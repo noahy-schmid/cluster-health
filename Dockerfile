@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN gradle shadowJar
+RUN ./gradlew shadowJar
 
 FROM openjdk:23-jdk-slim
 

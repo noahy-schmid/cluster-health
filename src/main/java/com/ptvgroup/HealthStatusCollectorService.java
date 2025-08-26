@@ -73,8 +73,6 @@ public class HealthStatusCollectorService {
         } catch (Exception e) {
             logger.error("Error checking endpoint: {}", url, e);
             return false;
-        } finally {
-            client.close();
         }
     }
 
