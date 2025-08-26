@@ -63,30 +63,46 @@ sudo mkdir -p /var/www
 sudo chown $USER:$USER /var/www
 ```
 
-### 4. Copy Deployment Scripts
+### 4. Deployment Scripts (Automatically Uploaded)
 
-Copy the following scripts from the repository to your droplet:
+The deployment scripts are automatically uploaded to your droplet by the GitHub Actions workflow if they don't exist. However, if you want to manually upload them:
 
 ```bash
-# Copy scripts to your home directory
+# Copy scripts to your home directory (optional - workflow handles this)
 scp scripts/configure-nginx-pr.sh user@your-droplet-ip:~/
 scp scripts/cleanup-pr.sh user@your-droplet-ip:~/
 
-# Make them executable
+# Make them executable (optional - workflow handles this)
 chmod +x ~/configure-nginx-pr.sh
 chmod +x ~/cleanup-pr.sh
 ```
 
-### 5. Set Up SSH Key Authentication
+**Note:** The workflow automatically checks if these scripts exist and uploads them if needed, so manual upload is not required.
 
-1. Generate an SSH key pair for GitHub Actions:
+### 5. Set Up Password Authentication
+
+The workflow uses password-based SSH authentication instead of key-based authentication.
+
+1. Ensure your droplet user has a password set:
    ```bash
-   ssh-keygen -t rsa -b 4096 -C "github-actions@your-repo"
+   sudo passwd your-username
    ```
 
-2. Add the public key to your droplet's `~/.ssh/authorized_keys`
+2. Make sure password authentication is enabled in SSH config:
+   ```bash
+   sudo nano /etc/ssh/sshd_config
+   ```
+   
+   Ensure these settings:
+   ```
+   PasswordAuthentication yes
+   PubkeyAuthentication yes
+   ```
 
-3. Keep the private key secure - you'll add it to GitHub Secrets
+3. Restart SSH service:
+   ```bash
+   sudo systemctl restart ssh
+   ```
 
 ## GitHub Setup
 
@@ -98,7 +114,7 @@ Add the following secrets to your GitHub repository (Settings → Secrets and va
 |-------------|-------------|---------|
 | `DROPLET_HOST` | Your droplet's IP address or domain | `203.0.113.1` |
 | `DROPLET_USER` | Username for SSH access | `deploy` |
-| `DROPLET_SSH_KEY` | Private SSH key for authentication | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `DROPLET_PASSWORD` | Password for SSH authentication | `your-secure-password` |
 
 ### 2. Workflow Configuration
 
@@ -106,9 +122,10 @@ The workflow is automatically configured in `.github/workflows/pr-preview.yml`. 
 
 - Trigger on PR events (opened, synchronized, reopened, closed)
 - Build the React app with the correct subpath configuration
-- Deploy to the droplet using SSH/SCP
+- Upload deployment scripts to the droplet if they don't exist
+- Deploy to the droplet using password-based SSH/SCP authentication
 - Configure NGINX for the new preview
-- Comment on the PR with the preview URL
+- Comment on the PR with the preview URL and deployment details
 - Clean up when the PR is closed
 
 ## How It Works

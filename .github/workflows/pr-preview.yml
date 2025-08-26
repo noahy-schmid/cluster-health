@@ -32,27 +32,44 @@ jobs:
           GENERATE_SOURCEMAP: false
         run: npm run build
         
-      - name: Setup SSH
+      - name: Install sshpass and setup SSH
         run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
           mkdir -p ~/.ssh
-          echo "${{ secrets.DROPLET_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Upload deployment scripts to droplet
+        env:
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+        run: |
+          # Upload configure-nginx-pr.sh script if it doesn't exist
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f /home/$DROPLET_USER/configure-nginx-pr.sh" || \
+          sshpass -p "$DROPLET_PASSWORD" scp scripts/configure-nginx-pr.sh $DROPLET_USER@$DROPLET_HOST:/home/$DROPLET_USER/configure-nginx-pr.sh
+          
+          # Upload cleanup-pr.sh script if it doesn't exist
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f /home/$DROPLET_USER/cleanup-pr.sh" || \
+          sshpass -p "$DROPLET_PASSWORD" scp scripts/cleanup-pr.sh $DROPLET_USER@$DROPLET_HOST:/home/$DROPLET_USER/cleanup-pr.sh
+          
+          # Make scripts executable
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x /home/$DROPLET_USER/configure-nginx-pr.sh /home/$DROPLET_USER/cleanup-pr.sh"
           
       - name: Deploy to DigitalOcean Droplet
         env:
           DROPLET_USER: ${{ secrets.DROPLET_USER }}
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
           # Create PR directory on droplet
-          ssh $DROPLET_USER@$DROPLET_HOST "sudo mkdir -p /var/www/pr-${{ github.event.number }}"
-          ssh $DROPLET_USER@$DROPLET_HOST "sudo chown $DROPLET_USER:$DROPLET_USER /var/www/pr-${{ github.event.number }}"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo mkdir -p /var/www/pr-${{ github.event.number }}"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo chown $DROPLET_USER:$DROPLET_USER /var/www/pr-${{ github.event.number }}"
           
           # Copy build files to droplet
-          scp -r build/* $DROPLET_USER@$DROPLET_HOST:/var/www/pr-${{ github.event.number }}/
+          sshpass -p "$DROPLET_PASSWORD" scp -r build/* $DROPLET_USER@$DROPLET_HOST:/var/www/pr-${{ github.event.number }}/
           
           # Configure NGINX for this PR
-          ssh $DROPLET_USER@$DROPLET_HOST "sudo /home/$DROPLET_USER/configure-nginx-pr.sh ${{ github.event.number }}"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo /home/$DROPLET_USER/configure-nginx-pr.sh ${{ github.event.number }}"
           
       - name: Comment PR with preview URL
         uses: actions/github-script@v7
@@ -62,9 +79,15 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 **PR Preview Deployed!**
+              body: `🚀 **PR Preview Deployed Successfully!**
               
               Your changes are now live at: http://${{ secrets.DROPLET_HOST }}/pr-${{ github.event.number }}
+              
+              ✅ **Deployment Details:**
+              - **PR Number:** #${{ github.event.number }}
+              - **Commit:** ${{ github.sha }}
+              - **Deployed at:** $(date -u)
+              - **Build Status:** ✅ Success
               
               This preview will be automatically cleaned up when the PR is closed.`
             })
@@ -74,19 +97,19 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Setup SSH
+      - name: Install sshpass and setup SSH
         run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
           mkdir -p ~/.ssh
-          echo "${{ secrets.DROPLET_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
           
       - name: Cleanup PR preview
         env:
           DROPLET_USER: ${{ secrets.DROPLET_USER }}
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
-          ssh $DROPLET_USER@$DROPLET_HOST "sudo /home/$DROPLET_USER/cleanup-pr.sh ${{ github.event.number }}"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo /home/$DROPLET_USER/cleanup-pr.sh ${{ github.event.number }}"
           
       - name: Comment PR about cleanup
         uses: actions/github-script@v7
