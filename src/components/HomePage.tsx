@@ -59,7 +59,7 @@ const HomePage: React.FC = () => {
             <div className="feature-card">
               <div className="feature-icon">📅</div>
               <h3>Intelligente Terminplanung</h3>
-              <p>Intelligenter Kalender der Doppelbuchungen verhindert und Ihren Tagesablauf optimiert</p>
+              <p>Intelligenter Kalender der Doppelbuchungen verhindert und auf Ihren Tagesablauf abgestimmt ist</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">💳</div>
