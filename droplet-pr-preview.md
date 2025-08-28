@@ -65,7 +65,18 @@ sudo chown $USER:$USER /var/www
 
 ### 4. Deployment Scripts (Automatically Uploaded)
 
-The deployment scripts are automatically uploaded to your droplet by the GitHub Actions workflow if they don't exist. However, if you want to manually upload them:
+The deployment scripts are automatically uploaded to your droplet by the GitHub Actions workflow if they don't exist. The scripts now include intelligent NGINX configuration detection that works across different Linux distributions and NGINX setups:
+
+**Enhanced NGINX Configuration Support:**
+- Automatically detects common NGINX configuration file locations:
+  - `/etc/nginx/sites-available/default` (Ubuntu/Debian style)
+  - `/etc/nginx/conf.d/default.conf` (CentOS/RHEL style)  
+  - `/etc/nginx/default.conf` (Alternative configurations)
+  - `/etc/nginx/nginx.conf` (Direct configuration)
+- Creates a basic NGINX configuration if none exists
+- Handles both sites-available/sites-enabled and conf.d directory structures
+
+If you want to manually upload the scripts (optional):
 
 ```bash
 # Copy scripts to your home directory (optional - workflow handles this)
@@ -77,7 +88,7 @@ chmod +x ~/configure-nginx-pr.sh
 chmod +x ~/cleanup-pr.sh
 ```
 
-**Note:** The workflow automatically checks if these scripts exist and uploads them if needed, so manual upload is not required.
+**Note:** The workflow automatically checks if these scripts exist and uploads them if needed, so manual upload is not required. The scripts now work across different NGINX configurations and Linux distributions.
 
 ### 5. Set Up Password Authentication
 
@@ -185,7 +196,9 @@ location /pr-123 {
 2. **NGINX Configuration Errors**
    - Check NGINX syntax: `sudo nginx -t`
    - View logs: `sudo journalctl -u nginx`
-   - Restore backup: `sudo cp /etc/nginx/sites-available/default.backup /etc/nginx/sites-available/default`
+   - The deployment scripts now include intelligent NGINX configuration detection for different Linux distributions
+   - If NGINX configuration file doesn't exist, the script will create a basic one automatically
+   - Restore backup: `sudo cp /etc/nginx/sites-available/default.backup /etc/nginx/sites-available/default` (or the appropriate config file path)
 
 3. **Permission Issues**
    - Ensure the deployment user has sudo privileges

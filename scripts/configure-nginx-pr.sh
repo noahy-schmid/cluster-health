@@ -15,14 +15,88 @@ if [ -z "$PR_NUMBER" ]; then
 fi
 
 # Configuration variables
-NGINX_SITES_AVAILABLE="/etc/nginx/sites-available"
-NGINX_SITES_ENABLED="/etc/nginx/sites-enabled"
 PR_ROOT="/var/www/pr-$PR_NUMBER"
-MAIN_CONFIG_FILE="$NGINX_SITES_AVAILABLE/default"
 
 echo "Configuring NGINX for PR #$PR_NUMBER..."
 
-# Backup original config if it doesn't exist
+# Function to detect NGINX configuration file
+detect_nginx_config() {
+    # Check common NGINX configuration file locations
+    if [ -f "/etc/nginx/sites-available/default" ]; then
+        echo "/etc/nginx/sites-available/default"
+    elif [ -f "/etc/nginx/conf.d/default.conf" ]; then
+        echo "/etc/nginx/conf.d/default.conf"
+    elif [ -f "/etc/nginx/default.conf" ]; then
+        echo "/etc/nginx/default.conf"
+    elif [ -f "/etc/nginx/nginx.conf" ]; then
+        # Check if nginx.conf has a server block we can use
+        if grep -q "server {" "/etc/nginx/nginx.conf"; then
+            echo "/etc/nginx/nginx.conf"
+        else
+            echo ""
+        fi
+    else
+        echo ""
+    fi
+}
+
+# Function to create a basic NGINX configuration
+create_basic_config() {
+    local config_file="$1"
+    local config_dir=$(dirname "$config_file")
+    
+    # Create directory if it doesn't exist
+    mkdir -p "$config_dir"
+    
+    cat > "$config_file" << 'EOF'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name _;
+
+    # Main location block
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+EOF
+    
+    # Enable the site if using sites-available structure
+    if [[ "$config_file" == *"sites-available"* ]]; then
+        local sites_enabled="/etc/nginx/sites-enabled/$(basename "$config_file")"
+        if [ ! -L "$sites_enabled" ]; then
+            ln -sf "$config_file" "$sites_enabled"
+        fi
+    fi
+    
+    echo "Created basic NGINX configuration at $config_file"
+}
+
+# Detect or create NGINX configuration
+MAIN_CONFIG_FILE=$(detect_nginx_config)
+
+if [ -z "$MAIN_CONFIG_FILE" ]; then
+    echo "No existing NGINX configuration found. Creating basic configuration..."
+    # Try to create in the most common location
+    if [ -d "/etc/nginx/sites-available" ]; then
+        MAIN_CONFIG_FILE="/etc/nginx/sites-available/default"
+    elif [ -d "/etc/nginx/conf.d" ]; then
+        MAIN_CONFIG_FILE="/etc/nginx/conf.d/default.conf"
+    else
+        # Create conf.d directory as fallback
+        mkdir -p "/etc/nginx/conf.d"
+        MAIN_CONFIG_FILE="/etc/nginx/conf.d/default.conf"
+    fi
+    create_basic_config "$MAIN_CONFIG_FILE"
+fi
+
+echo "Using NGINX configuration file: $MAIN_CONFIG_FILE"
+
+# Backup original config if backup doesn't exist
 if [ ! -f "$MAIN_CONFIG_FILE.backup" ]; then
     cp "$MAIN_CONFIG_FILE" "$MAIN_CONFIG_FILE.backup"
     echo "Created backup of original NGINX config"
