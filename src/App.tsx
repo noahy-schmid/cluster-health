@@ -7,11 +7,11 @@ function App() {
       {/* Navigation */}
       <nav className="navbar">
         <div className="nav-container">
-          <div className="nav-brand">BookStylist</div>
+          <div className="nav-brand">Mein Stylist</div>
           <div className="nav-links">
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <button className="btn-primary">Get Started</button>
+            <a href="#features">Funktionen</a>
+            <a href="#pricing">Preise</a>
+            <button className="btn-primary">Jetzt starten</button>
           </div>
         </div>
       </nav>
@@ -21,19 +21,19 @@ function App() {
         <div className="hero-container">
           <div className="hero-content">
             <h1 className="hero-title">
-              Transform Your Hair Salon with 
-              <span className="highlight"> Smart Booking</span>
+              Revolutionieren Sie Ihren Friseursalon mit 
+              <span className="highlight"> intelligenter Terminbuchung</span>
             </h1>
             <p className="hero-subtitle">
-              The complete appointment management solution designed exclusively for hair stylists. 
-              Accept online bookings, manage your schedule, and grow your business effortlessly.
+              Die professionelle Terminverwaltung speziell für Friseure. 
+              Akzeptieren Sie Online-Buchungen, verwalten Sie Ihren Terminkalender und behalten Sie die volle Kontrolle über Ihre Kunden.
             </p>
             <div className="hero-cta">
-              <button className="btn-primary-large">Start Free Trial</button>
-              <button className="btn-secondary">Watch Demo</button>
+              <button className="btn-primary-large">3 Monate kostenlos testen</button>
+              <button className="btn-secondary">Demo ansehen</button>
             </div>
             <div className="hero-social-proof">
-              <p className="social-proof-text">Trusted by 10,000+ stylists worldwide</p>
+              <p className="social-proof-text">Vertraut von über 10.000 Friseuren weltweit</p>
             </div>
           </div>
           <div className="hero-image">
@@ -53,39 +53,39 @@ function App() {
       <section id="features" className="features">
         <div className="container">
           <div className="section-header">
-            <h2>Everything You Need to Run Your Salon</h2>
-            <p>Streamline your business operations with powerful tools designed for hair professionals</p>
+            <h2>Alles was Sie für Ihren Salon brauchen</h2>
+            <p>Optimieren Sie Ihre Geschäftsabläufe mit professionellen Tools für Friseure</p>
           </div>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">📅</div>
-              <h3>Smart Scheduling</h3>
-              <p>Intelligent calendar that prevents double-bookings and optimizes your daily schedule</p>
+              <h3>Intelligente Terminplanung</h3>
+              <p>Intelligenter Kalender der Doppelbuchungen verhindert und Ihren Tagesablauf optimiert</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">💳</div>
-              <h3>Online Payments</h3>
-              <p>Accept payments and deposits online. Reduce no-shows with secure payment processing</p>
+              <h3>Kundenkontrolle</h3>
+              <p>Kunden können nicht direkt über die App bezahlen - Sie behalten die vollständige Kontrolle über die Kundenbeziehung</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📱</div>
               <h3>Mobile App</h3>
-              <p>Manage bookings on-the-go with our mobile app. Never miss an appointment again</p>
+              <p>Verwalten Sie Buchungen unterwegs mit unserer mobilen App. Verpassen Sie nie wieder einen Termin</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">👥</div>
-              <h3>Client Management</h3>
-              <p>Build detailed client profiles with service history and preferences</p>
+              <h3>Kundenverwaltung</h3>
+              <p>Erstellen Sie detaillierte Kundenprofile mit Servicehistorie und Präferenzen</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📊</div>
-              <h3>Business Analytics</h3>
-              <p>Track revenue, popular services, and growth trends with detailed reports</p>
+              <h3>Geschäftsanalysen</h3>
+              <p>Verfolgen Sie Umsatz, beliebte Services und Wachstumstrends mit detaillierten Berichten</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🔔</div>
-              <h3>Automated Reminders</h3>
-              <p>Reduce no-shows with automatic SMS and email appointment reminders</p>
+              <h3>Automatische Erinnerungen</h3>
+              <p>Reduzieren Sie No-Shows mit automatischen SMS- und E-Mail-Terminerinnerungen</p>
             </div>
           </div>
         </div>
@@ -96,30 +96,30 @@ function App() {
         <div className="container">
           <div className="benefits-grid">
             <div className="benefits-content">
-              <h2>Grow Your Business with Professional Tools</h2>
+              <h2>Steigern Sie Ihr Geschäft mit professionellen Tools</h2>
               <ul className="benefits-list">
-                <li>✅ Increase bookings by 40% with 24/7 online scheduling</li>
-                <li>✅ Reduce no-shows by 60% with automated reminders</li>
-                <li>✅ Save 2+ hours daily on administrative tasks</li>
-                <li>✅ Accept payments and deposits to secure bookings</li>
-                <li>✅ Build stronger client relationships with detailed profiles</li>
-                <li>✅ Scale your business with multi-stylist support</li>
+                <li>✅ Steigern Sie Ihre Buchungen um 40% mit 24/7 Online-Terminplanung</li>
+                <li>✅ Reduzieren Sie No-Shows um 60% mit automatischen Erinnerungen</li>
+                <li>✅ Sparen Sie täglich 2+ Stunden bei Verwaltungsaufgaben</li>
+                <li>✅ Behalten Sie die volle Kontrolle über Kundenzahlungen</li>
+                <li>✅ Stärken Sie Kundenbeziehungen mit detaillierten Profilen</li>
+                <li>✅ Skalieren Sie Ihr Geschäft mit Multi-Stylist-Unterstützung</li>
               </ul>
-              <button className="btn-primary-large">Start Your Free Trial</button>
+              <button className="btn-primary-large">Jetzt 3 Monate kostenlos testen</button>
             </div>
             <div className="benefits-image">
               <div className="stats-card">
                 <div className="stat">
                   <div className="stat-number">40%</div>
-                  <div className="stat-label">More Bookings</div>
+                  <div className="stat-label">Mehr Buchungen</div>
                 </div>
                 <div className="stat">
                   <div className="stat-number">60%</div>
-                  <div className="stat-label">Fewer No-Shows</div>
+                  <div className="stat-label">Weniger No-Shows</div>
                 </div>
                 <div className="stat">
-                  <div className="stat-number">2hrs</div>
-                  <div className="stat-label">Time Saved Daily</div>
+                  <div className="stat-number">2 Std.</div>
+                  <div className="stat-label">Täglich gespart</div>
                 </div>
               </div>
             </div>
@@ -131,63 +131,54 @@ function App() {
       <section id="pricing" className="pricing">
         <div className="container">
           <div className="section-header">
-            <h2>Simple, Transparent Pricing</h2>
-            <p>Choose the plan that's right for your salon</p>
+            <h2>Einfache, transparente Preise</h2>
+            <p>Starten Sie kostenlos und zahlen Sie nur für das, was Sie nutzen</p>
           </div>
           <div className="pricing-grid">
-            <div className="pricing-card">
-              <div className="pricing-header">
-                <h3>Solo Stylist</h3>
-                <div className="pricing-price">
-                  <span className="price">$29</span>
-                  <span className="period">/month</span>
-                </div>
-              </div>
-              <ul className="pricing-features">
-                <li>Up to 100 bookings/month</li>
-                <li>Online scheduling</li>
-                <li>Client management</li>
-                <li>Basic analytics</li>
-                <li>Email support</li>
-              </ul>
-              <button className="btn-primary">Start Free Trial</button>
-            </div>
             <div className="pricing-card featured">
-              <div className="popular-badge">Most Popular</div>
+              <div className="popular-badge">Empfohlen</div>
               <div className="pricing-header">
-                <h3>Professional</h3>
+                <h3>Für alle Friseure</h3>
                 <div className="pricing-price">
-                  <span className="price">$49</span>
-                  <span className="period">/month</span>
+                  <span className="price">3 Monate</span>
+                  <span className="period">kostenlos</span>
                 </div>
               </div>
               <ul className="pricing-features">
-                <li>Unlimited bookings</li>
-                <li>Online payments</li>
-                <li>SMS reminders</li>
-                <li>Advanced analytics</li>
-                <li>Priority support</li>
-                <li>Mobile app</li>
+                <li>Unbegrenzte Terminbuchungen</li>
+                <li>Kundenverwaltung und -profile</li>
+                <li>Automatische Erinnerungen</li>
+                <li>Mobile App</li>
+                <li>E-Mail-Support</li>
+                <li>Keine Kreditkarte erforderlich</li>
               </ul>
-              <button className="btn-primary">Start Free Trial</button>
+              <button className="btn-primary">Jetzt kostenlos starten</button>
             </div>
             <div className="pricing-card">
               <div className="pricing-header">
-                <h3>Salon Team</h3>
+                <h3>Nach der Testphase</h3>
                 <div className="pricing-price">
-                  <span className="price">$89</span>
-                  <span className="period">/month</span>
+                  <span className="price">10 Cent</span>
+                  <span className="period">pro Buchung</span>
                 </div>
               </div>
               <ul className="pricing-features">
-                <li>Up to 5 stylists</li>
-                <li>Team scheduling</li>
-                <li>Revenue sharing</li>
-                <li>Custom branding</li>
-                <li>Dedicated support</li>
+                <li>Nur zahlen für tatsächliche Buchungen</li>
+                <li>Monatliche Rechnung</li>
+                <li>Keine versteckten Kosten</li>
+                <li>Sie behalten Kundenkontrolle</li>
+                <li>Jederzeit kündbar</li>
+                <li>Prioritäts-Support</li>
               </ul>
-              <button className="btn-primary">Start Free Trial</button>
+              <button className="btn-primary">Mehr erfahren</button>
             </div>
+          </div>
+          <div style={{textAlign: 'center', marginTop: '40px', padding: '20px', background: '#f9fafb', borderRadius: '12px'}}>
+            <h4 style={{marginBottom: '16px', color: '#6366f1'}}>Warum dieses Preismodell?</h4>
+            <p style={{color: '#6b7280', maxWidth: '600px', margin: '0 auto'}}>
+              Kunden können nicht direkt über die App bezahlen - das bedeutet, Sie behalten die vollständige Kontrolle 
+              über Ihre Kundenbeziehungen und Zahlungsabwicklung. Wir rechnen nur für erfolgreiche Buchungen ab.
+            </p>
           </div>
         </div>
       </section>
@@ -196,11 +187,11 @@ function App() {
       <section className="cta">
         <div className="container">
           <div className="cta-content">
-            <h2>Ready to Transform Your Business?</h2>
-            <p>Join thousands of stylists who have already modernized their booking process</p>
+            <h2>Bereit, Ihr Geschäft zu revolutionieren?</h2>
+            <p>Schließen Sie sich tausenden von Friseuren an, die bereits ihren Buchungsprozess modernisiert haben</p>
             <div className="cta-buttons">
-              <button className="btn-primary-large">Start Free 14-Day Trial</button>
-              <p className="cta-note">No credit card required • Cancel anytime</p>
+              <button className="btn-primary-large">3 Monate kostenlos testen</button>
+              <p className="cta-note">Keine Kreditkarte erforderlich • Jederzeit kündbar</p>
             </div>
           </div>
         </div>
@@ -211,32 +202,32 @@ function App() {
         <div className="container">
           <div className="footer-content">
             <div className="footer-brand">
-              <div className="footer-logo">BookStylist</div>
-              <p>The complete booking solution for hair professionals</p>
+              <div className="footer-logo">Mein Stylist</div>
+              <p>Die komplette Buchungslösung für Friseur-Profis</p>
             </div>
             <div className="footer-links">
               <div className="footer-section">
-                <h4>Product</h4>
-                <a href="#features">Features</a>
-                <a href="#pricing">Pricing</a>
+                <h4>Produkt</h4>
+                <a href="#features">Funktionen</a>
+                <a href="#pricing">Preise</a>
                 <a href="#demo">Demo</a>
               </div>
               <div className="footer-section">
                 <h4>Support</h4>
-                <a href="#help">Help Center</a>
-                <a href="#contact">Contact</a>
-                <a href="#tutorials">Tutorials</a>
+                <a href="#help">Hilfe-Center</a>
+                <a href="#contact">Kontakt</a>
+                <a href="#tutorials">Anleitungen</a>
               </div>
               <div className="footer-section">
-                <h4>Company</h4>
-                <a href="#about">About</a>
-                <a href="#careers">Careers</a>
-                <a href="#privacy">Privacy</a>
+                <h4>Unternehmen</h4>
+                <a href="#about">Über uns</a>
+                <a href="#careers">Karriere</a>
+                <a href="#privacy">Datenschutz</a>
               </div>
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2024 BookStylist. All rights reserved.</p>
+            <p>&copy; 2024 Mein Stylist. Alle Rechte vorbehalten.</p>
           </div>
         </div>
       </footer>
