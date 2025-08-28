@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app-pr-__PR_NUMBER__:
     build:
@@ -17,6 +15,21 @@ services:
     labels:
       - "pr.number=__PR_NUMBER__"
       - "pr.cleanup=true"
+
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ~/nginx-dynamic.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - cluster-health
+    depends_on:
+      - app-pr-__PR_NUMBER__
+    labels:
+      - "pr.shared=true"
 
 networks:
   cluster-health:

@@ -16,17 +16,17 @@ fi
 
 # Configuration variables
 COMPOSE_FILE="~/docker-compose.pr-$PR_NUMBER.yml"
-NGINX_PROXY_CONFIG="/etc/nginx/nginx.conf"
+NGINX_DYNAMIC_CONFIG="~/nginx-dynamic.conf"
 CONTAINER_NAME="cluster-health-pr-$PR_NUMBER"
 
 echo "Cleaning up Docker-based PR #$PR_NUMBER preview deployment..."
 
-# Stop and remove Docker containers
+# Stop and remove Docker containers for this PR
 if [ -f "$COMPOSE_FILE" ]; then
-    echo "Stopping and removing Docker containers..."
-    docker-compose -f "$COMPOSE_FILE" down --rmi all --volumes --remove-orphans || true
+    echo "Stopping and removing PR containers..."
+    docker-compose -f "$COMPOSE_FILE" down --volumes --remove-orphans || true
     rm -f "$COMPOSE_FILE"
-    echo "✅ Docker containers and compose file removed"
+    echo "✅ PR containers and compose file removed"
 else
     echo "ℹ️  Compose file not found: $COMPOSE_FILE"
     
@@ -39,91 +39,99 @@ else
     fi
 fi
 
-# Remove any dangling images for this PR
-echo "Cleaning up Docker images..."
-docker image prune -f || true
-
-# Function to detect NGINX configuration file
-detect_nginx_config() {
-    # Check common NGINX configuration file locations
-    if [ -f "/etc/nginx/nginx.conf" ]; then
-        echo "/etc/nginx/nginx.conf"
-    elif [ -f "/etc/nginx/sites-available/default" ]; then
-        echo "/etc/nginx/sites-available/default"
-    elif [ -f "/etc/nginx/conf.d/default.conf" ]; then
-        echo "/etc/nginx/conf.d/default.conf"
-    elif [ -f "/etc/nginx/default.conf" ]; then
-        echo "/etc/nginx/default.conf"
-    else
-        echo ""
+# Remove PR location from nginx config
+remove_pr_from_nginx() {
+    local config_file="$1"
+    local pr_num="$2"
+    
+    if [ ! -f "$config_file" ]; then
+        echo "ℹ️  NGINX config file not found: $config_file"
+        return 0
     fi
+    
+    # Check if PR location block exists
+    if ! grep -q "location /pr-$pr_num" "$config_file"; then
+        echo "ℹ️  No NGINX configuration found for PR #$pr_num"
+        return 0
+    fi
+    
+    # Create temporary file without the PR location block
+    local temp_config=$(mktemp)
+    
+    # Remove the PR location block and its comment
+    awk -v pr_num="$pr_num" '
+    /^[[:space:]]*# PR Preview #/ && $4 == pr_num {
+        # Skip the comment line and start skipping the block
+        skip = 1
+        next
+    }
+    /^[[:space:]]*location \/pr-/ && index($0, "/pr-" pr_num " ") {
+        # Skip the location block
+        skip = 1
+        next
+    }
+    /^[[:space:]]*\}/ && skip {
+        # Skip the closing brace of the location block
+        skip = 0
+        next
+    }
+    /^[[:space:]]*proxy_pass/ && skip {
+        # Skip proxy_pass lines within the block
+        next
+    }
+    /^[[:space:]]*proxy_set_header/ && skip {
+        # Skip proxy_set_header lines within the block
+        next
+    }
+    /^[[:space:]]*$/ && skip {
+        # Skip empty lines within the block
+        next
+    }
+    !skip { print }
+    ' "$config_file" > "$temp_config"
+    
+    # Replace the original config with the cleaned one
+    cp "$temp_config" "$config_file"
+    rm "$temp_config"
+    
+    echo "✅ Removed PR #$pr_num configuration from nginx"
 }
 
 # Clean up NGINX configuration
-MAIN_CONFIG_FILE=$(detect_nginx_config)
+echo "Cleaning up NGINX configuration..."
+remove_pr_from_nginx "$NGINX_DYNAMIC_CONFIG" "$PR_NUMBER"
 
-if [ -z "$MAIN_CONFIG_FILE" ]; then
-    echo "ℹ️  No NGINX configuration file found"
+# Check if there are any other PR containers running
+OTHER_PRS=$(docker ps --format "{{.Names}}" | grep "^cluster-health-pr-" | grep -v "^$CONTAINER_NAME$" || true)
+
+if [ -z "$OTHER_PRS" ]; then
+    echo "No other PR containers running. Stopping nginx proxy..."
+    # Stop nginx proxy since no PRs are running
+    if docker ps --format "{{.Names}}" | grep -q "^nginx-proxy$"; then
+        docker stop nginx-proxy || true
+        docker rm nginx-proxy || true
+        echo "✅ Nginx proxy stopped"
+    fi
 else
-    echo "Using NGINX configuration file: $MAIN_CONFIG_FILE"
+    echo "Other PR containers still running. Restarting nginx proxy with updated config..."
+    # Restart nginx proxy to reload configuration
+    if docker ps --format "{{.Names}}" | grep -q "^nginx-proxy$"; then
+        docker stop nginx-proxy || true
+        docker rm nginx-proxy || true
+    fi
     
-    if [ -f "$MAIN_CONFIG_FILE" ]; then
-        # Create temporary file without the PR location block
-        TEMP_CONFIG=$(mktemp)
-        
-        # Remove the PR location block and its comment
-        awk -v pr_num="$PR_NUMBER" '
-        /^[[:space:]]*# PR Preview #/ && $4 == pr_num {
-            # Skip the comment line and start skipping the block
-            skip = 1
-            next
-        }
-        /^[[:space:]]*location \/pr-/ && index($0, "/pr-" pr_num " ") {
-            # Skip the location block
-            skip = 1
-            next
-        }
-        /^[[:space:]]*\}/ && skip {
-            # Skip the closing brace of the location block
-            skip = 0
-            next
-        }
-        /^[[:space:]]*proxy_pass/ && skip {
-            # Skip proxy_pass lines within the block
-            next
-        }
-        /^[[:space:]]*proxy_set_header/ && skip {
-            # Skip proxy_set_header lines within the block
-            next
-        }
-        /^[[:space:]]*$/ && skip {
-            # Skip empty lines within the block
-            next
-        }
-        !skip { print }
-        ' "$MAIN_CONFIG_FILE" > "$TEMP_CONFIG"
-        
-        # Replace the original config with the cleaned one
-        sudo cp "$TEMP_CONFIG" "$MAIN_CONFIG_FILE"
-        rm "$TEMP_CONFIG"
-        
-        # Test NGINX configuration
-        if sudo nginx -t; then
-            # Reload NGINX
-            sudo systemctl reload nginx
-            echo "✅ NGINX configuration cleaned up for PR #$PR_NUMBER"
-        else
-            echo "❌ NGINX configuration test failed after cleanup"
-            echo "Please check NGINX configuration manually"
-            exit 1
-        fi
-    else
-        echo "ℹ️  NGINX config file not found: $MAIN_CONFIG_FILE"
+    # Find any running PR container to get its compose file
+    FIRST_PR=$(echo "$OTHER_PRS" | head -1 | sed 's/cluster-health-pr-//')
+    if [ -f "~/docker-compose.pr-$FIRST_PR.yml" ]; then
+        echo "Restarting nginx proxy using compose file for PR #$FIRST_PR..."
+        docker-compose -f "~/docker-compose.pr-$FIRST_PR.yml" up -d nginx-proxy
+        echo "✅ Nginx proxy restarted"
     fi
 fi
 
-# Clean up any orphaned networks if no containers are using them
-echo "Cleaning up Docker networks..."
+# Clean up any orphaned images and networks
+echo "Cleaning up Docker resources..."
+docker image prune -f || true
 docker network prune -f || true
 
 echo "🧹 Cleanup completed for PR #$PR_NUMBER"

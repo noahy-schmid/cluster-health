@@ -105,6 +105,11 @@ jobs:
           sshpass -p "$DROPLET_PASSWORD" scp nginx-proxy.conf $DROPLET_USER@$DROPLET_HOST:/tmp/nginx-proxy.conf
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/nginx-proxy.conf ~/nginx-proxy.conf"
           
+          # Upload NGINX dynamic configuration file (always upload to ensure latest version)
+          echo "Uploading nginx-dynamic.conf..."
+          sshpass -p "$DROPLET_PASSWORD" scp nginx-dynamic.conf $DROPLET_USER@$DROPLET_HOST:/tmp/nginx-dynamic.conf
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/nginx-dynamic.conf ~/nginx-dynamic.conf"
+          
           # Upload Docker Compose template (always upload to ensure latest version)
           echo "Uploading docker-compose.pr-template.yml..."
           sshpass -p "$DROPLET_PASSWORD" scp docker-compose.pr-template.yml $DROPLET_USER@$DROPLET_HOST:/tmp/docker-compose.pr-template.yml

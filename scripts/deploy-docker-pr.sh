@@ -16,9 +16,8 @@ if [ -z "$PR_NUMBER" ] || [ -z "$DOCKER_IMAGE_TAG" ]; then
 fi
 
 # Configuration variables
-COMPOSE_FILE="$HOME/docker-compose.pr-$PR_NUMBER.yml"
-NGINX_PROXY_CONFIG="/etc/nginx/nginx.conf"
-NGINX_PROXY_TEMPLATE="$HOME/nginx-proxy.conf"
+COMPOSE_FILE="~/docker-compose.pr-$PR_NUMBER.yml"
+NGINX_DYNAMIC_CONFIG="~/nginx-dynamic.conf"
 CONTAINER_NAME="cluster-health-pr-$PR_NUMBER"
 
 echo "Deploying Docker-based PR #$PR_NUMBER preview..."
@@ -43,11 +42,9 @@ if ! docker network ls | grep -q "cluster-health"; then
 fi
 
 # Create docker-compose file for this PR using the template
-TEMPLATE_FILE="$HOME/docker-compose.pr-template.yml"
+TEMPLATE_FILE="~/docker-compose.pr-template.yml"
 echo "Creating docker-compose file at: $COMPOSE_FILE"
 echo "Using template file: $TEMPLATE_FILE"
-echo "Current working directory: $(pwd)"
-echo "Home directory: $HOME"
 
 # Check if template file exists
 if [ ! -f "$TEMPLATE_FILE" ]; then
@@ -57,14 +54,7 @@ if [ ! -f "$TEMPLATE_FILE" ]; then
     exit 1
 fi
 
-# Ensure we can write to the home directory
-if [ ! -w "$HOME" ]; then
-    echo "❌ Error: Cannot write to home directory $HOME"
-    exit 1
-fi
-
 # Create docker-compose file from template, replacing placeholders
-# Replace __PR_NUMBER__ with actual PR number and modify for deployment (use image instead of build)
 python3 -c "
 import sys
 import os
@@ -117,30 +107,8 @@ fi
 
 echo "✅ Docker-compose file created successfully at $COMPOSE_FILE"
 
-# Stop and remove existing container if it exists
-if docker ps -a --format "{{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
-    echo "Stopping existing container..."
-    docker-compose -f "$COMPOSE_FILE" down
-fi
-
-# Start the new container
-echo "Starting PR #$PR_NUMBER container..."
-docker-compose -f "$COMPOSE_FILE" up -d
-
-# Wait for container to be ready
-echo "Waiting for container to be ready..."
-sleep 10
-
-# Verify container is running
-if docker ps --format "{{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
-    echo "✅ Container $CONTAINER_NAME is running"
-else
-    echo "❌ Failed to start container $CONTAINER_NAME"
-    exit 1
-fi
-
-# Configure NGINX proxy for this PR
-configure_nginx_proxy() {
+# Update nginx configuration for this PR
+configure_nginx_for_pr() {
     local config_file="$1"
     local pr_num="$2"
     local container_name="$3"
@@ -154,7 +122,7 @@ configure_nginx_proxy() {
     # Create temporary file with the new location block
     local temp_config=$(mktemp)
     
-    # Add PR location block before the main location /
+    # Add PR location block before the comment
     awk -v pr_num="$pr_num" -v container_name="$container_name" '
     /^[[:space:]]*# PR preview locations will be dynamically added here/ {
         print "        # PR Preview #" pr_num
@@ -175,45 +143,59 @@ configure_nginx_proxy() {
     rm "$temp_config"
 }
 
-# Check if NGINX is installed and configure it
-if command -v nginx &> /dev/null; then
-    echo "Configuring NGINX proxy for PR #$PR_NUMBER..."
-    
-    # Check if nginx-proxy template exists
-    if [ ! -f "$NGINX_PROXY_TEMPLATE" ]; then
-        echo "❌ Error: NGINX proxy template not found at $NGINX_PROXY_TEMPLATE"
-        echo "Available files in home directory:"
-        ls -la ~/
-        exit 1
-    fi
-    
-    # Backup original config if backup doesn't exist
-    if [ ! -f "$NGINX_PROXY_CONFIG.backup" ]; then
-        sudo cp "$NGINX_PROXY_CONFIG" "$NGINX_PROXY_CONFIG.backup"
-        echo "Created backup of original NGINX config"
-    fi
-    
-    # Copy the nginx-proxy template and add the PR-specific location
-    sudo cp "$NGINX_PROXY_TEMPLATE" "$NGINX_PROXY_CONFIG"
-    echo "Copied nginx-proxy template to $NGINX_PROXY_CONFIG"
-    
-    configure_nginx_proxy "$NGINX_PROXY_CONFIG" "$PR_NUMBER" "$CONTAINER_NAME"
-    
-    # Test NGINX configuration
-    if sudo nginx -t; then
-        # Reload NGINX
-        sudo systemctl reload nginx
-        echo "✅ NGINX configuration updated for PR #$PR_NUMBER"
-    else
-        echo "❌ NGINX configuration test failed"
-        # Restore backup on failure
-        sudo cp "$NGINX_PROXY_CONFIG.backup" "$NGINX_PROXY_CONFIG"
-        exit 1
-    fi
+echo "Configuring NGINX for PR #$PR_NUMBER..."
+
+# Check if nginx dynamic config exists
+if [ ! -f "$NGINX_DYNAMIC_CONFIG" ]; then
+    echo "❌ Error: NGINX dynamic config not found at $NGINX_DYNAMIC_CONFIG"
+    echo "Available files in home directory:"
+    ls -la ~/
+    exit 1
+fi
+
+# Update nginx configuration with new PR location
+configure_nginx_for_pr "$NGINX_DYNAMIC_CONFIG" "$PR_NUMBER" "$CONTAINER_NAME"
+
+# Stop and remove existing PR container if it exists
+if docker ps -a --format "{{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
+    echo "Stopping existing PR container..."
+    docker-compose -f "$COMPOSE_FILE" down || true
+fi
+
+# Stop existing nginx proxy if it exists (to restart with new config)
+if docker ps --format "{{.Names}}" | grep -q "^nginx-proxy$"; then
+    echo "Stopping existing nginx proxy to reload configuration..."
+    docker stop nginx-proxy || true
+    docker rm nginx-proxy || true
+fi
+
+# Start the new container and nginx proxy
+echo "Starting PR #$PR_NUMBER container and nginx proxy..."
+docker-compose -f "$COMPOSE_FILE" up -d
+
+# Wait for containers to be ready
+echo "Waiting for containers to be ready..."
+sleep 15
+
+# Verify containers are running
+if docker ps --format "{{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
+    echo "✅ Container $CONTAINER_NAME is running"
 else
-    echo "⚠️  NGINX not found. Please install NGINX to enable reverse proxy."
+    echo "❌ Failed to start container $CONTAINER_NAME"
+    docker-compose -f "$COMPOSE_FILE" logs
+    exit 1
+fi
+
+if docker ps --format "{{.Names}}" | grep -q "^nginx-proxy$"; then
+    echo "✅ Nginx proxy is running"
+else
+    echo "❌ Failed to start nginx proxy"
+    docker-compose -f "$COMPOSE_FILE" logs nginx-proxy
+    exit 1
 fi
 
 echo "🚀 PR #$PR_NUMBER deployed successfully!"
 echo "Container: $CONTAINER_NAME"
 echo "Compose file: $COMPOSE_FILE"
+echo "Nginx proxy: nginx-proxy"
+echo "URL: http://your-domain/pr-$PR_NUMBER"
