@@ -18,6 +18,7 @@ fi
 # Configuration variables
 COMPOSE_FILE="$HOME/docker-compose.pr-$PR_NUMBER.yml"
 NGINX_PROXY_CONFIG="/etc/nginx/nginx.conf"
+NGINX_PROXY_TEMPLATE="$HOME/nginx-proxy.conf"
 CONTAINER_NAME="cluster-health-pr-$PR_NUMBER"
 
 echo "Deploying Docker-based PR #$PR_NUMBER preview..."
@@ -178,11 +179,23 @@ configure_nginx_proxy() {
 if command -v nginx &> /dev/null; then
     echo "Configuring NGINX proxy for PR #$PR_NUMBER..."
     
+    # Check if nginx-proxy template exists
+    if [ ! -f "$NGINX_PROXY_TEMPLATE" ]; then
+        echo "❌ Error: NGINX proxy template not found at $NGINX_PROXY_TEMPLATE"
+        echo "Available files in home directory:"
+        ls -la ~/
+        exit 1
+    fi
+    
     # Backup original config if backup doesn't exist
     if [ ! -f "$NGINX_PROXY_CONFIG.backup" ]; then
         sudo cp "$NGINX_PROXY_CONFIG" "$NGINX_PROXY_CONFIG.backup"
         echo "Created backup of original NGINX config"
     fi
+    
+    # Copy the nginx-proxy template and add the PR-specific location
+    sudo cp "$NGINX_PROXY_TEMPLATE" "$NGINX_PROXY_CONFIG"
+    echo "Copied nginx-proxy template to $NGINX_PROXY_CONFIG"
     
     configure_nginx_proxy "$NGINX_PROXY_CONFIG" "$PR_NUMBER" "$CONTAINER_NAME"
     
@@ -193,6 +206,8 @@ if command -v nginx &> /dev/null; then
         echo "✅ NGINX configuration updated for PR #$PR_NUMBER"
     else
         echo "❌ NGINX configuration test failed"
+        # Restore backup on failure
+        sudo cp "$NGINX_PROXY_CONFIG.backup" "$NGINX_PROXY_CONFIG"
         exit 1
     fi
 else
