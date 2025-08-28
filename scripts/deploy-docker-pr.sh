@@ -16,7 +16,7 @@ if [ -z "$PR_NUMBER" ] || [ -z "$DOCKER_IMAGE_TAG" ]; then
 fi
 
 # Configuration variables
-COMPOSE_FILE="/home/$USER/docker-compose.pr-$PR_NUMBER.yml"
+COMPOSE_FILE="$HOME/docker-compose.pr-$PR_NUMBER.yml"
 NGINX_PROXY_CONFIG="/etc/nginx/nginx.conf"
 CONTAINER_NAME="cluster-health-pr-$PR_NUMBER"
 
@@ -42,6 +42,16 @@ if ! docker network ls | grep -q "cluster-health"; then
 fi
 
 # Create docker-compose file for this PR
+echo "Creating docker-compose file at: $COMPOSE_FILE"
+echo "Current working directory: $(pwd)"
+echo "Home directory: $HOME"
+
+# Ensure we can write to the home directory
+if [ ! -w "$HOME" ]; then
+    echo "❌ Error: Cannot write to home directory $HOME"
+    exit 1
+fi
+
 cat > "$COMPOSE_FILE" << EOF
 version: '3.8'
 
@@ -63,6 +73,14 @@ networks:
   cluster-health:
     external: true
 EOF
+
+# Verify the docker-compose file was created successfully
+if [ ! -f "$COMPOSE_FILE" ]; then
+    echo "❌ Error: Failed to create docker-compose file at $COMPOSE_FILE"
+    exit 1
+fi
+
+echo "✅ Docker-compose file created successfully at $COMPOSE_FILE"
 
 # Stop and remove existing container if it exists
 if docker ps -a --format "{{.Names}}" | grep -q "^$CONTAINER_NAME$"; then
