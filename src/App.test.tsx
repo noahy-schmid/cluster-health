@@ -1,9 +1,18 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import ContactForm from './components/ContactForm';
 
-test('renders Mein Stylist app', () => {
-  render(<App />);
-  const titleElement = screen.getByRole('heading', { name: /Revolutionieren Sie Ihren Friseursalon/i });
-  expect(titleElement).toBeInTheDocument();
+test('renders contact form with required fields', () => {
+  render(<ContactForm />);
+  
+  // Check for required form fields
+  const nameInput = screen.getByRole('textbox', { name: /Name/i });
+  const emailInput = screen.getByRole('textbox', { name: /E-Mail/i });
+  const messageInput = screen.getByRole('textbox', { name: /Nachricht/i });
+  const submitButton = screen.getByRole('button', { name: /Partnerstatus-Anfrage senden/i });
+  
+  expect(nameInput).toBeInTheDocument();
+  expect(emailInput).toBeInTheDocument();
+  expect(messageInput).toBeInTheDocument();
+  expect(submitButton).toBeInTheDocument();
 });
