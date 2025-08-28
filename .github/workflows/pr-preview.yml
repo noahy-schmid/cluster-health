@@ -5,6 +5,11 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches: [main]
 
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
 env:
   NODE_VERSION: '18'
 
