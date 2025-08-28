@@ -1,36 +1,13 @@
 services:
-  app-pr-__PR_NUMBER__:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - PUBLIC_URL=/pr-__PR_NUMBER__
+  app:
+    image: __DOCKER_IMAGE__
     container_name: cluster-health-pr-__PR_NUMBER__
     restart: unless-stopped
+    ports:
+      - "__PORT__:80"
     environment:
       - NODE_ENV=production
       - PUBLIC_URL=/pr-__PR_NUMBER__
-    networks:
-      - cluster-health
     labels:
       - "pr.number=__PR_NUMBER__"
       - "pr.cleanup=true"
-
-  nginx-proxy:
-    image: nginx:alpine
-    container_name: nginx-proxy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    volumes:
-      - ~/nginx-dynamic.conf:/etc/nginx/nginx.conf:ro
-    networks:
-      - cluster-health
-    depends_on:
-      - app-pr-__PR_NUMBER__
-    labels:
-      - "pr.shared=true"
-
-networks:
-  cluster-health:
-    external: true

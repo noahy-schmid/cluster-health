@@ -46,79 +46,48 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
         
-      - name: Setup deployment environment and upload scripts
+      - name: Setup deployment environment
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
           
-      - name: Upload deployment scripts to droplet
+      - name: Install Docker and upload deployment files
         env:
           DROPLET_USER: ${{ secrets.DROPLET_USER }}
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
-          # Install Docker and Docker Compose if not already installed
-          echo "Checking Docker installation..."
+          # Install Docker and Docker Compose if needed
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
-            # Check if Docker is installed
             if ! command -v docker &> /dev/null; then
               echo 'Installing Docker...'
               curl -fsSL https://get.docker.com -o get-docker.sh
               sudo sh get-docker.sh
               sudo usermod -aG docker \$USER
               rm get-docker.sh
-              echo 'Docker installed successfully'
-            else
-              echo 'Docker is already installed'
             fi
             
-            # Check if Docker Compose is installed
             if ! command -v docker-compose &> /dev/null; then
               echo 'Installing Docker Compose...'
               sudo curl -L \"https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
-              echo 'Docker Compose installed successfully'
-            else
-              echo 'Docker Compose is already installed'
             fi
             
-            # Start Docker service if not running
-            if ! sudo systemctl is-active --quiet docker; then
-              echo 'Starting Docker service...'
-              sudo systemctl start docker
-              sudo systemctl enable docker
-            fi
+            sudo systemctl start docker
+            sudo systemctl enable docker
           "
           
-          # Upload Docker deployment scripts (always upload to ensure latest versions)
-          echo "Uploading deploy-docker-pr.sh script..."
-          sshpass -p "$DROPLET_PASSWORD" scp scripts/deploy-docker-pr.sh $DROPLET_USER@$DROPLET_HOST:/tmp/deploy-docker-pr.sh
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/deploy-docker-pr.sh ~/deploy-docker-pr.sh"
-          
-          echo "Uploading cleanup-docker-pr.sh script..."
-          sshpass -p "$DROPLET_PASSWORD" scp scripts/cleanup-docker-pr.sh $DROPLET_USER@$DROPLET_HOST:/tmp/cleanup-docker-pr.sh
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/cleanup-docker-pr.sh ~/cleanup-docker-pr.sh"
-          
-          # Upload NGINX proxy configuration template (always upload to ensure latest version)
-          echo "Uploading nginx-proxy.conf template..."
-          sshpass -p "$DROPLET_PASSWORD" scp nginx-proxy.conf $DROPLET_USER@$DROPLET_HOST:/tmp/nginx-proxy.conf
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/nginx-proxy.conf ~/nginx-proxy.conf"
-          
-          # Upload NGINX dynamic configuration file (always upload to ensure latest version)
-          echo "Uploading nginx-dynamic.conf..."
-          sshpass -p "$DROPLET_PASSWORD" scp nginx-dynamic.conf $DROPLET_USER@$DROPLET_HOST:/tmp/nginx-dynamic.conf
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/nginx-dynamic.conf ~/nginx-dynamic.conf"
-          
-          # Upload Docker Compose template (always upload to ensure latest version)
-          echo "Uploading docker-compose.pr-template.yml..."
-          sshpass -p "$DROPLET_PASSWORD" scp docker-compose.pr-template.yml $DROPLET_USER@$DROPLET_HOST:/tmp/docker-compose.pr-template.yml
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/docker-compose.pr-template.yml ~/docker-compose.pr-template.yml"
+          # Upload deployment scripts
+          sshpass -p "$DROPLET_PASSWORD" scp scripts/deploy-docker-pr.sh $DROPLET_USER@$DROPLET_HOST:~/
+          sshpass -p "$DROPLET_PASSWORD" scp scripts/cleanup-docker-pr.sh $DROPLET_USER@$DROPLET_HOST:~/
+          sshpass -p "$DROPLET_PASSWORD" scp scripts/configure-nginx-pr.sh $DROPLET_USER@$DROPLET_HOST:~/
+          sshpass -p "$DROPLET_PASSWORD" scp docker-compose.pr-template.yml $DROPLET_USER@$DROPLET_HOST:~/
           
           # Make scripts executable
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x ~/deploy-docker-pr.sh ~/cleanup-docker-pr.sh"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x ~/*.sh"
           
-      - name: Deploy Docker container to DigitalOcean Droplet
+      - name: Deploy Docker container
         env:
           DROPLET_USER: ${{ secrets.DROPLET_USER }}
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
@@ -130,7 +99,7 @@ jobs:
             echo '${{ secrets.GITHUB_TOKEN }}' | docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} --password-stdin
           "
           
-          # Deploy the Docker container
+          # Deploy the container
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
             ~/deploy-docker-pr.sh ${{ github.event.number }} $DOCKER_IMAGE
           "
@@ -139,21 +108,25 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const prNumber = ${{ github.event.number }};
+            const basePort = 8000;
+            const prPort = basePort + prNumber;
+            
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `🚀 **PR Preview Deployed Successfully!**
               
-              Your changes are now live at: http://${{ secrets.DROPLET_HOST }}/pr-${{ github.event.number }}
+              **Access URLs:**
+              - Direct: http://${{ secrets.DROPLET_HOST }}:${prPort}
+              - Via proxy: http://${{ secrets.DROPLET_HOST }}/pr-${prNumber}
               
-              ✅ **Deployment Details:**
-              - **PR Number:** #${{ github.event.number }}
-              - **Commit:** ${{ github.sha }}
-              - **Deployed at:** $(date -u)
-              - **Build Status:** ✅ Success
-              - **Deployment Type:** 🐳 Docker Container
-              - **Docker Image:** ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:pr-${{ github.event.number }}
+              **Deployment Details:**
+              - PR Number: #${prNumber}
+              - Port: ${prPort}
+              - Container: cluster-health-pr-${prNumber}
+              - Docker Image: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:pr-${{ github.event.number }}
               
               This preview will be automatically cleaned up when the PR is closed.`
             })
@@ -163,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Install sshpass and setup SSH
+      - name: Setup SSH
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
           mkdir -p ~/.ssh
@@ -175,18 +148,14 @@ jobs:
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
-          # Check if Docker cleanup script exists and run it
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
             if [ -f ~/cleanup-docker-pr.sh ]; then
               ~/cleanup-docker-pr.sh ${{ github.event.number }}
             else
-              echo 'Docker cleanup script not found, performing manual cleanup...'
-              # Stop and remove container
+              # Fallback cleanup
               docker stop cluster-health-pr-${{ github.event.number }} || true
               docker rm cluster-health-pr-${{ github.event.number }} || true
-              # Remove compose file
               rm -f ~/docker-compose.pr-${{ github.event.number }}.yml || true
-              echo 'PR container removed'
             fi
           "
           
