@@ -1,20 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Navigation from './Navigation';
 
 const HomePage: React.FC = () => {
+  const navLinks = [
+    { href: "#features", text: "Funktionen" },
+    { href: "#pricing", text: "Preise" },
+    { to: "/membership", text: "Jetzt starten", className: "btn-primary" }
+  ];
+
   return (
     <div className="App">
-      {/* Navigation */}
-      <nav className="navbar">
-        <div className="nav-container">
-          <div className="nav-brand">Mein Stylist</div>
-          <div className="nav-links">
-            <a href="#features">Funktionen</a>
-            <a href="#pricing">Preise</a>
-            <Link to="/membership" className="btn-primary">Jetzt starten</Link>
-          </div>
-        </div>
-      </nav>
+      <Navigation navLinks={navLinks} />
 
       {/* Hero Section */}
       <section className="hero">

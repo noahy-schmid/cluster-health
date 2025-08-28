@@ -1,20 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Navigation from './Navigation';
 import ContactForm from './ContactForm';
 import './MembershipPage.css';
 
 const MembershipPage: React.FC = () => {
+  const navLinks = [
+    { to: "/#features", text: "Funktionen" },
+    { to: "/#pricing", text: "Preise" },
+    { to: "/membership", text: "Jetzt starten", className: "btn-primary" }
+  ];
+
   return (
     <div className="membership-page">
-      {/* Navigation */}
-      <nav className="navbar">
-        <div className="nav-container">
-          <Link to="/" className="nav-brand">Mein Stylist</Link>
-          <div className="nav-links">
-            <Link to="/">Zurück zur Hauptseite</Link>
-          </div>
-        </div>
-      </nav>
+      <Navigation navLinks={navLinks} />
 
       {/* Header Section */}
       <section className="membership-header">
