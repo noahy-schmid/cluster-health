@@ -70,34 +70,39 @@ const Navigation: React.FC<NavigationProps> = ({
       </nav>
 
       {/* Mobile Menu */}
-      <div className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}>
-        {navLinks.map((link, index) => (
-          link.to ? (
-            <Link 
-              key={index} 
-              to={link.to} 
-              className={link.className}
-              onClick={() => {
-                closeMobileMenu();
-                link.onClick?.();
-              }}
-            >
-              {link.text}
-            </Link>
-          ) : (
-            <a 
-              key={index} 
-              href={link.href} 
-              className={link.className}
-              onClick={() => {
-                closeMobileMenu();
-                link.onClick?.();
-              }}
-            >
-              {link.text}
-            </a>
-          )
-        ))}
+      <div 
+        className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}
+        onClick={closeMobileMenu}
+      >
+        <div className="mobile-menu-content" onClick={(e) => e.stopPropagation()}>
+          {navLinks.map((link, index) => (
+            link.to ? (
+              <Link 
+                key={index} 
+                to={link.to} 
+                className={link.className}
+                onClick={() => {
+                  closeMobileMenu();
+                  link.onClick?.();
+                }}
+              >
+                {link.text}
+              </Link>
+            ) : (
+              <a 
+                key={index} 
+                href={link.href} 
+                className={link.className}
+                onClick={() => {
+                  closeMobileMenu();
+                  link.onClick?.();
+                }}
+              >
+                {link.text}
+              </a>
+            )
+          ))}
+        </div>
       </div>
     </>
   );
