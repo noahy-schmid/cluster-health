@@ -6,7 +6,9 @@ import './MembershipPage.css';
 
 const MembershipPage: React.FC = () => {
   const navLinks = [
-    { to: "/", text: "Zurück zur Hauptseite" }
+    { to: "/#features", text: "Funktionen" },
+    { to: "/#pricing", text: "Preise" },
+    { to: "/membership", text: "Jetzt starten", className: "btn-primary" }
   ];
 
   return (
