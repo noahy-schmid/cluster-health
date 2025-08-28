@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ContactForm from './ContactForm';
 import './MembershipPage.css';
 
 const MembershipPage: React.FC = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="membership-page">
       {/* Navigation */}
@@ -13,8 +23,22 @@ const MembershipPage: React.FC = () => {
           <div className="nav-links">
             <Link to="/">Zurück zur Hauptseite</Link>
           </div>
+          <button 
+            className={`hamburger ${isMobileMenuOpen ? 'active' : ''}`}
+            onClick={toggleMobileMenu}
+            aria-label="Toggle mobile menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Menu */}
+      <div className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}>
+        <Link to="/" onClick={closeMobileMenu}>Zurück zur Hauptseite</Link>
+      </div>
 
       {/* Header Section */}
       <section className="membership-header">

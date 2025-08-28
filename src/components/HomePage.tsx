@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const HomePage: React.FC = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="App">
       {/* Navigation */}
@@ -13,8 +23,24 @@ const HomePage: React.FC = () => {
             <a href="#pricing">Preise</a>
             <Link to="/membership" className="btn-primary">Jetzt starten</Link>
           </div>
+          <button 
+            className={`hamburger ${isMobileMenuOpen ? 'active' : ''}`}
+            onClick={toggleMobileMenu}
+            aria-label="Toggle mobile menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Menu */}
+      <div className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}>
+        <a href="#features" onClick={closeMobileMenu}>Funktionen</a>
+        <a href="#pricing" onClick={closeMobileMenu}>Preise</a>
+        <Link to="/membership" className="btn-primary" onClick={closeMobileMenu}>Jetzt starten</Link>
+      </div>
 
       {/* Hero Section */}
       <section className="hero">
