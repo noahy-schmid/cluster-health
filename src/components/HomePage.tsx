@@ -30,7 +30,6 @@ const HomePage: React.FC = () => {
             </p>
             <div className="hero-cta">
               <Link to="/membership" className="btn-primary-large">3 Monate kostenlos testen</Link>
-              <button className="btn-secondary">Demo ansehen</button>
             </div>
             <div className="hero-social-proof">
               <p className="social-proof-text">Vertraut von über 10.000 Friseuren weltweit</p>
