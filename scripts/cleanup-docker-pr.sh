@@ -15,7 +15,7 @@ if [ -z "$PR_NUMBER" ]; then
 fi
 
 # Configuration variables
-COMPOSE_FILE="$HOME/docker-compose.pr-$PR_NUMBER.yml"
+COMPOSE_FILE="~/docker-compose.pr-$PR_NUMBER.yml"
 NGINX_PROXY_CONFIG="/etc/nginx/nginx.conf"
 CONTAINER_NAME="cluster-health-pr-$PR_NUMBER"
 
