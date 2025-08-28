@@ -16,7 +16,7 @@ if [ -z "$PR_NUMBER" ] || [ -z "$DOCKER_IMAGE_TAG" ]; then
 fi
 
 # Configuration variables
-COMPOSE_FILE="~/docker-compose.pr-$PR_NUMBER.yml"
+COMPOSE_FILE="$HOME/docker-compose.pr-$PR_NUMBER.yml"
 NGINX_PROXY_CONFIG="/etc/nginx/nginx.conf"
 CONTAINER_NAME="cluster-health-pr-$PR_NUMBER"
 
@@ -42,7 +42,7 @@ if ! docker network ls | grep -q "cluster-health"; then
 fi
 
 # Create docker-compose file for this PR using the template
-TEMPLATE_FILE="~/docker-compose.pr-template.yml"
+TEMPLATE_FILE="$HOME/docker-compose.pr-template.yml"
 echo "Creating docker-compose file at: $COMPOSE_FILE"
 echo "Using template file: $TEMPLATE_FILE"
 echo "Current working directory: $(pwd)"
@@ -66,8 +66,9 @@ fi
 # Replace __PR_NUMBER__ with actual PR number and modify for deployment (use image instead of build)
 python3 -c "
 import sys
-template_file = '$TEMPLATE_FILE'
-output_file = '$COMPOSE_FILE'
+import os
+template_file = os.path.expanduser('~/docker-compose.pr-template.yml')
+output_file = os.path.expanduser('~/docker-compose.pr-$PR_NUMBER.yml')
 pr_number = '$PR_NUMBER'
 docker_image = '$DOCKER_IMAGE_TAG'
 
