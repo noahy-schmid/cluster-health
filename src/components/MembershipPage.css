@@ -1,0 +1,244 @@
+/* Membership Page Styles */
+.membership-page {
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+/* Override nav-brand to work with Link */
+.nav-brand {
+  color: #6366f1 !important;
+  text-decoration: none !important;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.nav-brand:hover {
+  color: #5856eb !important;
+}
+
+.nav-links a {
+  color: #4b5563 !important;
+  text-decoration: none !important;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: #6366f1 !important;
+}
+
+/* Header Section */
+.membership-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 120px 20px 80px;
+  text-align: center;
+}
+
+.membership-content h1 {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.membership-subtitle {
+  font-size: 20px;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Info Section */
+.membership-info {
+  padding: 80px 20px;
+  background: white;
+}
+
+.info-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.info-content h2 {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #1a1a1a;
+}
+
+.info-content > p {
+  font-size: 18px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 60px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Benefits Grid */
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  margin-bottom: 80px;
+}
+
+.benefit-item {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.benefit-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.benefit-item h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #1a1a1a;
+}
+
+.benefit-item p {
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* Process Info */
+.process-info {
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: left;
+}
+
+.process-info h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 32px;
+  text-align: center;
+  color: #1a1a1a;
+}
+
+.process-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.process-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.step-number {
+  background: #6366f1;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1a1a1a;
+}
+
+.step-content p {
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* Contact Section */
+.contact-section {
+  padding: 80px 20px;
+  background: #f9fafb;
+}
+
+.contact-section .section-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.contact-section .section-header h2 {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+}
+
+.contact-section .section-header p {
+  font-size: 18px;
+  color: #6b7280;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Footer */
+.membership-page .footer {
+  background: #1f2937;
+  color: white;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.membership-page .footer-bottom {
+  border: none;
+  padding: 0;
+}
+
+.membership-page .footer-bottom a {
+  color: #6366f1;
+  text-decoration: none;
+}
+
+.membership-page .footer-bottom a:hover {
+  color: #5856eb;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .membership-content h1 {
+    font-size: 32px;
+  }
+  
+  .membership-subtitle {
+    font-size: 18px;
+  }
+  
+  .info-content h2 {
+    font-size: 28px;
+  }
+  
+  .contact-section .section-header h2 {
+    font-size: 28px;
+  }
+  
+  .benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .process-info {
+    padding: 24px;
+  }
+  
+  .process-step {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+}
