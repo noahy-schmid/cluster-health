@@ -12,6 +12,8 @@ permissions:
 
 env:
   NODE_VERSION: '18'
+  DOCKER_IMAGE_NAME: cluster-health
+  DOCKER_REGISTRY: ghcr.io
 
 jobs:
   deploy:
@@ -22,20 +24,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
         
-      - name: Build React app for PR preview
-        env:
-          PUBLIC_URL: /pr-${{ github.event.number }}
-          GENERATE_SOURCEMAP: false
-        run: npm run build
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:pr-${{ github.event.number }}
+          build-args: |
+            PUBLIC_URL=/pr-${{ github.event.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
         
       - name: Install sshpass and setup SSH
         run: |
@@ -49,66 +57,45 @@ jobs:
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
-          # Check if scripts exist in home directory, if not upload them
-          if ! sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/configure-nginx-pr.sh"; then
-            echo "Uploading configure-nginx-pr.sh script..."
-            sshpass -p "$DROPLET_PASSWORD" scp scripts/configure-nginx-pr.sh $DROPLET_USER@$DROPLET_HOST:/tmp/configure-nginx-pr.sh
-            sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/configure-nginx-pr.sh ~/configure-nginx-pr.sh"
+          # Check if Docker deployment scripts exist in home directory, if not upload them
+          if ! sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/deploy-docker-pr.sh"; then
+            echo "Uploading deploy-docker-pr.sh script..."
+            sshpass -p "$DROPLET_PASSWORD" scp scripts/deploy-docker-pr.sh $DROPLET_USER@$DROPLET_HOST:/tmp/deploy-docker-pr.sh
+            sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/deploy-docker-pr.sh ~/deploy-docker-pr.sh"
           fi
           
-          if ! sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/cleanup-pr.sh"; then
-            echo "Uploading cleanup-pr.sh script..."
-            sshpass -p "$DROPLET_PASSWORD" scp scripts/cleanup-pr.sh $DROPLET_USER@$DROPLET_HOST:/tmp/cleanup-pr.sh
-            sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/cleanup-pr.sh ~/cleanup-pr.sh"
+          if ! sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/cleanup-docker-pr.sh"; then
+            echo "Uploading cleanup-docker-pr.sh script..."
+            sshpass -p "$DROPLET_PASSWORD" scp scripts/cleanup-docker-pr.sh $DROPLET_USER@$DROPLET_HOST:/tmp/cleanup-docker-pr.sh
+            sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/cleanup-docker-pr.sh ~/cleanup-docker-pr.sh"
+          fi
+          
+          # Upload NGINX proxy configuration template
+          if ! sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/nginx-proxy.conf"; then
+            echo "Uploading nginx-proxy.conf template..."
+            sshpass -p "$DROPLET_PASSWORD" scp nginx-proxy.conf $DROPLET_USER@$DROPLET_HOST:/tmp/nginx-proxy.conf
+            sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/nginx-proxy.conf ~/nginx-proxy.conf"
           fi
           
           # Make scripts executable
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x ~/configure-nginx-pr.sh ~/cleanup-pr.sh"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x ~/deploy-docker-pr.sh ~/cleanup-docker-pr.sh"
           
-      - name: Deploy to DigitalOcean Droplet
+      - name: Deploy Docker container to DigitalOcean Droplet
         env:
           DROPLET_USER: ${{ secrets.DROPLET_USER }}
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+          DOCKER_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:pr-${{ github.event.number }}
         run: |
-          # Create PR directory on droplet
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo mkdir -p /var/www/pr-${{ github.event.number }}"
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo chown $DROPLET_USER:$DROPLET_USER /var/www/pr-${{ github.event.number }}"
-          
-          # Copy build files to droplet
-          sshpass -p "$DROPLET_PASSWORD" scp -r build/* $DROPLET_USER@$DROPLET_HOST:/var/www/pr-${{ github.event.number }}/
-          
-          # Install and setup NGINX if not already installed
+          # Log in to container registry on droplet
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
-            if ! command -v nginx &> /dev/null; then
-              echo 'NGINX not found, installing...'
-              
-              # Detect package manager and install NGINX
-              if command -v apt-get &> /dev/null; then
-                sudo apt-get update
-                sudo apt-get install -y nginx
-              elif command -v yum &> /dev/null; then
-                sudo yum install -y nginx
-              elif command -v dnf &> /dev/null; then
-                sudo dnf install -y nginx
-              else
-                echo 'Error: No supported package manager found (apt-get, yum, dnf)'
-                exit 1
-              fi
-              
-              # Start and enable NGINX
-              sudo systemctl start nginx
-              sudo systemctl enable nginx
-              echo 'NGINX installed and started successfully'
-            else
-              echo 'NGINX is already installed'
-              # Ensure NGINX is running
-              sudo systemctl start nginx || true
-            fi
+            echo '${{ secrets.GITHUB_TOKEN }}' | docker login ${{ env.DOCKER_REGISTRY }} -u ${{ github.actor }} --password-stdin
           "
           
-          # Configure NGINX for this PR
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo ~/configure-nginx-pr.sh ${{ github.event.number }}"
+          # Deploy the Docker container
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
+            ~/deploy-docker-pr.sh ${{ github.event.number }} $DOCKER_IMAGE
+          "
           
       - name: Comment PR with preview URL
         uses: actions/github-script@v7
@@ -127,6 +114,8 @@ jobs:
               - **Commit:** ${{ github.sha }}
               - **Deployed at:** $(date -u)
               - **Build Status:** ✅ Success
+              - **Deployment Type:** 🐳 Docker Container
+              - **Docker Image:** ${{ env.DOCKER_REGISTRY }}/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:pr-${{ github.event.number }}
               
               This preview will be automatically cleaned up when the PR is closed.`
             })
@@ -148,14 +137,18 @@ jobs:
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
-          # Check if cleanup script exists and run it
+          # Check if Docker cleanup script exists and run it
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
-            if [ -f ~/cleanup-pr.sh ]; then
-              sudo ~/cleanup-pr.sh ${{ github.event.number }}
+            if [ -f ~/cleanup-docker-pr.sh ]; then
+              ~/cleanup-docker-pr.sh ${{ github.event.number }}
             else
-              echo 'Cleanup script not found, performing manual cleanup...'
-              sudo rm -rf /var/www/pr-${{ github.event.number }} || true
-              echo 'PR directory removed'
+              echo 'Docker cleanup script not found, performing manual cleanup...'
+              # Stop and remove container
+              docker stop cluster-health-pr-${{ github.event.number }} || true
+              docker rm cluster-health-pr-${{ github.event.number }} || true
+              # Remove compose file
+              rm -f ~/docker-compose.pr-${{ github.event.number }}.yml || true
+              echo 'PR container removed'
             fi
           "
           
