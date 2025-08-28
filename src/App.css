@@ -585,7 +585,7 @@ body {
 
 .mobile-menu-close {
   position: absolute;
-  top: -40px;
+  top: 20px;
   right: 20px;
   background: none;
   border: none;
@@ -595,6 +595,7 @@ body {
   padding: 10px;
   line-height: 1;
   transition: color 0.3s ease;
+  z-index: 1001;
 }
 
 .mobile-menu-close:hover {

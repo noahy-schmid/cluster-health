@@ -74,14 +74,14 @@ const Navigation: React.FC<NavigationProps> = ({
         className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}
         onClick={closeMobileMenu}
       >
+        <button 
+          className="mobile-menu-close"
+          onClick={closeMobileMenu}
+          aria-label="Close mobile menu"
+        >
+          ✕
+        </button>
         <div className="mobile-menu-content" onClick={(e) => e.stopPropagation()}>
-          <button 
-            className="mobile-menu-close"
-            onClick={closeMobileMenu}
-            aria-label="Close mobile menu"
-          >
-            ✕
-          </button>
           {navLinks.map((link, index) => (
             link.to ? (
               <Link 
