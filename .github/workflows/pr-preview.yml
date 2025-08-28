@@ -45,15 +45,15 @@ jobs:
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
           # Upload configure-nginx-pr.sh script if it doesn't exist
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f /home/$DROPLET_USER/configure-nginx-pr.sh" || \
-          sshpass -p "$DROPLET_PASSWORD" scp scripts/configure-nginx-pr.sh $DROPLET_USER@$DROPLET_HOST:/home/$DROPLET_USER/configure-nginx-pr.sh
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/configure-nginx-pr.sh" || \
+          sshpass -p "$DROPLET_PASSWORD" scp scripts/configure-nginx-pr.sh $DROPLET_USER@$DROPLET_HOST:~/configure-nginx-pr.sh
           
           # Upload cleanup-pr.sh script if it doesn't exist
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f /home/$DROPLET_USER/cleanup-pr.sh" || \
-          sshpass -p "$DROPLET_PASSWORD" scp scripts/cleanup-pr.sh $DROPLET_USER@$DROPLET_HOST:/home/$DROPLET_USER/cleanup-pr.sh
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/cleanup-pr.sh" || \
+          sshpass -p "$DROPLET_PASSWORD" scp scripts/cleanup-pr.sh $DROPLET_USER@$DROPLET_HOST:~/cleanup-pr.sh
           
           # Make scripts executable
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x /home/$DROPLET_USER/configure-nginx-pr.sh /home/$DROPLET_USER/cleanup-pr.sh"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x ~/configure-nginx-pr.sh ~/cleanup-pr.sh"
           
       - name: Deploy to DigitalOcean Droplet
         env:
@@ -69,7 +69,7 @@ jobs:
           sshpass -p "$DROPLET_PASSWORD" scp -r build/* $DROPLET_USER@$DROPLET_HOST:/var/www/pr-${{ github.event.number }}/
           
           # Configure NGINX for this PR
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo /home/$DROPLET_USER/configure-nginx-pr.sh ${{ github.event.number }}"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo ~/configure-nginx-pr.sh ${{ github.event.number }}"
           
       - name: Comment PR with preview URL
         uses: actions/github-script@v7
@@ -109,7 +109,7 @@ jobs:
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo /home/$DROPLET_USER/cleanup-pr.sh ${{ github.event.number }}"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo ~/cleanup-pr.sh ${{ github.event.number }}"
           
       - name: Comment PR about cleanup
         uses: actions/github-script@v7
