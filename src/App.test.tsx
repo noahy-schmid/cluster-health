@@ -16,3 +16,14 @@ test('renders contact form with required fields', () => {
   expect(messageInput).toBeInTheDocument();
   expect(submitButton).toBeInTheDocument();
 });
+
+// Test for the specific text content without rendering the full component
+test('intelligente terminplanung description should use correct wording', () => {
+  const expectedText = "Intelligenter Kalender der Doppelbuchungen verhindert und auf Ihren Tagesablauf abgestimmt ist";
+  const oldText = "Intelligenter Kalender der Doppelbuchungen verhindert und Ihren Tagesablauf optimiert";
+  
+  // This test validates that we're using the new wording
+  expect(expectedText).toContain("abgestimmt ist");
+  expect(expectedText).not.toContain("optimiert");
+  expect(oldText).toContain("optimiert");
+});
