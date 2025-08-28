@@ -20,9 +20,9 @@ const MembershipPage: React.FC = () => {
       <section className="membership-header">
         <div className="container">
           <div className="membership-content">
-            <h1>Partner werden</h1>
+            <h1>Starten Sie jetzt</h1>
             <p className="membership-subtitle">
-              Werden Sie Teil des Mein Stylist Partner-Netzwerks
+              Nutzen Sie Mein Stylist für Ihren Friseursalon
             </p>
           </div>
         </div>
@@ -32,53 +32,52 @@ const MembershipPage: React.FC = () => {
       <section className="membership-info">
         <div className="container">
           <div className="info-content">
-            <h2>Kontaktieren Sie uns für Ihren Partnerstatus</h2>
+            <h2>Starten Sie jetzt mit Mein Stylist</h2>
             <p>
-              Um Partner bei Mein Stylist zu werden, müssen Sie sich direkt bei unserem Team bewerben. 
-              Wir prüfen jeden Antrag sorgfältig, um sicherzustellen, dass unsere Partner den höchsten 
-              Qualitätsstandards entsprechen.
+              Partner werden bedeutet einfach, dass Sie unser Produkt nutzen. Nach Ihrer Anfrage 
+              kontaktieren wir Sie, um alles einzurichten und Ihnen den Einstieg zu erleichtern.
             </p>
             
             <div className="benefits-grid">
               <div className="benefit-item">
-                <div className="benefit-icon">🎯</div>
-                <h3>Exklusive Vorteile</h3>
-                <p>Erhalten Sie Zugang zu erweiterten Funktionen und Prioritäts-Support</p>
+                <div className="benefit-icon">📅</div>
+                <h3>Intelligente Terminbuchung</h3>
+                <p>Revolutionieren Sie Ihren Friseursalon mit intelligenter Terminverwaltung</p>
               </div>
               <div className="benefit-item">
                 <div className="benefit-icon">💼</div>
-                <h3>Geschäftswachstum</h3>
-                <p>Profitieren Sie von unserem Marketing und erweiterten Geschäftstools</p>
+                <h3>Professionelle Verwaltung</h3>
+                <p>Verwalten Sie Ihren Terminkalender und behalten Sie die volle Kontrolle über Ihre Kunden</p>
               </div>
               <div className="benefit-item">
-                <div className="benefit-icon">🤝</div>
-                <h3>Persönliche Betreuung</h3>
-                <p>Erhalten Sie einen dedizierten Ansprechpartner für Ihre Bedürfnisse</p>
+                <div className="benefit-icon">💰</div>
+                <h3>Transparente Preisstruktur</h3>
+                <p>Faire und transparente Preise - Sie zahlen nur für das, was Sie tatsächlich nutzen</p>
               </div>
             </div>
 
             <div className="process-info">
-              <h3>So funktioniert der Bewerbungsprozess:</h3>
+              <h3>So einfach geht's:</h3>
               <div className="process-steps">
                 <div className="process-step">
                   <span className="step-number">1</span>
                   <div className="step-content">
-                    <h4>Kontaktformular ausfüllen</h4>
-                    <p>Teilen Sie uns mit, warum Sie Partner werden möchten</p>
+                    <h4>Anfrage senden</h4>
+                    <p>Füllen Sie das Kontaktformular aus und teilen Sie uns Ihre Bedürfnisse mit</p>
                   </div>
                 </div>
                 <div className="process-step">
                   <span className="step-number">2</span>
                   <div className="step-content">
-                    <h4>Bewertung & Gespräch</h4>
-                    <p>Unser Team prüft Ihre Anfrage und kontaktiert Sie für ein Gespräch</p>
+                    <h4>Persönliche Kontaktaufnahme</h4>
+                    <p>Wir kontaktieren Sie direkt, um alles für Ihren Friseursalon einzurichten</p>
                   </div>
                 </div>
                 <div className="process-step">
                   <span className="step-number">3</span>
                   <div className="step-content">
-                    <h4>Partner-Onboarding</h4>
-                    <p>Nach der Genehmigung erhalten Sie Zugang zu exklusiven Partner-Features</p>
+                    <h4>Sofort loslegen</h4>
+                    <p>Nach der Einrichtung können Sie sofort mit der intelligenten Terminverwaltung starten</p>
                   </div>
                 </div>
               </div>
@@ -91,8 +90,8 @@ const MembershipPage: React.FC = () => {
       <section className="contact-section">
         <div className="container">
           <div className="section-header">
-            <h2>Jetzt Partner werden</h2>
-            <p>Füllen Sie das untenstehende Formular aus und wir melden uns bei Ihnen</p>
+            <h2>Jetzt starten</h2>
+            <p>Füllen Sie das untenstehende Formular aus und wir kontaktieren Sie, um alles einzurichten</p>
           </div>
           <ContactForm />
         </div>
