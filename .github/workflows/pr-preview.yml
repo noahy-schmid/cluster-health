@@ -1,0 +1,173 @@
+name: PR Preview Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  deploy:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build React app for PR preview
+        env:
+          PUBLIC_URL: /pr-${{ github.event.number }}
+          GENERATE_SOURCEMAP: false
+        run: npm run build
+        
+      - name: Install sshpass and setup SSH
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Upload deployment scripts to droplet
+        env:
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+        run: |
+          # Check if scripts exist in home directory, if not upload them
+          if ! sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/configure-nginx-pr.sh"; then
+            echo "Uploading configure-nginx-pr.sh script..."
+            sshpass -p "$DROPLET_PASSWORD" scp scripts/configure-nginx-pr.sh $DROPLET_USER@$DROPLET_HOST:/tmp/configure-nginx-pr.sh
+            sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/configure-nginx-pr.sh ~/configure-nginx-pr.sh"
+          fi
+          
+          if ! sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/cleanup-pr.sh"; then
+            echo "Uploading cleanup-pr.sh script..."
+            sshpass -p "$DROPLET_PASSWORD" scp scripts/cleanup-pr.sh $DROPLET_USER@$DROPLET_HOST:/tmp/cleanup-pr.sh
+            sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/cleanup-pr.sh ~/cleanup-pr.sh"
+          fi
+          
+          # Make scripts executable
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x ~/configure-nginx-pr.sh ~/cleanup-pr.sh"
+          
+      - name: Deploy to DigitalOcean Droplet
+        env:
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+        run: |
+          # Create PR directory on droplet
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo mkdir -p /var/www/pr-${{ github.event.number }}"
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo chown $DROPLET_USER:$DROPLET_USER /var/www/pr-${{ github.event.number }}"
+          
+          # Copy build files to droplet
+          sshpass -p "$DROPLET_PASSWORD" scp -r build/* $DROPLET_USER@$DROPLET_HOST:/var/www/pr-${{ github.event.number }}/
+          
+          # Install and setup NGINX if not already installed
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
+            if ! command -v nginx &> /dev/null; then
+              echo 'NGINX not found, installing...'
+              
+              # Detect package manager and install NGINX
+              if command -v apt-get &> /dev/null; then
+                sudo apt-get update
+                sudo apt-get install -y nginx
+              elif command -v yum &> /dev/null; then
+                sudo yum install -y nginx
+              elif command -v dnf &> /dev/null; then
+                sudo dnf install -y nginx
+              else
+                echo 'Error: No supported package manager found (apt-get, yum, dnf)'
+                exit 1
+              fi
+              
+              # Start and enable NGINX
+              sudo systemctl start nginx
+              sudo systemctl enable nginx
+              echo 'NGINX installed and started successfully'
+            else
+              echo 'NGINX is already installed'
+              # Ensure NGINX is running
+              sudo systemctl start nginx || true
+            fi
+          "
+          
+          # Configure NGINX for this PR
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo ~/configure-nginx-pr.sh ${{ github.event.number }}"
+          
+      - name: Comment PR with preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **PR Preview Deployed Successfully!**
+              
+              Your changes are now live at: http://${{ secrets.DROPLET_HOST }}/pr-${{ github.event.number }}
+              
+              ✅ **Deployment Details:**
+              - **PR Number:** #${{ github.event.number }}
+              - **Commit:** ${{ github.sha }}
+              - **Deployed at:** $(date -u)
+              - **Build Status:** ✅ Success
+              
+              This preview will be automatically cleaned up when the PR is closed.`
+            })
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Install sshpass and setup SSH
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Cleanup PR preview
+        env:
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+        run: |
+          # Check if cleanup script exists and run it
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
+            if [ -f ~/cleanup-pr.sh ]; then
+              sudo ~/cleanup-pr.sh ${{ github.event.number }}
+            else
+              echo 'Cleanup script not found, performing manual cleanup...'
+              sudo rm -rf /var/www/pr-${{ github.event.number }} || true
+              echo 'PR directory removed'
+            fi
+          "
+          
+      - name: Comment PR about cleanup
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🧹 **PR Preview Cleaned Up**
+              
+              The preview deployment for this PR has been removed from the server.`
+            })
