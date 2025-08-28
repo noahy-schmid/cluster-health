@@ -1,0 +1,13 @@
+services:
+  app:
+    image: __DOCKER_IMAGE__
+    container_name: cluster-health-pr-__PR_NUMBER__
+    restart: unless-stopped
+    ports:
+      - "__PORT__:80"
+    environment:
+      - NODE_ENV=production
+      - PUBLIC_URL=/pr-__PR_NUMBER__
+    labels:
+      - "pr.number=__PR_NUMBER__"
+      - "pr.cleanup=true"

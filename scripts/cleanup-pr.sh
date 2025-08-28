@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Cleanup script for PR preview deployments
-# This script should be placed at /home/$USER/cleanup-pr.sh on the DigitalOcean droplet
+# This script should be placed at ~/cleanup-pr.sh on the DigitalOcean droplet
 # Usage: sudo ./cleanup-pr.sh <PR_NUMBER>
 
 set -e

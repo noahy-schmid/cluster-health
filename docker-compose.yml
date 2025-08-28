@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Main application service (for production deployment)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cluster-health-app
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - cluster-health
+
+  # Nginx reverse proxy for handling multiple PR deployments
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: cluster-health-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - cluster-health
+
+networks:
+  cluster-health:
+    driver: bridge
+
+# For PR previews, this file will be dynamically generated
+# with the specific PR service configuration
