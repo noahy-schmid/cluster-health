@@ -19,6 +19,21 @@ PR_ROOT="/var/www/pr-$PR_NUMBER"
 
 echo "Configuring NGINX for PR #$PR_NUMBER..."
 
+# Check if NGINX is installed
+if ! command -v nginx &> /dev/null; then
+    echo "❌ Error: NGINX is not installed on this system"
+    echo "Please install NGINX first using your package manager:"
+    echo "  Ubuntu/Debian: sudo apt-get install nginx"
+    echo "  CentOS/RHEL:   sudo yum install nginx"
+    exit 1
+fi
+
+# Check if NGINX service is running
+if ! systemctl is-active --quiet nginx; then
+    echo "Starting NGINX service..."
+    systemctl start nginx
+fi
+
 # Function to detect NGINX configuration file
 detect_nginx_config() {
     # Check common NGINX configuration file locations

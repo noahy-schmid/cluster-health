@@ -73,6 +73,35 @@ jobs:
           # Copy build files to droplet
           sshpass -p "$DROPLET_PASSWORD" scp -r build/* $DROPLET_USER@$DROPLET_HOST:/var/www/pr-${{ github.event.number }}/
           
+          # Install and setup NGINX if not already installed
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
+            if ! command -v nginx &> /dev/null; then
+              echo 'NGINX not found, installing...'
+              
+              # Detect package manager and install NGINX
+              if command -v apt-get &> /dev/null; then
+                sudo apt-get update
+                sudo apt-get install -y nginx
+              elif command -v yum &> /dev/null; then
+                sudo yum install -y nginx
+              elif command -v dnf &> /dev/null; then
+                sudo dnf install -y nginx
+              else
+                echo 'Error: No supported package manager found (apt-get, yum, dnf)'
+                exit 1
+              fi
+              
+              # Start and enable NGINX
+              sudo systemctl start nginx
+              sudo systemctl enable nginx
+              echo 'NGINX installed and started successfully'
+            else
+              echo 'NGINX is already installed'
+              # Ensure NGINX is running
+              sudo systemctl start nginx || true
+            fi
+          "
+          
           # Configure NGINX for this PR
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo ~/configure-nginx-pr.sh ${{ github.event.number }}"
           
@@ -114,7 +143,16 @@ jobs:
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "sudo ~/cleanup-pr.sh ${{ github.event.number }}"
+          # Check if cleanup script exists and run it
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
+            if [ -f ~/cleanup-pr.sh ]; then
+              sudo ~/cleanup-pr.sh ${{ github.event.number }}
+            else
+              echo 'Cleanup script not found, performing manual cleanup...'
+              sudo rm -rf /var/www/pr-${{ github.event.number }} || true
+              echo 'PR directory removed'
+            fi
+          "
           
       - name: Comment PR about cleanup
         uses: actions/github-script@v7
