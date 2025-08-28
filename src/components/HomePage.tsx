@@ -1,46 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import Navigation from './Navigation';
 
 const HomePage: React.FC = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const navLinks = [
+    { href: "#features", text: "Funktionen" },
+    { href: "#pricing", text: "Preise" },
+    { to: "/membership", text: "Jetzt starten", className: "btn-primary" }
+  ];
 
   return (
     <div className="App">
-      {/* Navigation */}
-      <nav className="navbar">
-        <div className="nav-container">
-          <div className="nav-brand">Mein Stylist</div>
-          <div className="nav-links">
-            <a href="#features">Funktionen</a>
-            <a href="#pricing">Preise</a>
-            <Link to="/membership" className="btn-primary">Jetzt starten</Link>
-          </div>
-          <button 
-            className={`hamburger ${isMobileMenuOpen ? 'active' : ''}`}
-            onClick={toggleMobileMenu}
-            aria-label="Toggle mobile menu"
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile Menu */}
-      <div className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}>
-        <a href="#features" onClick={closeMobileMenu}>Funktionen</a>
-        <a href="#pricing" onClick={closeMobileMenu}>Preise</a>
-        <Link to="/membership" className="btn-primary" onClick={closeMobileMenu}>Jetzt starten</Link>
-      </div>
+      <Navigation navLinks={navLinks} />
 
       {/* Hero Section */}
       <section className="hero">
