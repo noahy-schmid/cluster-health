@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Docker-based deployment script for PR preview deployments
-# This script should be placed at /home/$USER/deploy-docker-pr.sh on the DigitalOcean droplet
+# This script should be placed at ~/deploy-docker-pr.sh on the DigitalOcean droplet
 # Usage: ./deploy-docker-pr.sh <PR_NUMBER> <DOCKER_IMAGE_TAG>
 
 set -e
@@ -16,7 +16,7 @@ if [ -z "$PR_NUMBER" ] || [ -z "$DOCKER_IMAGE_TAG" ]; then
 fi
 
 # Configuration variables
-COMPOSE_FILE="$HOME/docker-compose.pr-$PR_NUMBER.yml"
+COMPOSE_FILE="~/docker-compose.pr-$PR_NUMBER.yml"
 NGINX_PROXY_CONFIG="/etc/nginx/nginx.conf"
 CONTAINER_NAME="cluster-health-pr-$PR_NUMBER"
 

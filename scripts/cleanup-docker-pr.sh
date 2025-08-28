@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Docker-based cleanup script for PR preview deployments
-# This script should be placed at /home/$USER/cleanup-docker-pr.sh on the DigitalOcean droplet
+# This script should be placed at ~/cleanup-docker-pr.sh on the DigitalOcean droplet
 # Usage: ./cleanup-docker-pr.sh <PR_NUMBER>
 
 set -e
@@ -15,7 +15,7 @@ if [ -z "$PR_NUMBER" ]; then
 fi
 
 # Configuration variables
-COMPOSE_FILE="/home/$USER/docker-compose.pr-$PR_NUMBER.yml"
+COMPOSE_FILE="~/docker-compose.pr-$PR_NUMBER.yml"
 NGINX_PROXY_CONFIG="/etc/nginx/nginx.conf"
 CONTAINER_NAME="cluster-health-pr-$PR_NUMBER"
 

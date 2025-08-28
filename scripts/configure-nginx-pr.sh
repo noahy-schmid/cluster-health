@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # NGINX configuration script for PR preview deployments
-# This script should be placed at /home/$USER/configure-nginx-pr.sh on the DigitalOcean droplet
+# This script should be placed at ~/configure-nginx-pr.sh on the DigitalOcean droplet
 # Usage: sudo ./configure-nginx-pr.sh <PR_NUMBER>
 
 set -e
