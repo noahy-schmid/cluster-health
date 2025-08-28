@@ -41,10 +41,20 @@ if ! docker network ls | grep -q "cluster-health"; then
     docker network create cluster-health
 fi
 
-# Create docker-compose file for this PR
+# Create docker-compose file for this PR using the template
+TEMPLATE_FILE="~/docker-compose.pr-template.yml"
 echo "Creating docker-compose file at: $COMPOSE_FILE"
+echo "Using template file: $TEMPLATE_FILE"
 echo "Current working directory: $(pwd)"
 echo "Home directory: $HOME"
+
+# Check if template file exists
+if [ ! -f "$TEMPLATE_FILE" ]; then
+    echo "❌ Error: Template file $TEMPLATE_FILE not found"
+    echo "Available files in home directory:"
+    ls -la ~/
+    exit 1
+fi
 
 # Ensure we can write to the home directory
 if [ ! -w "$HOME" ]; then
@@ -52,27 +62,50 @@ if [ ! -w "$HOME" ]; then
     exit 1
 fi
 
-cat > "$COMPOSE_FILE" << EOF
-version: '3.8'
+# Create docker-compose file from template, replacing placeholders
+# Replace __PR_NUMBER__ with actual PR number and modify for deployment (use image instead of build)
+python3 -c "
+import sys
+template_file = '$TEMPLATE_FILE'
+output_file = '$COMPOSE_FILE'
+pr_number = '$PR_NUMBER'
+docker_image = '$DOCKER_IMAGE_TAG'
 
-services:
-  app-pr-$PR_NUMBER:
-    image: $DOCKER_IMAGE_TAG
-    container_name: $CONTAINER_NAME
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-      - PUBLIC_URL=/pr-$PR_NUMBER
-    networks:
-      - cluster-health
-    labels:
-      - "pr.number=$PR_NUMBER"
-      - "pr.cleanup=true"
+with open(template_file, 'r') as f:
+    content = f.read()
 
-networks:
-  cluster-health:
-    external: true
-EOF
+# Replace placeholders
+content = content.replace('__PR_NUMBER__', pr_number)
+
+# Replace build section with image
+lines = content.split('\n')
+in_build_section = False
+new_lines = []
+build_indent = ''
+
+for line in lines:
+    if '    build:' in line:
+        new_lines.append(f'    image: {docker_image}')
+        in_build_section = True
+        # Get the indentation level
+        build_indent = len(line) - len(line.lstrip())
+        continue
+    elif in_build_section:
+        # Check if we're still in the build section
+        if line.strip() == '':
+            continue  # Skip empty lines
+        current_indent = len(line) - len(line.lstrip())
+        if current_indent > build_indent:
+            continue  # Skip lines that are part of the build section
+        else:
+            in_build_section = False
+    
+    if not in_build_section:
+        new_lines.append(line)
+
+with open(output_file, 'w') as f:
+    f.write('\n'.join(new_lines))
+"
 
 # Verify the docker-compose file was created successfully
 if [ ! -f "$COMPOSE_FILE" ]; then

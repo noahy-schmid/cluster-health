@@ -111,6 +111,13 @@ jobs:
             sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/nginx-proxy.conf ~/nginx-proxy.conf"
           fi
           
+          # Upload Docker Compose template
+          if ! sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/docker-compose.pr-template.yml"; then
+            echo "Uploading docker-compose.pr-template.yml..."
+            sshpass -p "$DROPLET_PASSWORD" scp docker-compose.pr-template.yml $DROPLET_USER@$DROPLET_HOST:/tmp/docker-compose.pr-template.yml
+            sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "mv /tmp/docker-compose.pr-template.yml ~/docker-compose.pr-template.yml"
+          fi
+          
           # Make scripts executable
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x ~/deploy-docker-pr.sh ~/cleanup-docker-pr.sh"
           
