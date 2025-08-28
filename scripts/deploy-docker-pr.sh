@@ -22,35 +22,17 @@ CONTAINER_NAME="cluster-health-pr-$PR_NUMBER"
 
 echo "Deploying Docker-based PR #$PR_NUMBER preview..."
 
-# Check if Docker is installed
+# Verify Docker is available (should be installed by CI pipeline)
 if ! command -v docker &> /dev/null; then
     echo "❌ Error: Docker is not installed on this system"
-    echo "Installing Docker..."
-    
-    # Install Docker
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
-    sudo usermod -aG docker $USER
-    rm get-docker.sh
-    echo "✅ Docker installed successfully"
+    echo "Docker should have been installed by the CI pipeline."
+    exit 1
 fi
 
-# Check if Docker Compose is installed
 if ! command -v docker-compose &> /dev/null; then
     echo "❌ Error: Docker Compose is not installed on this system"
-    echo "Installing Docker Compose..."
-    
-    # Install Docker Compose
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    echo "✅ Docker Compose installed successfully"
-fi
-
-# Start Docker service if not running
-if ! sudo systemctl is-active --quiet docker; then
-    echo "Starting Docker service..."
-    sudo systemctl start docker
-    sudo systemctl enable docker
+    echo "Docker Compose should have been installed by the CI pipeline."
+    exit 1
 fi
 
 # Create cluster-health network if it doesn't exist

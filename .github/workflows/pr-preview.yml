@@ -58,6 +58,39 @@ jobs:
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
         run: |
+          # Install Docker and Docker Compose if not already installed
+          echo "Checking Docker installation..."
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
+            # Check if Docker is installed
+            if ! command -v docker &> /dev/null; then
+              echo 'Installing Docker...'
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sudo sh get-docker.sh
+              sudo usermod -aG docker \$USER
+              rm get-docker.sh
+              echo 'Docker installed successfully'
+            else
+              echo 'Docker is already installed'
+            fi
+            
+            # Check if Docker Compose is installed
+            if ! command -v docker-compose &> /dev/null; then
+              echo 'Installing Docker Compose...'
+              sudo curl -L \"https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              echo 'Docker Compose installed successfully'
+            else
+              echo 'Docker Compose is already installed'
+            fi
+            
+            # Start Docker service if not running
+            if ! sudo systemctl is-active --quiet docker; then
+              echo 'Starting Docker service...'
+              sudo systemctl start docker
+              sudo systemctl enable docker
+            fi
+          "
+          
           # Check if Docker deployment scripts exist in home directory, if not upload them
           if ! sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "test -f ~/deploy-docker-pr.sh"; then
             echo "Uploading deploy-docker-pr.sh script..."
