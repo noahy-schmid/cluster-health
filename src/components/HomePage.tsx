@@ -68,8 +68,8 @@ const HomePage: React.FC = () => {
             </div>
             <div className="feature-card">
               <div className="feature-icon">📱</div>
-              <h3>Mobile App</h3>
-              <p>Verwalten Sie Buchungen unterwegs mit unserer mobilen App. Verpassen Sie nie wieder einen Termin</p>
+              <h3>Mobile-optimierte Web-App</h3>
+              <p>Verwalten Sie Buchungen unterwegs mit unserer für mobile Geräte optimierten Web-Anwendung. Funktioniert in jedem Browser - keine App-Installation erforderlich</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">👥</div>
