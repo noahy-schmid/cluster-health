@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from './Navigation';
+import CustomerCapacityChart from './CustomerCapacityChart';
+import './CustomerCapacityChart.css';
 
 const HomePage: React.FC = () => {
   const navLinks = [
@@ -119,6 +121,19 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Hair Stylist Benefits Section */}
+      <section className="hair-stylist-benefits">
+        <div className="container">
+          <div className="section-header">
+            <h2>Perfect for Hair Stylists</h2>
+            <p>See how our app helps hair stylists serve more customers by saving time on appointment management</p>
+          </div>
+          <div className="hair-stylist-panel">
+            <CustomerCapacityChart />
           </div>
         </div>
       </section>

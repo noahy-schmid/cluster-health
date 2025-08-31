@@ -1,0 +1,101 @@
+/* Customer Capacity Chart Styles */
+.chart-container {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f3f4f6;
+}
+
+.chart-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #1a1a1a;
+}
+
+.chart-wrapper {
+  height: 300px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.chart-description {
+  font-size: 16px;
+  color: #6b7280;
+  line-height: 1.6;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Hair Stylist Benefits Section */
+.hair-stylist-benefits {
+  padding: 100px 20px;
+  background: #f9fafb;
+}
+
+.hair-stylist-benefits .section-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.hair-stylist-benefits .section-header h2 {
+  font-size: 42px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+}
+
+.hair-stylist-benefits .section-header p {
+  font-size: 18px;
+  color: #6b7280;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.hair-stylist-panel {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hair-stylist-benefits {
+    padding: 60px 20px;
+  }
+  
+  .hair-stylist-benefits .section-header h2 {
+    font-size: 32px;
+  }
+  
+  .chart-container {
+    padding: 24px;
+  }
+  
+  .chart-title {
+    font-size: 20px;
+  }
+  
+  .chart-wrapper {
+    height: 250px;
+  }
+  
+  .chart-description {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hair-stylist-benefits .section-header h2 {
+    font-size: 28px;
+  }
+  
+  .chart-container {
+    padding: 20px;
+  }
+  
+  .chart-wrapper {
+    height: 200px;
+  }
+}
