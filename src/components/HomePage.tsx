@@ -87,6 +87,74 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Reasons Section */}
+      <section className="reasons">
+        <div className="container">
+          <div className="section-header">
+            <h2>Gründe für die Zeitersparnis</h2>
+            <p>Sehen Sie, wie viel Zeit Sie mit intelligenter Online-Terminbuchung sparen</p>
+          </div>
+          <div className="reasons-content">
+            <div className="reasons-grid">
+              <div className="reason-card">
+                <div className="reason-icon">📞</div>
+                <h3>Anrufzeit sparen</h3>
+                <p>Herkömmliche Terminbuchung per Telefon dauert durchschnittlich <strong>2 Minuten pro Kunde</strong>. Mit Online-Buchung entfällt diese Zeit komplett.</p>
+                <div className="time-savings">
+                  <span className="time-before">Vorher: 2 Min.</span>
+                  <span className="arrow">→</span>
+                  <span className="time-after">Nachher: 0 Min.</span>
+                </div>
+              </div>
+              <div className="reason-card">
+                <div className="reason-icon">💳</div>
+                <h3>Zahlungszeit sparen</h3>
+                <p>Keine Zeit mehr für komplizierte Zahlungsabwicklung während der Termine. Kunden bezahlen weiterhin direkt bei Ihnen, aber die Buchung läuft automatisiert.</p>
+                <div className="time-savings">
+                  <span className="time-before">Vorher: 5 Min.</span>
+                  <span className="arrow">→</span>
+                  <span className="time-after">Nachher: 2 Min.</span>
+                </div>
+              </div>
+            </div>
+            <div className="time-chart-container">
+              <h3>Zeitersparnis-Visualisierung</h3>
+              <div className="time-chart">
+                <div className="chart-section">
+                  <h4>Traditionelle Buchung</h4>
+                  <div className="time-bar">
+                    <div className="time-segment call" style={{width: '40%'}}>
+                      <span>Anruf (2 Min.)</span>
+                    </div>
+                    <div className="time-segment payment" style={{width: '60%'}}>
+                      <span>Zahlung (3 Min.)</span>
+                    </div>
+                  </div>
+                  <div className="total-time">Gesamt: 5 Min. pro Buchung</div>
+                </div>
+                <div className="vs-divider">VS</div>
+                <div className="chart-section">
+                  <h4>Online-Buchung</h4>
+                  <div className="time-bar">
+                    <div className="time-segment online" style={{width: '40%'}}>
+                      <span>Automatisch (0 Min.)</span>
+                    </div>
+                    <div className="time-segment payment-simple" style={{width: '60%'}}>
+                      <span>Zahlung (2 Min.)</span>
+                    </div>
+                  </div>
+                  <div className="total-time">Gesamt: 2 Min. pro Buchung</div>
+                </div>
+              </div>
+              <div className="savings-summary">
+                <strong>Zeitersparnis: 3 Minuten pro Buchung</strong>
+                <p>Bei 20 Buchungen täglich sparen Sie 1 Stunde!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Benefits Section */}
       <section className="benefits">
         <div className="container">
