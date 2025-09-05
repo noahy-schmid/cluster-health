@@ -7,6 +7,7 @@ echo "Setting up NGINX directory structure..."
 
 # Create nginx configuration directories
 sudo mkdir -p /etc/nginx-docker/conf.d
+sudo mkdir -p /etc/nginx-docker/pr-deployments
 sudo mkdir -p /etc/nginx-docker/ssl
 sudo mkdir -p /var/www
 

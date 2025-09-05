@@ -26,16 +26,23 @@ jobs:
           DROPLET_USER: ${{ secrets.DROPLET_USER }}
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+          PR_NUMBER: ${{ github.event.number }}
         run: |
-          # Check if cleanup script exists and run it
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
-            if [ -f ~/cleanup-pr.sh ]; then
-              sudo ~/cleanup-pr.sh ${{ github.event.number }}
-            else
-              echo 'Cleanup script not found, performing manual cleanup...'
-              sudo rm -rf /var/www/pr-${{ github.event.number }} || true
-              echo 'PR directory removed'
-            fi
+            # Stop and remove the PR container
+            docker stop pr-$PR_NUMBER-service || echo 'Container not running'
+            docker rm pr-$PR_NUMBER-service || echo 'Container not found'
+            
+            # Remove the Docker image (optional, saves space)
+            docker rmi ghcr.io/${{ github.repository_owner }}/my-services:$PR_NUMBER || echo 'Image not found locally'
+            
+            # Remove NGINX configuration
+            sudo rm -f /etc/nginx-docker/pr-deployments/pr-$PR_NUMBER.conf || true
+            
+            # Reload NGINX to remove the configuration
+            docker exec nginx-proxy nginx -s reload || echo 'Failed to reload NGINX'
+            
+            echo 'PR #$PR_NUMBER cleanup completed'
           "
           
       - name: Comment PR about cleanup
