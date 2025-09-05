@@ -39,7 +39,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ github.event.number }}
+            type=raw,value=pr-${{ github.event.number }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -51,6 +51,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            PUBLIC_URL=/pr-${{ github.event.number }}
 
       - name: Install sshpass and setup SSH
         run: |
@@ -64,7 +66,7 @@ jobs:
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
           DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
           PR_NUMBER: ${{ github.event.number }}
-          IMAGE_TAG: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.event.number }}
+          IMAGE_TAG: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }}
         run: |
           sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
             # Stop and remove existing container if it exists
@@ -80,6 +82,7 @@ jobs:
               --name pr-$PR_NUMBER-service \
               --network pr-network \
               -p 3000 \
+              -e PUBLIC_URL=/pr-$PR_NUMBER \
               --restart unless-stopped \
               $IMAGE_TAG
               
