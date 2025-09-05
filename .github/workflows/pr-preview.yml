@@ -2,7 +2,7 @@ name: PR Preview Deployment
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
     branches: [main]
 
 permissions:
@@ -15,12 +15,17 @@ env:
 
 jobs:
   deploy:
-    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: docker build -t my-react-app .
         
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -129,45 +134,4 @@ jobs:
               - **Build Status:** ✅ Success
               
               This preview will be automatically cleaned up when the PR is closed.`
-            })
-
-  cleanup:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Install sshpass and setup SSH
-        run: |
-          sudo apt-get update && sudo apt-get install -y sshpass
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
-          
-      - name: Cleanup PR preview
-        env:
-          DROPLET_USER: ${{ secrets.DROPLET_USER }}
-          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
-          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
-        run: |
-          # Check if cleanup script exists and run it
-          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
-            if [ -f ~/cleanup-pr.sh ]; then
-              sudo ~/cleanup-pr.sh ${{ github.event.number }}
-            else
-              echo 'Cleanup script not found, performing manual cleanup...'
-              sudo rm -rf /var/www/pr-${{ github.event.number }} || true
-              echo 'PR directory removed'
-            fi
-          "
-          
-      - name: Comment PR about cleanup
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `🧹 **PR Preview Cleaned Up**
-              
-              The preview deployment for this PR has been removed from the server.`
             })

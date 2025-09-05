@@ -1,0 +1,84 @@
+name: Setup Droplet
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/setup-droplet.yml'
+      - 'deployment/*'
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Install sshpass and setup SSH
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Install Docker on droplet
+        env:
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+        run: |
+          # Upload and run Docker installation script
+          sshpass -p "$DROPLET_PASSWORD" scp deployment/scripts/install-docker.sh $DROPLET_USER@$DROPLET_HOST:/tmp/install-docker.sh
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x /tmp/install-docker.sh && /tmp/install-docker.sh && rm /tmp/install-docker.sh"
+          
+      - name: Setup NGINX directory structure
+        env:
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+        run: |
+          # Upload and run NGINX setup script
+          sshpass -p "$DROPLET_PASSWORD" scp deployment/scripts/setup-nginx-dirs.sh $DROPLET_USER@$DROPLET_HOST:/tmp/setup-nginx-dirs.sh
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x /tmp/setup-nginx-dirs.sh && /tmp/setup-nginx-dirs.sh && rm /tmp/setup-nginx-dirs.sh"
+          
+          # Upload NGINX configuration files
+          sshpass -p "$DROPLET_PASSWORD" scp deployment/nginx/nginx.conf $DROPLET_USER@$DROPLET_HOST:/tmp/nginx.conf
+          sshpass -p "$DROPLET_PASSWORD" scp deployment/nginx/conf.d/default.conf $DROPLET_USER@$DROPLET_HOST:/tmp/default.conf
+          
+          # Move configuration files to proper locations
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "
+            sudo mv /tmp/nginx.conf /etc/nginx-docker/nginx.conf
+            sudo mv /tmp/default.conf /etc/nginx-docker/conf.d/default.conf
+          "
+          
+      - name: Create Docker network and start NGINX container
+        env:
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+        run: |
+          # Upload and run NGINX container startup script
+          sshpass -p "$DROPLET_PASSWORD" scp deployment/scripts/start-nginx-container.sh $DROPLET_USER@$DROPLET_HOST:/tmp/start-nginx-container.sh
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x /tmp/start-nginx-container.sh && /tmp/start-nginx-container.sh && rm /tmp/start-nginx-container.sh"
+          
+      - name: Upload deployment scripts
+        env:
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_PASSWORD: ${{ secrets.DROPLET_PASSWORD }}
+        run: |
+          # Upload scripts if they exist
+          if [ -f deployment/scripts/configure-nginx-pr.sh ]; then
+            sshpass -p "$DROPLET_PASSWORD" scp deployment/scripts/configure-nginx-pr.sh $DROPLET_USER@$DROPLET_HOST:~/configure-nginx-pr.sh
+          fi
+          
+          if [ -f deployment/scripts/cleanup-pr.sh ]; then
+            sshpass -p "$DROPLET_PASSWORD" scp deployment/scripts/cleanup-pr.sh $DROPLET_USER@$DROPLET_HOST:~/cleanup-pr.sh
+          fi
+          
+          # Make scripts executable
+          sshpass -p "$DROPLET_PASSWORD" ssh $DROPLET_USER@$DROPLET_HOST "chmod +x ~/configure-nginx-pr.sh ~/cleanup-pr.sh || true"
