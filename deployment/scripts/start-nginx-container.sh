@@ -20,6 +20,7 @@ docker run -d \
   -p 443:443 \
   -v /etc/nginx-docker/nginx.conf:/etc/nginx/nginx.conf:ro \
   -v /etc/nginx-docker/conf.d:/etc/nginx/conf.d:ro \
+  -v /etc/nginx-docker/pr-deployments:/etc/nginx/pr-deployments:ro \
   -v /etc/nginx-docker/ssl:/etc/nginx/ssl:ro \
   -v /var/www:/var/www:ro \
   --restart unless-stopped \
