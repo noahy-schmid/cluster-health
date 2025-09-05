@@ -12,6 +12,10 @@ RUN npm ci
 # Copy the rest of the application code to the working directory
 COPY . .
 
+# Accept build arguments for basePath
+ARG PUBLIC_URL
+ENV PUBLIC_URL=$PUBLIC_URL
+
 # Build the Next.js application
 RUN npm run build
 
