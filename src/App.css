@@ -69,8 +69,8 @@ body {
 
 /* Buttons */
 .btn-primary {
-  background: #4338ca;
-  color: white;
+  background: #4338ca !important;
+  color: white !important;
   border: none;
   padding: 12px 24px;
   border-radius: 8px;
@@ -83,13 +83,14 @@ body {
 }
 
 .btn-primary:hover {
-  background: #3730a3;
+  background: #3730a3 !important;
+  color: white !important;
   transform: translateY(-2px);
 }
 
 .btn-primary-large {
-  background: #4338ca;
-  color: white;
+  background: #4338ca !important;
+  color: white !important;
   border: none;
   padding: 16px 32px;
   border-radius: 12px;
@@ -100,7 +101,8 @@ body {
 }
 
 .btn-primary-large:hover {
-  background: #3730a3;
+  background: #3730a3 !important;
+  color: white !important;
   transform: translateY(-2px);
 }
 
@@ -117,8 +119,8 @@ body {
 }
 
 .btn-secondary:hover {
-  background: #4338ca;
-  color: white;
+  background: #4338ca !important;
+  color: white !important;
 }
 
 /* Hero Section */
@@ -620,8 +622,8 @@ body {
 }
 
 .mobile-menu .btn-primary {
-  background: #4338ca;
-  color: white;
+  background: #4338ca !important;
+  color: white !important;
   border: none;
   padding: 16px 32px;
   border-radius: 12px;
@@ -634,8 +636,38 @@ body {
 }
 
 .mobile-menu .btn-primary:hover {
-  background: #3730a3;
+  background: #3730a3 !important;
+  color: white !important;
   transform: translateY(-2px);
+}
+
+/* Ensure all primary buttons have white text regardless of element type */
+a.btn-primary,
+button.btn-primary,
+.btn-primary a,
+.btn-primary button {
+  color: white !important;
+}
+
+a.btn-primary:hover,
+button.btn-primary:hover,
+.btn-primary:hover a,
+.btn-primary:hover button {
+  color: white !important;
+}
+
+a.btn-primary-large,
+button.btn-primary-large,
+.btn-primary-large a,
+.btn-primary-large button {
+  color: white !important;
+}
+
+a.btn-primary-large:hover,
+button.btn-primary-large:hover,
+.btn-primary-large:hover a,
+.btn-primary-large:hover button {
+  color: white !important;
 }
 
 /* Responsive Design */
