@@ -47,7 +47,7 @@ body {
 .nav-brand {
   font-size: 24px;
   font-weight: 700;
-  color: #6366f1;
+  color: #4338ca;
 }
 
 .nav-links {
@@ -64,13 +64,13 @@ body {
 }
 
 .nav-links a:hover {
-  color: #6366f1;
+  color: #4338ca;
 }
 
 /* Buttons */
 .btn-primary {
-  background: #6366f1;
-  color: white;
+  background: #4338ca !important;
+  color: white !important;
   border: none;
   padding: 12px 24px;
   border-radius: 8px;
@@ -83,13 +83,14 @@ body {
 }
 
 .btn-primary:hover {
-  background: #5856eb;
+  background: #3730a3 !important;
+  color: white !important;
   transform: translateY(-2px);
 }
 
 .btn-primary-large {
-  background: #6366f1;
-  color: white;
+  background: #4338ca !important;
+  color: white !important;
   border: none;
   padding: 16px 32px;
   border-radius: 12px;
@@ -100,14 +101,15 @@ body {
 }
 
 .btn-primary-large:hover {
-  background: #5856eb;
+  background: #3730a3 !important;
+  color: white !important;
   transform: translateY(-2px);
 }
 
 .btn-secondary {
   background: transparent;
-  color: #6366f1;
-  border: 2px solid #6366f1;
+  color: #4338ca;
+  border: 2px solid #4338ca;
   padding: 14px 30px;
   border-radius: 12px;
   font-weight: 600;
@@ -117,8 +119,8 @@ body {
 }
 
 .btn-secondary:hover {
-  background: #6366f1;
-  color: white;
+  background: #4338ca !important;
+  color: white !important;
 }
 
 /* Hero Section */
@@ -211,7 +213,7 @@ body {
 
 .mockup-calendar::before {
   content: '';
-  background: #6366f1;
+  background: #4338ca;
   border-radius: 4px;
   height: 20px;
   grid-column: span 2;
@@ -556,7 +558,7 @@ body {
 }
 
 .pricing-card.featured {
-  border-color: #6366f1;
+  border-color: #4338ca;
   transform: scale(1.05);
 }
 
@@ -565,7 +567,7 @@ body {
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: #6366f1;
+  background: #4338ca;
   color: white;
   padding: 8px 24px;
   border-radius: 20px;
@@ -586,7 +588,7 @@ body {
 .price {
   font-size: 48px;
   font-weight: 700;
-  color: #6366f1;
+  color: #4338ca;
 }
 
 .period {
@@ -663,7 +665,7 @@ body {
 .footer-logo {
   font-size: 24px;
   font-weight: 700;
-  color: #6366f1;
+  color: #4338ca;
   margin-bottom: 16px;
 }
 
@@ -693,7 +695,7 @@ body {
 }
 
 .footer-section a:hover {
-  color: #6366f1;
+  color: #4338ca;
 }
 
 .footer-bottom {
@@ -786,7 +788,7 @@ body {
 }
 
 .mobile-menu-close:hover {
-  color: #6366f1;
+  color: #4338ca;
 }
 
 .mobile-menu a {
@@ -802,13 +804,13 @@ body {
 }
 
 .mobile-menu a:hover {
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
+  color: #4338ca;
+  background: rgba(67, 56, 202, 0.1);
 }
 
 .mobile-menu .btn-primary {
-  background: #6366f1;
-  color: white;
+  background: #4338ca !important;
+  color: white !important;
   border: none;
   padding: 16px 32px;
   border-radius: 12px;
@@ -821,8 +823,38 @@ body {
 }
 
 .mobile-menu .btn-primary:hover {
-  background: #5856eb;
+  background: #3730a3 !important;
+  color: white !important;
   transform: translateY(-2px);
+}
+
+/* Ensure all primary buttons have white text regardless of element type */
+a.btn-primary,
+button.btn-primary,
+.btn-primary a,
+.btn-primary button {
+  color: white !important;
+}
+
+a.btn-primary:hover,
+button.btn-primary:hover,
+.btn-primary:hover a,
+.btn-primary:hover button {
+  color: white !important;
+}
+
+a.btn-primary-large,
+button.btn-primary-large,
+.btn-primary-large a,
+.btn-primary-large button {
+  color: white !important;
+}
+
+a.btn-primary-large:hover,
+button.btn-primary-large:hover,
+.btn-primary-large:hover a,
+.btn-primary-large:hover button {
+  color: white !important;
 }
 
 /* Responsive Design */
