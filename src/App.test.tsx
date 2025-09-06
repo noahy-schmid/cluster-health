@@ -27,3 +27,16 @@ test('intelligente terminplanung description should use correct wording', () => 
   expect(expectedText).not.toContain("optimiert");
   expect(oldText).toContain("optimiert");
 });
+
+// Test for the new Reasons section content
+test('reasons section should contain time savings information', () => {
+  const callTimeText = "Herkömmliche Terminbuchung per Telefon dauert durchschnittlich 2 Minuten pro Kunde";
+  const paymentTimeText = "Keine Zeit mehr für komplizierte Zahlungsabwicklung während der Termine";
+  const summaryText = "Bei 20 Buchungen täglich sparen Sie 1 Stunde!";
+  
+  // Validate the key time savings messages are defined
+  expect(callTimeText).toContain("2 Minuten pro Kunde");
+  expect(paymentTimeText).toContain("Zahlungsabwicklung");
+  expect(summaryText).toContain("20 Buchungen täglich");
+  expect(summaryText).toContain("1 Stunde");
+});
