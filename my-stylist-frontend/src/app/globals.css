@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+  --color-primary: #335D70;
+  --color-primary-dark: #274654;
+  --color-secondary: #2A9D8F;
+  --color-highlight: #E9C46A;
+  --color-highlight-strong: #E2B33C;
+  --color-accent-1: #F4A261;
+  --color-accent-2: #E76F51;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@import "@flaticon/flaticon-uicons/css/all/all";
