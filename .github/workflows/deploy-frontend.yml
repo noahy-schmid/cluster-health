@@ -93,7 +93,15 @@ jobs:
         chmod +x deployment/scripts/deploy-k8s.sh
         export IMAGE_NAME=${{ env.IMAGE_NAME }}
         export IMAGE_TAG=${{ env.IMAGE_TAG }}
-        ./deployment/scripts/deploy-k8s.sh ${{ env.ENVIRONMENT }} ${{ env.IMAGE_TAG }}
+        export DOCKER_USERNAME=${{ github.actor }}
+        export DOCKER_PASSWORD=${{ secrets.GITHUB_TOKEN }}
+        
+        # Pass PR number for PR deployments
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          ./deployment/scripts/deploy-k8s.sh ${{ env.ENVIRONMENT }} ${{ env.IMAGE_TAG }} ${{ github.event.number }}
+        else
+          ./deployment/scripts/deploy-k8s.sh ${{ env.ENVIRONMENT }} ${{ env.IMAGE_TAG }}
+        fi
 
     - name: Comment PR with deployment info
       if: github.event_name == 'pull_request'
@@ -104,19 +112,23 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: `🚀 **Deployment Complete**
+            body: `🚀 **PR Deployment Complete**
             
             **Environment:** ${{ env.ENVIRONMENT }}
+            **Namespace:** ${{ steps.deploy.outputs.namespace }}
             **Image Tag:** ${{ env.IMAGE_TAG }}
             **Frontend URL:** ${{ steps.deploy.outputs.frontend-url }}
             
-            The application has been deployed and should be accessible shortly.`
+            The application has been deployed to namespace \`pr-${{ github.event.number }}\` and should be accessible shortly.
+            
+            **Clean up:** This PR deployment will need to be manually cleaned up after merging.`
           })
 
     - name: Deployment summary
       run: |
         echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
         echo "- **Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Namespace:** ${{ steps.deploy.outputs.namespace }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Image:** ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Frontend URL:** ${{ steps.deploy.outputs.frontend-url }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

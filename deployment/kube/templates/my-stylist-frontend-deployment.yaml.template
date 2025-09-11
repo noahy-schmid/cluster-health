@@ -2,11 +2,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-stylist-frontend
+  namespace: ${NAMESPACE}
   labels:
     app: my-stylist-frontend
     version: "${IMAGE_TAG}"
 spec:
-  replicas: ${REPLICAS:-2}
+  replicas: $REPLICAS
   selector:
     matchLabels:
       app: my-stylist-frontend
@@ -23,11 +24,11 @@ spec:
         - containerPort: 3000
         env:
         - name: NODE_ENV
-          value: "${NODE_ENV:-production}"
+          value: "$NODE_ENV"
         - name: PUBLIC_URL
-          value: "${PUBLIC_URL:-/}"
+          value: "$PUBLIC_URL"
         - name: NEXT_PUBLIC_API_URL
-          value: "${NEXT_PUBLIC_API_URL}"
+          value: "$NEXT_PUBLIC_API_URL"
         resources:
           requests:
             memory: "128Mi"

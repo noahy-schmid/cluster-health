@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# Cleanup script for PR preview deployments
-# This script should be placed at /home/$USER/cleanup-pr.sh on the DigitalOcean droplet
-# Usage: sudo ./cleanup-pr.sh <PR_NUMBER>
+# Cleanup script for PR Kubernetes deployments
+# Usage: ./cleanup-pr.sh <PR_NUMBER>
 
 set -e
 
@@ -11,13 +10,38 @@ PR_NUMBER=$1
 if [ -z "$PR_NUMBER" ]; then
     echo "Error: PR number is required"
     echo "Usage: $0 <PR_NUMBER>"
+    echo "Example: $0 123"
     exit 1
 fi
 
 # Configuration variables
-PR_ROOT="/var/www/pr-$PR_NUMBER"
+NAMESPACE="pr-$PR_NUMBER"
 
-echo "Cleaning up PR #$PR_NUMBER preview deployment..."
+echo "Cleaning up Kubernetes PR #$PR_NUMBER deployment..."
+echo "This will delete namespace: $NAMESPACE"
+
+# Confirm deletion (skip confirmation in CI)
+if [ -z "$CI" ] && [ -z "$GITHUB_ACTIONS" ]; then
+  read -p "Are you sure you want to delete namespace '$NAMESPACE' and all its resources? (y/N): " -r
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Cleanup cancelled."
+      exit 0
+  fi
+fi
+
+# Check if namespace exists
+if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+  echo "Namespace '$NAMESPACE' does not exist. Nothing to clean up."
+  exit 0
+fi
+
+echo "Deleting namespace '$NAMESPACE' and all its resources..."
+
+# Delete the namespace (this will delete all resources in it)
+kubectl delete namespace "$NAMESPACE" --timeout=300s
+
+echo "✅ Successfully cleaned up Kubernetes PR deployment for PR #$PR_NUMBER"
+echo "Namespace '$NAMESPACE' and all its resources have been deleted."
 
 # Function to detect NGINX configuration file
 detect_nginx_config() {
