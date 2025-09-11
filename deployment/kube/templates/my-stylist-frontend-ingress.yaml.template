@@ -14,12 +14,6 @@ metadata:
     # Force HTTP (no HTTPS redirect)
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-    # SSL/TLS annotations (uncomment when ready)
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      add_header X-Service-Name "my-stylist-frontend" always;
-      add_header X-Service-Version "${IMAGE_TAG}" always;
 spec:
   # Uncomment and configure TLS when ready
   # tls:
