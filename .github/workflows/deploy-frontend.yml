@@ -26,6 +26,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
+      pull-requests: write  # Add this permission for PR comments
     
     steps:
     - name: Checkout code
