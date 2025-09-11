@@ -26,8 +26,7 @@ spec:
   #   secretName: my-stylist-frontend-tls
   
   rules:
-  - host: ${FRONTEND_HOST}
-    http:
+  - http:
       paths:
       - path: /
         pathType: Prefix
@@ -38,17 +37,6 @@ spec:
               number: 80
       - path: /health
         pathType: Exact
-        backend:
-          service:
-            name: my-stylist-frontend
-            port:
-              number: 80
-  
-  # Fallback rule without host (for testing)
-  - http:
-      paths:
-      - path: /stylist
-        pathType: Prefix
         backend:
           service:
             name: my-stylist-frontend
