@@ -6,7 +6,7 @@ set -e
 ENVIRONMENT=${1:-dev}
 IMAGE_TAG=${2:-latest}
 PR_NUMBER=${3:-""}
-IMAGE_NAME="ghcr.io/noahyschmid/my-stylist-frontend"
+IMAGE_NAME="ghcr.io/noahy-schmid/my-stylist-frontend"
 
 echo "Deploying my-stylist-frontend to $ENVIRONMENT environment with tag $IMAGE_TAG"
 
