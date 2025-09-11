@@ -73,11 +73,11 @@ jobs:
       with:
         version: 'latest'
 
-    - name: Configure kubectl for DigitalOcean
-      run: |
-        echo "${{ secrets.DIGITALOCEAN_KUBECONFIG }}" | base64 -d > $HOME/.kube/config
-        chmod 600 $HOME/.kube/config
-        kubectl cluster-info
+    - name: Set up kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        method: kubeconfig
+        kubeconfig: ${{ secrets.DIGITALOCEAN_KUBECONFIG }}
 
     - name: Create image pull secret
       run: |
