@@ -1,0 +1,55 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-stylist-frontend-ingress
+  labels:
+    app: my-stylist-frontend
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    # SSL/TLS annotations (uncomment when ready)
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Service-Name "my-stylist-frontend" always;
+      add_header X-Service-Version "${IMAGE_TAG}" always;
+spec:
+  # Uncomment and configure TLS when ready
+  # tls:
+  # - hosts:
+  #   - ${FRONTEND_HOST}
+  #   secretName: my-stylist-frontend-tls
+  
+  rules:
+  - host: ${FRONTEND_HOST}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-stylist-frontend
+            port:
+              number: 80
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: my-stylist-frontend
+            port:
+              number: 80
+  
+  # Fallback rule without host (for testing)
+  - http:
+      paths:
+      - path: /stylist
+        pathType: Prefix
+        backend:
+          service:
+            name: my-stylist-frontend
+            port:
+              number: 80

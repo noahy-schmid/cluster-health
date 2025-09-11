@@ -1,0 +1,122 @@
+name: Build and Deploy My Stylist Frontend
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
+
+env:
+  IMAGE_NAME: ghcr.io/noahyschmid/my-stylist-frontend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      
+    - name: Set up environment variables
+      run: |
+        # Determine environment based on branch or manual input
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+        elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          echo "ENVIRONMENT=production" >> $GITHUB_ENV
+        elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+          echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+        else
+          echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+        fi
+        
+        # Set image tag
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "IMAGE_TAG=pr-${{ github.event.number }}" >> $GITHUB_ENV
+        else
+          echo "IMAGE_TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+        fi
+
+    - name: Build and push Docker image
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        chmod +x deployment/scripts/build-and-publish-docker.sh
+        ./deployment/scripts/build-and-publish-docker.sh ${{ env.IMAGE_TAG }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl for DigitalOcean
+      run: |
+        echo "${{ secrets.DIGITALOCEAN_KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+        kubectl cluster-info
+
+    - name: Create image pull secret
+      run: |
+        kubectl create secret docker-registry ghcr-secret \
+          --docker-server=ghcr.io \
+          --docker-username=${{ github.actor }} \
+          --docker-password=${{ secrets.GITHUB_TOKEN }} \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Deploy to Kubernetes
+      id: deploy
+      run: |
+        chmod +x deployment/scripts/deploy-k8s.sh
+        export IMAGE_NAME=${{ env.IMAGE_NAME }}
+        export IMAGE_TAG=${{ env.IMAGE_TAG }}
+        ./deployment/scripts/deploy-k8s.sh ${{ env.ENVIRONMENT }} ${{ env.IMAGE_TAG }}
+
+    - name: Comment PR with deployment info
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `🚀 **Deployment Complete**
+            
+            **Environment:** ${{ env.ENVIRONMENT }}
+            **Image Tag:** ${{ env.IMAGE_TAG }}
+            **Frontend URL:** ${{ steps.deploy.outputs.frontend-url }}
+            
+            The application has been deployed and should be accessible shortly.`
+          })
+
+    - name: Deployment summary
+      run: |
+        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Environment:** ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Image:** ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Frontend URL:** ${{ steps.deploy.outputs.frontend-url }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
