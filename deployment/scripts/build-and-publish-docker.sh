@@ -3,7 +3,7 @@
 # Usage: ./build-and-publish-docker.sh <tag>
 set -e
 
-IMAGE_NAME="ghcr.io/noahyschmid/my-stylist-frontend"
+IMAGE_NAME="ghcr.io/noahy-schmid/my-stylist-frontend"
 
 if [ -z "$1" ]; then
   echo "Usage: $0 <tag>"
