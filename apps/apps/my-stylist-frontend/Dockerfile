@@ -31,8 +31,10 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
-ARG PUBLIC_PATH
-ENV NEXT_PUBLIC_BASE_PATH=${PUBLIC_PATH}
+ARG BASE_PATH
+ENV NEXT_PUBLIC_BASE_PATH=${BASE_PATH}
+
+RUN echo "Base path is set to: ${NEXT_PUBLIC_BASE_PATH}"
  
 # Build the project
 COPY --from=builder /app/out/full/ .
