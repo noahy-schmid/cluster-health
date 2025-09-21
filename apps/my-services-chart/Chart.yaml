@@ -1,0 +1,14 @@
+apiVersion: v2
+name: my-services-chart
+description: Umbrella chart for all my services
+
+type: application
+
+version: 0.1.0
+
+appVersion: "1.16.0"
+
+dependencies:
+  - name: my-stylist-frontend
+    version: "0.1.1"
+    repository: "file://../apps/my-stylist-frontend/chart"

@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "docker:build": "docker build --platform linux/amd64 --build-arg PUBLIC_PATH=/${PATH_PREFIX} -t ghcr.io/noahy-schmid/my-stylist-frontend:${DOCKER_TAG} -f Dockerfile ./../..",
+    "docker:push": "docker push ghcr.io/noahy-schmid/my-stylist-frontend:${DOCKER_TAG}",
+    "helm:lint": "helm lint ./chart"
   },
   "dependencies": {
     "@flaticon/flaticon-uicons": "^3.3.1",

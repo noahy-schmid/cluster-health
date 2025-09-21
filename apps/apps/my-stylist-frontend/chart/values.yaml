@@ -1,0 +1,9 @@
+image:
+  repository: ghcr.io/noahy-schmid
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  path: /

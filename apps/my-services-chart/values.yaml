@@ -1,0 +1,16 @@
+# Global values for all subcharts
+global: {}
+
+# Configuration for my-stylist-frontend subchart
+my-stylist-frontend:
+  enabled: true  
+  image:
+    repository: ghcr.io/noahy-schmid
+    tag: "test"
+  
+  service:
+    type: ClusterIP
+    port: 80
+  
+  ingress:
+    path: /test
