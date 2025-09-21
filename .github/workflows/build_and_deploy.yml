@@ -158,7 +158,7 @@ jobs:
 
           pnpm helm:umbrella:lint
 
-          pnpm helm:umbrella:install my-services-${DOCKER_TAG} ${NAMESPACE} ${DOCKER_TAG} ${PATH_PREFIX}
+          pnpm helm:umbrella:install my-services-${NAMESPACE} ${NAMESPACE} ${DOCKER_TAG} ${PATH_PREFIX}
 
       - name: Get deployment status
         id: deployment
