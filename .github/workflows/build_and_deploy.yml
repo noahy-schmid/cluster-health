@@ -114,7 +114,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'pnpm'
+          cache-dependency-path: ./apps/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install
