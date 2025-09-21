@@ -49,8 +49,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    outputs:
-      tag: ${{ needs.determine_environment.outputs.docker_tag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
