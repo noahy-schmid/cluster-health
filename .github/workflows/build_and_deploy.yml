@@ -84,7 +84,7 @@ jobs:
           DOCKER_TAG: ${{ needs.determine_environment.outputs.docker_tag }}
           PATH_PREFIX: ${{ needs.determine_environment.outputs.path_prefix }}
         working-directory: ./apps
-        run: pnpm build:docker
+        run: pnpm docker:build
 
   deploy_to_cluster:
     name: Deploy to Kubernetes
