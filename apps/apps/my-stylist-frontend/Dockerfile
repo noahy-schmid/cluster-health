@@ -27,17 +27,14 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-ARG BASE_PATH
-ENV NEXT_PUBLIC_BASE_PATH=${BASE_PATH}
-RUN echo "Base path is set to: ${NEXT_PUBLIC_BASE_PATH}"
-
 
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
-
-
+ARG BASE_PATH
+ENV NEXT_PUBLIC_BASE_PATH=${BASE_PATH}
+RUN echo "Base path is set to: ${NEXT_PUBLIC_BASE_PATH}"
  
 # Build the project
 COPY --from=builder /app/out/full/ .
