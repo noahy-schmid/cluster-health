@@ -163,11 +163,11 @@ jobs:
       - name: Get deployment status
         id: deployment
         run: |
-          # Use helm status to get comprehensive deployment information
-          helm status my-stylist-frontend --namespace ${{ needs.determine_environment.outputs.namespace }}
-          
+          NAMESPACE=${{ needs.determine_environment.outputs.namespace }}
+          helm status my-services-${NAMESPACE} --namespace $NAMESPACE
+
           # Get ingress URL if available
-          INGRESS_IP=$(kubectl get ingress -n ${{ needs.determine_environment.outputs.namespace }} -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "pending")
+          INGRESS_IP=$(kubectl get ingress -n $NAMESPACE -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "pending")
           echo "frontend-url=http://${INGRESS_IP}" >> $GITHUB_OUTPUT
 
       - name: Comment PR with deployment info
