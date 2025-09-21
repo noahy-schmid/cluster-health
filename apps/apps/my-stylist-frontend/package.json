@@ -7,7 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "docker:build": "docker build --platform linux/amd64 --build-arg PATH_PREFIX=${PATH_PREFIX} -t ghcr.io/noahy-schmid/my-stylist-frontend:${DOCKER_TAG} -f Dockerfile ./../..",
+    "docker:build": "docker build --platform linux/amd64 --build-arg BASE_PATH=${BASE_PATH} -t ghcr.io/noahy-schmid/my-stylist-frontend:${DOCKER_TAG} -f Dockerfile ./../..",
     "docker:push": "docker push ghcr.io/noahy-schmid/my-stylist-frontend:${DOCKER_TAG}",
     "helm:lint": "helm lint ./chart"
   },

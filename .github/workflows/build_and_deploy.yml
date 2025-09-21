@@ -14,7 +14,7 @@ jobs:
       environment: ${{ steps.env.outputs.environment }}
       namespace: ${{ steps.env.outputs.namespace }}
       docker_tag: ${{ steps.env.outputs.docker_tag }}
-      path_prefix: ${{ steps.env.outputs.path_prefix }}
+      base_path: ${{ steps.env.outputs.base_path }}
     steps:
       - name: Determine environment variables
         id: env
@@ -24,22 +24,22 @@ jobs:
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "namespace=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
             echo "docker_tag=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
-            echo "path_prefix=/pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+            echo "base_path=/pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
             echo "environment=staging" >> $GITHUB_OUTPUT
             echo "namespace=staging" >> $GITHUB_OUTPUT
             echo "docker_tag=develop" >> $GITHUB_OUTPUT
-            echo "path_prefix=/staging" >> $GITHUB_OUTPUT
+            echo "base_path=/staging" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "environment=production" >> $GITHUB_OUTPUT
             echo "namespace=production" >> $GITHUB_OUTPUT
             echo "docker_tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
-            echo "path_prefix=/production" >> $GITHUB_OUTPUT
+            echo "base_path=/production" >> $GITHUB_OUTPUT
           else
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "namespace=development" >> $GITHUB_OUTPUT
             echo "docker_tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
-            echo "path_prefix=/development" >> $GITHUB_OUTPUT
+            echo "base_path=/development" >> $GITHUB_OUTPUT
           fi
 
   build_docker:
@@ -83,7 +83,7 @@ jobs:
       - name: Build and push Docker image
         env:
           DOCKER_TAG: ${{ needs.determine_environment.outputs.docker_tag }}
-          PATH_PREFIX: ${{ needs.determine_environment.outputs.path_prefix }}
+          BASE_PATH: ${{ needs.determine_environment.outputs.base_path }}
         working-directory: ./apps
         run: |
           pnpm docker:build
@@ -150,13 +150,13 @@ jobs:
         run: |
           DOCKER_TAG=${{ needs.determine_environment.outputs.docker_tag }}
           NAMESPACE=${{ needs.determine_environment.outputs.namespace }}
-          PATH_PREFIX=${{ needs.determine_environment.outputs.path_prefix }}
+          BASE_PATH=${{ needs.determine_environment.outputs.base_path }}
 
           pnpm helm:umbrella:dep:update
 
           pnpm helm:umbrella:lint
 
-          pnpm helm:umbrella:install my-services-${NAMESPACE} ${NAMESPACE} ${DOCKER_TAG} ${PATH_PREFIX}
+          pnpm helm:umbrella:install my-services-${NAMESPACE} ${NAMESPACE} ${DOCKER_TAG} ${BASE_PATH}
 
       - name: Get deployment status
         id: deployment

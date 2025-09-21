@@ -32,7 +32,7 @@ fi
 RELEASE_NAME=$1
 NAMESPACE=$2
 DOCKER_TAG=$3
-PATH_PREFIX=${4:-/}
+BASE_PATH=${4:-/}
 
 # Validate arguments
 if [ -z "$RELEASE_NAME" ]; then
@@ -55,7 +55,7 @@ echo "🚀 Installing Helm umbrella chart..."
 echo "   Release Name: $RELEASE_NAME"
 echo "   Namespace:    $NAMESPACE"
 echo "   Docker Tag:   $DOCKER_TAG"
-echo "   Path Prefix:  $PATH_PREFIX"
+echo "   Path Prefix:  $BASE_PATH"
 echo ""
 
 # Change to the chart directory
@@ -66,7 +66,7 @@ helm upgrade --install "$RELEASE_NAME" . \
     --create-namespace \
     --namespace "$NAMESPACE" \
     --set "my-stylist-frontend.image.tag=$DOCKER_TAG" \
-    --set "my-stylist-frontend.ingress.path=$PATH_PREFIX"
+    --set "my-stylist-frontend.ingress.path=$BASE_PATH"
 
 echo "✅ Deployment completed successfully!"
 echo ""
