@@ -62,7 +62,7 @@ echo ""
 cd my-services-chart
 
 # Run the helm install command
-helm install "$RELEASE_NAME" . \
+helm upgrade --install "$RELEASE_NAME" . \
     --create-namespace \
     --namespace "$NAMESPACE" \
     --set "my-stylist-frontend.image.tag=$DOCKER_TAG" \
