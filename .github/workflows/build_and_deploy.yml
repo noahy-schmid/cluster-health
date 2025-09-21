@@ -52,6 +52,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 10
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: ./apps/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./apps
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
