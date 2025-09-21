@@ -84,7 +84,9 @@ jobs:
           DOCKER_TAG: ${{ needs.determine_environment.outputs.docker_tag }}
           PATH_PREFIX: ${{ needs.determine_environment.outputs.path_prefix }}
         working-directory: ./apps
-        run: pnpm docker:build
+        run: |
+          pnpm docker:build
+          pnpm docker:push
 
   deploy_to_cluster:
     name: Deploy to Kubernetes
@@ -99,22 +101,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 10
+          run_install: false
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22'
           cache: 'npm'
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 9.0.0
-
-      - name: Download Helm chart
-        uses: actions/download-artifact@v3
-        with:
-          name: helm-chart
-          path: ./helm-charts
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./apps
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
