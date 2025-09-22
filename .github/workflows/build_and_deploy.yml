@@ -21,7 +21,7 @@ jobs:
         run: |
           # Set environment, namespace, and docker tag based on event type and branch
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "environment=pr" >> $GITHUB_OUTPUT
             echo "namespace=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
             echo "docker_tag=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
             echo "base_path=/pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
@@ -36,7 +36,7 @@ jobs:
             echo "docker_tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
             echo "base_path=/production" >> $GITHUB_OUTPUT
           else
-            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "environment=develop" >> $GITHUB_OUTPUT
             echo "namespace=development" >> $GITHUB_OUTPUT
             echo "docker_tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
             echo "base_path=/development" >> $GITHUB_OUTPUT
@@ -83,11 +83,11 @@ jobs:
       - name: Build and push Docker image
         working-directory: ./apps
         run: |
-          DOCKER_TAG=$${{ needs.determine_environment.outputs.docker_tag }}
-          BASE_PATH=$${{ needs.determine_environment.outputs.base_path }}
-          ENVIRONMENT=$${{ needs.determine_environment.outputs.environment }}
-          pnpm docker:build -- $ENVIRONMENT $DOCKER_TAG $BASE_PATH
-          pnpm docker:push -- $ENVIRONMENT $DOCKER_TAG $BASE_PATH
+          DOCKER_TAG=${{ needs.determine_environment.outputs.docker_tag }}
+          BASE_PATH=${{ needs.determine_environment.outputs.base_path }}
+          ENVIRONMENT=${{ needs.determine_environment.outputs.environment }}
+          pnpm docker:build -- $DOCKER_TAG $ENVIRONMENT $BASE_PATH
+          pnpm docker:push -- $DOCKER_TAG $ENVIRONMENT $BASE_PATH
 
   deploy_to_cluster:
     name: Deploy to Kubernetes
