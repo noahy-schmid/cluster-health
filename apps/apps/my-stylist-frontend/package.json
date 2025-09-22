@@ -7,8 +7,8 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "docker:build": "docker build --platform linux/amd64 --build-arg BASE_PATH=${BASE_PATH} -t ghcr.io/noahy-schmid/my-stylist-frontend:${DOCKER_TAG} -f Dockerfile ./../..",
-    "docker:push": "docker push ghcr.io/noahy-schmid/my-stylist-frontend:${DOCKER_TAG}",
+    "docker:build": "bash ../../scripts/docker-build-push.sh build my-stylist-frontend",
+    "docker:push": "bash ../../scripts/docker-build-push.sh push my-stylist-frontend",
     "helm:lint": "helm lint ./chart"
   },
   "dependencies": {

@@ -81,13 +81,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        env:
-          DOCKER_TAG: ${{ needs.determine_environment.outputs.docker_tag }}
-          BASE_PATH: ${{ needs.determine_environment.outputs.base_path }}
         working-directory: ./apps
         run: |
-          pnpm docker:build
-          pnpm docker:push
+          DOCKER_TAG=$${{ needs.determine_environment.outputs.docker_tag }}
+          BASE_PATH=$${{ needs.determine_environment.outputs.base_path }}
+          ENVIRONMENT=$${{ needs.determine_environment.outputs.environment }}
+          pnpm docker:build -- $ENVIRONMENT $DOCKER_TAG $BASE_PATH
+          pnpm docker:push -- $ENVIRONMENT $DOCKER_TAG $BASE_PATH
 
   deploy_to_cluster:
     name: Deploy to Kubernetes
