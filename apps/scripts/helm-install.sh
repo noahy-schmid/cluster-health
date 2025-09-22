@@ -11,6 +11,7 @@ show_usage() {
     echo ""
     echo "Arguments:"
     echo "  release-name  Name of the Helm release"
+    echo "  environment    Environment for the deployment ('pr', 'develop', 'staging' or 'production')"
     echo "  namespace     Kubernetes namespace to deploy to"
     echo "  docker-tag    Docker image tag to use"
     echo "  path-prefix   Optional path prefix for ingress (default: /)"
@@ -30,9 +31,10 @@ fi
 
 # Parse arguments
 RELEASE_NAME=$1
-NAMESPACE=$2
-DOCKER_TAG=$3
-BASE_PATH=${4:-/}
+ENVIRONMENT=$2
+NAMESPACE=$3
+DOCKER_TAG=$4
+BASE_PATH=${5:-/}
 
 # Validate arguments
 if [ -z "$RELEASE_NAME" ]; then
@@ -51,7 +53,7 @@ if [ -z "$DOCKER_TAG" ]; then
 fi
 
 # Show what we're about to do
-echo "🚀 Installing Helm umbrella chart..."
+echo "🚀 Installing Helm umbrella chart in ($ENVIRONMENT)..."
 echo "   Release Name: $RELEASE_NAME"
 echo "   Namespace:    $NAMESPACE"
 echo "   Docker Tag:   $DOCKER_TAG"

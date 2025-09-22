@@ -10,8 +10,9 @@ show_usage() {
     echo "Usage: $0 <action> <docker-tag> [path-prefix]"
     echo ""
     echo "Arguments:"
-    echo "  action         Action to perform: 'build' or 'push'"
-    echo "  image-name    Docker image name (leading ghcr.io/noahy-schmid/ already included)"
+    echo "  [action         Action to perform: 'build' or 'push']"
+    echo "  [image-name    Docker image name (leading ghcr.io/noahy-schmid/ already included)]"
+    echo "   ↑↑ (first two parameters are preset by pnpm)"
     echo "  docker-tag     Docker image tag (required)"
     echo "  environment    Environment for the build ('pr', 'develop', 'staging' or 'production')"
     echo "  path-prefix    Path prefix for Next.js basePath (default: /, only used for build)"
@@ -36,7 +37,7 @@ ACTION=$1
 IMAGE_NAME=$2
 DOCKER_TAG=$3
 ENVIRONMENT=$4
-PATH_PREFIX=${5:-/}
+PATH_PREFIX=${5}
 
 # Validate action
 if [ "$ACTION" != "build" ] && [ "$ACTION" != "push" ]; then
@@ -79,9 +80,6 @@ if [ "$ACTION" = "build" ]; then
         ./../..
 
     echo "✅ Docker build completed successfully!"
-    echo ""
-    echo "🔍 Image details:"
-    docker images "$IMAGE_NAME" --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
 
 elif [ "$ACTION" = "push" ]; then
     # Push the Docker image
@@ -97,6 +95,5 @@ elif [ "$ACTION" = "push" ]; then
     
     docker push "$FULL_IMAGE_NAME"
     echo "✅ Docker push completed successfully!"
-    echo ""
     echo "🎉 Image available at: $FULL_IMAGE_NAME"
 fi
