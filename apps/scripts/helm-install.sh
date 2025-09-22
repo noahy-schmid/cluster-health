@@ -7,7 +7,7 @@ set -e
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 <release-name> <namespace> <docker-tag> [path-prefix]"
+    echo "Usage: $0 <release-name> <environment> <namespace> <docker-tag> [path-prefix]"
     echo ""
     echo "Arguments:"
     echo "  release-name  Name of the Helm release"
@@ -17,14 +17,13 @@ show_usage() {
     echo "  path-prefix   Optional path prefix for ingress (default: /)"
     echo ""
     echo "Examples:"
-    echo "  $0 my-services-dev dev latest /dev"
-    echo "  $0 my-services-prod production v1.0.0"
+    echo "  $0 my-services-dev develop develop latest /dev"
     echo ""
     exit 1
 }
 
-# Check if we have at least 3 arguments
-if [ $# -lt 3 ]; then
+# Check if we have at least 4 arguments
+if [ $# -lt 4 ]; then
     echo "Error: Missing required arguments"
     show_usage
 fi
