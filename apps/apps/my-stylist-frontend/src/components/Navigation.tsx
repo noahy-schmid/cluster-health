@@ -19,17 +19,13 @@ export default function Navigation() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-200 transition-all duration-300 ${
-        isScrolled ? "py-2" : "py-4"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-200 transition-all duration-300 py-4`}
     >
       <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
         {/* Logo/Title */}
         <div className="flex items-center">
           <h1
-            className={`font-bold font-sans text-primary-dark transition-all duration-300 ${
-              isScrolled ? "text-xl" : "text-2xl"
-            }`}
+            className={`font-bold font-sans text-primary-dark transition-all duration-300 text-2xl`}
           >
             Mein Stylist
           </h1>

@@ -7,17 +7,18 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "docker:build": "bash ../../scripts/docker-build-push.sh build my-stylist-frontend",
     "docker:push": "bash ../../scripts/docker-build-push.sh push my-stylist-frontend",
     "helm:lint": "helm lint ./chart"
   },
   "dependencies": {
     "@flaticon/flaticon-uicons": "^3.3.1",
+    "@repo/ui": "workspace:*",
     "motion": "^12.23.12",
     "next": "15.5.2",
     "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "@repo/ui": "workspace:*"
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -25,6 +26,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint-plugin-unused-imports": "^4.2.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "tailwindcss": "^4",

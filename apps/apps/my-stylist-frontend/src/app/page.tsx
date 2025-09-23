@@ -2,7 +2,7 @@ import FeatureCard from "@/components/FeatureCard";
 import Navigation from "../components/Navigation";
 import Link from "next/link";
 import ContactForm from "@/components/ContactForm";
-import { LayoutGroup } from "motion/react";
+import ThreeSteps from "@/components/pages/three-steps/ThreeSteps";
 
 export default function Home() {
   return (
@@ -193,49 +193,26 @@ export default function Home() {
 
         {/* How It Works Section */}
         <section id="start" className="px-6 md:px-20 py-20 bg-gray-50">
-          <div className="max-w-6xl mx-auto bg-white rounded-2xl p-6">
-            <h2 className="text-3xl md:text-4xl font-bold font-sans text-primary-dark mb-8 text-center">
-              So einfach geht es
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="flex flex-col items-center text-center">
-                <div className="rounded-full from-accent-1 to-accent-2 bg-gradient-to-br text-white font-bold text-lg p-3 aspect-square">
-                  1
-                </div>
-                <h4 className="font-sans text-2xl font-bold text-primary-dark mt-4">
-                  Anfrage senden
-                </h4>
-                <p className="text-gray-600 text-lg mt-2">
-                  Füllen Sie das Kontaktformular aus und teilen Sie uns Ihre
-                  Bedürfnisse mit.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="rounded-full from-accent-1 to-accent-2 bg-gradient-to-br text-white font-bold text-lg p-3 aspect-square">
-                  2
-                </div>
-                <h4 className="font-sans text-2xl font-bold text-primary-dark mt-4">
-                  Persönliche Kontaktaufnahme
-                </h4>
-                <p className="text-gray-600 text-lg mt-2">
-                  Wir kontaktieren Sie direkt, um alles für Ihren Salon
-                  einzurichten.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="rounded-full from-accent-1 to-accent-2 bg-gradient-to-br text-white font-bold text-lg p-3 aspect-square">
-                  3
-                </div>
-                <h4 className="font-sans text-2xl font-bold text-primary-dark mt-4">
-                  Sofort loslegen
-                </h4>
-                <p className="text-gray-600 text-lg mt-2">
-                  Nach der Einrichtung können Sie sofort mit der
-                  Terminverwaltung beginnen.
-                </p>
-              </div>
-            </div>
-          </div>
+          <ThreeSteps
+            title="So einfach geht es"
+            steps={[
+              {
+                number: 1,
+                header: "Anfrage senden",
+                body: "Füllen Sie das Kontaktformular aus und teilen Sie uns Ihre Bedürfnisse mit."
+              },
+              {
+                number: 2,
+                header: "Persönliche Kontaktaufnahme",
+                body: "Wir kontaktieren Sie direkt, um alles für Ihren Salon einzurichten."
+              },
+              {
+                number: 3,
+                header: "Sofort loslegen",
+                body: "Nach der Einrichtung können Sie sofort mit der Terminverwaltung beginnen."
+              }
+            ]}
+          />
         </section>
 
         {/* Contact Form Section */}
