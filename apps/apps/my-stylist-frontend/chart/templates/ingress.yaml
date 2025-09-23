@@ -4,10 +4,13 @@ metadata:
   name: {{ .Chart.Name }}
   labels:
     app: {{ .Chart.Name }}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: www.dein.salon
+    http:
       paths:
       - path: {{ .Values.ingress.path | default "/" }}
         pathType: Prefix
@@ -16,3 +19,18 @@ spec:
             name: {{ .Chart.Name }}
             port:
               number: {{ .Values.service.port | default 80 }}
+  - host: dein.salon
+    http:
+      paths:
+      - path: {{ .Values.ingress.path | default "/" }}
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Chart.Name }}
+            port:
+              number: {{ .Values.service.port | default 80 }}
+  tls:
+  - hosts:
+    - www.dein.salon
+    - dein.salon
+    secretName: dein-salon-tls
