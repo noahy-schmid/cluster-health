@@ -5,6 +5,10 @@
 			"path": "."
 		},
 		{
+			"name": "base",
+			"path": "apps"
+		},
+		{
 			"name": "my-stylist-frontend",
 			"path": "apps/apps/my-stylist-frontend"
 		},
@@ -13,10 +17,7 @@
 			"path": "apps/apps/salon-webpage"
 		},
 		{
-			"name": "base",
-			"path": "apps"
-		},
-		{
+			"name": "ui",
 			"path": "apps/packages/ui"
 		}
 	],
