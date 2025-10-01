@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"name": "root",
+			"path": "."
+		},
+		{
+			"name": "my-stylist-frontend",
+			"path": "apps/apps/my-stylist-frontend"
+		},
+		{
+			"name": "salon-webpage",
+			"path": "apps/apps/salon-webpage"
+		},
+		{
+			"name": "base",
+			"path": "apps"
+		}
+	],
+	"settings": {}
+}
