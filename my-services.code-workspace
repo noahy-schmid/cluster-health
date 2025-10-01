@@ -15,6 +15,9 @@
 		{
 			"name": "base",
 			"path": "apps"
+		},
+		{
+			"path": "apps/packages/ui"
 		}
 	],
 	"settings": {}
