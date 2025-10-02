@@ -2,3 +2,40 @@
 @import "@repo/ui/globals.css";
 
 /* App-specific overrides or additions can go here */
+
+:root {
+  /* OKLCH colors for CSS usage */
+  --bg-dark: oklch(0.2 0.05 264.19);
+  --bg: oklch(0.3 0.05 264.19);
+  --bg-light: oklch(0.4 0.05 264.19);
+  --fg: oklch(0.8 0.05 264.19);
+  --fg-light: oklch(0.95 0.05 264.19);
+
+  /* RGB values for Tailwind (converted from OKLCH) */
+  --bg-dark-rgb: 45 47 64;
+  --bg-rgb: #666989;
+  --bg-light-rgb: 87 92 115;
+  --fg-rgb: 188 193 217;
+  --fg-light-rgb: 240 242 248;
+}
+
+@theme {
+  --color-bg-dark: var(--bg-dark);
+  --color-bg: var(--bg);
+  --color-bg-light: var(--bg-light);
+  --color-fg: var(--fg);
+}
+
+
+.background {
+  background-color: var(--bg-dark);
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

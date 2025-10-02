@@ -1,103 +1,258 @@
+"use client";
+
 import Image from "next/image";
+import styles from "../styles/menu.module.css";
+import { CircleChevronDown } from "lucide-react";
+import MenuChip from "@/components/menu-chip";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start rounded">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+	const [activeSection, setActiveSection] = useState("uber-uns");
+	const [showStickyLogo, setShowStickyLogo] = useState(false);
+	const menuChipContainerRef = useRef<HTMLDivElement>(null);
+	const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
+	const heroRef = useRef<HTMLElement>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+	const menuItems = useMemo(
+		() => [
+			{ id: "uber-uns", text: "Über Uns" },
+			{ id: "service", text: "Service" },
+			{ id: "trends", text: "Trends" },
+			{ id: "haarprodukte", text: "Haarprodukte" },
+			{ id: "preise", text: "Preise" },
+		],
+		[]
+	);
+
+	// Handle menu chip click - scroll to section with offset
+	const handleMenuClick = (sectionId: string) => {
+		const section = sectionRefs.current[sectionId];
+		if (section) {
+			// Calculate offset for sticky header + menu chips
+			const stickyHeaderHeight = showStickyLogo ? 76 : 0; // Height when logo is visible
+			const menuChipsHeight = 68; // Approximate height of menu chip container
+			const totalOffset = stickyHeaderHeight + menuChipsHeight + 20; // Extra 20px padding
+			
+			// Get the section's position
+			const sectionTop = section.getBoundingClientRect().top + window.pageYOffset;
+			const targetPosition = sectionTop - totalOffset;
+			
+			// Smooth scroll to the calculated position
+			window.scrollTo({
+				top: Math.max(0, targetPosition), // Don't scroll above the top
+				behavior: "smooth"
+			});
+		}
+	};
+
+	// Scroll active chip into view
+	const scrollActiveChipIntoView = useCallback(
+		(activeId: string) => {
+			if (menuChipContainerRef.current) {
+				const activeIndex = menuItems.findIndex((item) => item.id === activeId);
+				const container = menuChipContainerRef.current;
+				const chipWidth = 120; // Approximate chip width
+				const scrollLeft = Math.max(
+					0,
+					activeIndex * chipWidth - container.clientWidth / 2
+				);
+
+				container.scrollTo({
+					left: scrollLeft,
+					behavior: "smooth",
+				});
+			}
+		},
+		[menuItems]
+	);
+
+	// Intersection Observer to detect which section is in view
+	useEffect(() => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const sortedEntries = entries
+					.filter((entry) => entry.isIntersecting)
+					.sort((a, b) => {
+						return a.boundingClientRect.top - b.boundingClientRect.top;
+					});
+
+				if (sortedEntries.length > 0) {
+					const mostVisibleEntry = sortedEntries[0];
+					const id = mostVisibleEntry.target.id;
+					setActiveSection(id);
+					scrollActiveChipIntoView(id);
+				}
+			},
+			{
+				threshold: [0],
+				rootMargin: "-50% 0px -50% 0px",
+			}
+		);
+
+		// Observe all sections
+		Object.values(sectionRefs.current).forEach((section) => {
+			if (section) observer.observe(section);
+		});
+
+		return () => observer.disconnect();
+	}, [scrollActiveChipIntoView]);
+
+	// Observe hero section for sticky logo visibility
+	useEffect(() => {
+		const heroObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					setShowStickyLogo(!entry.isIntersecting);
+				});
+			},
+			{
+				threshold: 0,
+			}
+		);
+
+		if (heroRef.current) {
+			heroObserver.observe(heroRef.current);
+		}
+
+		return () => heroObserver.disconnect();
+	}, []);
+
+	return (
+		<div>
+			<menu className={styles.hero} ref={heroRef}>
+				<Image
+					className={styles.heroImage}
+					src={"/images/hair.png"}
+					alt="hair"
+					width={500}
+					height={300}
+				></Image>
+				<div className={styles.heroOverlay}></div>
+				<Image
+					src={"/images/logo.png"}
+					alt="logo"
+					width={100}
+					height={100}
+					className={styles.logo}
+				></Image>
+
+				{/* Hero slogan - only visible on tablet/desktop */}
+				<div className={styles.heroSlogan}>
+					<h1>Wir lieben Haare</h1>
+					<p>Herzlich Willkommen in unserem Salon</p>
+				</div>
+
+				{/* Animated arrow - only visible on tablet/desktop */}
+				<div className={styles.scrollArrow}>
+					<CircleChevronDown size={32} />
+				</div>
+			</menu>
+
+			<div
+				className={`sticky top-0 z-20 ${showStickyLogo ? "bg-bg shadow-lg" : "bg-bg-dark"} transition-colors`}
+			>
+				<div
+					className={`${styles.stickyLogo} ${showStickyLogo ? styles.visible : ""}`}
+				>
+					<Image src={"/images/logo.png"} alt="logo" width={60} height={60} />
+				</div>
+				<div
+					className={`scroll-smooth overflow-x-auto whitespace-nowrap flex gap-2 hide-scrollbar p-4 ${showStickyLogo ? "pt-[92px]" : ""} transition-all`}
+					ref={menuChipContainerRef}
+				>
+					{menuItems.map((item) => (
+						<MenuChip
+							key={item.id}
+							active={activeSection === item.id}
+							text={item.text}
+							onClick={() => handleMenuClick(item.id)}
+						/>
+					))}
+				</div>
+			</div>
+
+			{/* Mock Content Sections */}
+			<section
+				id="uber-uns"
+				className={styles.contentSection}
+				ref={(el) => {
+					sectionRefs.current["uber-uns"] = el;
+				}}
+			>
+				<h2>Über Uns</h2>
+				<p>
+					Willkommen in unserem exklusiven Friseursalon! Mit über 15 Jahren
+					Erfahrung in der Haar- und Stylingbranche bieten wir Ihnen
+					professionelle Beratung und erstklassige Dienstleistungen. Unser Team
+					aus qualifizierten Stylisten sorgt dafür, dass Sie sich bei uns rundum
+					wohlfühlen.
+				</p>
+			</section>
+
+			<section
+				id="service"
+				className={styles.contentSection}
+				ref={(el) => {
+					sectionRefs.current["service"] = el;
+				}}
+			>
+				<h2>Unsere Services</h2>
+				<p>
+					Von klassischen Haarschnitten bis hin zu modernen Colorationen - wir
+					bieten das komplette Spektrum professioneller Friseurleistungen. Ob
+					Waschen, Schneiden, Föhnen, Färben oder spezielle Behandlungen für Ihr
+					Haar - bei uns sind Sie in den besten Händen.
+				</p>
+			</section>
+
+			<section
+				id="trends"
+				className={styles.contentSection}
+				ref={(el) => {
+					sectionRefs.current["trends"] = el;
+				}}
+			>
+				<h2>Aktuelle Trends</h2>
+				<p>
+					Bleiben Sie immer up-to-date mit den neuesten Haar-Trends! Unser Team
+					besucht regelmäßig Weiterbildungen und Trend-Seminare, um Ihnen die
+					aktuellsten Schnitt- und Farbtechniken anbieten zu können. Von
+					Balayage bis zu den neuesten Kurzhaarschnitten - wir setzen Trends um.
+				</p>
+			</section>
+
+			<section
+				id="haarprodukte"
+				className={styles.contentSection}
+				ref={(el) => {
+					sectionRefs.current["haarprodukte"] = el;
+				}}
+			>
+				<h2>Hochwertige Haarprodukte</h2>
+				<p>
+					Wir verwenden ausschließlich Produkte von renommierten Marken, die für
+					Qualität und Nachhaltigkeit stehen. In unserem Salon finden Sie eine
+					sorgfältig ausgewählte Produktpalette für die optimale Pflege Ihres
+					Haares zu Hause. Gerne beraten wir Sie bei der Auswahl der richtigen
+					Produkte.
+				</p>
+			</section>
+
+			<section
+				id="preise"
+				className={styles.contentSection}
+				ref={(el) => {
+					sectionRefs.current["preise"] = el;
+				}}
+			>
+				<h2>Faire Preise</h2>
+				<p>
+					Qualität muss nicht teuer sein! Wir bieten Ihnen transparente und
+					faire Preise für alle unsere Dienstleistungen. Ob Student, Senior oder
+					Familie - bei uns gibt es attraktive Rabatte und Angebote. Vereinbaren
+					Sie einen Termin und lassen Sie sich unverbindlich beraten.
+				</p>
+			</section>
+		</div>
+	);
 }
