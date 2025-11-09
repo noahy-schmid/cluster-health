@@ -3,7 +3,7 @@
 
 # Oh My Zsh configuration
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="agnoster" # You can change this to your preferred theme
+ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # Plugins
 plugins=(
@@ -13,12 +13,30 @@ plugins=(
     node
     npm
     rust
+    fzf-tab
     zsh-autosuggestions
     zsh-syntax-highlighting
 )
 
 # Load Oh My Zsh
 source $ZSH/oh-my-zsh.sh
+
+# Powerlevel10k instant prompt
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# Load Powerlevel10k config if it exists
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# fzf-tab configuration
+# Enable fzf-tab for better tab completion
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath 2>/dev/null || ls -1 --color=always $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza -1 --color=always $realpath 2>/dev/null || ls -1 --color=always $realpath'
+zstyle ':fzf-tab:*' switch-group ',' '.'
 
 # Custom aliases
 alias ll='ls -alF'

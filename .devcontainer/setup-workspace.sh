@@ -113,6 +113,16 @@ if [ -d "/home/node/.oh-my-zsh" ]; then
     if [ ! -d "/home/node/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" ]; then
         git clone https://github.com/zsh-users/zsh-syntax-highlighting /home/node/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting 2>/dev/null || true
     fi
+    
+    # Install fzf-tab
+    if [ ! -d "/home/node/.oh-my-zsh/custom/plugins/fzf-tab" ]; then
+        git clone https://github.com/Aloxaf/fzf-tab /home/node/.oh-my-zsh/custom/plugins/fzf-tab 2>/dev/null || true
+    fi
+    
+    # Install Powerlevel10k theme
+    if [ ! -d "/home/node/.oh-my-zsh/custom/themes/powerlevel10k" ]; then
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+    fi
 fi
 
 # Fix ownership of home directory files
