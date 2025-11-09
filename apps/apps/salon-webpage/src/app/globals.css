@@ -24,8 +24,14 @@
   --color-bg: var(--bg);
   --color-bg-light: var(--bg-light);
   --color-fg: var(--fg);
-}
 
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 3;
+  --text-p: 1rem;
+  --text-p--line-height: 1.5;
+
+  --inset-shadow-md: inset 0 5px 8px rgba(0, 0, 0, 1);
+}
 
 .background {
   background-color: var(--bg-dark);
