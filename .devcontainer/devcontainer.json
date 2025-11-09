@@ -5,5 +5,17 @@
 	"workspaceFolder": "/workspaces/cluster-health",
 	"shutdownAction": "stopCompose",
 	"postCreateCommand": ".devcontainer/setup-workspace.sh",
-	"remoteUser": "node"
+	"remoteUser": "node",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "zsh",
+				"terminal.integrated.profiles.linux": {
+					"zsh": {
+						"path": "/bin/zsh"
+					}
+				}
+			}
+		}
+	}
 }
