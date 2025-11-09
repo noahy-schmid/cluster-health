@@ -149,7 +149,7 @@ export default function Home() {
 			</menu>
 
 			<div
-				className={`sticky top-0 z-20 ${showStickyLogo ? "bg-bg shadow-lg" : "bg-bg-dark"} transition-colors`}
+				className={`sticky top-0 z-20 h-[142px] flex items-end  ${showStickyLogo ? "bg-bg shadow-lg" : "bg-bg-dark"} transition-colors`}
 			>
 				<div
 					className={`${styles.stickyLogo} ${showStickyLogo ? styles.visible : ""}`}
@@ -157,7 +157,7 @@ export default function Home() {
 					<Image src={"/images/logo.png"} alt="logo" width={60} height={60} />
 				</div>
 				<div
-					className={`scroll-smooth overflow-x-auto whitespace-nowrap flex gap-2 hide-scrollbar p-4 ${showStickyLogo ? "pt-[92px]" : ""} transition-all`}
+					className={`scroll-smooth overflow-x-auto whitespace-nowrap flex gap-2 hide-scrollbar p-4 justify-start ${showStickyLogo ? "pt-[92px]" : ""} transition-all`}
 					ref={menuChipContainerRef}
 				>
 					{menuItems.map((item) => (
