@@ -1,36 +1,9 @@
 {
-	"name": "Node.js & TypeScript with pnpm",
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-	"features": {
-		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-			"version": "latest",
-			"helm": "latest",
-			"minikube": "none"
-		},
-		"ghcr.io/rio/features/k9s:1": {},
-		"ghcr.io/devcontainers/features/common-utils:2": {
-			"installZsh": true,
-			"configureZshAsDefaultShell": true,
-			"installOhMyZsh": true,
-			"upgradePackages": true,
-			"username": "vscode"
-		},
-		"ghcr.io/devcontainers/features/rust:1": {
-			"version": "latest",
-			"profile": "default"
-		}
-	},
-	"mounts": [
-		"source=dev-ssh,target=/home/vscode/.ssh,type=volume",
-		"source=dev-zshrc-d,target=/home/vscode/.zshrc.d,type=volume"
-	],
-	"runArgs": [
-		"--init",
-		"--privileged"
-	],
-	"containerEnv": {
-		"NEXT_TELEMETRY_DISABLED": "1"
-	},
-	"postCreateCommand": "sudo npm install -g pnpm@latest && chmod 700 ~/.ssh && chmod 755 ~/.zshrc.d || true",
-	"remoteUser": "vscode"
+	"name": "Cluster Health Development",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "devcontainer",
+	"workspaceFolder": "/workspaces/cluster-health",
+	"shutdownAction": "stopCompose",
+	"postCreateCommand": ".devcontainer/setup-workspace.sh",
+	"remoteUser": "node"
 }
