@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cluster-health-dev
+    volumes:
+      # Workspace volume for better performance
+      - cluster-health-workspace:/workspaces/cluster-health
+      # Bind mount for initial sync
+      - ..:/tmp/host-workspace:cached
+      # Persistent volumes for user data
+      - dev-ssh:/home/node/.ssh
+      - dev-zshrc-d:/home/node/.zshrc.d
+      - dev-cargo:/home/node/.cargo
+      - dev-npm-cache:/home/node/.npm
+      - dev-pnpm-cache:/home/node/.local/share/pnpm
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+      - NODE_ENV=development
+    init: true
+    privileged: true
+    # Keep container running
+    command: sleep infinity
+    # Network setup for future services
+    networks:
+      - cluster-health-network
+
+  # PostgreSQL database (commented out for now, uncomment when needed)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: cluster-health-postgres
+  #   environment:
+  #     POSTGRES_DB: cluster_health
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - cluster-health-network
+
+  # Redis cache (commented out for now, uncomment when needed)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: cluster-health-redis
+  #   volumes:
+  #     - redis-data:/data
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - cluster-health-network
+
+  # RabbitMQ message broker (commented out for now, uncomment when needed)
+  # rabbitmq:
+  #   image: rabbitmq:3-management-alpine
+  #   container_name: cluster-health-rabbitmq
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: admin
+  #     RABBITMQ_DEFAULT_PASS: admin
+  #   volumes:
+  #     - rabbitmq-data:/var/lib/rabbitmq
+  #   ports:
+  #     - "5672:5672"    # AMQP port
+  #     - "15672:15672"  # Management UI
+  #   networks:
+  #     - cluster-health-network
+
+volumes:
+  # Workspace volume for better performance on Windows
+  cluster-health-workspace:
+    driver: local
+  # Persistent user data volumes
+  dev-ssh:
+    driver: local
+  dev-zshrc-d:
+    driver: local
+  dev-cargo:
+    driver: local
+  dev-npm-cache:
+    driver: local
+  dev-pnpm-cache:
+    driver: local
+  # Database volumes (for future use)
+  # postgres-data:
+  #   driver: local
+  # redis-data:
+  #   driver: local
+  # rabbitmq-data:
+  #   driver: local
+
+networks:
+  cluster-health-network:
+    driver: bridge
