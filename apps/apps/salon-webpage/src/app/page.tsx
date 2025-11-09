@@ -6,6 +6,8 @@ import { CircleChevronDown } from "lucide-react";
 import MenuChip from "@/components/menu-chip";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import ImageTextSection from "@/components/image-text-section";
+import StaffSlider from "@/components/staff-slider";
+import BookingModal from "@/components/booking-modal";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState("uber-uns");
@@ -13,6 +15,39 @@ export default function Home() {
   const menuChipContainerRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
   const heroRef = useRef<HTMLElement>(null);
+  const [selectedStaff, setSelectedStaff] = useState<number | null>(null);
+
+  // Mock staff data
+  const staffMembers = [
+    {
+      name: "Jana Schmidt",
+      role: "Salon-Inhaberin & Meisterin",
+      imageSrc: "/images/house.png", // Replace with actual staff images
+      description:
+        "Mit über 20 Jahren Erfahrung leitet Jana den Salon mit Leidenschaft und Expertise. Spezialisiert auf moderne Schnitt- und Färbetechniken.",
+    },
+    {
+      name: "Sarah Müller",
+      role: "Color Specialist",
+      imageSrc: "/images/house.png",
+      description:
+        "Sarah ist unsere Expertin für außergewöhnliche Colorationen und Balayage. Sie kreiert individuelle Farberlebnisse für jeden Haartyp.",
+    },
+    {
+      name: "Tim Wagner",
+      role: "Stylist",
+      imageSrc: "/images/house.png",
+      description:
+        "Tim bringt frischen Wind in klassische Schnitte. Seine modernen Interpretationen von zeitlosen Styles begeistern unsere Kunden.",
+    },
+    {
+      name: "Lisa Becker",
+      role: "Hair Artist",
+      imageSrc: "/images/house.png",
+      description:
+        "Lisa hat ein Händchen für kreative Hochsteckfrisuren und besondere Anlässe. Sie zaubert wahre Kunstwerke.",
+    },
+  ];
 
   const menuItems = useMemo(
     () => [
@@ -21,6 +56,7 @@ export default function Home() {
       { id: "trends", text: "Trends" },
       { id: "haarprodukte", text: "Haarprodukte" },
       { id: "preise", text: "Preise" },
+      { id: "team", text: "Unser Team" },
       { id: "booking", text: "Buchen" },
     ],
     []
@@ -258,6 +294,42 @@ export default function Home() {
           imageAlt="Faire Preise"
         />
       </div>
+
+      {/* Staff Slider Section */}
+      <div
+        id="team"
+        ref={(el) => {
+          sectionRefs.current["team"] = el;
+        }}
+        className="py-16 bg-bg-light/30"
+      >
+        <div className="w-full">
+          <div className="text-center mb-10 px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-fg mb-4">
+              Unser Team
+            </h2>
+            <p className="text-fg/70 text-lg max-w-2xl mx-auto">
+              Lernen Sie unser erfahrenes Team kennen und buchen Sie direkt
+              einen Termin mit Ihrem Lieblingsstylisten.
+            </p>
+          </div>
+
+          {/* Staff Slider */}
+          <StaffSlider
+            staffMembers={staffMembers}
+            onStaffClick={setSelectedStaff}
+          />
+        </div>
+      </div>
+
+      {/* Booking Modal */}
+      {selectedStaff !== null && (
+        <BookingModal
+          isOpen={selectedStaff !== null}
+          onClose={() => setSelectedStaff(null)}
+          staffMember={staffMembers[selectedStaff]}
+        />
+      )}
 
       <div
         id="booking"
