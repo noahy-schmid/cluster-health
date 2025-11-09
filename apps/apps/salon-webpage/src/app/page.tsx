@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import styles from "../styles/menu.module.css";
-import { CircleChevronDown } from "lucide-react";
+import { CircleChevronDown, Send } from "lucide-react";
 import MenuChip from "@/components/menu-chip";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import ImageTextSection from "@/components/image-text-section";
@@ -378,6 +378,9 @@ export default function Home() {
           }}
         >
           Nachricht senden
+          <span>
+            <Send className="inline ml-2" />
+          </span>
         </button>
       </div>
     </div>

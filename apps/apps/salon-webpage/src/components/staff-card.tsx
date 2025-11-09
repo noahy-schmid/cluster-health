@@ -17,21 +17,29 @@ export default function StaffCard({
 }: StaffCardProps) {
   return (
     <div
-      className="bg-bg rounded-xl shadow-lg shadow-black/20 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] w-full"
+      className="relative cursor-pointer transition-transform hover:scale-[1.02] w-full pt-16"
       onClick={onClick}
     >
-      <div className="relative w-full h-80 md:h-72 bg-bg-light">
-        <Image src={imageSrc} alt={name} fill className="object-cover" />
+      {/* Circular profile image - positioned above the card */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
+        <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden shadow-2xl shadow-black/40">
+          <Image src={imageSrc} alt={name} fill className="object-cover" />
+        </div>
       </div>
-      <div className="p-6 md:p-4 text-center">
-        <h3 className="text-2xl md:text-xl font-semibold text-fg">{name}</h3>
-        <p className="text-fg/70 mt-1 text-lg md:text-base">{role}</p>
-        <button
-          type="button"
-          className="mt-6 md:mt-4 w-full bg-fg text-bg rounded-lg px-4 py-3 md:py-2 font-semibold shadow-md hover:opacity-90 transition text-lg md:text-base"
-        >
-          Termin buchen
-        </button>
+
+      {/* Card */}
+      <div className="relative bg-bg rounded-3xl shadow-lg shadow-black/20 overflow-hidden pt-20 pb-6 px-6 inset-shadow-sm inset-shadow-fg/20">
+        {/* Content */}
+        <div className="relative text-center">
+          <h3 className="text-2xl md:text-xl font-bold text-fg">{name}</h3>
+          <p className="text-fg/70 mt-2 text-base md:text-sm">{role}</p>
+          <button
+            type="button"
+            className="mt-6 w-full bg-fg text-bg rounded-xl px-6 py-3 md:py-2.5 font-semibold shadow-md shadow-fg/20 hover:shadow-lg transition-all text-lg md:text-base cursor-pointer"
+          >
+            Termin buchen
+          </button>
+        </div>
       </div>
     </div>
   );
