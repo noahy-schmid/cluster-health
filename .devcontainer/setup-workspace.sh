@@ -46,20 +46,33 @@ if [ ! -d "$WORKSPACE_DIR/.git" ]; then
     
     if [ -d "$HOST_WORKSPACE/.git" ]; then
         echo "🔗 Setting up git repository..."
-        git init .
-        
-        # Copy git config
+
+        # Initialize a new repo in the workspace (safe even if .git was copied later)
+        git init . 2>/dev/null || true
+
+        # Copy git config from host if present (may include remotes)
         cp "$HOST_WORKSPACE/.git/config" "$WORKSPACE_DIR/.git/" 2>/dev/null || true
-        
-        # Get remote URL from host workspace
+
+        # Determine remote URL on host (if any)
         REMOTE_URL=$(cd "$HOST_WORKSPACE" && git remote get-url origin 2>/dev/null || echo "")
+
+        # Determine if a local 'origin' remote already exists
+        LOCAL_REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
+
+        # If host has a remote and local doesn't, add it. If both exist but differ, update it.
         if [ -n "$REMOTE_URL" ]; then
-            git remote add origin "$REMOTE_URL"
-            echo "✅ Added remote: $REMOTE_URL"
+            if [ -z "$LOCAL_REMOTE" ]; then
+                git remote add origin "$REMOTE_URL" && echo "✅ Added remote: $REMOTE_URL" || true
+            elif [ "$LOCAL_REMOTE" != "$REMOTE_URL" ]; then
+                git remote set-url origin "$REMOTE_URL" && echo "🔁 Updated remote origin to: $REMOTE_URL" || true
+            else
+                echo "ℹ️  Remote origin already set to: $LOCAL_REMOTE"
+            fi
         fi
-        
-        # Get current branch from host
+
+        # Get current branch from host (fallback to main) and ensure it exists locally
         CURRENT_BRANCH=$(cd "$HOST_WORKSPACE" && git branch --show-current 2>/dev/null || echo "main")
+        # Try to create and switch to branch, but avoid failing if it already exists
         git checkout -b "$CURRENT_BRANCH" 2>/dev/null || git checkout "$CURRENT_BRANCH" 2>/dev/null || true
     fi
     
