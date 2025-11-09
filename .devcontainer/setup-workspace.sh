@@ -8,6 +8,16 @@ HOST_WORKSPACE="/tmp/host-workspace"
 
 echo "🚀 Setting up devcontainer workspace..."
 
+# Fix ownership of all mounted volumes first
+echo "👤 Setting ownership of mounted volumes..."
+sudo chown -R node:node /home/node/.ssh 2>/dev/null || true
+sudo chown -R node:node /home/node/.zshrc.d 2>/dev/null || true
+sudo chown -R node:node /home/node/.cargo 2>/dev/null || true
+sudo chown -R node:node /home/node/.npm 2>/dev/null || true
+sudo chown -R node:node /home/node/.local 2>/dev/null || true
+sudo chown -R node:node "$WORKSPACE_DIR" 2>/dev/null || true
+echo "✅ Ownership configured"
+
 # Create workspace directory if it doesn't exist
 mkdir -p "$WORKSPACE_DIR"
 
@@ -81,7 +91,7 @@ else
     echo "📁 Existing workspace found, skipping initialization"
 fi
 
-# Set proper permissions for SSH
+# Set proper permissions for SSH (ownership already set at start)
 if [ -d "/home/node/.ssh" ]; then
     chmod 700 /home/node/.ssh
     chmod 600 /home/node/.ssh/* 2>/dev/null || true
@@ -137,9 +147,6 @@ if [ -d "/home/node/.oh-my-zsh" ]; then
         git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
     fi
 fi
-
-# Fix ownership of home directory files
-sudo chown -R node:node /home/node/.zshrc.d /home/node/.oh-my-zsh 2>/dev/null || true
 
 echo "🎉 Devcontainer setup completed successfully!"
 echo "� Running with Docker Compose for easy service management"
