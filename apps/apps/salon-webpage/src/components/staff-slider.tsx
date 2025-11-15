@@ -3,23 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import StaffCard from "./staff-card";
-
-interface StaffMember {
-  name: string;
-  role: string;
-  imageSrc: string;
-  description: string;
-}
+import { StaffMemberBasic } from "@/lib/types/staff";
 
 interface StaffSliderProps {
-  staffMembers: StaffMember[];
-  onStaffClick: (index: number) => void;
+  staffMembers: StaffMemberBasic[];
 }
 
-export default function StaffSlider({
-  staffMembers,
-  onStaffClick,
-}: StaffSliderProps) {
+export default function StaffSlider({ staffMembers }: StaffSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -158,7 +148,7 @@ export default function StaffSlider({
                 name={staff.name}
                 role={staff.role}
                 imageSrc={staff.imageSrc}
-                onClick={() => onStaffClick(index)}
+                specialistId={staff.id}
               />
             </div>
           ))}

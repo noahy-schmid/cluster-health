@@ -1,24 +1,31 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface StaffCardProps {
   name: string;
   role: string;
   imageSrc: string;
-  onClick: () => void;
+  specialistId: string;
 }
 
 export default function StaffCard({
   name,
   role,
   imageSrc,
-  onClick,
+  specialistId,
 }: StaffCardProps) {
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push(`/specialist/${specialistId}`);
+  };
+
   return (
     <div
       className="relative cursor-pointer transition-transform hover:scale-[1.02] w-full pt-16"
-      onClick={onClick}
+      onClick={handleClick}
     >
       {/* Circular profile image - positioned above the card */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">

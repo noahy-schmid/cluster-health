@@ -1,21 +1,22 @@
 {
-	"name": "Cluster Health Development",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "devcontainer",
-	"workspaceFolder": "/workspaces/cluster-health",
-	"shutdownAction": "stopCompose",
-	"postCreateCommand": ".devcontainer/setup-workspace.sh",
-	"remoteUser": "node",
-	"customizations": {
-		"vscode": {
-			"settings": {
-				"terminal.integrated.defaultProfile.linux": "zsh",
-				"terminal.integrated.profiles.linux": {
-					"zsh": {
-						"path": "/bin/zsh"
-					}
-				}
-			}
-		}
-	}
+  "name": "Cluster Health Development",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspaces/cluster-health",
+  "shutdownAction": "stopCompose",
+  "postCreateCommand": ".devcontainer/setup-workspace.sh",
+  "remoteUser": "node",
+  "customizations": {
+    "vscode": {
+      "extensions": ["esbenp.prettier-vscode", "bradlc.vscode-tailwindcss"],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/zsh"
+          }
+        }
+      }
+    }
+  }
 }
