@@ -7,6 +7,7 @@ import StickyMenuBar from "@/components/sticky-menu-bar";
 import ContactForm from "@/app/contact-form";
 import { getStaffMembers } from "@/lib/services/staff-service";
 import FeatureListSection from "@/components/homepage-sections/feature-list-section";
+import ImageCarouselSection from "@/components/homepage-sections/image-carousel-section";
 
 export default async function Home() {
   // Load staff data on the server
@@ -71,15 +72,7 @@ export default async function Home() {
       </div>
 
       <div id="trends">
-        <ImageTextSection
-          header="Aktuelle Trends"
-          text={`Bleiben Sie immer up-to-date mit den neuesten Haar-Trends! Unser Team
-          besucht regelmäßig Weiterbildungen und Trend-Seminare, um Ihnen die
-          aktuellsten Schnitt- und Farbtechniken anbieten zu können. Von
-          Balayage bis zu den neuesten Kurzhaarschnitten - wir setzen Trends um.`}
-          imageSrc="/images/house.png"
-          imageAlt="Aktuelle Trends"
-        />
+        <ImageCarouselSection />
       </div>
 
       <div id="haarprodukte">
