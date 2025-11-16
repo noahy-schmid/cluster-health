@@ -157,6 +157,15 @@ export default function ImageCarouselSection() {
     }, 300);
   }, [currentIndex]);
 
+  // Auto-advance carousel every 2 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      goToNext();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section className="border-b py-8 border-fg/30 relative">
       <div className="max-w-7xl mx-auto px-4 mb-6">
