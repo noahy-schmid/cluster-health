@@ -1,11 +1,12 @@
 import Image from "next/image";
 import styles from "../styles/menu.module.css";
 import { CircleChevronDown } from "lucide-react";
-import ImageTextSection from "@/components/image-text-section";
-import StaffSlider from "@/components/staff-slider";
+import ImageTextSection from "@/components/homepage-sections/image-text-section";
+import StaffSlider from "@/components/homepage-sections/staff-slider";
 import StickyMenuBar from "@/components/sticky-menu-bar";
 import ContactForm from "@/app/contact-form";
 import { getStaffMembers } from "@/lib/services/staff-service";
+import FeatureListSection from "@/components/homepage-sections/feature-list-section";
 
 export default async function Home() {
   // Load staff data on the server
@@ -66,15 +67,7 @@ export default async function Home() {
       </div>
 
       <div id="service">
-        <ImageTextSection
-          header="Unsere Services"
-          text="Von klassischen Haarschnitten bis hin zu modernen Colorationen - wir
-          bieten das komplette Spektrum professioneller Friseurleistungen. Ob
-          Waschen, Schneiden, Föhnen, Färben oder spezielle Behandlungen für Ihr
-          Haar - bei uns sind Sie in den besten Händen."
-          imageSrc="/images/house.png"
-          imageAlt="Unsere Services"
-        />
+        <FeatureListSection />
       </div>
 
       <div id="trends">
