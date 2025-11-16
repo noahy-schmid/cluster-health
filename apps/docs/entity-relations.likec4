@@ -1,0 +1,72 @@
+specification {
+  relationship oneToMany {
+    head crow
+    tail none
+    line solid
+  }
+
+  relationship manyToMany {
+    head crow
+    tail crow
+    line solid
+  }
+
+  relationship oneToOne {
+    head none
+    tail none
+    line solid
+  }
+}
+
+
+
+model {
+
+  databaseSystem = system "Database System" {
+    description "General Database System"
+    style {
+      color green
+    }
+
+    reservationsDatabase = container "Reservations Database" {
+      description "Database storing salon reservation data"
+
+      serviceBookingTable = container "Service Booking Table" {
+        description "Table containing service booking records"
+        technology "Relational Table"
+      }
+
+      serviceTable = container "Service Table" {
+        technology "Relational Table"
+      }
+
+      staffTable = container "Staff Table" {
+        technology "Relational Table"
+      }
+
+      salonTable = container "Salon Table" {
+        technology "Relational Table"
+      }
+
+      serviceTemplateTable = container "Service Template Table" {
+        technology "Relational Table"
+      }
+
+      salonTable .oneToMany staffTable 
+      salonTable .oneToMany serviceTable
+      staffTable .oneToMany serviceTemplateTable
+      serviceTable .oneToMany serviceTemplateTable
+      serviceTable .oneToMany serviceBookingTable
+      staffTable .oneToMany serviceBookingTable
+    }
+  }
+}
+
+views {
+  view fullReservationsDB of reservationsDatabase {
+    title "Database System Overview"
+    include *
+    include serviceBookingTable.*
+
+  }
+}

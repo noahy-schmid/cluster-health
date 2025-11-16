@@ -5,7 +5,15 @@
 
 :root {
   /* OKLCH colors for CSS usage */
-  --bg-dark: oklch(0.2 0.05 264.19);
+  --bg-dark: oklch(0.26 0.05 264.19);
+  --bg-layer-0: var(--bg-dark);
+  --bg-layer-1: oklch(0.28 0.05 264.19);
+  --bg-layer-2: oklch(0.3 0.05 264.19);
+  --bg-layer-3: oklch(0.32 0.05 264.19);
+  --bg-layer-4: oklch(0.34 0.05 264.19);
+  --bg-layer-5: oklch(0.36 0.05 264.19);
+  --bg-layer-6: oklch(0.38 0.05 264.19);
+  --bg-layer-7: oklch(0.4 0.05 264.19);
   --bg: oklch(0.3 0.05 264.19);
   --bg-light: oklch(0.4 0.05 264.19);
   --fg: oklch(0.8 0.05 264.19);
@@ -21,6 +29,16 @@
 
 @theme {
   --color-bg-dark: var(--bg-dark);
+
+  --color-bg-layer-0: var(--bg-layer-0);
+  --color-bg-layer-1: var(--bg-layer-1);
+  --color-bg-layer-2: var(--bg-layer-2);
+  --color-bg-layer-3: var(--bg-layer-3);
+  --color-bg-layer-4: var(--bg-layer-4);
+  --color-bg-layer-5: var(--bg-layer-5);
+  --color-bg-layer-6: var(--bg-layer-6);
+  --color-bg-layer-7: var(--bg-layer-7);
+
   --color-bg: var(--bg);
   --color-bg-light: var(--bg-light);
   --color-fg: var(--fg);

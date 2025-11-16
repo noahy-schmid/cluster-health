@@ -55,15 +55,17 @@ export function getReservation(reservationId: string): Reservation | null {
 }
 
 // Update reservation with user details
-export function updateReservationUserDetails(
+export async function updateReservationUserDetails(
   reservationId: string,
   userDetails: {
     userEmail: string;
     userName: string;
     userPhone?: string;
   }
-): boolean {
+): Promise<boolean> {
   const reservation = reservationsStore.get(reservationId);
+
+  await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate async operation
 
   if (!reservation) {
     return false;

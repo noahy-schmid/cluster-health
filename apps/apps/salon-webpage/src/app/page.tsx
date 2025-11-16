@@ -4,7 +4,7 @@ import { CircleChevronDown } from "lucide-react";
 import ImageTextSection from "@/components/image-text-section";
 import StaffSlider from "@/components/staff-slider";
 import StickyMenuBar from "@/components/sticky-menu-bar";
-import ContactForm from "@/components/contact-form";
+import ContactForm from "@/app/contact-form";
 import { getStaffMembers } from "@/lib/services/staff-service";
 
 export default async function Home() {

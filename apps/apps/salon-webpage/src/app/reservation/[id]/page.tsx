@@ -17,7 +17,17 @@ import {
   updateReservationUserDetails,
   confirmReservation,
 } from "@/lib/services/reservation-service";
-import ContactDetailsDisplay from "./contact-details-display";
+import FormField from "@/components/form-field";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRef } from "react";
+
+// State machine based on LikeC4 model: reservationPageStateMachine
+type PageState =
+  | "initial"
+  | "submittingContactInfo"
+  | "showVerificationCode"
+  | "submittingVerificationCode"
+  | "confirmed";
 
 export default function ReservationPage() {
   const params = useParams();
@@ -28,14 +38,17 @@ export default function ReservationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Page state machine
+  const [pageState, setPageState] = useState<PageState>("initial");
+
   // Form state
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userPhone, setUserPhone] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showVerificationCode, setShowVerificationCode] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
+
+  // Ref for verification section to scroll to
+  const verificationSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadReservation = async () => {
@@ -69,29 +82,38 @@ export default function ReservationPage() {
       return;
     }
 
-    setIsSubmitting(true);
+    // Transition: initial -> submittingContactInfo
+    setPageState("submittingContactInfo");
+
     try {
-      const success = updateReservationUserDetails(reservationId, {
+      const success = await updateReservationUserDetails(reservationId, {
         userEmail,
         userName,
         userPhone,
       });
 
       if (success) {
-        // Show verification code field instead of confirming immediately
-        setShowVerificationCode(true);
+        // Transition: submittingContactInfo -> showVerificationCode
+        setPageState("showVerificationCode");
         // Reload reservation to show updated status
         const updated = getReservation(reservationId);
         if (updated) {
           setReservation(updated);
         }
+        // Scroll to verification section after animation starts
+        setTimeout(() => {
+          verificationSectionRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }, 200);
       } else {
         alert("Fehler beim Speichern der Daten");
+        setPageState("initial");
       }
     } catch (err) {
       alert("Ein Fehler ist aufgetreten");
-    } finally {
-      setIsSubmitting(false);
+      setPageState("initial");
     }
   };
 
@@ -103,13 +125,28 @@ export default function ReservationPage() {
       return;
     }
 
-    // For now, accept any code
-    setIsEmailVerified(true);
-    confirmReservation(reservationId);
-    const updated = getReservation(reservationId);
-    if (updated) {
-      setReservation(updated);
-    }
+    // Transition: showVerificationCode -> submittingVerificationCode
+    setPageState("submittingVerificationCode");
+
+    // Simulate verification (in real app, this would be async)
+    setTimeout(() => {
+      // For now, accept any code
+      const isValid = true; // In real app: verify code with backend
+
+      if (isValid) {
+        // Transition: submittingVerificationCode -> confirmed
+        setPageState("confirmed");
+        confirmReservation(reservationId);
+        const updated = getReservation(reservationId);
+        if (updated) {
+          setReservation(updated);
+        }
+      } else {
+        // Transition: submittingVerificationCode -> showVerificationCode (failed)
+        setPageState("showVerificationCode");
+        alert("Ungültiger Code. Bitte versuchen Sie es erneut.");
+      }
+    }, 500);
   };
 
   if (isLoading) {
@@ -142,16 +179,16 @@ export default function ReservationPage() {
   const isConfirmed = reservation.status === "confirmed";
 
   return (
-    <div className="min-h-screen bg-bg-light/30">
+    <div className="min-h-screen bg-bg-dark">
       {/* Header */}
-      <div className="bg-bg shadow-lg sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="bg-bg-layer-5 shadow-lg sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 pb-6 pt-2">
           <button
-            onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-fg hover:text-fg/70 transition mb-4"
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-fg hover:bg-bg-layer-7 hover:shadow hover:shadow-black/20 hover:inset-shadow-xs hover:inset-shadow-fg/20 transition-all duration-200 p-3 rounded-lg"
           >
             <ArrowLeft size={20} />
-            <span>Zurück zur Startseite</span>
+            <span>Zurück zur vorherigen Seite</span>
           </button>
           <h1 className="text-3xl font-bold text-fg">
             {isConfirmed ? "Buchungsbestätigung" : "Reservierung abschließen"}
@@ -161,23 +198,8 @@ export default function ReservationPage() {
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {isEmailVerified && (
-          <div className="bg-green-50 border-2 border-green-500 rounded-2xl p-6 mb-8 flex items-center gap-4">
-            <CheckCircle className="text-green-500" size={32} />
-            <div>
-              <h2 className="text-xl font-bold text-green-800">
-                E-Mail bestätigt!
-              </h2>
-              <p className="text-green-700">
-                Ihre Reservierung wurde erfolgreich bestätigt. Sie erhalten in
-                Kürze eine Bestätigungs-E-Mail an {reservation.userEmail}
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Reservation Details */}
-        <div className="bg-bg rounded-2xl shadow-lg p-6 md:p-8 mb-8">
+        <div className="max-w-5xl bg-bg mx-auto rounded-xl mb-10 shadow-lg shadow-black/20 inset-shadow-sm inset-shadow-fg/20 p-4 md:p-8">
           <h2 className="text-2xl font-bold text-fg mb-6">
             Reservierungsdetails
           </h2>
@@ -227,7 +249,7 @@ export default function ReservationPage() {
               </p>
             </div>
 
-            <div className="bg-fg/5 rounded-lg p-3 mt-4">
+            <div className="bg-bg-layer-1 inset-shadow-xs inset-shadow-black/20 rounded-lg p-3 mt-4">
               <p className="text-fg/60 text-xs">Reservierungs-ID</p>
               <p className="text-fg font-mono text-sm">{reservation.id}</p>
             </div>
@@ -235,112 +257,117 @@ export default function ReservationPage() {
         </div>
 
         {/* User Details Form */}
-        {!isConfirmed && !showVerificationCode && (
-          <div className="bg-bg rounded-2xl shadow-lg p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-fg mb-6">
-              Ihre Kontaktdaten
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-fg font-semibold mb-2">
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-fg/20 bg-bg text-fg focus:border-fg outline-none transition"
-                  placeholder="Ihr vollständiger Name"
-                  required
-                />
-              </div>
 
-              <div>
-                <label className="block text-fg font-semibold mb-2">
-                  E-Mail-Adresse *
-                </label>
-                <input
-                  type="email"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-fg/20 bg-bg text-fg focus:border-fg outline-none transition"
-                  placeholder="ihre.email@beispiel.de"
-                  required
-                />
-                <p className="text-fg/60 text-sm mt-1">
-                  Sie erhalten einen Bestätigungscode an diese Adresse
+        <div className="max-w-5xl bg-bg mx-auto rounded-xl my-10 shadow-lg shadow-black/20 inset-shadow-sm inset-shadow-fg/20 p-4 md:p-8">
+          <h2 className="text-2xl font-bold text-fg mb-6">Ihre Kontaktdaten</h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <FormField
+              label="Name"
+              type="text"
+              value={userName}
+              onChange={setUserName}
+              placeholder="Ihr vollständiger Name"
+              required
+              disabled={pageState !== "initial"}
+            />
+
+            <FormField
+              label="E-Mail-Adresse"
+              type="email"
+              value={userEmail}
+              onChange={setUserEmail}
+              placeholder="ihre.email@beispiel.de"
+              required
+              helperText="Sie erhalten einen Bestätigungscode an diese Adresse"
+              disabled={pageState !== "initial"}
+            />
+
+            <FormField
+              label="Telefonnummer"
+              type="tel"
+              value={userPhone}
+              onChange={setUserPhone}
+              placeholder="+49 123 456789"
+              required
+              disabled={pageState !== "initial"}
+            />
+
+            <AnimatePresence>
+              {(pageState === "showVerificationCode" ||
+                pageState === "submittingVerificationCode") && (
+                <motion.div
+                  ref={verificationSectionRef}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-6">
+                    <h3 className="text-lg font-bold text-fg border-t border-fg/20 pt-6">
+                      E-Mail bestätigen
+                    </h3>
+                    <p className="text-fg/80 mb-6">
+                      Wir haben einen Bestätigungscode an{" "}
+                      <span className="font-semibold">{userEmail}</span>{" "}
+                      gesendet. Bitte geben Sie den Code unten ein.
+                    </p>
+                    <FormField
+                      label="Bestätigungscode"
+                      type="text"
+                      value={verificationCode}
+                      onChange={setVerificationCode}
+                      placeholder="XXXXXX"
+                      required
+                      helperText="Bitte überprüfen Sie auch Ihren Spam-Ordner"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {pageState === "confirmed" && (
+              <div className="mt-6 flex items-center gap-3 bg-bg-layer-4 p-4 rounded-lg shadow shadow-black/20 inset-shadow-xs inset-shadow-fg/20">
+                <CheckCircle className="text-fg" size={24} />
+                <p className="text-fg font-semibold">
+                  Ihre Reservierung wurde bestätigt! Wir freuen uns, Sie
+                  begrüßen zu dürfen.
                 </p>
               </div>
+            )}
 
-              <div>
-                <label className="block text-fg font-semibold mb-2">
-                  Telefonnummer *
-                </label>
-                <input
-                  type="tel"
-                  value={userPhone}
-                  onChange={(e) => setUserPhone(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-fg/20 bg-bg text-fg focus:border-fg outline-none transition"
-                  placeholder="+49 123 456789"
-                  required
-                />
-              </div>
-
+            {pageState !== "confirmed" && (
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={
+                  pageState !== "initial" &&
+                  pageState !== "showVerificationCode"
+                }
                 className="w-full bg-fg text-bg py-4 rounded-xl font-bold text-lg hover:opacity-90 transition disabled:opacity-50"
+                onClick={
+                  pageState === "showVerificationCode" ||
+                  pageState === "submittingVerificationCode"
+                    ? handleVerifyCode
+                    : handleSubmit
+                }
               >
-                {isSubmitting
-                  ? "Wird gespeichert..."
-                  : "Reservierung bestätigen"}
+                {(() => {
+                  switch (pageState) {
+                    case "submittingContactInfo":
+                      return "Wird gespeichert...";
+                    case "submittingVerificationCode":
+                      return "Wird überprüft...";
+                    case "showVerificationCode":
+                      return "E-Mail bestätigen";
+                    case "initial":
+                    default:
+                      return "Reservierung abschließen";
+                  }
+                })()}
               </button>
-            </form>
-          </div>
-        )}
-
-        {/* Email Verification Code */}
-        {!isConfirmed && showVerificationCode && !isEmailVerified && (
-          <div className="bg-bg rounded-2xl shadow-lg p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-fg mb-6">
-              E-Mail bestätigen
-            </h2>
-            <p className="text-fg/80 mb-6">
-              Wir haben einen Bestätigungscode an{" "}
-              <span className="font-semibold">{userEmail}</span> gesendet. Bitte
-              geben Sie den Code unten ein.
-            </p>
-            <form onSubmit={handleVerifyCode} className="space-y-6">
-              <div>
-                <label className="block text-fg font-semibold mb-2">
-                  Bestätigungscode *
-                </label>
-                <input
-                  type="text"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-fg/20 bg-bg text-fg focus:border-fg outline-none transition font-mono text-center text-xl tracking-wider"
-                  placeholder="XXXXXX"
-                  required
-                />
-                <p className="text-fg/60 text-sm mt-1">
-                  Bitte überprüfen Sie auch Ihren Spam-Ordner
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-fg text-bg py-4 rounded-xl font-bold text-lg hover:opacity-90 transition"
-              >
-                E-Mail bestätigen
-              </button>
-            </form>
-          </div>
-        )}
-
-        {isConfirmed && reservation.userName && (
-          <ContactDetailsDisplay reservation={reservation} />
-        )}
+            )}
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -76,7 +76,7 @@ export default function SpecialistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-light/30">
+    <div className="min-h-screen bg-bg-dark">
       {/* Header */}
       <div className="bg-bg shadow-lg sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-6">

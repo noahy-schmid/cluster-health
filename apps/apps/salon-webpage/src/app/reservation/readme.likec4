@@ -1,0 +1,42 @@
+model {
+
+  extend salonSystem.salonFrontend.salonPages.reservationPage {
+
+    initialState = component "Initial State" {
+      description "Initial state for the Reservation Page"
+    }
+
+    submittingContactInfoState = component "Submitting Contact Info State" {
+      description "State when the user is submitting their contact information"
+    }
+
+    showVerificationCodeState = component "Show Verification Code State" {
+      description "State when the verification code input is shown"
+    }
+
+    submittingVerificationCodeState = component "Submitting Verification Code State" {
+      description "State when the user is submitting the verification code"
+    }
+
+    confirmedState = component "Confirmed State" {
+      description "State when the reservation is confirmed"
+    }
+
+    initialState -> submittingContactInfoState "Submit Contact Info"
+    submittingContactInfoState -> showVerificationCodeState "Submitting finished"
+
+    showVerificationCodeState -> submittingVerificationCodeState "Submit Verification Code"
+
+    submittingVerificationCodeState -> confirmedState "Verification Successful"
+
+    submittingVerificationCodeState -> showVerificationCodeState "Verification Failed"
+
+  }
+}
+
+views {
+  view reservationPageStateMachine of salonSystem.salonFrontend.salonPages.reservationPage {
+    title "Reservation Page State Machine"
+    include *
+  }
+}
