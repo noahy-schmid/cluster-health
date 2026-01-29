@@ -27,7 +27,7 @@ export default function Navigation() {
           <h1
             className={`font-bold font-sans text-primary-dark transition-all duration-300 text-2xl`}
           >
-            Mein Stylist
+            dein.salon
           </h1>
         </div>
 
