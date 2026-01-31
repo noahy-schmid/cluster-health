@@ -41,6 +41,10 @@ func main() {
 		Title:     "Test Appointment",
 		ID:        uuid.NewString(),
 	})
+	if err != nil {
+		fmt.Printf("Error adding calendar event: %v\n", err)
+		return
+	}
 
 	rrule, err := rrule.NewRRule(rrule.ROption{
 		Freq: rrule.DAILY,
