@@ -50,7 +50,7 @@ func main() {
 		return
 	}
 
-	err = calendar.AddReccuringCalendarEvent(calendarID, ports.CalendarEvent{
+	err = calendar.AddRecurringCalendarEvent(calendarID, ports.CalendarEvent{
 		ID:        uuid.NewString(),
 		Title:     "Recurring Test Appointment",
 		StartTime: time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 10, 0, 0, 0, time.Local),
