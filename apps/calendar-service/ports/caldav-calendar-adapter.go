@@ -163,7 +163,7 @@ func (a *CaldavCalendarAdapter) AddCalendarEvent(calendarID string, event Calend
 	return nil
 }
 
-func (a *CaldavCalendarAdapter) AddReccuringCalendarEvent(calendarID string, event CalendarEvent, repetition rrule.RRule) error {
+func (a *CaldavCalendarAdapter) AddRecurringCalendarEvent(calendarID string, event CalendarEvent, repetition rrule.RRule) error {
 	ctx := context.Background()
 
 	principal, err := a.client.FindCurrentUserPrincipal(ctx)
