@@ -8,4 +8,4 @@ require (
 	github.com/yinjun1991/caldav-client-go v1.0.6
 )
 
-require github.com/teambition/rrule-go v1.8.2 // indirect
+require github.com/teambition/rrule-go v1.8.2
