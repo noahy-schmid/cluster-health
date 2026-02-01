@@ -18,8 +18,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "My Stylist - Professional Styling Services",
-  description: "Transform your style with our expert styling services",
+  title: "dein.salon - Professionelle Friseurdienstleistungen",
+  description: "Bringen Sie Ihren Salon online mit dein.salon",
 };
 
 export default function RootLayout({

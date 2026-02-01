@@ -199,18 +199,18 @@ export default function Home() {
               {
                 number: 1,
                 header: "Anfrage senden",
-                body: "Füllen Sie das Kontaktformular aus und teilen Sie uns Ihre Bedürfnisse mit."
+                body: "Füllen Sie das Kontaktformular aus und teilen Sie uns Ihre Bedürfnisse mit.",
               },
               {
                 number: 2,
                 header: "Persönliche Kontaktaufnahme",
-                body: "Wir kontaktieren Sie direkt, um alles für Ihren Salon einzurichten."
+                body: "Wir kontaktieren Sie direkt, um alles für Ihren Salon einzurichten.",
               },
               {
                 number: 3,
                 header: "Sofort loslegen",
-                body: "Nach der Einrichtung können Sie sofort mit der Terminverwaltung beginnen."
-              }
+                body: "Nach der Einrichtung können Sie sofort mit der Terminverwaltung beginnen.",
+              },
             ]}
           />
         </section>
@@ -237,8 +237,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-100 py-6">
         <div className="max-w-6xl mx-auto px-6 text-center text-gray-600">
-          &copy; {new Date().getFullYear()} Mein Stylist. Alle Rechte
-          vorbehalten.
+          &copy; {new Date().getFullYear()} dein.salon Alle Rechte vorbehalten.
         </div>
       </footer>
     </div>
