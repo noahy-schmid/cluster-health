@@ -21,6 +21,7 @@ export async function createWebsite(): Promise<
     salonId: randomUUID(),
     heroImage: "",
     logo: "",
+    slug: `salon-${Date.now()}`,
   };
 
   try {
