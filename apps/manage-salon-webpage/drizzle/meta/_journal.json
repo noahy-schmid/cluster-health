@@ -15,6 +15,13 @@
       "when": 1770128421980,
       "tag": "0001_melted_mentallo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770132990076,
+      "tag": "0002_clear_the_hood",
+      "breakpoints": true
     }
   ]
 }

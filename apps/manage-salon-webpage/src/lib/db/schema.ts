@@ -24,3 +24,20 @@ export const textWithImageSectionsTable = pgTable("text_with_image_sections", {
   content: text().notNull(),
   image: varchar().notNull(),
 });
+
+export const gallerySectionsTable = pgTable("gallery_sections", {
+  id: uuid()
+    .primaryKey()
+    .references(() => sectionsTable.id, { onDelete: "cascade" }),
+  title: varchar().notNull(),
+  subtitle: varchar().notNull(),
+});
+
+export const galleryImagesTable = pgTable("gallery_images", {
+  id: uuid().primaryKey().defaultRandom(),
+  gallerySectionId: uuid()
+    .notNull()
+    .references(() => gallerySectionsTable.id, { onDelete: "cascade" }),
+  imageUrl: varchar().notNull(),
+  order: integer().notNull(),
+});

@@ -1,14 +1,11 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { getSectionById } from "@/lib/storage";
 import { useSectionsStore } from "@/services/sections-store";
-import { GallerySettings } from "@/lib/types/section-types";
-import FormInput from "@/components/website/forms/FormInput";
-import ImageUrlList from "@/components/website/forms/ImageUrlList";
-import FormActions from "@/components/website/forms/FormActions";
+import { useWebsiteStore } from "@/services/website-store";
 import PageHeader from "@/components/PageHeader";
+import GalleryForm from "@/components/website/forms/GalleryForm";
 
 interface PageProps {
   params: Promise<{ sectionId: string }>;
@@ -17,44 +14,46 @@ interface PageProps {
 export default function GalleryEditPage({ params }: PageProps) {
   const { sectionId } = use(params);
   const router = useRouter();
-  const updateSection = useSectionsStore((state) => state.updateSection);
-  const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState<GallerySettings>({
-    title: "",
-    subtitle: "",
-    imageUrls: [],
-  });
+  const websiteStore = useWebsiteStore();
+  const sections = useSectionsStore((state) => state.sections);
+  const isLoadingSections = useSectionsStore((state) => state.isLoading);
+  const initializeSections = useSectionsStore((state) => state.initialize);
 
+  // Find the section from store
+  const section = useMemo(
+    () => sections.find((s) => s.id === sectionId),
+    [sections, sectionId],
+  );
+
+  // Initialize stores
   useEffect(() => {
-    const loadSection = () => {
-      const section = getSectionById(sectionId);
-      if (section && section.type === "gallery") {
-        setSettings(section.settings);
+    const init = async () => {
+      // Wait for website store to initialize
+      if (websiteStore.loading) {
+        await websiteStore.initialize();
       }
-      setLoading(false);
+
+      // Then initialize sections store
+      await initializeSections();
     };
-    loadSection();
-  }, [sectionId]);
 
-  const handleSave = async () => {
-    const section = getSectionById(sectionId);
-    if (section && section.type === "gallery") {
-      await updateSection({
-        ...section,
-        settings,
-      });
-      router.push("/website");
-    }
-  };
+    init();
+  }, [websiteStore, initializeSections]);
 
-  const handleCancel = () => {
-    router.push("/website");
-  };
-
-  if (loading) {
+  // Show loading state while stores are initializing
+  if (websiteStore.loading || isLoadingSections) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-near-black">Loading...</p>
+      </div>
+    );
+  }
+
+  // Show error if section not found
+  if (!section || section.type !== "gallery") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-near-black">Section not found</p>
       </div>
     );
   }
@@ -67,31 +66,12 @@ export default function GalleryEditPage({ params }: PageProps) {
       />
 
       <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg">
-        <div className="flex flex-col gap-lg">
-          <FormInput
-            label="Titel"
-            value={settings.title}
-            onChange={(value) => setSettings({ ...settings, title: value })}
-            placeholder="Gallerietitel eingeben"
-            required
-          />
-
-          <FormInput
-            label="Untertitel"
-            value={settings.subtitle}
-            onChange={(value) => setSettings({ ...settings, subtitle: value })}
-            placeholder="Gallerieuntertitel eingeben"
-            required
-          />
-
-          <ImageUrlList
-            label="Galleriebilder"
-            imageUrls={settings.imageUrls}
-            onChange={(imageUrls) => setSettings({ ...settings, imageUrls })}
-          />
-
-          <FormActions onCancel={handleCancel} onSave={handleSave} />
-        </div>
+        <GalleryForm
+          key={section.id}
+          section={section}
+          onCancel={() => router.push("/website")}
+          onSave={() => router.push("/website")}
+        />
       </div>
     </div>
   );

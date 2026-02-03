@@ -2,7 +2,12 @@
 
 import { Section, SectionType } from "@/lib/types/section-types";
 import { db } from "@/lib/db";
-import { sectionsTable, textWithImageSectionsTable } from "@/lib/db/schema";
+import {
+  sectionsTable,
+  textWithImageSectionsTable,
+  gallerySectionsTable,
+  galleryImagesTable,
+} from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
 /**
@@ -50,11 +55,38 @@ export async function createSection(
 
       return { success: true, section: newSection };
     } else if (type === "gallery") {
-      // Gallery not implemented yet
-      return {
-        success: false,
-        error: "Gallery section type not implemented yet",
+      // Insert into sections table
+      const [insertedSection] = await db
+        .insert(sectionsTable)
+        .values({
+          websiteId,
+          type: "gallery",
+          order: position,
+        })
+        .returning();
+
+      // Insert into gallery_sections table
+      const [insertedGallerySection] = await db
+        .insert(gallerySectionsTable)
+        .values({
+          id: insertedSection.id,
+          title: "New Gallery",
+          subtitle: "Gallery subtitle",
+        })
+        .returning();
+
+      const newSection: Section = {
+        id: insertedSection.id,
+        type: "gallery",
+        settings: {
+          title: insertedGallerySection.title,
+          subtitle: insertedGallerySection.subtitle,
+          imageUrls: [],
+        },
+        order: insertedSection.order,
       };
+
+      return { success: true, section: newSection };
     } else {
       return { success: false, error: "Invalid section type" };
     }
@@ -95,8 +127,32 @@ export async function updateSection(
           image: section.settings.imageUrl,
         })
         .where(eq(textWithImageSectionsTable.id, section.id));
+    } else if (section.type === "gallery") {
+      // Update gallery_sections table
+      await db
+        .update(gallerySectionsTable)
+        .set({
+          title: section.settings.title,
+          subtitle: section.settings.subtitle,
+        })
+        .where(eq(gallerySectionsTable.id, section.id));
+
+      // Delete existing images and re-insert
+      await db
+        .delete(galleryImagesTable)
+        .where(eq(galleryImagesTable.gallerySectionId, section.id));
+
+      // Insert new images
+      if (section.settings.imageUrls.length > 0) {
+        await db.insert(galleryImagesTable).values(
+          section.settings.imageUrls.map((url, index) => ({
+            gallerySectionId: section.id,
+            imageUrl: url,
+            order: index,
+          })),
+        );
+      }
     }
-    // Gallery not implemented yet
 
     return { success: true };
   } catch (error) {
@@ -194,8 +250,32 @@ export async function fetchSections(websiteId: string): Promise<{
             order: dbSection.order,
           });
         }
+      } else if (dbSection.type === "gallery") {
+        const [gallerySection] = await db
+          .select()
+          .from(gallerySectionsTable)
+          .where(eq(gallerySectionsTable.id, dbSection.id));
+
+        if (gallerySection) {
+          // Fetch images for this gallery
+          const images = await db
+            .select()
+            .from(galleryImagesTable)
+            .where(eq(galleryImagesTable.gallerySectionId, dbSection.id))
+            .orderBy(galleryImagesTable.order);
+
+          sections.push({
+            id: dbSection.id,
+            type: "gallery",
+            settings: {
+              title: gallerySection.title,
+              subtitle: gallerySection.subtitle,
+              imageUrls: images.map((img) => img.imageUrl),
+            },
+            order: dbSection.order,
+          });
+        }
       }
-      // Gallery not implemented yet
     }
 
     return { success: true, sections };
