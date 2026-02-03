@@ -1,7 +1,7 @@
 "use client";
 
-import { Sidebar } from "./Sidebar";
-import { MobileMenu } from "./MobileMenu";
+import { Sidebar } from "./menu/Sidebar";
+import { MobileMenu } from "./menu/MobileMenu";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -9,20 +9,22 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--color-content-bg)]">
+    <div className="flex h-screen overflow-hidden">
       {/* Desktop Sidebar */}
-      <Sidebar />
+      <div className="hidden lg:block">
+        <Sidebar />
+      </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Menu */}
-        <MobileMenu />
+        <div className="lg:hidden">
+          <MobileMenu />
+        </div>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-[var(--spacing-lg)] lg:p-[var(--spacing-2xl)]">
-            {children}
-          </div>
+        <main className="flex-1 overflow-y-auto bg-bg-0">
+          <div className="p-lg">{children}</div>
         </main>
       </div>
     </div>

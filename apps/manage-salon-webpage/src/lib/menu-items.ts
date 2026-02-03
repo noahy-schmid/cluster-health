@@ -1,12 +1,12 @@
 import {
   LayoutDashboard,
-  Calendar,
   Users,
   Scissors,
   Settings,
   BarChart3,
   Clock,
   type LucideIcon,
+  Earth,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -22,29 +22,9 @@ export const menuItems: MenuItem[] = [
     href: "/",
   },
   {
-    icon: Calendar,
-    label: "Appointments",
-    href: "/appointments",
-  },
-  {
-    icon: Users,
-    label: "Clients",
-    href: "/clients",
-  },
-  {
-    icon: Scissors,
-    label: "Services",
-    href: "/services",
-  },
-  {
-    icon: Clock,
-    label: "Schedule",
-    href: "/schedule",
-  },
-  {
-    icon: BarChart3,
-    label: "Analytics",
-    href: "/analytics",
+    icon: Earth,
+    label: "Webseite",
+    href: "/website",
   },
   {
     icon: Settings,
