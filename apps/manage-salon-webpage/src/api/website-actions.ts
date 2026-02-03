@@ -1,7 +1,6 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { websitesTable } from "@/lib/db/schema";
+import { db, websitesTable } from "@repo/website-database";
 import { randomUUID } from "crypto";
 
 /**

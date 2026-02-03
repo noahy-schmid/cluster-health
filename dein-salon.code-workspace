@@ -17,6 +17,10 @@
       "path": "apps/manage-salon-webpage",
     },
     {
+      "name": "backend | salon-database",
+      "path": "packages/website-database",
+    },
+    {
       "name": "frontend | ui-components",
       "path": "packages/ui",
     },
