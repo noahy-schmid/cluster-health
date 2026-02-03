@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { getSectionById } from "@/lib/storage";
 import { useSectionsStore } from "@/services/sections-store";
 import { TextWithImageSettings } from "@/lib/types/section-types";
-import FormInput from "@/components/webseite/forms/FormInput";
-import FormTextarea from "@/components/webseite/forms/FormTextarea";
-import FormActions from "@/components/webseite/forms/FormActions";
+import FormInput from "@/components/website/forms/FormInput";
+import FormTextarea from "@/components/website/forms/FormTextarea";
+import FormActions from "@/components/website/forms/FormActions";
 import PageHeader from "@/components/PageHeader";
 
 interface PageProps {

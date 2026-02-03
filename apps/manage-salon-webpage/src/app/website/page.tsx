@@ -17,9 +17,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useSectionsStore } from "@/services/sections-store";
-import { EmptySectionPlaceholder } from "@/components/webseite/EmptySectionPlaceholder";
-import { SectionCard } from "@/components/webseite/SectionCard";
-import { AddSectionButton } from "@/components/webseite/AddSectionButton";
+import { EmptySectionPlaceholder } from "@/components/website/EmptySectionPlaceholder";
+import { SectionCard } from "@/components/website/SectionCard";
+import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
 
 export default function WebseitePage() {

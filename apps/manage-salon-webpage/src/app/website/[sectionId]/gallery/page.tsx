@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { getSectionById } from "@/lib/storage";
 import { useSectionsStore } from "@/services/sections-store";
 import { GallerySettings } from "@/lib/types/section-types";
-import FormInput from "@/components/webseite/forms/FormInput";
-import ImageUrlList from "@/components/webseite/forms/ImageUrlList";
-import FormActions from "@/components/webseite/forms/FormActions";
+import FormInput from "@/components/website/forms/FormInput";
+import ImageUrlList from "@/components/website/forms/ImageUrlList";
+import FormActions from "@/components/website/forms/FormActions";
 import PageHeader from "@/components/PageHeader";
 
 interface PageProps {
