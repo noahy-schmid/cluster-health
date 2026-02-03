@@ -40,6 +40,7 @@ export default function GalleryCard({ settings, order }: GalleryCardProps) {
                   className="aspect-square bg-gray-100 rounded-md overflow-hidden"
                 >
                   {url && url.trim() !== "" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={url}
                       alt={`Gallery image ${index + 1}`}

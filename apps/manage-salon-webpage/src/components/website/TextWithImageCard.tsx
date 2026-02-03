@@ -28,6 +28,7 @@ export default function TextWithImageCard({
       <div className="grid md:grid-cols-2 gap-md">
         <div className="aspect-video bg-bg-2 rounded-md flex items-center justify-center overflow-hidden">
           {hasImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={settings.imageUrl}
               alt={settings.title}
@@ -35,16 +36,16 @@ export default function TextWithImageCard({
             />
           ) : (
             <div className="flex flex-col items-center gap-sm text-fg-muted">
-              <ImageIcon className="w-8 h-8" />
+              <ImageIcon className="w-lg h-lg" />
               <span className="text-sm">Kein Bild</span>
             </div>
           )}
         </div>
         <div className="flex flex-col gap-sm">
-          <h4 className="font-medium text-fg-normal">
+          <h4 className="font-normal text-fg-normal text-lg">
             {settings.title || "Kein Titel"}
           </h4>
-          <p className="text-sm text-fg-muted line-clamp-3">
+          <p className="font-unfocus text-fg-normal text-base line-clamp-3">
             {settings.text || "Kein Text"}
           </p>
         </div>
