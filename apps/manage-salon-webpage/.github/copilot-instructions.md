@@ -93,6 +93,14 @@ dein.salon is a professional, high-quality B2B platform for hair salons (managem
 
 ## Architecture Decisions
 
+### Server Actions
+
+- **ALWAYS use Server Actions** instead of API routes (`app/api/*/route.ts`) when possible
+- Place all server actions in the `src/api/` folder
+- Use `"use server"` directive at the top of action files
+- Name action files with `-actions.ts` suffix (e.g., `sections-actions.ts`, `website-actions.ts`)
+- Server actions provide better integration with React Server Components and forms
+
 ### Layout Implementation
 
 - Main layout wrapper in `layout.tsx` or separate `MainLayout` component

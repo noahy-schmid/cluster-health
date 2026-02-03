@@ -1,0 +1,40 @@
+"use server";
+
+import { db } from "@/lib/db";
+import { websitesTable } from "@/lib/db/schema";
+import { randomUUID } from "crypto";
+
+/**
+ * Server action to create a new website
+ * Returns the created website ID
+ */
+export async function createWebsite(): Promise<
+  | {
+      success: true;
+      websiteId: string;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
+  const newWebsite: typeof websitesTable.$inferInsert = {
+    salonId: randomUUID(),
+    heroImage: "",
+    logo: "",
+  };
+
+  try {
+    const insertedWebsite = await db
+      .insert(websitesTable)
+      .values(newWebsite)
+      .returning();
+    return { success: true, websiteId: insertedWebsite[0].id };
+  } catch (error) {
+    console.error("Error creating website:", error);
+    return {
+      success: false,
+      error: "Failed to create website",
+    };
+  }
+}
