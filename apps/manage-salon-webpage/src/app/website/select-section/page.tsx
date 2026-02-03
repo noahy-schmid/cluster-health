@@ -1,21 +1,22 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { ImageIcon, Images } from "lucide-react";
+import { ChevronLeft, ImageIcon, Images, StepBack } from "lucide-react";
 import { SectionType } from "@/lib/types/section-types";
 import { useSectionsStore } from "@/services/sections-store";
+import PageHeader from "@/components/PageHeader";
 
 const sectionTypes = [
   {
     type: "text-with-image" as SectionType,
-    label: "Text with Image",
-    description: "Display text content alongside an image",
+    label: "Text mit Bild",
+    description: "Textinhalt zusammen mit einem Bild anzeigen",
     icon: ImageIcon,
   },
   {
     type: "gallery" as SectionType,
-    label: "Gallery",
-    description: "Showcase multiple images in a gallery layout",
+    label: "Galerie",
+    description: "Mehrere Bilder in einem Galerie-Layout anzeigen",
     icon: Images,
   },
 ];
@@ -40,21 +41,18 @@ export default function SelectSectionPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="mb-xl">
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-text-muted hover:text-text-primary mb-lg inline-flex items-center gap-2 transition-colors"
-        >
-          ← Zurück
-        </button>
-        <h1 className="text-3xl font-bold text-near-black mb-sm">
-          Select Section Type
-        </h1>
-        <p className="text-base text-gray-600">
-          Choose the type of section you want to add
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto">
+      <button
+        onClick={() => router.back()}
+        className="text-base text-fg-muted hover:text-fg-normal flex items-center gap-2 bg-bg-1 px-4 py-2 rounded-md hover:bg-bg-2 transition-colors cursor-pointer"
+      >
+        <ChevronLeft className="w-4 h-4" /> Zurück zur Webseite
+      </button>
+
+      <PageHeader
+        title="Abschnittstyp Wählen"
+        subtitle="Wähle die Art des Abschnitts welche hinzugefügt werden soll"
+      ></PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
         {sectionTypes.map((sectionType) => {
@@ -63,19 +61,19 @@ export default function SelectSectionPage() {
             <button
               key={sectionType.type}
               onClick={() => handleSelectType(sectionType.type)}
-              className="bg-bg-2 border border-border rounded-lg p-lg hover:border-primary hover:shadow-md transition-all text-left group"
+              className="bg-bg-1 border border-border rounded-lg p-lg hover:bg-bg-2 hover:shadow-md transition-all text-left group"
             >
-              <div className="flex items-start gap-md mb-md">
+              <div className="flex items-center gap-md mb-md">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                   <Icon className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-text-primary mb-1">
+                  <h3 className="text-lg font-focus text-fg-strong mb-1">
                     {sectionType.label}
                   </h3>
                 </div>
               </div>
-              <p className="text-sm text-text-muted leading-relaxed">
+              <p className="text-md font-unfocus text-fg-normal leading-relaxed">
                 {sectionType.description}
               </p>
             </button>

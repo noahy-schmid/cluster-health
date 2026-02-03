@@ -28,8 +28,8 @@ export function MenuList({ onItemClick }: MenuListProps) {
                   text-sm font-medium transition-fast
                   ${
                     isActive
-                      ? "bg-sidebar-active text-primary"
-                      : "text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active"
+                      ? "bg-bg-1 text-fg-strong"
+                      : "text-fg-muted hover:bg-bg-2 hover:text-fg-strong"
                   }
                 `}
               >
