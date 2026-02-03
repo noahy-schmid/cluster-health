@@ -21,6 +21,7 @@ import { EmptySectionPlaceholder } from "@/components/website/EmptySectionPlaceh
 import { SectionCard } from "@/components/website/SectionCard";
 import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
+import { useWebsiteStore } from "@/services/website-store";
 
 export default function WebseitePage() {
   const router = useRouter();
@@ -28,7 +29,8 @@ export default function WebseitePage() {
   // Get state and actions from Zustand store
   const sections = useSectionsStore((state) => state.sections);
   const isLoading = useSectionsStore((state) => state.isLoading);
-  const initialize = useSectionsStore((state) => state.initialize);
+  const initializeSections = useSectionsStore((state) => state.initialize);
+  const initializeWebsite = useWebsiteStore((state) => state.initialize);
   const removeSection = useSectionsStore((state) => state.removeSection);
   const reorderSections = useSectionsStore((state) => state.reorderSections);
 
@@ -45,8 +47,10 @@ export default function WebseitePage() {
 
   // Initialize store on mount
   useEffect(() => {
-    initialize();
-  }, [initialize]);
+    initializeWebsite().then(() => {
+      initializeSections();
+    });
+  }, [initializeWebsite, initializeSections]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

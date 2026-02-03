@@ -1,14 +1,11 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { getSectionById } from "@/lib/storage";
 import { useSectionsStore } from "@/services/sections-store";
-import { TextWithImageSettings } from "@/lib/types/section-types";
-import FormInput from "@/components/website/forms/FormInput";
-import FormTextarea from "@/components/website/forms/FormTextarea";
-import FormActions from "@/components/website/forms/FormActions";
+import { useWebsiteStore } from "@/services/website-store";
 import PageHeader from "@/components/PageHeader";
+import TextWithImageForm from "@/app/website/[sectionId]/text-with-image/TextWithImageForm";
 
 interface PageProps {
   params: Promise<{ sectionId: string }>;
@@ -17,44 +14,46 @@ interface PageProps {
 export default function TextWithImageEditPage({ params }: PageProps) {
   const { sectionId } = use(params);
   const router = useRouter();
-  const updateSection = useSectionsStore((state) => state.updateSection);
-  const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState<TextWithImageSettings>({
-    imageUrl: "",
-    title: "",
-    text: "",
-  });
+  const websiteStore = useWebsiteStore();
+  const sections = useSectionsStore((state) => state.sections);
+  const isLoadingSections = useSectionsStore((state) => state.isLoading);
+  const initializeSections = useSectionsStore((state) => state.initialize);
 
+  // Find the section from store
+  const section = useMemo(
+    () => sections.find((s) => s.id === sectionId),
+    [sections, sectionId],
+  );
+
+  // Initialize stores
   useEffect(() => {
-    const loadSection = () => {
-      const section = getSectionById(sectionId);
-      if (section && section.type === "text-with-image") {
-        setSettings(section.settings);
+    const init = async () => {
+      // Wait for website store to initialize
+      if (websiteStore.loading) {
+        await websiteStore.initialize();
       }
-      setLoading(false);
+
+      // Then initialize sections store
+      await initializeSections();
     };
-    loadSection();
-  }, [sectionId]);
 
-  const handleSave = async () => {
-    const section = getSectionById(sectionId);
-    if (section && section.type === "text-with-image") {
-      await updateSection({
-        ...section,
-        settings,
-      });
-      router.push("/website");
-    }
-  };
+    init();
+  }, [websiteStore, initializeSections]);
 
-  const handleCancel = () => {
-    router.push("/website");
-  };
-
-  if (loading) {
+  // Show loading state while stores are initializing
+  if (websiteStore.loading || isLoadingSections) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-near-black">Loading...</p>
+      </div>
+    );
+  }
+
+  // Show error if section not found
+  if (!section || section.type !== "text-with-image") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-near-black">Section not found</p>
       </div>
     );
   }
@@ -67,35 +66,12 @@ export default function TextWithImageEditPage({ params }: PageProps) {
       />
 
       <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg">
-        <div className="flex flex-col gap-lg">
-          <FormInput
-            label="Bild URL"
-            value={settings.imageUrl}
-            onChange={(value) => setSettings({ ...settings, imageUrl: value })}
-            placeholder="https://example.com/image.jpg"
-            type="url"
-            required
-          />
-
-          <FormInput
-            label="Titel"
-            value={settings.title}
-            onChange={(value) => setSettings({ ...settings, title: value })}
-            placeholder="Abschnittstitel eingeben"
-            required
-          />
-
-          <FormTextarea
-            label="Text"
-            value={settings.text}
-            onChange={(value) => setSettings({ ...settings, text: value })}
-            placeholder="Abschnittstext eingeben"
-            rows={6}
-            required
-          />
-
-          <FormActions onCancel={handleCancel} onSave={handleSave} />
-        </div>
+        <TextWithImageForm
+          key={section.id}
+          section={section}
+          onCancel={() => router.push("/website")}
+          onSave={() => router.push("/website")}
+        />
       </div>
     </div>
   );

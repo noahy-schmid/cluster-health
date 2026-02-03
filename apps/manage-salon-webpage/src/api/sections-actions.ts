@@ -1,49 +1,63 @@
 "use server";
 
 import { Section, SectionType } from "@/lib/types/section-types";
+import { db } from "@/lib/db";
+import { sectionsTable, textWithImageSectionsTable } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 
 /**
  * Server action to create a new section
- * Takes type and position, returns the created section with generated ID
+ * Takes websiteId, type and position, returns the created section with generated ID
  */
 export async function createSection(
+  websiteId: string,
   type: SectionType,
   position: number,
 ): Promise<{ success: boolean; section?: Section; error?: string }> {
   try {
-    // TODO: Save to database
-    const id = `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-    let newSection: Section;
-
     if (type === "text-with-image") {
-      newSection = {
-        id,
+      // Insert into sections table
+      const [insertedSection] = await db
+        .insert(sectionsTable)
+        .values({
+          websiteId,
+          type: "text-with-image",
+          order: position,
+        })
+        .returning();
+
+      // Insert into text_with_image_sections table
+      const [insertedTextSection] = await db
+        .insert(textWithImageSectionsTable)
+        .values({
+          id: insertedSection.id,
+          title: "New Text with Image Section",
+          content: "Add your text here",
+          image: "",
+        })
+        .returning();
+
+      const newSection: Section = {
+        id: insertedSection.id,
         type: "text-with-image",
         settings: {
-          imageUrl: "",
-          title: "New Text with Image Section",
-          text: "Add your text here",
+          imageUrl: insertedTextSection.image,
+          title: insertedTextSection.title,
+          text: insertedTextSection.content,
         },
-        order: position,
+        order: insertedSection.order,
       };
+
+      return { success: true, section: newSection };
     } else if (type === "gallery") {
-      newSection = {
-        id,
-        type: "gallery",
-        settings: {
-          title: "New Gallery",
-          subtitle: "Gallery subtitle",
-          imageUrls: [],
-        },
-        order: position,
+      // Gallery not implemented yet
+      return {
+        success: false,
+        error: "Gallery section type not implemented yet",
       };
     } else {
       return { success: false, error: "Invalid section type" };
     }
-
-    console.log("Creating section:", newSection);
-    return { success: true, section: newSection };
   } catch (error) {
     console.error("Error creating section:", error);
     return { success: false, error: "Failed to create section" };
@@ -54,11 +68,36 @@ export async function createSection(
  * Server action to update an existing section
  */
 export async function updateSection(
+  websiteId: string,
   section: Section,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // TODO: Update in database
-    console.log("Updating section:", section);
+    // Update sections table
+    await db
+      .update(sectionsTable)
+      .set({
+        order: section.order,
+      })
+      .where(
+        and(
+          eq(sectionsTable.id, section.id),
+          eq(sectionsTable.websiteId, websiteId),
+        ),
+      );
+
+    // Update type-specific table
+    if (section.type === "text-with-image") {
+      await db
+        .update(textWithImageSectionsTable)
+        .set({
+          title: section.settings.title,
+          content: section.settings.text,
+          image: section.settings.imageUrl,
+        })
+        .where(eq(textWithImageSectionsTable.id, section.id));
+    }
+    // Gallery not implemented yet
+
     return { success: true };
   } catch (error) {
     console.error("Error updating section:", error);
@@ -67,29 +106,20 @@ export async function updateSection(
 }
 
 /**
- * Server action to get a section by ID
- */
-export async function getSectionById(id: string): Promise<Section | null> {
-  try {
-    // TODO: Fetch from database
-    // For now, handled client-side
-    console.log("Fetching section by ID:", id);
-    return null;
-  } catch (error) {
-    console.error("Error fetching section:", error);
-    return null;
-  }
-}
-
-/**
  * Server action to delete a section
  */
 export async function deleteSection(
+  websiteId: string,
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // TODO: Delete from database
-    console.log("Deleting section:", id);
+    // Delete from sections table (cascades to type-specific tables)
+    await db
+      .delete(sectionsTable)
+      .where(
+        and(eq(sectionsTable.id, id), eq(sectionsTable.websiteId, websiteId)),
+      );
+
     return { success: true };
   } catch (error) {
     console.error("Error deleting section:", error);
@@ -99,16 +129,26 @@ export async function deleteSection(
 
 /**
  * Server action to reorder sections
+ * Takes websiteId and array of section IDs in their new order
  */
 export async function reorderSections(
-  sections: Section[],
+  websiteId: string,
+  sectionIds: string[],
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // TODO: Update order in database
-    console.log(
-      "Reordering sections:",
-      sections.map((s) => s.id),
-    );
+    // Update order for each section
+    for (let i = 0; i < sectionIds.length; i++) {
+      await db
+        .update(sectionsTable)
+        .set({ order: i })
+        .where(
+          and(
+            eq(sectionsTable.id, sectionIds[i]),
+            eq(sectionsTable.websiteId, websiteId),
+          ),
+        );
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error reordering sections:", error);
@@ -117,19 +157,48 @@ export async function reorderSections(
 }
 
 /**
- * Server action to fetch all sections
+ * Server action to fetch all sections for a website
  */
-export async function fetchSections(): Promise<{
+export async function fetchSections(websiteId: string): Promise<{
   success: boolean;
   sections?: Section[];
   error?: string;
 }> {
   try {
-    // TODO: Fetch from database
-    // For now, handled client-side via storage
-    console.log("Fetching sections from backend");
+    // Fetch all sections for the website
+    const dbSections = await db
+      .select()
+      .from(sectionsTable)
+      .where(eq(sectionsTable.websiteId, websiteId))
+      .orderBy(sectionsTable.order);
 
-    return { success: true };
+    const sections: Section[] = [];
+
+    // Fetch details for each section based on type
+    for (const dbSection of dbSections) {
+      if (dbSection.type === "text-with-image") {
+        const [textSection] = await db
+          .select()
+          .from(textWithImageSectionsTable)
+          .where(eq(textWithImageSectionsTable.id, dbSection.id));
+
+        if (textSection) {
+          sections.push({
+            id: dbSection.id,
+            type: "text-with-image",
+            settings: {
+              imageUrl: textSection.image,
+              title: textSection.title,
+              text: textSection.content,
+            },
+            order: dbSection.order,
+          });
+        }
+      }
+      // Gallery not implemented yet
+    }
+
+    return { success: true, sections };
   } catch (error) {
     console.error("Error fetching sections:", error);
     return { success: false, error: "Failed to fetch sections" };
