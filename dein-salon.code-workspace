@@ -1,0 +1,25 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": ".",
+    },
+    {
+      "name": "webpage | marketing",
+      "path": "apps/my-stylist-frontend",
+    },
+    {
+      "name": "webpage | salon",
+      "path": "apps/salon-webpage",
+    },
+    {
+      "name": "webpage | manage-salon",
+      "path": "apps/manage-salon-webpage",
+    },
+    {
+      "name": "frontend | ui-components",
+      "path": "packages/ui",
+    },
+  ],
+  "settings": {},
+}
