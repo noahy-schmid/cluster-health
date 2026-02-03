@@ -1,29 +1,28 @@
 import { GallerySettings } from "@/lib/types/section-types";
 import { ImageIcon } from "lucide-react";
+import SectionHeader from "./SectionHeader";
 
 interface GalleryCardProps {
   settings: GallerySettings;
   order: number;
+  menuTitle: string | undefined;
 }
 
-export default function GalleryCard({ settings, order }: GalleryCardProps) {
+export default function GalleryCard({
+  settings,
+  order,
+  menuTitle,
+}: GalleryCardProps) {
   const imageCount = settings.imageUrls.length;
   const previewImages = settings.imageUrls.slice(0, 4);
 
   return (
     <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-md">
-        <div className="flex items-center gap-md">
-          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-medium">
-            {order}
-          </div>
-          <div>
-            <h3 className="font-focus text-fg-strong text-lg">
-              Bilder Gallerie
-            </h3>
-          </div>
-        </div>
-      </div>
+      <SectionHeader
+        order={order}
+        title="Bilder Gallerie"
+        menuTitle={menuTitle}
+      />
 
       <div className="space-y-sm">
         <h4 className="font-normal text-fg-normal text-lg">{settings.title}</h4>

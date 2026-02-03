@@ -7,6 +7,7 @@ interface FormInputProps {
   placeholder?: string;
   type?: "text" | "url";
   required?: boolean;
+  helperText?: string;
 }
 
 export default function FormInput({
@@ -16,6 +17,7 @@ export default function FormInput({
   placeholder,
   type = "text",
   required = false,
+  helperText,
 }: FormInputProps) {
   return (
     <div className="flex flex-col gap-sm">
@@ -31,6 +33,7 @@ export default function FormInput({
         required={required}
         className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal"
       />
+      {helperText && <p className="text-sm text-fg-muted">{helperText}</p>}
     </div>
   );
 }

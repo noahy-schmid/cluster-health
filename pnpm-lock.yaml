@@ -148,6 +148,12 @@ importers:
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@repo/website-database':
+        specifier: workspace:*
+        version: link:../../packages/website-database
+      drizzle-orm:
+        specifier: ^0.45.1
+        version: 0.45.1(@types/pg@8.16.0)(pg@8.18.0)
       framer-motion:
         specifier: ^12.23.24
         version: 12.23.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -157,6 +163,9 @@ importers:
       next:
         specifier: 16.1.6
         version: 16.1.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      pg:
+        specifier: ^8.18.0
+        version: 8.18.0
       react:
         specifier: 19.1.0
         version: 19.1.0

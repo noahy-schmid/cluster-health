@@ -36,6 +36,7 @@ After making code changes, always check the modified files for errors using the 
 ### Code Quality
 
 - **TypeScript**: Use proper typing, avoid `any`
+- **Prefer `undefined` over `null`**: Use `undefined` for optional values and uninitialized state
 - **Accessibility**: Include proper ARIA labels, keyboard navigation
 - **Performance**: Optimize images, lazy load when appropriate
 - **Mobile-first**: Design mobile view first, then enhance for desktop
@@ -64,3 +65,26 @@ After making code changes, always check the modified files for errors using the 
 - Use `"use server"` directive at the top of action files
 - Name action files with `-actions.ts` suffix (e.g., `sections-actions.ts`, `website-actions.ts`)
 - Server actions provide better integration with React Server Components and forms
+
+## Do's and Don'ts
+
+### Do:
+
+✅ Use CSS variables for all design tokens
+✅ Use Lucide React for icons
+✅ Make layouts responsive with mobile-first approach
+✅ Keep components small and focused
+✅ Use semantic HTML elements
+✅ Add proper TypeScript types
+✅ Test on both desktop and mobile viewports
+Do put state as close to where it's used as possible
+Do make reusable components in seperate files
+
+### Don't:
+
+❌ Don't hardcode colors, spacing, or font sizes
+❌ Don't use other icon libraries
+❌ Don't use inline styles unless absolutely necessary
+❌ Don't create overly complex component hierarchies
+❌ Don't forget accessibility features
+❌ Don't mix server and client components unnecessarily

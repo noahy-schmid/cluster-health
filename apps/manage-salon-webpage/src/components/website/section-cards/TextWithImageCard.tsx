@@ -1,29 +1,27 @@
 import { TextWithImageSettings } from "@/lib/types/section-types";
 import { ImageIcon } from "lucide-react";
+import SectionHeader from "./SectionHeader";
 
 interface TextWithImageCardProps {
   settings: TextWithImageSettings;
   order: number;
+  menuTitle: string | undefined;
 }
 
 export default function TextWithImageCard({
   settings,
   order,
+  menuTitle,
 }: TextWithImageCardProps) {
   const hasImage = settings.imageUrl && settings.imageUrl.trim() !== "";
 
   return (
     <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-md">
-        <div className="flex items-center gap-md">
-          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-medium">
-            {order}
-          </div>
-          <div>
-            <h3 className="text-lg font-focus text-fg-strong">Text mit Bild</h3>
-          </div>
-        </div>
-      </div>
+      <SectionHeader
+        order={order}
+        title="Text mit Bild"
+        menuTitle={menuTitle}
+      />
 
       <div className="grid md:grid-cols-2 gap-md">
         <div className="aspect-video bg-bg-2 rounded-md flex items-center justify-center overflow-hidden">

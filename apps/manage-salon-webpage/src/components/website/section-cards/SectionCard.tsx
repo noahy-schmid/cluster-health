@@ -78,11 +78,21 @@ function renderSectionContent(section: Section) {
   switch (section.type) {
     case "text-with-image":
       return (
-        <TextWithImageCard settings={section.settings} order={section.order} />
+        <TextWithImageCard
+          settings={section.settings}
+          order={section.order}
+          menuTitle={section.menuTitle}
+        />
       );
 
     case "gallery":
-      return <GalleryCard settings={section.settings} order={section.order} />;
+      return (
+        <GalleryCard
+          settings={section.settings}
+          order={section.order}
+          menuTitle={section.menuTitle}
+        />
+      );
 
     default:
       return (

@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useSectionsStore } from "@/services/sections-store";
 import { EmptySectionPlaceholder } from "@/components/website/EmptySectionPlaceholder";
-import { SectionCard } from "@/components/website/SectionCard";
+import { SectionCard } from "@/components/website/section-cards/SectionCard";
 import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
 import { useWebsiteStore } from "@/services/website-store";

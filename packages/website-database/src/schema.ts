@@ -15,6 +15,7 @@ export const sectionsTable = pgTable("sections", {
     .references(() => websitesTable.id, { onDelete: "cascade" }),
   type: varchar().notNull(),
   order: integer().notNull(),
+  menuTitle: varchar(),
 });
 
 export const textWithImageSectionsTable = pgTable("text_with_image_sections", {

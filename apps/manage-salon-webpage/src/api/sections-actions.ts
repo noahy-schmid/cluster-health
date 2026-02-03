@@ -51,6 +51,7 @@ export async function createSection(
           text: insertedTextSection.content,
         },
         order: insertedSection.order,
+        menuTitle: insertedSection.menuTitle ?? undefined,
       };
 
       return { success: true, section: newSection };
@@ -84,6 +85,7 @@ export async function createSection(
           imageUrls: [],
         },
         order: insertedSection.order,
+        menuTitle: insertedSection.menuTitle ?? undefined,
       };
 
       return { success: true, section: newSection };
@@ -109,6 +111,7 @@ export async function updateSection(
       .update(sectionsTable)
       .set({
         order: section.order,
+        menuTitle: section.menuTitle ?? null,
       })
       .where(
         and(
@@ -250,6 +253,7 @@ export async function fetchSections(websiteId: string): Promise<{
               text: textSection.content,
             },
             order: dbSection.order,
+            menuTitle: dbSection.menuTitle ?? undefined,
           });
         }
       } else if (dbSection.type === "gallery") {
@@ -275,6 +279,7 @@ export async function fetchSections(websiteId: string): Promise<{
               imageUrls: images.map((img) => img.imageUrl),
             },
             order: dbSection.order,
+            menuTitle: dbSection.menuTitle ?? undefined,
           });
         }
       }

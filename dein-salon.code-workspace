@@ -25,5 +25,9 @@
       "path": "packages/ui",
     },
   ],
-  "settings": {},
+  "settings": {
+    "chat.tools.terminal.autoApprove": {
+      "mv": true,
+    },
+  },
 }

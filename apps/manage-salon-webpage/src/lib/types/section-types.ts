@@ -21,12 +21,14 @@ export type Section =
       type: "text-with-image";
       settings: TextWithImageSettings;
       order: number;
+      menuTitle: string | undefined;
     }
   | {
       id: string;
       type: "gallery";
       settings: GallerySettings;
       order: number;
+      menuTitle: string | undefined;
     };
 
 export interface SectionTypeInfo {

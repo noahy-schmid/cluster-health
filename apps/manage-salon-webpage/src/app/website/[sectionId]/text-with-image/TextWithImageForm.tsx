@@ -22,17 +22,27 @@ export default function TextWithImageForm({
   const [settings, setSettings] = useState<TextWithImageSettings>(
     section.settings,
   );
+  const [menuTitle, setMenuTitle] = useState<string>(section.menuTitle || "");
 
   const handleSave = async () => {
     await updateSection({
       ...section,
       settings,
+      menuTitle: menuTitle.trim() === "" ? undefined : menuTitle,
     });
     onSave();
   };
 
   return (
     <div className="flex flex-col gap-lg">
+      <FormInput
+        label="Menü Titel (optional)"
+        value={menuTitle}
+        onChange={(value) => setMenuTitle(value)}
+        placeholder="Abschnitt im Menü anzeigen"
+        helperText="Wenn ein Titel angegeben wird, erscheint dieser Abschnitt im Navigationsmenü"
+      />
+
       <FormInput
         label="Bild URL"
         value={settings.imageUrl}
