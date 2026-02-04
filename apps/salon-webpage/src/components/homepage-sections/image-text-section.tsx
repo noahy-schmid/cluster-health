@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Image from "next/image";
 
 type Props = {
@@ -17,17 +18,20 @@ export default function ImageTextSection(props: Props) {
       }
     >
       <div>
-        <h2 className="text-xl font-semibold text-fg">{props.header}</h2>
-        <p className="text-p text-fg opacity-90">{props.text}</p>
+        <h2 className="text-3xl font-semibold text-salon-fg-strong">
+          {props.header}
+        </h2>
+        <p className="text-p text-salon-fg-base opacity-90">{props.text}</p>
       </div>
       <div className="shrink-0 md:w-[50%] md:m-10 rounded-3xl overflow-hidden shadow-lg shadow-black/20 aspect-video">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {props.imageSrc && <img
-          src={props.imageSrc}
-          alt={props.imageAlt}
-          width={1000}
-          height={562}
-        ></img>}
+        {props.imageSrc && (
+          <img
+            src={props.imageSrc}
+            alt={props.imageAlt}
+            width={1000}
+            height={562}
+          ></img>
+        )}
       </div>
     </section>
   );

@@ -25,7 +25,7 @@ export default async function Hero({ salonSlug }: HeroProps) {
         width={2000}
         height={2000}
       />
-      <div className="absolute w-full h-full top-0 z-1 bg-gradient-to-b from-80% from-transparent to-bg-dark"></div>
+      <div className="absolute w-full h-full top-0 z-1 bg-gradient-to-b from-80% from-transparent to-salon-bg-base"></div>
       <img
         src={logo}
         alt="Salon logo"
@@ -35,7 +35,7 @@ export default async function Hero({ salonSlug }: HeroProps) {
       />
 
       {/* Hero slogan - only visible on tablet/desktop */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white z-4 hidden md:block">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-salon-fg-strong z-4 hidden md:block">
         <h1 className="text-5xl font-bold text-shadow-2xl mb-4">{title}</h1>
         <p className="text-lg opacity-90 text-shadow-xl font-light">
           {subtitle}
@@ -43,7 +43,7 @@ export default async function Hero({ salonSlug }: HeroProps) {
       </div>
 
       {/* Animated arrow - only visible on tablet/desktop */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-fg z-3 hidden animate-bounce md:block">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-salon-fg-strong z-3 hidden animate-bounce md:block">
         <CircleChevronDown size={32} />
       </div>
     </section>

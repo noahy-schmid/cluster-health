@@ -1,4 +1,5 @@
 import { fetchSectionsBySalonSlug } from "@/api/sections-actions";
+import { fetchHeroSettingsBySalonSlug } from "@/api/hero-actions";
 import SectionRenderer from "@/components/sections/SectionRenderer";
 import StickyMenuBar, { MenuItem } from "@/components/sticky-menu-bar";
 import Hero from "./Hero";
@@ -17,9 +18,13 @@ export default async function SalonPage({
 }) {
   const { salonSlug } = await params;
 
-  // Fetch sections from the database
-  const { success, sections, error } =
-    await fetchSectionsBySalonSlug(salonSlug);
+  // Fetch sections and hero settings from the database
+  const [sectionsResult, heroResult] = await Promise.all([
+    fetchSectionsBySalonSlug(salonSlug),
+    fetchHeroSettingsBySalonSlug(salonSlug),
+  ]);
+
+  const { success, sections, error } = sectionsResult;
 
   const menuItems: MenuItem[] =
     sections
@@ -49,9 +54,16 @@ export default async function SalonPage({
     <>
       <Hero salonSlug={salonSlug} />
 
-      <StickyMenuBar menuItems={menuItems} />
+      <StickyMenuBar
+        menuItems={menuItems}
+        logoUrl={
+          heroResult.success && heroResult.settings
+            ? heroResult.settings.logoImageUrl
+            : "/images/logo.png"
+        }
+      />
 
-      <div className="w-full">
+      <div className="w-full bg-salon-bg-base">
         {sections.map((section, index) => (
           <div
             key={section.id}

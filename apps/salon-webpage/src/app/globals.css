@@ -4,7 +4,17 @@
 /* App-specific overrides or additions can go here */
 
 :root {
-  /* OKLCH colors for CSS usage */
+  /* Dynamic colors - will be injected by ColorProvider */
+  --color-bg-base: #faf8f6;
+  --color-bg-elevation-1: #ffffff;
+  --color-bg-elevation-2: #f5f3f1;
+  --color-fg-base: #1a1a1a;
+  --color-fg-muted: #6b6b6b;
+  --color-fg-strong: #000000;
+  --color-accent: #b8845f;
+  --color-on-accent: #ffffff;
+
+  /* Legacy OKLCH colors (keep for backwards compatibility) */
   --bg-dark: oklch(0.26 0.05 264.19);
   --bg-layer-0: var(--bg-dark);
   --bg-layer-1: oklch(0.28 0.05 264.19);
@@ -28,6 +38,17 @@
 }
 
 @theme {
+  /* Dynamic salon colors mapped to Tailwind utilities */
+  --color-salon-bg-base: var(--color-bg-base);
+  --color-salon-bg-1: var(--color-bg-elevation-1);
+  --color-salon-bg-2: var(--color-bg-elevation-2);
+  --color-salon-fg-base: var(--color-fg-base);
+  --color-salon-fg-muted: var(--color-fg-muted);
+  --color-salon-fg-strong: var(--color-fg-strong);
+  --color-salon-accent: var(--color-accent);
+  --color-salon-on-accent: var(--color-on-accent);
+
+  /* Legacy colors for backwards compatibility */
   --color-bg-dark: var(--bg-dark);
 
   --color-bg-layer-0: var(--bg-layer-0);

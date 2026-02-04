@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -12,11 +13,15 @@ export interface MenuItem {
 
 interface StickyMenuBarProps {
   menuItems: MenuItem[];
+  logoUrl: string;
 }
 
-export default function StickyMenuBar({ menuItems }: StickyMenuBarProps) {
+export default function StickyMenuBar({
+  menuItems,
+  logoUrl,
+}: StickyMenuBarProps) {
   const [activeSection, setActiveSection] = useState(
-    menuItems.length > 0 ? menuItems[0].id : ""
+    menuItems.length > 0 ? menuItems[0].id : "",
   );
   const [showStickyLogo, setShowStickyLogo] = useState(false);
   const menuChipContainerRef = useRef<HTMLDivElement>(null);
@@ -54,7 +59,7 @@ export default function StickyMenuBar({ menuItems }: StickyMenuBarProps) {
         const chipWidth = 120; // Approximate chip width
         const scrollLeft = Math.max(
           0,
-          activeIndex * chipWidth - container.clientWidth / 2
+          activeIndex * chipWidth - container.clientWidth / 2,
         );
 
         container.scrollTo({
@@ -63,7 +68,7 @@ export default function StickyMenuBar({ menuItems }: StickyMenuBarProps) {
         });
       }
     },
-    [menuItems]
+    [menuItems],
   );
 
   // Intersection Observer to detect which section is in view
@@ -86,7 +91,7 @@ export default function StickyMenuBar({ menuItems }: StickyMenuBarProps) {
       {
         threshold: [0],
         rootMargin: "-50% 0px -50% 0px",
-      }
+      },
     );
 
     // Observe all sections by their IDs
@@ -131,14 +136,14 @@ export default function StickyMenuBar({ menuItems }: StickyMenuBarProps) {
         ref={menuBarRef}
         className={`top-0 z-20 flex items-end ${
           showStickyLogo
-            ? "bg-bg shadow-lg shadow-black/20 fixed w-full h-[150px] transition-all"
-            : "bg-bg-dark h-[100px] transition-colors"
+            ? "bg-salon-bg-2 shadow-lg shadow-black/20 fixed w-full h-[150px] transition-all"
+            : "bg-salon-bg-base h-[100px] transition-colors"
         }`}
       >
         <div
           className={`${styles.stickyLogo} ${showStickyLogo ? styles.visible : ""}`}
         >
-          <Image src={"/images/logo.png"} alt="logo" width={60} height={60} />
+          <img src={logoUrl} alt="logo" width={60} height={60} />
         </div>
         <div
           className={`scroll-smooth overflow-x-auto whitespace-nowrap flex gap-2 hide-scrollbar p-4 justify-start ${
