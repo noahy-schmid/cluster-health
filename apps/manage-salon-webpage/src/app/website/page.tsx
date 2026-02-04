@@ -22,6 +22,8 @@ import { SectionCard } from "@/components/website/section-cards/SectionCard";
 import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
 import { useWebsiteStore } from "@/services/website-store";
+import { Settings } from "lucide-react";
+import HeroCard from "@/components/website/section-cards/HeroCard";
 
 export default function WebseitePage() {
   const router = useRouter();
@@ -33,6 +35,7 @@ export default function WebseitePage() {
   const initializeWebsite = useWebsiteStore((state) => state.initialize);
   const removeSection = useSectionsStore((state) => state.removeSection);
   const reorderSections = useSectionsStore((state) => state.reorderSections);
+  const heroSettings = useWebsiteStore((state) => state.heroSettings);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -80,6 +83,10 @@ export default function WebseitePage() {
     }
   };
 
+  const handleHeroSettings = () => {
+    router.push("/website/start/hero");
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -108,6 +115,31 @@ export default function WebseitePage() {
         title="Webseite bearbeiten"
         subtitle="Erstellen und verwalten Sie die Abschnitte Ihrer Salon-Webseite"
       />
+      <div className="flex items-start gap-sm lg:gap-md mb-lg">
+        {/* Drag Handle */}
+        <button
+          className="cursor-grab active:cursor-grabbing p-2 hover:bg-bg-1 rounded transition-colors touch-none mt-md"
+          aria-label="Abschnitt verschieben"
+        >
+          <div className="w-5 h-5 invisible"></div>
+        </button>
+
+        {/* Section Content */}
+        <div className="flex-1 min-w-0">
+          <HeroCard settings={heroSettings} />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col items-center gap-2 mt-md">
+          <button
+            onClick={handleHeroSettings}
+            className="p-2 hover:bg-bg-1 rounded group"
+            aria-label="Edit section"
+          >
+            <Settings className="w-5 h-5 text-fg-muted group-hover:text-fg-normal" />
+          </button>
+        </div>
+      </div>
 
       <DndContext
         sensors={sensors}

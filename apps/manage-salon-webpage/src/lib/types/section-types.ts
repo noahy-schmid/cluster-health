@@ -1,5 +1,13 @@
 export type SectionType = "text-with-image" | "gallery";
 
+// Settings for Hero section (Start)
+export interface HeroSettings {
+  backgroundImageUrl: string;
+  logoImageUrl: string;
+  title: string;
+  subtitle: string;
+}
+
 // Settings for Text with Image section
 export interface TextWithImageSettings {
   imageUrl: string;
