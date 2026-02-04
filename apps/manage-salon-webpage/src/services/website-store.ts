@@ -1,9 +1,12 @@
 import { create } from "zustand";
-import { createWebsite } from "@/api/website-actions";
+import {
+  createWebsite,
+  getHeroSettings,
+  updateHeroSettings as updateHeroSettingsAction,
+} from "@/api/website-actions";
 import { HeroSettings } from "@/lib/types/section-types";
 
 const WEBSITE_ID_KEY = "deinsalon_website_id";
-const HERO_SETTINGS_KEY = "deinsalon_hero_settings";
 
 type WebsiteStore =
   | {
@@ -37,13 +40,14 @@ export const useWebsiteStore = create<WebsiteStore>((set) => ({
     try {
       // Check localStorage first
       const savedId = localStorage.getItem(WEBSITE_ID_KEY);
-      const savedHeroSettings = localStorage.getItem(HERO_SETTINGS_KEY);
-
-      const heroSettings = savedHeroSettings
-        ? JSON.parse(savedHeroSettings)
-        : defaultHeroSettings;
 
       if (savedId) {
+        // Fetch hero settings from database
+        const heroResult = await getHeroSettings(savedId);
+        const heroSettings = heroResult.success
+          ? heroResult.settings
+          : defaultHeroSettings;
+
         set({ websiteId: savedId, loading: false, heroSettings });
         return;
       }
@@ -58,6 +62,12 @@ export const useWebsiteStore = create<WebsiteStore>((set) => ({
       // Save to localStorage
       localStorage.setItem(WEBSITE_ID_KEY, result.websiteId);
 
+      // Fetch hero settings from the newly created website
+      const heroResult = await getHeroSettings(result.websiteId);
+      const heroSettings = heroResult.success
+        ? heroResult.settings
+        : defaultHeroSettings;
+
       set({ websiteId: result.websiteId, loading: false, heroSettings });
     } catch (error) {
       console.error("Error initializing website store:", error);
@@ -65,10 +75,22 @@ export const useWebsiteStore = create<WebsiteStore>((set) => ({
   },
 
   updateHeroSettings: async (settings: HeroSettings) => {
-    try {
-      // Save to localStorage
-      localStorage.setItem(HERO_SETTINGS_KEY, JSON.stringify(settings));
+    const state = useWebsiteStore.getState();
 
+    if (state.loading) {
+      console.error("Cannot update hero settings while loading");
+      return;
+    }
+
+    try {
+      // Update in database
+      const result = await updateHeroSettingsAction(state.websiteId, settings);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Update local state
       set({ heroSettings: settings });
     } catch (error) {
       console.error("Error updating hero settings:", error);

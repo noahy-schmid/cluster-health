@@ -5,6 +5,8 @@ export const websitesTable = pgTable("websites", {
   salonId: uuid().notNull(),
   heroImage: varchar().notNull(),
   logo: varchar().notNull(),
+  title: varchar().notNull(),
+  subtitle: varchar().notNull(),
   slug: varchar().notNull().unique(),
 });
 
