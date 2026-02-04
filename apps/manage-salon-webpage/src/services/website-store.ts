@@ -3,6 +3,10 @@ import {
   createWebsite,
   getHeroSettings,
   updateHeroSettings as updateHeroSettingsAction,
+  getColorSettings,
+  updateColorSettings as updateColorSettingsAction,
+  ColorSettings,
+  AllColorSettings,
 } from "@/api/website-actions";
 import { HeroSettings } from "@/lib/types/section-types";
 
@@ -12,15 +16,19 @@ type WebsiteStore =
   | {
       loading: true;
       heroSettings: HeroSettings;
+      colorSettings: ColorSettings;
       initialize: () => Promise<void>;
       updateHeroSettings: (settings: HeroSettings) => Promise<void>;
+      updateColorSettings: (colors: AllColorSettings) => Promise<void>;
     }
   | {
       loading: false;
       websiteId: string;
       heroSettings: HeroSettings;
+      colorSettings: ColorSettings;
       initialize: () => Promise<void>;
       updateHeroSettings: (settings: HeroSettings) => Promise<void>;
+      updateColorSettings: (colors: AllColorSettings) => Promise<void>;
     };
 
 const defaultHeroSettings: HeroSettings = {
@@ -30,11 +38,18 @@ const defaultHeroSettings: HeroSettings = {
   subtitle: "",
 };
 
+const defaultColorSettings: ColorSettings = {
+  backgroundBase: "#FAF8F6",
+  foregroundBase: "#1A1A1A",
+  accent: "#B8845F",
+};
+
 export const useWebsiteStore = create<WebsiteStore>((set) => ({
   websiteId: null,
   loading: true,
   error: null,
   heroSettings: defaultHeroSettings,
+  colorSettings: defaultColorSettings,
 
   initialize: async () => {
     try {
@@ -48,7 +63,18 @@ export const useWebsiteStore = create<WebsiteStore>((set) => ({
           ? heroResult.settings
           : defaultHeroSettings;
 
-        set({ websiteId: savedId, loading: false, heroSettings });
+        // Fetch color settings from database
+        const colorResult = await getColorSettings(savedId);
+        const colorSettings = colorResult.success
+          ? colorResult.colors
+          : defaultColorSettings;
+
+        set({
+          websiteId: savedId,
+          loading: false,
+          heroSettings,
+          colorSettings,
+        });
         return;
       }
 
@@ -68,7 +94,18 @@ export const useWebsiteStore = create<WebsiteStore>((set) => ({
         ? heroResult.settings
         : defaultHeroSettings;
 
-      set({ websiteId: result.websiteId, loading: false, heroSettings });
+      // Fetch color settings from the newly created website
+      const colorResult = await getColorSettings(result.websiteId);
+      const colorSettings = colorResult.success
+        ? colorResult.colors
+        : defaultColorSettings;
+
+      set({
+        websiteId: result.websiteId,
+        loading: false,
+        heroSettings,
+        colorSettings,
+      });
     } catch (error) {
       console.error("Error initializing website store:", error);
     }
@@ -94,6 +131,35 @@ export const useWebsiteStore = create<WebsiteStore>((set) => ({
       set({ heroSettings: settings });
     } catch (error) {
       console.error("Error updating hero settings:", error);
+    }
+  },
+
+  updateColorSettings: async (colors: AllColorSettings) => {
+    const state = useWebsiteStore.getState();
+
+    if (state.loading) {
+      console.error("Cannot update color settings while loading");
+      return;
+    }
+
+    try {
+      // Update in database (all colors including computed ones)
+      const result = await updateColorSettingsAction(state.websiteId, colors);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Update local state with base colors only
+      set({
+        colorSettings: {
+          backgroundBase: colors.backgroundBase,
+          foregroundBase: colors.foregroundBase,
+          accent: colors.accent,
+        },
+      });
+    } catch (error) {
+      console.error("Error updating color settings:", error);
     }
   },
 }));

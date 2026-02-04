@@ -8,6 +8,14 @@ export const websitesTable = pgTable("websites", {
   title: varchar().notNull(),
   subtitle: varchar().notNull(),
   slug: varchar().notNull().unique(),
+  colorBackgroundBase: varchar().notNull(),
+  colorBackgroundElevation1: varchar().notNull(),
+  colorBackgroundElevation2: varchar().notNull(),
+  colorForegroundBase: varchar().notNull(),
+  colorForegroundMuted: varchar().notNull(),
+  colorForegroundStrong: varchar().notNull(),
+  colorAccent: varchar().notNull(),
+  colorOnAccent: varchar().notNull(),
 });
 
 export const sectionsTable = pgTable("sections", {

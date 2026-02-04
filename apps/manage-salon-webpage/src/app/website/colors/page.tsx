@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useWebsiteStore } from "@/services/website-store";
 import PageHeader from "@/components/PageHeader";
 import ColorPicker from "@/components/ColorPicker";
 import FormActions from "@/components/website/forms/FormActions";
@@ -100,9 +101,38 @@ function computeDerivedColors(
 
 export default function ColorsPage() {
   const router = useRouter();
+  const websiteStore = useWebsiteStore();
+  const hasInitialized = useRef(false);
+
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [foregroundColor, setForegroundColor] = useState("#000000");
   const [accentColor, setAccentColor] = useState("#d4a574");
+
+  // Initialize website store and load colors
+  useEffect(() => {
+    const init = async () => {
+      if (websiteStore.loading) {
+        await websiteStore.initialize();
+      } else if (!hasInitialized.current) {
+        // Once loaded, update colors
+        hasInitialized.current = true;
+        setBackgroundColor(websiteStore.colorSettings.backgroundBase);
+        setForegroundColor(websiteStore.colorSettings.foregroundBase);
+        setAccentColor(websiteStore.colorSettings.accent);
+      }
+    };
+
+    init();
+  }, [websiteStore, websiteStore.loading, websiteStore.colorSettings]);
+
+  // Show loading state while store is initializing
+  if (websiteStore.loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-near-black">Loading...</p>
+      </div>
+    );
+  }
 
   // Compute derived colors using OKLCH
   const derivedColors = computeDerivedColors(
@@ -111,12 +141,17 @@ export default function ColorsPage() {
     accentColor,
   );
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log("Saving colors:", {
-      backgroundColor,
-      foregroundColor,
-      accentColor,
+  const handleSave = async () => {
+    // Save all colors (base + computed) to the database
+    await websiteStore.updateColorSettings({
+      backgroundBase: backgroundColor,
+      backgroundElevation1: derivedColors.bgCard,
+      backgroundElevation2: derivedColors.bgCardHover,
+      foregroundBase: foregroundColor,
+      foregroundMuted: derivedColors.fgMuted,
+      foregroundStrong: derivedColors.fgStrong,
+      accent: accentColor,
+      onAccent: derivedColors.accentText,
     });
     router.replace("/website");
   };
