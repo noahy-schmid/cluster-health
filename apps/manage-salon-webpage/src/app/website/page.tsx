@@ -22,7 +22,7 @@ import { SectionCard } from "@/components/website/section-cards/SectionCard";
 import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
 import { useWebsiteStore } from "@/services/website-store";
-import { Settings } from "lucide-react";
+import { Palette, Settings } from "lucide-react";
 import HeroCard from "@/components/website/section-cards/HeroCard";
 
 export default function WebseitePage() {
@@ -114,6 +114,18 @@ export default function WebseitePage() {
       <PageHeader
         title="Webseite bearbeiten"
         subtitle="Erstellen und verwalten Sie die Abschnitte Ihrer Salon-Webseite"
+        actions={[
+          {
+            icon: Palette,
+            text: "Farbschema anpassen",
+            onClick: () => router.push("/website/colors"),
+          },
+          {
+            icon: Settings,
+            text: "Einstellungen",
+            onClick: () => {},
+          },
+        ]}
       />
       <div className="flex items-start gap-sm lg:gap-md mb-lg">
         {/* Drag Handle */}
