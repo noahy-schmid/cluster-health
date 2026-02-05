@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { fetchHeroSettingsBySalonSlug } from "@/api/hero-actions";
 import { CircleChevronDown } from "lucide-react";
-import Image from "next/image";
 
 interface HeroProps {
   salonSlug: string;
