@@ -1,6 +1,6 @@
-import { TextWithImageSettings } from "@/lib/types/section-types";
 import { ImageIcon } from "lucide-react";
 import SectionHeader from "./SectionHeader";
+import { TextWithImageSettings } from "@repo/website-database";
 
 interface TextWithImageCardProps {
   settings: TextWithImageSettings;

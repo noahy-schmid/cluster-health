@@ -1,14 +1,14 @@
 "use client";
 
-import { Section } from "@/lib/types/section-types";
 import { GripVertical, Trash2, Settings } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import TextWithImageCard from "./TextWithImageCard";
 import GalleryCard from "./GalleryCard";
+import { AllSections } from "@repo/website-database";
 
 interface SectionCardProps {
-  section: Section;
+  section: AllSections;
   onDelete: (id: string) => void;
   onSettings: (id: string) => void;
 }
@@ -74,7 +74,7 @@ export function SectionCard({
   );
 }
 
-function renderSectionContent(section: Section) {
+function renderSectionContent(section: AllSections) {
   switch (section.type) {
     case "text-with-image":
       return (

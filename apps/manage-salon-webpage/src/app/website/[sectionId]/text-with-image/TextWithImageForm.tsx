@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useSectionsStore } from "@/services/sections-store";
-import { Section, TextWithImageSettings } from "@/lib/types/section-types";
 import FormInput from "../../../../components/website/forms/FormInput";
 import FormTextarea from "../../../../components/website/forms/FormTextarea";
 import FormActions from "../../../../components/website/forms/FormActions";
+import { AllSections, TextWithImageSettings } from "@repo/website-database";
 
 interface TextWithImageFormProps {
-  section: Extract<Section, { type: "text-with-image" }>;
+  section: Extract<AllSections, { type: "text-with-image" }>;
   onSave: () => void;
   onCancel: () => void;
 }
