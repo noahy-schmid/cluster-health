@@ -30,7 +30,7 @@ export default function WebseitePage() {
 
   // Get state and actions from Zustand store
   const sections = useSectionsStore((state) => state.sections);
-  const isLoading = useSectionsStore((state) => state.isLoading);
+  const sectionsStatus = useSectionsStore((state) => state.status);
   const initializeSections = useSectionsStore((state) => state.initialize);
   const initializeWebsite = useWebsiteStore((state) => state.initialize);
   const removeSection = useSectionsStore((state) => state.removeSection);
@@ -88,7 +88,7 @@ export default function WebseitePage() {
   };
 
   // Show loading state
-  if (isLoading) {
+  if (sectionsStatus !== "initialized") {
     return (
       <div className="max-w-4xl mx-auto">
         <PageHeader title="Webseite bearbeiten" subtitle="Lade Abschnitte..." />

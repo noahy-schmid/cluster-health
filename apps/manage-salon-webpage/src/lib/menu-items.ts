@@ -1,10 +1,6 @@
 import {
   LayoutDashboard,
-  Users,
-  Scissors,
   Settings,
-  BarChart3,
-  Clock,
   type LucideIcon,
   Earth,
 } from "lucide-react";

@@ -11,8 +11,9 @@ import { useWebsiteStore } from "./website-store";
 
 interface SectionsStore {
   sections: Section[];
-  isLoading: boolean;
   error: string | null;
+  status: "uninitialized" | "initializing" | "initialized";
+  initPromise: Promise<void> | null;
 
   // Actions
   initialize: () => Promise<void>;
@@ -25,8 +26,6 @@ interface SectionsStore {
   reorderSections: (oldIndex: number, newIndex: number) => Promise<void>;
 }
 
-let initializePromise: Promise<void> | null = null;
-
 // Helper function to update order values based on array position
 function updateSectionOrders(sections: Section[]): Section[] {
   return sections.map((section, index) => ({
@@ -35,203 +34,213 @@ function updateSectionOrders(sections: Section[]): Section[] {
   }));
 }
 
-export const useSectionsStore = create<SectionsStore>((set, get) => ({
-  sections: [],
-  isLoading: true,
-  error: null,
+export const useSectionsStore = create<SectionsStore>(
+  (set, get) =>
+    ({
+      sections: [],
+      error: null,
+      status: "uninitialized",
+      initPromise: null,
+      initialize: async () => {
+        const current = get();
 
-  initialize: async () => {
-    const websiteState = useWebsiteStore.getState();
+        // If already initialized, return immediately
+        if (current.status === "initialized") return;
 
-    if (websiteState.loading || !websiteState.websiteId) {
-      set({ error: "Website not initialized", isLoading: false });
-      return;
-    }
+        // If initialization is in progress, return the stored promise
+        if (current.status === "initializing") return current.initPromise!;
 
-    const websiteId = websiteState.websiteId;
+        const p = async () => {
+          // Wait for website store to be ready
+          const websiteState = useWebsiteStore.getState();
+          if (websiteState.loading) {
+            set({
+              error: "Website not initialized",
+              status: "uninitialized",
+              initPromise: null,
+            });
+            throw new Error("Website not initialized");
+          }
 
-    // Prevent multiple initializations
-    if (initializePromise) {
-      return initializePromise;
-    }
+          const websiteId = websiteState.websiteId;
 
-    // Check if already initialized
-    if (!get().isLoading) {
-      return;
-    }
+          // Fetch from backend
+          const result = await fetchSectionsAction(websiteId);
 
-    initializePromise = (async () => {
-      try {
-        set({ isLoading: true, error: null });
+          if (result.success && result.sections) {
+            set({
+              sections: result.sections,
+              status: "initialized",
+              initPromise: null,
+            });
+          } else {
+            const message = result.error || "Failed to load sections";
+            set({
+              error: message,
+              status: "uninitialized",
+              initPromise: null,
+            });
+            throw new Error(message);
+          }
+        };
 
-        // Fetch from backend
-        const result = await fetchSectionsAction(websiteId);
+        const initializationPromise = p();
 
-        if (result.success && result.sections) {
-          set({ sections: result.sections, isLoading: false });
-        } else {
-          set({
-            error: result.error || "Failed to load sections",
-            isLoading: false,
-          });
-        }
-      } catch (error) {
-        console.error("Error initializing sections:", error);
-        set({ error: "Failed to initialize sections", isLoading: false });
-      } finally {
-        initializePromise = null;
-      }
-    })();
-
-    return initializePromise;
-  },
-
-  createSection: async (type, position) => {
-    const websiteState = useWebsiteStore.getState();
-
-    if (websiteState.loading || !websiteState.websiteId) {
-      set({ error: "Website not initialized" });
-      return null;
-    }
-
-    const websiteId = websiteState.websiteId;
-
-    try {
-      // Call backend to create section
-      const result = await createSectionAction(websiteId, type, position);
-
-      if (result.success && result.section) {
-        // Add to local state
-        set((state) => {
-          const newSections = [...state.sections];
-          newSections.splice(position, 0, result.section!);
-          // Update order values
-          const orderedSections = updateSectionOrders(newSections);
-          return { sections: orderedSections };
+        set({
+          error: null,
+          status: "initializing",
+          initPromise: initializationPromise,
         });
+        await initializationPromise;
+      },
 
-        return result.section;
-      } else {
-        set({ error: result.error || "Failed to create section" });
-        return null;
-      }
-    } catch (error) {
-      console.error("Error creating section:", error);
-      set({ error: "Failed to create section" });
-      return null;
-    }
-  },
+      createSection: async (type, position) => {
+        const websiteState = useWebsiteStore.getState();
 
-  updateSection: async (section) => {
-    const websiteState = useWebsiteStore.getState();
+        if (websiteState.loading || !websiteState.websiteId) {
+          set({ error: "Website not initialized" });
+          return null;
+        }
 
-    if (websiteState.loading || !websiteState.websiteId) {
-      set({ error: "Website not initialized" });
-      return;
-    }
+        const websiteId = websiteState.websiteId;
 
-    const websiteId = websiteState.websiteId;
+        try {
+          // Call backend to create section
+          const result = await createSectionAction(websiteId, type, position);
 
-    try {
-      // Update in local state
-      set((state) => {
-        const newSections = state.sections.map((s) =>
-          s.id === section.id ? section : s,
-        );
-        return { sections: newSections };
-      });
+          if (result.success && result.section) {
+            // Add to local state
+            set((state) => {
+              const newSections = [...state.sections];
+              newSections.splice(position, 0, result.section!);
+              // Update order values
+              const orderedSections = updateSectionOrders(newSections);
+              return { sections: orderedSections };
+            });
 
-      // Call backend
-      const result = await updateSectionAction(websiteId, section);
+            return result.section;
+          } else {
+            set({ error: result.error || "Failed to create section" });
+            return null;
+          }
+        } catch (error) {
+          console.error("Error creating section:", error);
+          set({ error: "Failed to create section" });
+          return null;
+        }
+      },
 
-      if (!result.success) {
-        set({ error: result.error || "Failed to update section" });
-        // Reload sections
-        await get().initialize();
-      }
-    } catch (error) {
-      console.error("Error updating section:", error);
-      set({ error: "Failed to update section" });
-      // Reload sections
-      await get().initialize();
-    }
-  },
+      updateSection: async (section) => {
+        const websiteState = useWebsiteStore.getState();
 
-  removeSection: async (id) => {
-    const websiteState = useWebsiteStore.getState();
+        if (websiteState.loading || !websiteState.websiteId) {
+          set({ error: "Website not initialized" });
+          return;
+        }
 
-    if (websiteState.loading || !websiteState.websiteId) {
-      set({ error: "Website not initialized" });
-      return;
-    }
+        const websiteId = websiteState.websiteId;
 
-    const websiteId = websiteState.websiteId;
+        try {
+          // Update in local state
+          set((state) => {
+            const newSections = state.sections.map((s) =>
+              s.id === section.id ? section : s,
+            );
+            return { sections: newSections };
+          });
 
-    try {
-      // Optimistic update
-      set((state) => {
-        const newSections = state.sections.filter(
-          (section) => section.id !== id,
-        );
-        // Update order values
-        const orderedSections = updateSectionOrders(newSections);
-        return { sections: orderedSections };
-      });
+          // Call backend
+          const result = await updateSectionAction(websiteId, section);
 
-      // Call backend
-      const result = await deleteSectionAction(websiteId, id);
+          if (!result.success) {
+            set({ error: result.error || "Failed to update section" });
+            // Reload sections
+            await get().initialize();
+          }
+        } catch (error) {
+          console.error("Error updating section:", error);
+          set({ error: "Failed to update section" });
+          // Reload sections
+          await get().initialize();
+        }
+      },
 
-      if (!result.success) {
-        // Revert on failure - would need to restore from backend
-        set({ error: result.error || "Failed to delete section" });
-        // Reload sections
-        await get().initialize();
-      }
-    } catch (error) {
-      console.error("Error deleting section:", error);
-      set({ error: "Failed to delete section" });
-      // Reload sections
-      await get().initialize();
-    }
-  },
+      removeSection: async (id) => {
+        const websiteState = useWebsiteStore.getState();
 
-  reorderSections: async (oldIndex, newIndex) => {
-    const websiteState = useWebsiteStore.getState();
+        if (websiteState.loading || !websiteState.websiteId) {
+          set({ error: "Website not initialized" });
+          return;
+        }
 
-    if (websiteState.loading || !websiteState.websiteId) {
-      set({ error: "Website not initialized" });
-      return;
-    }
+        const websiteId = websiteState.websiteId;
 
-    const websiteId = websiteState.websiteId;
+        try {
+          // Optimistic update
+          set((state) => {
+            const newSections = state.sections.filter(
+              (section) => section.id !== id,
+            );
+            // Update order values
+            const orderedSections = updateSectionOrders(newSections);
+            return { sections: orderedSections };
+          });
 
-    try {
-      // Optimistic update
-      set((state) => {
-        const newSections = [...state.sections];
-        const [movedSection] = newSections.splice(oldIndex, 1);
-        newSections.splice(newIndex, 0, movedSection);
-        // Update order values
-        const orderedSections = updateSectionOrders(newSections);
-        return { sections: orderedSections };
-      });
+          // Call backend
+          const result = await deleteSectionAction(websiteId, id);
 
-      // Get the new order of section IDs
-      const sectionIds = get().sections.map((s) => s.id);
+          if (!result.success) {
+            // Revert on failure - would need to restore from backend
+            set({ error: result.error || "Failed to delete section" });
+            // Reload sections
+            await get().initialize();
+          }
+        } catch (error) {
+          console.error("Error deleting section:", error);
+          set({ error: "Failed to delete section" });
+          // Reload sections
+          await get().initialize();
+        }
+      },
 
-      // Call backend
-      const result = await reorderSectionsAction(websiteId, sectionIds);
+      reorderSections: async (oldIndex, newIndex) => {
+        const websiteState = useWebsiteStore.getState();
 
-      if (!result.success) {
-        set({ error: result.error || "Failed to reorder sections" });
-        // Reload sections
-        await get().initialize();
-      }
-    } catch (error) {
-      console.error("Error reordering sections:", error);
-      set({ error: "Failed to reorder sections" });
-      // Reload sections
-      await get().initialize();
-    }
-  },
-}));
+        if (websiteState.loading || !websiteState.websiteId) {
+          set({ error: "Website not initialized" });
+          return;
+        }
+
+        const websiteId = websiteState.websiteId;
+
+        try {
+          // Optimistic update
+          set((state) => {
+            const newSections = [...state.sections];
+            const [movedSection] = newSections.splice(oldIndex, 1);
+            newSections.splice(newIndex, 0, movedSection);
+            // Update order values
+            const orderedSections = updateSectionOrders(newSections);
+            return { sections: orderedSections };
+          });
+
+          // Get the new order of section IDs
+          const sectionIds = get().sections.map((s) => s.id);
+
+          // Call backend
+          const result = await reorderSectionsAction(websiteId, sectionIds);
+
+          if (!result.success) {
+            set({ error: result.error || "Failed to reorder sections" });
+            // Reload sections
+            await get().initialize();
+          }
+        } catch (error) {
+          console.error("Error reordering sections:", error);
+          set({ error: "Failed to reorder sections" });
+          // Reload sections
+          await get().initialize();
+        }
+      },
+    }) satisfies SectionsStore,
+);

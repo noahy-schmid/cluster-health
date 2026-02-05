@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, ImageIcon, Images, StepBack } from "lucide-react";
+import { ChevronLeft, ImageIcon, Images } from "lucide-react";
 import { SectionType } from "@/lib/types/section-types";
 import { useSectionsStore } from "@/services/sections-store";
 import PageHeader from "@/components/PageHeader";

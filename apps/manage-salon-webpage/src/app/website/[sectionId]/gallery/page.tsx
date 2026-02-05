@@ -16,7 +16,7 @@ export default function GalleryEditPage({ params }: PageProps) {
   const router = useRouter();
   const websiteStore = useWebsiteStore();
   const sections = useSectionsStore((state) => state.sections);
-  const isLoadingSections = useSectionsStore((state) => state.isLoading);
+  const sectionsStatus = useSectionsStore((state) => state.status);
   const initializeSections = useSectionsStore((state) => state.initialize);
 
   // Find the section from store
@@ -41,7 +41,7 @@ export default function GalleryEditPage({ params }: PageProps) {
   }, [websiteStore, initializeSections]);
 
   // Show loading state while stores are initializing
-  if (websiteStore.loading || isLoadingSections) {
+  if (websiteStore.loading || sectionsStatus !== "initialized") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-near-black">Loading...</p>

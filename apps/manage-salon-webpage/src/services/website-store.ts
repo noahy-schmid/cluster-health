@@ -45,9 +45,7 @@ const defaultColorSettings: ColorSettings = {
 };
 
 export const useWebsiteStore = create<WebsiteStore>((set) => ({
-  websiteId: null,
   loading: true,
-  error: null,
   heroSettings: defaultHeroSettings,
   colorSettings: defaultColorSettings,
 

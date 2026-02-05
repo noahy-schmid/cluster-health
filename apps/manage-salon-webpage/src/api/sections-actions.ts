@@ -195,18 +195,20 @@ export async function reorderSections(
   sectionIds: string[],
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Update order for each section
-    for (let i = 0; i < sectionIds.length; i++) {
-      await db
-        .update(sectionsTable)
-        .set({ order: i })
-        .where(
-          and(
-            eq(sectionsTable.id, sectionIds[i]),
-            eq(sectionsTable.websiteId, websiteId),
-          ),
-        );
-    }
+    await db.transaction(async (tx) => {
+      // Update order for each section within a single transaction
+      for (let i = 0; i < sectionIds.length; i++) {
+        await tx
+          .update(sectionsTable)
+          .set({ order: i })
+          .where(
+            and(
+              eq(sectionsTable.id, sectionIds[i]),
+              eq(sectionsTable.websiteId, websiteId),
+            ),
+          );
+      }
+    });
 
     return { success: true };
   } catch (error) {
