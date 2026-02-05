@@ -14,5 +14,10 @@
     "apps/salon-webpage/**/*": "apps/salon-webpage/tailwind.config.mjs"
   },
   "css.validate": true,
-  "tailwindCSS.validate": true
+  "tailwindCSS.validate": true,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.format.enable": true
 }

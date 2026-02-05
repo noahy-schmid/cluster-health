@@ -13,8 +13,8 @@ export default function MenuChip({ active, text, onClick }: MenuChipProps) {
 				no-underline
 				${
           active
-            ? "bg-bg-light text-fg font-bold inset-shadow-sm inset-shadow-fg/20"
-            : "bg-bg text-fg hover:bg-bg-light hover:text-fg hover:inset-shadow-sm hover:inset-shadow-bg-dark/20"
+            ? "bg-salon-bg-1 text-salon-fg-strong font-bold inset-shadow-sm inset-shadow-fg/20"
+            : "bg-salon-bg-2 text-salon-fg-base hover:bg-salon-bg-2 hover:text-salon-fg-strong hover:inset-shadow-sm hover:inset-shadow-bg-dark/20"
         }
 			`}
       onClick={onClick}

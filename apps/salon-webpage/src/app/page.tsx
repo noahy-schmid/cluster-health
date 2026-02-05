@@ -54,8 +54,6 @@ export default async function Home() {
         </div>
       </menu>
 
-      <StickyMenuBar menuItems={menuItems} />
-
       {/* Mock Content Sections */}
 
       <div id="uber-uns">
