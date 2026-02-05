@@ -224,8 +224,6 @@ export async function fetchSections(websiteId: string): Promise<{
   error?: string;
 }> {
   try {
-    console.log("Environment:", process.env.DATABASE_URL);
-
     // Fetch all sections for the website
     const dbSections = await db
       .select()
