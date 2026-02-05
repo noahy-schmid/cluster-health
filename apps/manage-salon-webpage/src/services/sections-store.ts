@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { Section, SectionType } from "@/lib/types/section-types";
 import {
   createSection as createSectionAction,
   deleteSection as deleteSectionAction,
@@ -8,9 +7,10 @@ import {
   updateSection as updateSectionAction,
 } from "@/api/sections-actions";
 import { useWebsiteStore } from "./website-store";
+import { AllSections, SectionType } from "@repo/website-database";
 
 interface SectionsStore {
-  sections: Section[];
+  sections: AllSections[];
   error: string | null;
   status: "uninitialized" | "initializing" | "initialized";
   initPromise: Promise<void> | null;
@@ -20,14 +20,14 @@ interface SectionsStore {
   createSection: (
     type: SectionType,
     position: number,
-  ) => Promise<Section | null>;
-  updateSection: (section: Section) => Promise<void>;
+  ) => Promise<AllSections | null>;
+  updateSection: (section: AllSections) => Promise<void>;
   removeSection: (id: string) => Promise<void>;
   reorderSections: (oldIndex: number, newIndex: number) => Promise<void>;
 }
 
 // Helper function to update order values based on array position
-function updateSectionOrders(sections: Section[]): Section[] {
+function updateSectionOrders(sections: AllSections[]): AllSections[] {
   return sections.map((section, index) => ({
     ...section,
     order: index,
