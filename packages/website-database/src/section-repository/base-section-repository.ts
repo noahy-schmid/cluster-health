@@ -4,8 +4,14 @@ import { eq, and } from "drizzle-orm";
 import { SectionType } from "./types";
 
 export class BaseSectionRepository {
-  async createSection(websiteId: string, type: SectionType, order: number) {
-    const [insertedSection] = await db
+  async createSection(
+    websiteId: string,
+    type: SectionType,
+    order: number,
+    tx?: Transaction,
+  ) {
+    const dbInstance = tx ?? db;
+    const [insertedSection] = await dbInstance
       .insert(sectionsTable)
       .values({
         websiteId,
