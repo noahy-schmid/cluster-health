@@ -1,4 +1,5 @@
-import { db, textWithImageSectionsTable } from "../index";
+import { db } from "../database";
+import { textWithImageSectionsTable } from "../schema";
 import { eq } from "drizzle-orm";
 import { Section } from "./types";
 import {
