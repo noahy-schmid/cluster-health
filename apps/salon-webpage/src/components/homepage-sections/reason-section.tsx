@@ -18,7 +18,7 @@ export default function ReasonSection({ settings }: ReasonSectionProps) {
         : "md:grid-cols-2 lg:grid-cols-4";
 
   return (
-    <section className="border-b px-4 py-8 max-w-7xl mx-auto border-fg/30">
+    <section className="px-4 py-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="text-4xl font-semibold text-salon-fg-strong">

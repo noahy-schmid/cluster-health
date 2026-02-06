@@ -183,12 +183,12 @@ export default function ImageCarouselSection({
   }, []);
 
   return (
-    <section className="border-b py-8 border-fg/30 relative">
+    <section className="py-8 relative">
       <div className="max-w-7xl mx-auto px-4 mb-6">
-        <h2 className="text-3xl font-semibold text-salon-fg-strong text-center">
+        <h2 className="text-4xl font-semibold text-salon-fg-strong text-center">
           {title || "Unsere Galerie"}
         </h2>
-        <p className="text-p text-salon-fg-base opacity-90 text-center">
+        <p className="text-p text-salon-fg-base font-light text-center">
           {subtitle || "Entdecken Sie unsere schönsten Arbeiten"}
         </p>
       </div>
@@ -212,8 +212,8 @@ export default function ImageCarouselSection({
                 className="flex-shrink-0 snap-center w-[300px] md:w-[400px] h-[400px] md:h-[500px] relative rounded-lg overflow-hidden"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src={image.src} 
+                <img
+                  src={image.src}
                   alt={image.alt}
                   className="w-full h-full object-cover"
                 />
