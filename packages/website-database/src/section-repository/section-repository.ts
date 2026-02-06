@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { AllSections, SectionType } from "./types";
 import { GallerySectionRepository } from "./gallery-section-repository";
 import { TextWithImageSectionRepository } from "./text-with-image-section-repository";
+import { CenterTextSectionRepository } from "./center-text-section-repository";
 import { BaseSectionRepository } from "./base-section-repository";
 
 export class SectionRepository {
@@ -10,6 +11,7 @@ export class SectionRepository {
     private baseSectionRepo: BaseSectionRepository,
     private gallerySectionRepo: GallerySectionRepository,
     private textWithImageSectionRepo: TextWithImageSectionRepository,
+    private centerTextSectionRepo: CenterTextSectionRepository,
   ) {}
 
   async createSection(
@@ -24,6 +26,8 @@ export class SectionRepository {
         websiteId,
         position,
       );
+    } else if (type === "center-text") {
+      return await this.centerTextSectionRepo.createSection(websiteId, position);
     }
 
     return { success: false, error: "Invalid section type" };
@@ -39,6 +43,8 @@ export class SectionRepository {
         result = await this.gallerySectionRepo.updateSection(section);
       } else if (section.type === "text-with-image") {
         result = await this.textWithImageSectionRepo.updateSection(section);
+      } else if (section.type === "center-text") {
+        result = await this.centerTextSectionRepo.updateSection(section);
       } else {
         return { success: false, error: "Invalid section type" };
       }
@@ -126,6 +132,13 @@ export class SectionRepository {
           if (result.success) {
             sections.push(result.section);
           }
+        } else if (dbSection.type === "center-text") {
+          const result = await this.centerTextSectionRepo.fetchSection(
+            dbSection.id,
+          );
+          if (result.success) {
+            sections.push(result.section);
+          }
         }
       }
 
@@ -143,5 +156,6 @@ export const sectionRepository = () => {
     baseRepo,
     new GallerySectionRepository(baseRepo),
     new TextWithImageSectionRepository(baseRepo),
+    new CenterTextSectionRepository(baseRepo),
   );
 };

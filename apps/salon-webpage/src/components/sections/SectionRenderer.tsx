@@ -1,5 +1,6 @@
 import ImageTextSection from "../homepage-sections/image-text-section";
 import ImageCarouselSection from "../homepage-sections/image-carousel-section";
+import CenterTextSection from "../homepage-sections/center-text-section";
 import { AllSections } from "@repo/website-database";
 
 interface SectionRendererProps {
@@ -30,6 +31,8 @@ export default function SectionRenderer({
           subtitle={section.settings.subtitle}
         />
       );
+    case "center-text":
+      return <CenterTextSection settings={section.settings} />;
     default:
       return null;
   }

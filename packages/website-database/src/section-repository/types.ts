@@ -1,4 +1,4 @@
-export type SectionType = "text-with-image" | "gallery";
+export type SectionType = "text-with-image" | "gallery" | "center-text";
 
 // Settings for Text with Image section
 export interface TextWithImageSettings {
@@ -14,9 +14,15 @@ export interface GallerySettings {
   imageUrls: string[];
 }
 
+export interface CenterTextSettings {
+  title: string;
+  content: string;
+}
+
 type TypeToSettings = {
   "text-with-image": TextWithImageSettings;
   gallery: GallerySettings;
+  "center-text": CenterTextSettings;
 };
 
 export type Section<T extends SectionType> = {

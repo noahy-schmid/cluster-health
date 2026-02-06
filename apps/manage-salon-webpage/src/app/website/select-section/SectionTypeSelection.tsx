@@ -3,7 +3,7 @@
 import { SectionType } from "@repo/website-database";
 import SectionTypeSelectionButton from "./TypeSelectionButton";
 import { Suspense } from "react";
-import { ImageIcon, Images, LucideIcon } from "lucide-react";
+import { ImageIcon, Images, AlignCenter, LucideIcon } from "lucide-react";
 
 export type SectionTypeInfo = {
   type: SectionType;
@@ -24,6 +24,12 @@ const sectionTypes: SectionTypeInfo[] = [
     label: "Galerie",
     description: "Mehrere Bilder in einem Galerie-Layout anzeigen",
     icon: Images,
+  },
+  {
+    type: "center-text" as SectionType,
+    label: "Zentrierter Text",
+    description: "Einfacher Text-Abschnitt mit Titel und Inhalt",
+    icon: AlignCenter,
   },
 ];
 
