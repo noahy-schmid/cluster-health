@@ -1,4 +1,5 @@
-import { db, sectionsTable, Transaction } from "../index";
+import { db, Transaction } from "../database";
+import { sectionsTable } from "../schema";
 import { eq, and } from "drizzle-orm";
 import { SectionType } from "./types";
 
