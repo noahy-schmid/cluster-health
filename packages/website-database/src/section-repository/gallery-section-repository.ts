@@ -1,8 +1,5 @@
-import {
-  db,
-  gallerySectionsTable,
-  galleryImagesTable,
-} from "../index";
+import { db } from "../database";
+import { gallerySectionsTable, galleryImagesTable } from "../schema";
 import { eq } from "drizzle-orm";
 import { Section } from "./types";
 import {
