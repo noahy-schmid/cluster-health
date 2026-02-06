@@ -17,44 +17,54 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
     position: number,
   ): Promise<CreateSectionResult<"gallery">> {
     try {
-      // Insert into sections table via base repository
-      const insertedSection = await this.baseSectionRepo.createSection(
-        websiteId,
-        "gallery",
-        position,
+      const result = await db.transaction(
+        async (tx): Promise<CreateSectionResult<"gallery">> => {
+          // Insert into sections table via base repository within the transaction
+          const insertedSection = await this.baseSectionRepo.createSection(
+            websiteId,
+            "gallery",
+            position,
+            tx,
+          );
+
+          if (!insertedSection) {
+            return { success: false, error: "Failed to insert section" };
+          }
+
+          // Insert into gallery_sections table within the same transaction
+          const [insertedGallerySection] = await tx
+            .insert(gallerySectionsTable)
+            .values({
+              id: insertedSection.id,
+              title: "New Gallery",
+              subtitle: "Gallery subtitle",
+            })
+            .returning();
+
+          if (!insertedGallerySection) {
+            return {
+              success: false,
+              error: "Failed to insert gallery section",
+            };
+          }
+
+          const newSection: Section<"gallery"> = {
+            id: insertedSection.id,
+            type: "gallery",
+            settings: {
+              title: insertedGallerySection.title,
+              subtitle: insertedGallerySection.subtitle,
+              imageUrls: [],
+            },
+            order: insertedSection.order,
+            menuTitle: insertedSection.menuTitle ?? undefined,
+          };
+
+          return { success: true, section: newSection };
+        },
       );
 
-      if (!insertedSection) {
-        return { success: false, error: "Failed to insert section" };
-      }
-
-      // Insert into gallery_sections table
-      const [insertedGallerySection] = await db
-        .insert(gallerySectionsTable)
-        .values({
-          id: insertedSection.id,
-          title: "New Gallery",
-          subtitle: "Gallery subtitle",
-        })
-        .returning();
-
-      if (!insertedGallerySection) {
-        return { success: false, error: "Failed to insert gallery section" };
-      }
-
-      const newSection: Section<"gallery"> = {
-        id: insertedSection.id,
-        type: "gallery",
-        settings: {
-          title: insertedGallerySection.title,
-          subtitle: insertedGallerySection.subtitle,
-          imageUrls: [],
-        },
-        order: insertedSection.order,
-        menuTitle: insertedSection.menuTitle ?? undefined,
-      };
-
-      return { success: true, section: newSection };
+      return result;
     } catch (error) {
       console.error("Error creating gallery section:", error);
       return { success: false, error: "Failed to create gallery section" };
