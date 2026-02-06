@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useSectionsStore } from "@/services/sections-store";
-import { Section, GallerySettings } from "@/lib/types/section-types";
 import FormInput from "./FormInput";
 import ImageUrlList from "./ImageUrlList";
 import FormActions from "./FormActions";
+import { AllSections, GallerySettings } from "@repo/website-database";
 
 interface GalleryFormProps {
-  section: Extract<Section, { type: "gallery" }>;
+  section: Extract<AllSections, { type: "gallery" }>;
   onSave: () => void;
   onCancel: () => void;
 }

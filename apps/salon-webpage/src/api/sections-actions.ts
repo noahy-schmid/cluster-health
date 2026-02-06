@@ -3,131 +3,39 @@
 import {
   db,
   websitesTable,
-  sectionsTable,
-  textWithImageSectionsTable,
-  gallerySectionsTable,
-  galleryImagesTable,
+  AllSections,
+  sectionRepository,
 } from "@repo/website-database";
 import { eq } from "drizzle-orm";
-
-export type SectionType = "text-with-image" | "gallery";
-
-// Settings for Text with Image section
-export interface TextWithImageSettings {
-  imageUrl: string;
-  title: string;
-  text: string;
-}
-
-// Settings for Gallery section
-export interface GallerySettings {
-  title: string;
-  subtitle: string;
-  imageUrls: string[];
-}
-
-// Discriminated union for sections based on type
-export type Section =
-  | {
-      id: string;
-      type: "text-with-image";
-      settings: TextWithImageSettings;
-      order: number;
-      menuTitle?: string;
-    }
-  | {
-      id: string;
-      type: "gallery";
-      settings: GallerySettings;
-      order: number;
-      menuTitle?: string;
-    };
 
 /**
  * Server action to fetch all sections for a salon by its slug
  */
 export async function fetchSectionsBySalonSlug(salonSlug: string): Promise<{
   success: boolean;
-  sections?: Section[];
+  sections?: AllSections[];
   error?: string;
 }> {
-  try {
-    // First, get the website by salon slug
-    const [website] = await db
-      .select()
-      .from(websitesTable)
-      .where(eq(websitesTable.slug, salonSlug));
+  const [website] = await db
+    .select()
+    .from(websitesTable)
+    .where(eq(websitesTable.slug, salonSlug));
 
-    if (!website) {
-      return { success: false, error: "Website not found" };
-    }
-
-    // Fetch all sections for the website
-    const dbSections = await db
-      .select()
-      .from(sectionsTable)
-      .where(eq(sectionsTable.websiteId, website.id))
-      .orderBy(sectionsTable.order);
-
-    const sections: Section[] = [];
-
-    // Fetch details for each section based on type
-    for (const dbSection of dbSections) {
-      if (dbSection.type === "text-with-image") {
-        const [textSection] = await db
-          .select()
-          .from(textWithImageSectionsTable)
-          .where(eq(textWithImageSectionsTable.id, dbSection.id));
-
-        if (textSection) {
-          sections.push({
-            id: dbSection.id,
-            type: "text-with-image",
-            settings: {
-              imageUrl: textSection.image,
-              title: textSection.title,
-              text: textSection.content,
-            },
-            order: dbSection.order,
-            menuTitle: dbSection.menuTitle || undefined,
-          });
-        }
-      } else if (dbSection.type === "gallery") {
-        const [gallerySection] = await db
-          .select()
-          .from(gallerySectionsTable)
-          .where(eq(gallerySectionsTable.id, dbSection.id));
-
-        if (gallerySection) {
-          // Fetch images for this gallery
-          const images = await db
-            .select()
-            .from(galleryImagesTable)
-            .where(eq(galleryImagesTable.gallerySectionId, dbSection.id))
-            .orderBy(galleryImagesTable.order);
-
-          sections.push({
-            id: dbSection.id,
-            type: "gallery",
-            settings: {
-              title: gallerySection.title,
-              subtitle: gallerySection.subtitle,
-              imageUrls: images.map(
-                (img: { imageUrl: string }) => img.imageUrl,
-              ),
-            },
-            order: dbSection.order,
-            menuTitle: dbSection.menuTitle || undefined,
-          });
-        }
-      }
-    }
-
-    return { success: true, sections };
-  } catch (error) {
-    console.error("Error fetching sections by salon slug:", error);
-    return { success: false, error: "Failed to fetch sections" };
+  if (!website) {
+    return { success: false, error: "Website not found" };
   }
+
+  const repository = sectionRepository();
+  const fetchResult = await repository.fetchSections(website.id);
+
+  if (!fetchResult.success) {
+    return {
+      success: false,
+      error: fetchResult.error || "Failed to fetch sections",
+    };
+  }
+
+  return { success: true, sections: fetchResult.sections };
 }
 
 export interface WebsiteColors {

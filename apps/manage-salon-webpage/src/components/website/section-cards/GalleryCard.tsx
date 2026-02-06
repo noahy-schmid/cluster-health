@@ -1,6 +1,6 @@
-import { GallerySettings } from "@/lib/types/section-types";
 import { ImageIcon } from "lucide-react";
 import SectionHeader from "./SectionHeader";
+import { GallerySettings } from "@repo/website-database";
 
 interface GalleryCardProps {
   settings: GallerySettings;

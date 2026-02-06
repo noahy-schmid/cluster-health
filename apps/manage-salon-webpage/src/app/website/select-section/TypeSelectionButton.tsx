@@ -1,9 +1,9 @@
 "use client";
 
-import { SectionType } from "@/lib/types/section-types";
 import { useSectionsStore } from "@/services/sections-store";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SectionTypeInfo } from "./SectionTypeSelection";
+import { SectionType } from "@repo/website-database";
 
 export default function SectionTypeSelectionButton({
   info,
@@ -28,7 +28,7 @@ export default function SectionTypeSelectionButton({
     }
   };
 
-  //const Icon = info.icon;
+  const Icon = info.icon;
 
   return (
     <button
@@ -37,7 +37,7 @@ export default function SectionTypeSelectionButton({
     >
       <div className="flex items-center gap-md mb-md">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-          {/* <Icon className="w-6 h-6 text-primary" /> */}
+          <Icon className="w-6 h-6 text-primary" />
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-focus text-fg-strong mb-1">

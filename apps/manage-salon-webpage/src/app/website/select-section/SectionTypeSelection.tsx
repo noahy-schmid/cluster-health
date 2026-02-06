@@ -1,15 +1,15 @@
 "use client";
 
-import { SectionType } from "@/lib/types/section-types";
-import { LucideIcon, ImageIcon, Images } from "lucide-react";
+import { SectionType } from "@repo/website-database";
 import SectionTypeSelectionButton from "./TypeSelectionButton";
 import { Suspense } from "react";
+import { ImageIcon, Images, LucideIcon } from "lucide-react";
 
 export type SectionTypeInfo = {
   type: SectionType;
   label: string;
   description: string;
-  //icon: LucideIcon;
+  icon: LucideIcon;
 };
 
 const sectionTypes: SectionTypeInfo[] = [
@@ -17,13 +17,13 @@ const sectionTypes: SectionTypeInfo[] = [
     type: "text-with-image" as SectionType,
     label: "Text mit Bild",
     description: "Textinhalt zusammen mit einem Bild anzeigen",
-    //icon: ImageIcon,
+    icon: ImageIcon,
   },
   {
     type: "gallery" as SectionType,
     label: "Galerie",
     description: "Mehrere Bilder in einem Galerie-Layout anzeigen",
-    //icon: Images,
+    icon: Images,
   },
 ];
 

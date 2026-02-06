@@ -3,8 +3,21 @@ Also dont provide a summary of the changes made.
 
 After making code changes, always check the modified files for errors using the get_errors tool.
 
+## Implementation Approach
+
+**Before implementing new classes or functions:**
+
+1. First create function/method signatures with JSDoc comments explaining purpose, parameters, and return values
+2. Present the signatures to the user for approval
+3. Only proceed with full implementation after user confirms the signatures are correct
+4. This applies to:
+   - New classes with all their methods
+   - New repository classes
+   - New service classes
+   - Any file containing multiple new functions
 
 ## Guidelines for NextJS Frontends
+
 ### Component Structure
 
 - Use **client components** (`"use client"`) only when necessary (interactivity, hooks, state)

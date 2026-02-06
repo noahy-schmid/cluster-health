@@ -1,9 +1,9 @@
-import { Section } from "@/api/sections-actions";
 import ImageTextSection from "../homepage-sections/image-text-section";
 import ImageCarouselSection from "../homepage-sections/image-carousel-section";
+import { AllSections } from "@repo/website-database";
 
 interface SectionRendererProps {
-  section: Section;
+  section: AllSections;
   order: number;
 }
 
