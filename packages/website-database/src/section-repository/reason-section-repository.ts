@@ -40,63 +40,71 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
     position: number,
   ): Promise<CreateSectionResult<"reason">> {
     try {
-      // Insert into sections table via base repository
-      const insertedSection = await this.baseSectionRepo.createSection(
-        websiteId,
-        "reason",
-        position,
-      );
+      const result = await db.transaction(async (tx) => {
+        // Insert into sections table via base repository
+        const insertedSection = await this.baseSectionRepo.createSection(
+          websiteId,
+          "reason",
+          position,
+          tx,
+        );
 
-      if (!insertedSection) {
-        return { success: false, error: "Failed to insert section" };
-      }
+        if (!insertedSection) {
+          return { success: false, error: "Failed to insert section" } as const;
+        }
 
-      // Insert into reason_sections table with defaults
-      const [insertedReasonSection] = await db
-        .insert(reasonSectionsTable)
-        .values({
+        // Insert into reason_sections table with defaults
+        const [insertedReasonSection] = await tx
+          .insert(reasonSectionsTable)
+          .values({
+            id: insertedSection.id,
+            title: "Warum wir?",
+            subtitle: "Entdecken Sie, was uns auszeichnet",
+          })
+          .returning();
+
+        if (!insertedReasonSection) {
+          return {
+            success: false,
+            error: "Failed to insert reason section",
+          } as const;
+        }
+
+        // Create 2 default items
+        await tx.insert(reasonItemsTable).values([
+          {
+            reasonSectionId: insertedSection.id,
+            title: "Grund 1",
+            description: "Beschreibung für Grund 1",
+            order: 0,
+          },
+          {
+            reasonSectionId: insertedSection.id,
+            title: "Grund 2",
+            description: "Beschreibung für Grund 2",
+            order: 1,
+          },
+        ]);
+
+        const newSection: Section<"reason"> = {
           id: insertedSection.id,
-          title: "Warum wir?",
-          subtitle: "Entdecken Sie, was uns auszeichnet",
-        })
-        .returning();
+          type: "reason",
+          settings: {
+            title: insertedReasonSection.title,
+            subtitle: insertedReasonSection.subtitle,
+            items: [
+              { title: "Grund 1", description: "Beschreibung für Grund 1" },
+              { title: "Grund 2", description: "Beschreibung für Grund 2" },
+            ],
+          },
+          order: insertedSection.order,
+          menuTitle: insertedSection.menuTitle ?? undefined,
+        };
 
-      if (!insertedReasonSection) {
-        return { success: false, error: "Failed to insert reason section" };
-      }
+        return { success: true, section: newSection } as const;
+      });
 
-      // Create 2 default items
-      await db.insert(reasonItemsTable).values([
-        {
-          reasonSectionId: insertedSection.id,
-          title: "Grund 1",
-          description: "Beschreibung für Grund 1",
-          order: 0,
-        },
-        {
-          reasonSectionId: insertedSection.id,
-          title: "Grund 2",
-          description: "Beschreibung für Grund 2",
-          order: 1,
-        },
-      ]);
-
-      const newSection: Section<"reason"> = {
-        id: insertedSection.id,
-        type: "reason",
-        settings: {
-          title: insertedReasonSection.title,
-          subtitle: insertedReasonSection.subtitle,
-          items: [
-            { title: "Grund 1", description: "Beschreibung für Grund 1" },
-            { title: "Grund 2", description: "Beschreibung für Grund 2" },
-          ],
-        },
-        order: insertedSection.order,
-        menuTitle: insertedSection.menuTitle ?? undefined,
-      };
-
-      return { success: true, section: newSection };
+      return result;
     } catch (error) {
       console.error("Error creating reason section:", error);
       return { success: false, error: "Failed to create reason section" };
