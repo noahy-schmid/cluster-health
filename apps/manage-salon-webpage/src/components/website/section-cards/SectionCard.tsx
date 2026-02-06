@@ -5,6 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import TextWithImageCard from "./TextWithImageCard";
 import GalleryCard from "./GalleryCard";
+import ReasonCard from "./ReasonCard";
 import CenterTextCard from "./CenterTextCard";
 import { AllSections } from "@repo/website-database";
 
@@ -98,6 +99,15 @@ function renderSectionContent(section: AllSections) {
     case "center-text":
       return (
         <CenterTextCard
+          settings={section.settings}
+          order={section.order}
+          menuTitle={section.menuTitle}
+        />
+      );
+
+    case "reason":
+      return (
+        <ReasonCard
           settings={section.settings}
           order={section.order}
           menuTitle={section.menuTitle}

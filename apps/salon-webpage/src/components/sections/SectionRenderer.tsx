@@ -1,6 +1,7 @@
 import ImageTextSection from "../homepage-sections/image-text-section";
 import ImageCarouselSection from "../homepage-sections/image-carousel-section";
 import CenterTextSection from "../homepage-sections/center-text-section";
+import ReasonSection from "../homepage-sections/reason-section";
 import { AllSections } from "@repo/website-database";
 
 interface SectionRendererProps {
@@ -33,6 +34,8 @@ export default function SectionRenderer({
       );
     case "center-text":
       return <CenterTextSection settings={section.settings} />;
+    case "reason":
+      return <ReasonSection settings={section.settings} />;
     default:
       return null;
   }
