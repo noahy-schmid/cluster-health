@@ -17,48 +17,53 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
     position: number,
   ): Promise<CreateSectionResult<"text-with-image">> {
     try {
-      // Insert into sections table via base repository
-      const insertedSection = await this.baseSectionRepo.createSection(
-        websiteId,
-        "text-with-image",
-        position,
-      );
+      const result = await db.transaction(async (tx) => {
+        // Insert into sections table via base repository
+        const insertedSection = await this.baseSectionRepo.createSection(
+          websiteId,
+          "text-with-image",
+          position,
+          tx,
+        );
 
-      if (!insertedSection) {
-        return { success: false, error: "Failed to insert section" };
-      }
+        if (!insertedSection) {
+          return { success: false as const, error: "Failed to insert section" };
+        }
 
-      // Insert into text_with_image_sections table
-      const [insertedTextSection] = await db
-        .insert(textWithImageSectionsTable)
-        .values({
+        // Insert into text_with_image_sections table
+        const [insertedTextSection] = await tx
+          .insert(textWithImageSectionsTable)
+          .values({
+            id: insertedSection.id,
+            title: "New Text with Image Section",
+            content: "Add your text here",
+            image: "",
+          })
+          .returning();
+
+        if (!insertedTextSection) {
+          return {
+            success: false as const,
+            error: "Failed to insert text with image section",
+          };
+        }
+
+        const newSection: Section<"text-with-image"> = {
           id: insertedSection.id,
-          title: "New Text with Image Section",
-          content: "Add your text here",
-          image: "",
-        })
-        .returning();
-
-      if (!insertedTextSection) {
-        return {
-          success: false,
-          error: "Failed to insert text with image section",
+          type: "text-with-image",
+          settings: {
+            imageUrl: insertedTextSection.image,
+            title: insertedTextSection.title,
+            text: insertedTextSection.content,
+          },
+          order: insertedSection.order,
+          menuTitle: insertedSection.menuTitle ?? undefined,
         };
-      }
 
-      const newSection: Section<"text-with-image"> = {
-        id: insertedSection.id,
-        type: "text-with-image",
-        settings: {
-          imageUrl: insertedTextSection.image,
-          title: insertedTextSection.title,
-          text: insertedTextSection.content,
-        },
-        order: insertedSection.order,
-        menuTitle: insertedSection.menuTitle ?? undefined,
-      };
+        return { success: true as const, section: newSection };
+      });
 
-      return { success: true, section: newSection };
+      return result;
     } catch (error) {
       console.error("Error creating text with image section:", error);
       return {
