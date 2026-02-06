@@ -57,7 +57,7 @@ export default function ReasonForm({
     await updateSection({
       ...section,
       settings,
-      menuTitle: menuTitle.trim() === "" ? undefined : menuTitle,
+      menuTitle: menuTitle.trim() === "" ? undefined : menuTitle.trim(),
     });
     onSave();
   };
