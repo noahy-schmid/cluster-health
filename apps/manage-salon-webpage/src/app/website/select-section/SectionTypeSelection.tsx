@@ -3,7 +3,7 @@
 import { SectionType } from "@repo/website-database";
 import SectionTypeSelectionButton from "./TypeSelectionButton";
 import { Suspense } from "react";
-import { ImageIcon, Images, LucideIcon } from "lucide-react";
+import { ImageIcon, Images, List, LucideIcon } from "lucide-react";
 
 export type SectionTypeInfo = {
   type: SectionType;
@@ -24,6 +24,12 @@ const sectionTypes: SectionTypeInfo[] = [
     label: "Galerie",
     description: "Mehrere Bilder in einem Galerie-Layout anzeigen",
     icon: Images,
+  },
+  {
+    type: "reason" as SectionType,
+    label: "Gründe",
+    description: "Zeigen Sie 2-4 Gründe in einem Grid-Layout an",
+    icon: List,
   },
 ];
 

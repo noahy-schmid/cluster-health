@@ -15,6 +15,13 @@
       "when": 1770323638315,
       "tag": "0001_tiresome_raza",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770415622286,
+      "tag": "0002_youthful_santa_claus",
+      "breakpoints": true
     }
   ]
 }

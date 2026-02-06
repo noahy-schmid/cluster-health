@@ -53,3 +53,22 @@ export const galleryImagesTable = pgTable("gallery_images", {
   imageUrl: varchar().notNull(),
   order: integer().notNull(),
 });
+
+export const reasonSectionsTable = pgTable("reason_sections", {
+  id: uuid()
+    .primaryKey()
+    .references(() => sectionsTable.id, { onDelete: "cascade" }),
+  title: varchar().notNull(),
+  subtitle: varchar().notNull(),
+});
+
+export const reasonItemsTable = pgTable("reason_items", {
+  id: uuid().primaryKey().defaultRandom(),
+  reasonSectionId: uuid()
+    .notNull()
+    .references(() => reasonSectionsTable.id, { onDelete: "cascade" }),
+  title: varchar().notNull(),
+  description: text().notNull(),
+  imageUrl: varchar(),
+  order: integer().notNull(),
+});
