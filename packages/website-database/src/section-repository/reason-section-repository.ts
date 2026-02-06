@@ -1,4 +1,5 @@
-import { db, reasonSectionsTable, reasonItemsTable } from "../index";
+import { db } from "../database";
+import { reasonSectionsTable, reasonItemsTable } from "../schema";
 import { eq } from "drizzle-orm";
 import { Section, ReasonItem } from "./types";
 import {
