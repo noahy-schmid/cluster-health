@@ -11,7 +11,7 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // No backend logic yet - just prevent form submission
-    console.log("Login form submitted", { email, password });
+    console.log("Login form submitted with email:", email);
   };
 
   return (

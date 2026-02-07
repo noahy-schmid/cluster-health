@@ -37,10 +37,7 @@ export default function RegisterPage() {
     setErrors({});
     
     // No backend logic yet - just prevent form submission
-    console.log("Register form submitted", {
-      email,
-      password,
-    });
+    console.log("Register form submitted with email:", email);
   };
 
   return (
