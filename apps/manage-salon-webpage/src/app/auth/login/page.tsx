@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LogIn } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -84,12 +85,12 @@ export default function LoginPage() {
           {/* Footer */}
           <div className="mt-lg text-center text-sm text-fg-muted">
             Noch kein Konto?{" "}
-            <a
+            <Link
               href="/auth/register"
               className="text-primary hover:text-primary-hover font-medium transition-colors"
             >
               Jetzt registrieren
-            </a>
+            </Link>
           </div>
         </div>
       </div>
