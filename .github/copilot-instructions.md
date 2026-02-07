@@ -3,6 +3,12 @@ Also dont provide a summary of the changes made.
 
 After making code changes, always check the modified files for errors using the get_errors tool.
 
+## Database Migrations
+
+- **Schema changes**: Update the schema.ts file when adding new tables or fields
+- **Do NOT create migration files manually** - migrations are generated automatically by the database tooling
+- Only define the schema structure in schema.ts
+
 ## Implementation Approach
 
 **Before implementing new classes or functions:**

@@ -54,6 +54,14 @@ export const galleryImagesTable = pgTable("gallery_images", {
   order: integer().notNull(),
 });
 
+export const centerTextSectionsTable = pgTable("center_text_sections", {
+  id: uuid()
+    .primaryKey()
+    .references(() => sectionsTable.id, { onDelete: "cascade" }),
+  title: varchar().notNull(),
+  content: text().notNull(),
+});
+
 export const reasonSectionsTable = pgTable("reason_sections", {
   id: uuid()
     .primaryKey()

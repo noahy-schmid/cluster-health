@@ -1,4 +1,4 @@
-export type SectionType = "text-with-image" | "gallery" | "reason";
+export type SectionType = "text-with-image" | "gallery" | "center-text" | "reason";
 
 // Settings for Text with Image section
 export interface TextWithImageSettings {
@@ -12,6 +12,11 @@ export interface GallerySettings {
   title: string;
   subtitle: string;
   imageUrls: string[];
+}
+
+export interface CenterTextSettings {
+  title: string;
+  content: string;
 }
 
 // Settings for Reason section
@@ -30,6 +35,7 @@ export interface ReasonSettings {
 type TypeToSettings = {
   "text-with-image": TextWithImageSettings;
   gallery: GallerySettings;
+  "center-text": CenterTextSettings;
   reason: ReasonSettings;
 };
 

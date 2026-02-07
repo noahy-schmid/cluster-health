@@ -6,6 +6,7 @@ import { CSS } from "@dnd-kit/utilities";
 import TextWithImageCard from "./TextWithImageCard";
 import GalleryCard from "./GalleryCard";
 import ReasonCard from "./ReasonCard";
+import CenterTextCard from "./CenterTextCard";
 import { AllSections } from "@repo/website-database";
 
 interface SectionCardProps {
@@ -89,6 +90,15 @@ function renderSectionContent(section: AllSections) {
     case "gallery":
       return (
         <GalleryCard
+          settings={section.settings}
+          order={section.order}
+          menuTitle={section.menuTitle}
+        />
+      );
+
+    case "center-text":
+      return (
+        <CenterTextCard
           settings={section.settings}
           order={section.order}
           menuTitle={section.menuTitle}
