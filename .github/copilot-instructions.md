@@ -21,6 +21,7 @@ After making code changes, always check the modified files for errors using the 
    - New repository classes
    - New service classes
    - Any file containing multiple new functions
+5. To get the confirmation of the user, use the `askQuestions` tool.
 
 ## Guidelines for NextJS Frontends
 

@@ -1,26 +1,8 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
 import { useActionState, useState } from "react";
 import { loginAction } from "@/api/auth-actions";
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className={`w-full px-lg py-sm rounded-md text-base font-focus transition-colors ${
-        pending
-          ? "bg-primary-300 text-fg-inv cursor-not-allowed"
-          : "bg-primary-500 text-fg-inv hover:bg-primary-600"
-      }`}
-    >
-      {pending ? "Anmelden..." : "Anmelden"}
-    </button>
-  );
-}
+import SubmitButton from "@/components/SubmitButton";
 
 export default function LoginPage() {
   const [state, login] = useActionState(loginAction, undefined);
@@ -99,7 +81,7 @@ export default function LoginPage() {
 
           {/* Submit button */}
           <div className="pt-md">
-            <SubmitButton />
+            <SubmitButton label="Anmelden" pendingLabel="Anmelden..." />
           </div>
         </form>
       </div>
