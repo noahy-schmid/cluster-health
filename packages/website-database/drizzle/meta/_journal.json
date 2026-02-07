@@ -19,13 +19,6 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1770418812775,
-      "tag": "0002_previous_bromley",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
       "when": 1770415622286,
       "tag": "0002_youthful_santa_claus",
       "breakpoints": true
@@ -33,8 +26,8 @@
     {
       "idx": 3,
       "version": "7",
-      "when": 1770419789665,
-      "tag": "0003_minor_agent_zero",
+      "when": 1770470048922,
+      "tag": "0003_previous_hannibal_king",
       "breakpoints": true
     }
   ]
