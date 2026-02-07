@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useActionState, useState } from "react";
 import SubmitButton from "@/components/SubmitButton";
+import { registerAction } from "@/api/auth-actions";
 
 export default function RegisterPage() {
+  const [state, register] = useActionState(registerAction, undefined);
   const [formData, setFormData] = useState({
     email: "",
     confirmEmail: "",
@@ -22,11 +24,13 @@ export default function RegisterPage() {
     formData.confirmPassword.length > 0 &&
     formData.password !== formData.confirmPassword;
 
-  const handleSubmit = async (_data: FormData) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  const handleSubmit = async (data: FormData) => {
     setConfirmEmailTouched(true);
     setConfirmPasswordTouched(true);
-    console.log("Form submitted with data:", formData);
+    if (emailMismatch || passwordMismatch) {
+      return;
+    }
+    return register(data);
   };
 
   return (
@@ -86,7 +90,9 @@ export default function RegisterPage() {
             <p className="text-sm text-red-500">
               {confirmEmailTouched && emailMismatch
                 ? "Die E-Mail-Adressen stimmen nicht überein."
-                : "\u00A0"}
+                : state?.success === false && state.errors?.email
+                  ? state.errors.email.errors.join(" ")
+                  : "\u00A0"}
             </p>
           </div>
 
@@ -140,7 +146,9 @@ export default function RegisterPage() {
             <p className="text-sm text-red-500">
               {confirmPasswordTouched && passwordMismatch
                 ? "Die Passwörter stimmen nicht überein."
-                : "\u00A0"}
+                : state?.success === false && state.errors?.password
+                  ? state.errors.password.errors.join(" ")
+                  : "\u00A0"}
             </p>
           </div>
 

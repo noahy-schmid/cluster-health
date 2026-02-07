@@ -1,9 +1,9 @@
 "use server";
 
-import { SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import z from "zod";
+import { ManagementUserRepository } from "@repo/auth-domain";
 
 const loginActionSchema = z.object({
   email: z.email(),
@@ -20,14 +20,33 @@ type LoginActionResult =
       };
     };
 
-async function createSession(userId: string) {
-  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 1 day
-  const session = await new SignJWT({ userId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime(expires)
-    .sign(new TextEncoder().encode(process.env.JWT_SECRET || "default_secret"));
+const registerActionSchema = z.object({
+  email: z.email(),
+  password: z.string(),
+});
 
-  (await cookies()).set("session", session, {
+type RegisterActionResult =
+  | { success: true }
+  | {
+      success: false;
+      errors?: {
+        email?: { errors: string[] };
+        password?: { errors: string[] };
+      };
+    };
+
+/**
+ * Sets the session cookie from a JWT token.
+ * @param token JWT token from auth-domain.
+ * @returns Resolves when cookie is set.
+ */
+async function setSessionCookie(
+  token: string,
+  payload: { expiresAt?: Date },
+): Promise<void> {
+  const expires = payload.expiresAt;
+
+  (await cookies()).set("session", token, {
     expires,
     secure: true,
     httpOnly: true,
@@ -50,18 +69,71 @@ export async function loginAction(
 
   const { email, password } = parsed.data;
 
-  // Simulate authentication logic
-  if (email !== "admin@admin.com" || password !== "password") {
+  const repository = new ManagementUserRepository();
+  const authResult = await repository.authenticateCredentials(email, password);
+
+  if (!authResult.success) {
+    const message = "Ungültige E-Mail-Adresse oder Passwort";
     return {
       success: false,
       errors: {
-        email: { errors: ["Ungültige E-Mail-Adresse oder Passwort"] },
-        password: { errors: ["Ungültige E-Mail-Adresse oder Passwort"] },
+        email: { errors: [message] },
+        password: { errors: [message] },
       },
     };
   }
 
-  await createSession("admin"); // Simulate user ID
+  await setSessionCookie(authResult.data.token, authResult.data.payload);
+  redirect("/website");
+}
 
+/**
+ * Registers a management user and starts a session.
+ * @param prevState Previous action state (unused).
+ * @param formData FormData containing registration fields.
+ * @returns Success state or field errors.
+ */
+export async function registerAction(
+  prevState: any,
+  formData: FormData,
+): Promise<RegisterActionResult> {
+  const data = Object.fromEntries(formData.entries());
+  const parsed = registerActionSchema.safeParse(data);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      errors: z.treeifyError(parsed.error).properties,
+    };
+  }
+
+  const { email, password } = parsed.data;
+  const repository = new ManagementUserRepository();
+  const registerResult = await repository.registerUser(email, password);
+
+  if (!registerResult.success) {
+    return {
+      success: false,
+      errors: {
+        email: {
+          errors: ["E-Mail-Adresse ist bereits registriert"],
+        },
+      },
+    };
+  }
+
+  const authResult = await repository.authenticateCredentials(email, password);
+  if (!authResult.success) {
+    return {
+      success: false,
+      errors: {
+        email: {
+          errors: ["Registrierung fehlgeschlagen. Bitte erneut versuchen."],
+        },
+      },
+    };
+  }
+
+  await setSessionCookie(authResult.data.token, authResult.data.payload);
   redirect("/website");
 }

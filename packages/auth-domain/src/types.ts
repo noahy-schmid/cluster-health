@@ -17,4 +17,10 @@ export type ManagementAuthTokenPayload = {
   userId: string;
   salonId: string;
   roles: ManagementUserRole[];
+  expiresAt?: Date;
+};
+
+export type ManagementAuthTokenBundle = {
+  token: string;
+  payload: ManagementAuthTokenPayload;
 };

@@ -1,4 +1,9 @@
-import { ManagementAuthTokenPayload, ManagementUserRole, Result } from "../types";
+import {
+  ManagementAuthTokenBundle,
+  ManagementAuthTokenPayload,
+  ManagementUserRole,
+  Result,
+} from "../types";
 import { db } from "../database";
 import { managementUserTable, managementUserRoleTable } from "../schema";
 import { eq, and, isNull } from "drizzle-orm";
@@ -93,10 +98,13 @@ export class ManagementUserRepository {
       return { success: true, data: undefined };
     } catch (error: any) {
       // Check for unique constraint violation (duplicate email)
-      if (error.code === "23505" || error.constraint === "management_user_email_unique") {
+      if (
+        error.code === "23505" ||
+        error.constraint === "management_user_email_unique"
+      ) {
         return { success: false, errors: "Email address already registered" };
       }
-      
+
       console.error("Error registering user:", error);
       return { success: false, errors: "Failed to register user" };
     }
@@ -129,6 +137,10 @@ export class ManagementUserRepository {
           userId: payload.userId,
           salonId: payload.salonId,
           roles: payload.roles as ManagementUserRole[],
+          expiresAt:
+            typeof payload.exp === "number"
+              ? new Date(payload.exp * 1000)
+              : undefined,
         },
       };
     } catch (error: any) {
@@ -149,7 +161,7 @@ export class ManagementUserRepository {
   public async authenticateCredentials(
     email: string,
     password: string,
-  ): Promise<Result<string, string>> {
+  ): Promise<Result<ManagementAuthTokenBundle, string>> {
     try {
       // Find user by email
       const [user] = await db
@@ -176,18 +188,26 @@ export class ManagementUserRepository {
 
       // Generate JWT token
       const secret = this.getJwtSecret();
-      const expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 1 day
-
-      const token = await new SignJWT({
+      const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
+      const payload: ManagementAuthTokenPayload = {
         userId: user.id,
         salonId: user.salonId || "",
         roles,
+        expiresAt,
+      };
+
+      const token = await new SignJWT({
+        userId: payload.userId,
+        salonId: payload.salonId,
+        roles: payload.roles,
       })
         .setProtectedHeader({ alg: "HS256" })
-        .setExpirationTime(expires)
+        .setExpirationTime(expiresAt)
+        .setIssuedAt()
+        .setIssuer("dein.salon")
         .sign(secret);
 
-      return { success: true, data: token };
+      return { success: true, data: { token, payload } };
     } catch (error: any) {
       console.error("Error authenticating credentials:", error);
       return { success: false, errors: "Authentication failed" };

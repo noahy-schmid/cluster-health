@@ -11,7 +11,7 @@ After making code changes, always check the modified files for errors using the 
 
 ## Implementation Approach
 
-**Before implementing new classes or functions:**
+**Before implementing new classes or functions or types:**
 
 1. First create function/method signatures with JSDoc comments explaining purpose, parameters, and return values
 2. Present the signatures to the user for approval
@@ -21,7 +21,11 @@ After making code changes, always check the modified files for errors using the 
    - New repository classes
    - New service classes
    - Any file containing multiple new functions
-5. To get the confirmation of the user, use the `askQuestions` tool.
+5. To get the confirmation of the user, print the signatures in a clear format and ask for approval before proceeding, dont use the `askQuestions` tool.
+6. This also applies when changing the signature of functions, types, or classes that already exist. _Always_ present the proposed signature changes to the user for approval before implementing.
+
+**Before implementing Logic:**
+1. If in any doubt about details of an implementation use the `askQuestions` tool to clarify requirements before proceeding with the implementation. This applies to any implementation task, including small functions or methods.
 
 ## Guidelines for NextJS Frontends
 
