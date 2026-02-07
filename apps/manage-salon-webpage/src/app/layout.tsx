@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Libre_Baskerville } from "next/font/google";
 import "./globals.css";
-import { MainLayout } from "@/components/MainLayout";
+import { ConditionalLayout } from "@/components/ConditionalLayout";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,7 +31,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${libreBaskerville.variable} antialiased`}
       >
-        <MainLayout>{children}</MainLayout>
+        <ConditionalLayout>{children}</ConditionalLayout>
       </body>
     </html>
   );
