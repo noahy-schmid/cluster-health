@@ -20,6 +20,10 @@
       "name": "backend | website-domain",
       "path": "packages/website-database",
     },
+    {
+      "name": "backend | salon-domain",
+      "path": "packages/salon-domain",
+    },
     { "name": "backend | auth-domain", "path": "packages/auth-domain" },
     {
       "name": "frontend | ui-components",
@@ -30,5 +34,6 @@
     "chat.tools.terminal.autoApprove": {
       "mv": true,
     },
+    "postman.settings.dotenv-detection-notification-visibility": false,
   },
 }

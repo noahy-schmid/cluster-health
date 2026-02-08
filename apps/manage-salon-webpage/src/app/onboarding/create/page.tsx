@@ -1,8 +1,21 @@
+"use client";
+
+import { useActionState, useState } from "react";
 import { Store } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import SubmitButton from "@/components/SubmitButton";
+import { createSalonAction } from "@/api/salon-actions";
 
 export default function CreateSalonPage() {
+  const [state, createSalon] = useActionState(createSalonAction, undefined);
+  const [formData, setFormData] = useState({
+    salonName: "",
+    street: "",
+    postalCode: "",
+    city: "",
+    phone: "",
+  });
+
   return (
     <div className="min-h-screen bg-bg-0 text-fg-normal">
       <div className="mx-auto max-w-3xl px-lg py-xl md:py-2xl">
@@ -24,7 +37,7 @@ export default function CreateSalonPage() {
             </div>
           </div>
 
-          <form className="mt-xl grid grid-cols-1 gap-lg">
+          <form action={createSalon} className="mt-xl grid grid-cols-1 gap-lg">
             <div className="flex flex-col gap-sm">
               <label
                 htmlFor="salonName"
@@ -36,9 +49,22 @@ export default function CreateSalonPage() {
                 id="salonName"
                 name="salonName"
                 type="text"
+                required
+                value={formData.salonName}
+                onChange={(event) =>
+                  setFormData({
+                    ...formData,
+                    salonName: event.target.value,
+                  })
+                }
                 className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal"
                 placeholder="Salon Atelier"
               />
+              <p className="text-sm text-red-500">
+                {state?.success === false && state.errors?.salonName
+                  ? state.errors.salonName.errors.join(" ")
+                  : "\u00A0"}
+              </p>
             </div>
 
             <div className="flex flex-col gap-sm">
@@ -52,9 +78,22 @@ export default function CreateSalonPage() {
                 id="street"
                 name="street"
                 type="text"
+                required
+                value={formData.street}
+                onChange={(event) =>
+                  setFormData({
+                    ...formData,
+                    street: event.target.value,
+                  })
+                }
                 className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal"
                 placeholder="Musterstrasse 12"
               />
+              <p className="text-sm text-red-500">
+                {state?.success === false && state.errors?.street
+                  ? state.errors.street.errors.join(" ")
+                  : "\u00A0"}
+              </p>
             </div>
 
             <div className="grid grid-cols-1 gap-md md:grid-cols-2">
@@ -69,9 +108,22 @@ export default function CreateSalonPage() {
                   id="postalCode"
                   name="postalCode"
                   type="text"
+                  required
+                  value={formData.postalCode}
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      postalCode: event.target.value,
+                    })
+                  }
                   className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal"
                   placeholder="80331"
                 />
+                <p className="text-sm text-red-500">
+                  {state?.success === false && state.errors?.postalCode
+                    ? state.errors.postalCode.errors.join(" ")
+                    : "\u00A0"}
+                </p>
               </div>
               <div className="flex flex-col gap-sm">
                 <label
@@ -84,9 +136,22 @@ export default function CreateSalonPage() {
                   id="city"
                   name="city"
                   type="text"
+                  required
+                  value={formData.city}
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      city: event.target.value,
+                    })
+                  }
                   className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal"
                   placeholder="Munchen"
                 />
+                <p className="text-sm text-red-500">
+                  {state?.success === false && state.errors?.city
+                    ? state.errors.city.errors.join(" ")
+                    : "\u00A0"}
+                </p>
               </div>
             </div>
 
@@ -101,10 +166,29 @@ export default function CreateSalonPage() {
                 id="phone"
                 name="phone"
                 type="tel"
+                required
+                value={formData.phone}
+                onChange={(event) =>
+                  setFormData({
+                    ...formData,
+                    phone: event.target.value,
+                  })
+                }
                 className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal"
                 placeholder="+49 89 123456"
               />
+              <p className="text-sm text-red-500">
+                {state?.success === false && state.errors?.phone
+                  ? state.errors.phone.errors.join(" ")
+                  : "\u00A0"}
+              </p>
             </div>
+
+            <p className="text-sm text-red-500">
+              {state?.success === false && state.errors?.form
+                ? state.errors.form.errors.join(" ")
+                : "\u00A0"}
+            </p>
 
             <SubmitButton
               label="Salon erstellen"

@@ -13,6 +13,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@repo/auth-domain": "workspace:*",
+    "@repo/salon-domain": "workspace:*",
     "@repo/website-database": "workspace:*",
     "culori": "^4.0.2",
     "dotenv": "^17.2.3",

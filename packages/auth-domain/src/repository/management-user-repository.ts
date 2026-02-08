@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ManagementAuthTokenBundle,
   ManagementAuthTokenPayload,
@@ -76,6 +77,48 @@ export class ManagementUserRepository {
   }
 
   /**
+   * Builds a fresh JWT bundle for a user using current DB state and roles.
+   * @param userId - User ID to build the token for.
+   * @returns Result with JWT bundle or error message.
+   */
+  private async buildTokenBundle(
+    userId: string,
+  ): Promise<Result<ManagementAuthTokenBundle, string>> {
+    const [user] = await db
+      .select()
+      .from(managementUserTable)
+      .where(eq(managementUserTable.id, userId));
+
+    if (!user) {
+      return { success: false, errors: "User not found" };
+    }
+
+    const roles = await this.fetchUserRoles(user.id);
+
+    const secret = this.getJwtSecret();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
+    const payload: ManagementAuthTokenPayload = {
+      userId: user.id,
+      salonId: user.salonId || "",
+      roles,
+      expiresAt,
+    };
+
+    const token = await new SignJWT({
+      userId: payload.userId,
+      salonId: payload.salonId,
+      roles: payload.roles,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime(expiresAt)
+      .setIssuedAt()
+      .setIssuer("dein.salon")
+      .sign(secret);
+
+    return { success: true, data: { token, payload } };
+  }
+
+  /**
    * Registers a new user with email and password
    * @param email - User email address
    * @param password - Plain text password
@@ -125,18 +168,31 @@ export class ManagementUserRepository {
       // Validate payload structure
       if (
         typeof payload.userId !== "string" ||
-        typeof payload.salonId !== "string" ||
         !Array.isArray(payload.roles)
       ) {
         return { success: false, errors: "Invalid token payload" };
       }
 
+      const [user] = await db
+        .select({
+          id: managementUserTable.id,
+          salonId: managementUserTable.salonId,
+        })
+        .from(managementUserTable)
+        .where(eq(managementUserTable.id, payload.userId));
+
+      if (!user) {
+        return { success: false, errors: "User not found" };
+      }
+
+      const roles = await this.fetchUserRoles(user.id);
+
       return {
         success: true,
         data: {
-          userId: payload.userId,
-          salonId: payload.salonId,
-          roles: payload.roles as ManagementUserRole[],
+          userId: user.id,
+          salonId: user.salonId || "",
+          roles,
           expiresAt:
             typeof payload.exp === "number"
               ? new Date(payload.exp * 1000)
@@ -183,34 +239,26 @@ export class ManagementUserRepository {
         return { success: false, errors: "Invalid email or password" };
       }
 
-      // Fetch user roles
-      const roles = await this.fetchUserRoles(user.id);
-
-      // Generate JWT token
-      const secret = this.getJwtSecret();
-      const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
-      const payload: ManagementAuthTokenPayload = {
-        userId: user.id,
-        salonId: user.salonId || "",
-        roles,
-        expiresAt,
-      };
-
-      const token = await new SignJWT({
-        userId: payload.userId,
-        salonId: payload.salonId,
-        roles: payload.roles,
-      })
-        .setProtectedHeader({ alg: "HS256" })
-        .setExpirationTime(expiresAt)
-        .setIssuedAt()
-        .setIssuer("dein.salon")
-        .sign(secret);
-
-      return { success: true, data: { token, payload } };
-    } catch (error: any) {
+      return await this.buildTokenBundle(user.id);
+    } catch (error) {
       console.error("Error authenticating credentials:", error);
       return { success: false, errors: "Authentication failed" };
+    }
+  }
+
+  /**
+   * Re-issues a JWT for a user ID by reloading user + roles from the DB.
+   * @param userId - User ID to create a fresh token for.
+   * @returns Result with JWT bundle or error message.
+   */
+  public async issueTokenForUser(
+    userId: string,
+  ): Promise<Result<ManagementAuthTokenBundle, string>> {
+    try {
+      return await this.buildTokenBundle(userId);
+    } catch (error) {
+      console.error("Error issuing token:", error);
+      return { success: false, errors: "Failed to issue token" };
     }
   }
 
@@ -225,19 +273,34 @@ export class ManagementUserRepository {
     salonId: string,
   ): Promise<Result<void, string>> {
     try {
-      // Update user with salonId
-      const result = await db
-        .update(managementUserTable)
-        .set({ salonId })
-        .where(eq(managementUserTable.id, userId))
-        .returning();
+      return await db.transaction(async (tx) => {
+        const [existing] = await tx
+          .select({ salonId: managementUserTable.salonId })
+          .from(managementUserTable)
+          .where(eq(managementUserTable.id, userId));
 
-      if (result.length === 0) {
-        return { success: false, errors: "User not found" };
-      }
+        if (!existing) {
+          return { success: false, errors: "User not found" };
+        }
 
-      return { success: true, data: undefined };
-    } catch (error: any) {
+        if (existing.salonId) {
+          return { success: false, errors: "User already has a salon" };
+        }
+
+        // Update user with salonId
+        const result = await tx
+          .update(managementUserTable)
+          .set({ salonId })
+          .where(eq(managementUserTable.id, userId))
+          .returning();
+
+        if (result.length === 0) {
+          return { success: false, errors: "User not found" };
+        }
+
+        return { success: true, data: undefined };
+      });
+    } catch (error) {
       console.error("Error binding salon to user:", error);
       return { success: false, errors: "Failed to bind salon to user" };
     }
