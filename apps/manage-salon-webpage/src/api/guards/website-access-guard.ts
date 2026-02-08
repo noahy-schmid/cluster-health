@@ -1,3 +1,5 @@
+import "server-only";
+
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { db, websitesTable } from "@repo/website-database";
@@ -21,7 +23,7 @@ export class WebsiteAccessGuard {
     const authResult = await authRepository.authenticateToken(session.value);
 
     if (!authResult.success) {
-      return { success: false, error: "Ungultige Sitzung" };
+      return { success: false, error: "Ungültige Sitzung" };
     }
 
     if (!authResult.data.salonId) {
@@ -34,11 +36,11 @@ export class WebsiteAccessGuard {
       .where(eq(websitesTable.id, websiteId));
 
     if (!website) {
-      return { success: false, error: "Website not found" };
+      return { success: false, error: "Website nicht gefunden" };
     }
 
     if (website.salonId !== authResult.data.salonId) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, error: "Nicht autorisiert" };
     }
 
     return { success: true };
