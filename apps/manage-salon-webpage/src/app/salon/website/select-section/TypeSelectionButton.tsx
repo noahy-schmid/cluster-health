@@ -24,7 +24,7 @@ export default function SectionTypeSelectionButton({
       router.replace(`/website`);
     } else {
       // If creation failed, go back to website page
-      router.push("/website");
+      router.push("/salon/website");
     }
   };
 

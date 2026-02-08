@@ -84,7 +84,7 @@ export default function WebseitePage() {
   };
 
   const handleHeroSettings = () => {
-    router.push("/website/start/hero");
+    router.push("/salon/website/start/hero");
   };
 
   // Show loading state
@@ -118,7 +118,7 @@ export default function WebseitePage() {
           {
             icon: Palette,
             text: "Farbschema anpassen",
-            onClick: () => router.push("/website/colors"),
+            onClick: () => router.push("/salon/website/colors"),
           },
           {
             icon: Settings,

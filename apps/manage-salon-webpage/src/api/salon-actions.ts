@@ -139,5 +139,5 @@ export async function createSalonAction(
     httpOnly: true,
   });
 
-  redirect("/website");
+  redirect("/salon/website");
 }

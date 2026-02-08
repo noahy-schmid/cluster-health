@@ -153,11 +153,11 @@ export default function ColorsPage() {
       accent: accentColor,
       onAccent: derivedColors.accentText,
     });
-    router.replace("/website");
+    router.replace("/salon/website");
   };
 
   const handleCancel = () => {
-    router.replace("/website");
+    router.replace("/salon/website");
   };
 
   return (

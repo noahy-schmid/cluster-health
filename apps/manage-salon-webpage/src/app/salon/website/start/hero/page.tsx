@@ -34,7 +34,7 @@ export default function HeroEditPage() {
 
   const handleSave = async (settings: HeroSettings) => {
     await websiteStore.updateHeroSettings(settings);
-    router.replace("/website");
+    router.replace("/salon/website");
   };
 
   return (
@@ -47,7 +47,7 @@ export default function HeroEditPage() {
       <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg">
         <HeroForm
           settings={heroSettings}
-          onCancel={() => router.replace("/website")}
+          onCancel={() => router.replace("/salon/website")}
           onSave={handleSave}
         />
       </div>

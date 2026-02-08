@@ -15,16 +15,16 @@ export const menuItems: MenuItem[] = [
   {
     icon: LayoutDashboard,
     label: "Dashboard",
-    href: "/",
+    href: "/salon",
   },
   {
     icon: Earth,
     label: "Webseite",
-    href: "/website",
+    href: "/salon/website",
   },
   {
     icon: Settings,
     label: "Settings",
-    href: "/settings",
+    href: "/salon/settings",
   },
 ];

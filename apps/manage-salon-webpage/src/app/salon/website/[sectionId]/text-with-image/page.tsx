@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { useSectionsStore } from "@/services/sections-store";
 import { useWebsiteStore } from "@/services/website-store";
 import PageHeader from "@/components/PageHeader";
-import ReasonForm from "@/components/website/forms/ReasonForm";
+import TextWithImageForm from "@/app/website/[sectionId]/text-with-image/TextWithImageForm";
 
 interface PageProps {
   params: Promise<{ sectionId: string }>;
 }
 
-export default function ReasonEditPage({ params }: PageProps) {
+export default function TextWithImageEditPage({ params }: PageProps) {
   const { sectionId } = use(params);
   const router = useRouter();
   const websiteStore = useWebsiteStore();
@@ -50,7 +50,7 @@ export default function ReasonEditPage({ params }: PageProps) {
   }
 
   // Show error if section not found
-  if (!section || section.type !== "reason") {
+  if (!section || section.type !== "text-with-image") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-near-black">Section not found</p>
@@ -61,16 +61,16 @@ export default function ReasonEditPage({ params }: PageProps) {
   return (
     <div className="max-w-4xl mx-auto">
       <PageHeader
-        title="Gründe Abschnitt bearbeiten"
-        subtitle="Passen Sie die Gründe für diesen Abschnitt an."
+        title="Text mit Bild bearbeiten"
+        subtitle="Passen Sie die Einstellungen für diesen Abschnitt an."
       />
 
       <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg">
-        <ReasonForm
+        <TextWithImageForm
           key={section.id}
           section={section}
-          onCancel={() => router.push("/website")}
-          onSave={() => router.push("/website")}
+          onCancel={() => router.push("/salon/website")}
+          onSave={() => router.push("/salon/website")}
         />
       </div>
     </div>

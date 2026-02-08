@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { useSectionsStore } from "@/services/sections-store";
 import { useWebsiteStore } from "@/services/website-store";
 import PageHeader from "@/components/PageHeader";
-import CenterTextForm from "@/components/website/forms/CenterTextForm";
+import GalleryForm from "@/components/website/forms/GalleryForm";
 
 interface PageProps {
   params: Promise<{ sectionId: string }>;
 }
 
-export default function CenterTextEditPage({ params }: PageProps) {
+export default function GalleryEditPage({ params }: PageProps) {
   const { sectionId } = use(params);
   const router = useRouter();
   const websiteStore = useWebsiteStore();
@@ -44,16 +44,16 @@ export default function CenterTextEditPage({ params }: PageProps) {
   if (websiteStore.loading || sectionsStatus !== "initialized") {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-fg-strong">Loading...</p>
+        <p className="text-near-black">Loading...</p>
       </div>
     );
   }
 
   // Show error if section not found
-  if (!section || section.type !== "center-text") {
+  if (!section || section.type !== "gallery") {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-fg-strong">Section not found</p>
+        <p className="text-near-black">Section not found</p>
       </div>
     );
   }
@@ -61,16 +61,16 @@ export default function CenterTextEditPage({ params }: PageProps) {
   return (
     <div className="max-w-4xl mx-auto">
       <PageHeader
-        title="Text Abschnitt bearbeiten"
-        subtitle="Passen Sie den Titel und Inhalt für diesen Abschnitt an."
+        title="Gallerie bearbeiten"
+        subtitle="Passen Sie den Titel, Untertitel und die Bilder für diese Gallerie an."
       />
 
       <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg">
-        <CenterTextForm
+        <GalleryForm
           key={section.id}
           section={section}
-          onCancel={() => router.push("/website")}
-          onSave={() => router.push("/website")}
+          onCancel={() => router.push("/salon/website")}
+          onSave={() => router.push("/salon/website")}
         />
       </div>
     </div>
