@@ -21,11 +21,26 @@ export function MenuList({ onItemClick }: MenuListProps) {
     };
   });
 
+  const matchedItems = resolvedItems.map((item) => {
+    const isMatch =
+      pathname === item.href || pathname.startsWith(`${item.href}/`);
+    return {
+      ...item,
+      isMatch,
+      matchLength: isMatch ? item.href.length : -1,
+    };
+  });
+
+  const maxMatchLength = matchedItems.reduce(
+    (max, item) => Math.max(max, item.matchLength),
+    -1,
+  );
+
   return (
     <nav className="flex-1 overflow-y-auto py-lg">
       <ul className="space-y-sm">
-        {resolvedItems.map((item) => {
-          const isActive = pathname === item.href;
+        {matchedItems.map((item) => {
+          const isActive = item.isMatch && item.matchLength === maxMatchLength;
           const Icon = item.icon;
 
           return (
