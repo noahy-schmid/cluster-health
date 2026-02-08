@@ -29,7 +29,7 @@ type CreateSalonActionResult =
     };
 
 /**
- * Creates a salon, binds it to the current management user, and redirects to /website.
+ * Creates a salon, binds it to the current management user, and redirects to the salon page.
  * @param prevState - Previous action state (unused).
  * @param formData - Form data from onboarding/create.
  * @returns Success state or field errors.
@@ -139,5 +139,5 @@ export async function createSalonAction(
     httpOnly: true,
   });
 
-  redirect("/salon/website");
+  redirect(`/salon/${createResult.data.id}`);
 }

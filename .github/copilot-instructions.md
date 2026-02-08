@@ -3,6 +3,10 @@ Also dont provide a summary of the changes made.
 
 After making code changes, always check the modified files for errors using the get_errors tool.
 
+## Unexpected Changes
+
+- If you notice files changed unexpectedly, re-read the affected files and continue without blocking.
+
 ## Database Migrations
 
 - **Schema changes**: Update the schema.ts file when adding new tables or fields

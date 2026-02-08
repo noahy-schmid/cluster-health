@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -16,26 +16,33 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useSectionsStore } from "@/services/sections-store";
 import { EmptySectionPlaceholder } from "@/components/website/EmptySectionPlaceholder";
 import { SectionCard } from "@/components/website/section-cards/SectionCard";
 import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
-import { useWebsiteStore } from "@/services/website-store";
 import { Palette, Settings } from "lucide-react";
 import HeroCard from "@/components/website/section-cards/HeroCard";
+import { AllSections } from "@repo/website-database";
+import { HeroSettings } from "@/lib/types/section-types";
+import {
+  deleteSection as deleteSectionAction,
+  reorderSections as reorderSectionsAction,
+} from "@/api/sections-actions";
+import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 
-export default function WebseitePage() {
+interface WebsiteEditorClientProps {
+  initialSections: AllSections[];
+  initialHeroSettings: HeroSettings;
+}
+
+export default function WebsiteEditorClient({
+  initialSections,
+  initialHeroSettings,
+}: WebsiteEditorClientProps) {
   const router = useRouter();
-
-  // Get state and actions from Zustand store
-  const sections = useSectionsStore((state) => state.sections);
-  const sectionsStatus = useSectionsStore((state) => state.status);
-  const initializeSections = useSectionsStore((state) => state.initialize);
-  const initializeWebsite = useWebsiteStore((state) => state.initialize);
-  const removeSection = useSectionsStore((state) => state.removeSection);
-  const reorderSections = useSectionsStore((state) => state.reorderSections);
-  const heroSettings = useWebsiteStore((state) => state.heroSettings);
+  const { salonId, websiteId } = useWebsiteRouteContext();
+  const [sections, setSections] = useState<AllSections[]>(initialSections);
+  const [heroSettings] = useState<HeroSettings>(initialHeroSettings);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -48,53 +55,66 @@ export default function WebseitePage() {
     }),
   );
 
-  // Initialize store on mount
-  useEffect(() => {
-    initializeWebsite().then(() => {
-      initializeSections();
-    });
-  }, [initializeWebsite, initializeSections]);
+  const sectionIds = useMemo(
+    () => sections.map((section) => section.id),
+    [sections],
+  );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-      const oldIndex = sections.findIndex((item) => item.id === active.id);
-      const newIndex = sections.findIndex((item) => item.id === over.id);
+    if (!over || active.id === over.id) return;
 
-      reorderSections(oldIndex, newIndex);
+    const oldIndex = sections.findIndex((item) => item.id === active.id);
+    const newIndex = sections.findIndex((item) => item.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const nextSections = [...sections];
+    const [movedSection] = nextSections.splice(oldIndex, 1);
+    nextSections.splice(newIndex, 0, movedSection);
+    setSections(nextSections);
+
+    const result = await reorderSectionsAction(
+      websiteId ?? "",
+      nextSections.map((section) => section.id),
+    );
+
+    if (!result.success) {
+      setSections(sections);
     }
   };
 
   const handleAddSection = (position?: number) => {
     router.push(
-      `/website/select-section?position=${position ?? sections.length}`,
+      `/salon/${salonId}/website/${websiteId}/select-section?position=${
+        position ?? sections.length
+      }`,
     );
   };
 
-  const handleDeleteSection = (id: string) => {
-    removeSection(id);
+  const handleDeleteSection = async (id: string) => {
+    const nextSections = sections.filter((section) => section.id !== id);
+    setSections(nextSections);
+
+    const result = await deleteSectionAction(websiteId ?? "", id);
+    if (!result.success) {
+      setSections(sections);
+    }
   };
 
   const handleSectionSettings = (id: string) => {
     const section = sections.find((s) => s.id === id);
     if (section) {
-      router.push(`/website/${id}/${section.type}`);
+      router.push(
+        `/salon/${salonId}/website/${websiteId}/${id}/${section.type}`,
+      );
     }
   };
 
   const handleHeroSettings = () => {
-    router.push("/salon/website/start/hero");
+    router.push(`/salon/${salonId}/website/${websiteId}/start/hero`);
   };
-
-  // Show loading state
-  if (sectionsStatus !== "initialized") {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <PageHeader title="Webseite bearbeiten" subtitle="Lade Abschnitte..." />
-      </div>
-    );
-  }
 
   if (sections.length === 0) {
     return (
@@ -118,7 +138,8 @@ export default function WebseitePage() {
           {
             icon: Palette,
             text: "Farbschema anpassen",
-            onClick: () => router.push("/salon/website/colors"),
+            onClick: () =>
+              router.push(`/salon/${salonId}/website/${websiteId}/colors`),
           },
           {
             icon: Settings,
@@ -159,7 +180,7 @@ export default function WebseitePage() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={sections}
+          items={sectionIds}
           strategy={verticalListSortingStrategy}
         >
           <div>

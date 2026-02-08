@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useSectionsStore } from "@/services/sections-store";
+import { useRouter } from "next/navigation";
+import { updateSection } from "@/api/sections-actions";
+import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import FormInput from "./FormInput";
 import FormTextarea from "./FormTextarea";
 import FormActions from "./FormActions";
@@ -9,28 +11,23 @@ import { AllSections, CenterTextSettings } from "@repo/website-database";
 
 interface CenterTextFormProps {
   section: Extract<AllSections, { type: "center-text" }>;
-  onSave: () => void;
-  onCancel: () => void;
 }
 
-export default function CenterTextForm({
-  section,
-  onSave,
-  onCancel,
-}: CenterTextFormProps) {
-  const updateSection = useSectionsStore((state) => state.updateSection);
+export default function CenterTextForm({ section }: CenterTextFormProps) {
+  const router = useRouter();
+  const { salonId, websiteId } = useWebsiteRouteContext();
   const [settings, setSettings] = useState<CenterTextSettings>(
     section.settings,
   );
   const [menuTitle, setMenuTitle] = useState<string>(section.menuTitle || "");
 
   const handleSave = async () => {
-    await updateSection({
+    await updateSection(websiteId ?? "", {
       ...section,
       settings,
       menuTitle: menuTitle.trim() === "" ? undefined : menuTitle,
     });
-    onSave();
+    router.replace(`/salon/${salonId}/website/${websiteId}`);
   };
 
   return (
@@ -60,7 +57,12 @@ export default function CenterTextForm({
         required
       />
 
-      <FormActions onCancel={onCancel} onSave={handleSave} />
+      <FormActions
+        onCancel={() =>
+          router.replace(`/salon/${salonId}/website/${websiteId}`)
+        }
+        onSave={handleSave}
+      />
     </div>
   );
 }

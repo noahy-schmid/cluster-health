@@ -84,7 +84,7 @@ export async function loginAction(
   }
 
   await setSessionCookie(authResult.data.token, authResult.data.payload);
-  redirect(authResult.data.payload.salonId ? "/salon/website" : "/onboarding");
+  redirect(authResult.data.payload.salonId ? `/salon/${authResult.data.payload.salonId}` : "/onboarding");
 }
 
 /**
@@ -135,5 +135,5 @@ export async function registerAction(
   }
 
   await setSessionCookie(authResult.data.token, authResult.data.payload);
-  redirect(authResult.data.payload.salonId ? "/salon/website" : "/onboarding");
+  redirect(authResult.data.payload.salonId ? `/salon/${authResult.data.payload.salonId}` : "/onboarding");
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useSectionsStore } from "@/services/sections-store";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SectionTypeInfo } from "./SectionTypeSelection";
 import { SectionType } from "@repo/website-database";
+import { createSection } from "@/api/sections-actions";
+import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 
 export default function SectionTypeSelectionButton({
   info,
@@ -13,18 +14,19 @@ export default function SectionTypeSelectionButton({
   const router = useRouter();
   const searchParams = useSearchParams();
   const position = searchParams.get("position") || "0";
-  const createSection = useSectionsStore((state) => state.createSection);
+  const { salonId, websiteId } = useWebsiteRouteContext();
 
   const handleSelectType = async (type: SectionType) => {
-    // Create the section directly using the store
-    const section = await createSection(type, parseInt(position, 10));
+    const section = await createSection(
+      websiteId ?? "",
+      type,
+      parseInt(position, 10),
+    );
 
-    if (section) {
-      // Navigate to settings page for the newly created section
-      router.replace(`/website`);
+    if (section?.success && section.section) {
+      router.replace(`/salon/${salonId}/website/${websiteId}`);
     } else {
-      // If creation failed, go back to website page
-      router.push("/salon/website");
+      router.push(`/salon/${salonId}/website/${websiteId}`);
     }
   };
 

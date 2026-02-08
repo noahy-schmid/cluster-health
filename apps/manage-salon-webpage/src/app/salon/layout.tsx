@@ -1,9 +1,7 @@
-import { MainLayout } from "@/components/MainLayout";
-
-export default function WebsiteLayout({
+export default function SalonLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <MainLayout>{children}</MainLayout>;
+  return <>{children}</>;
 }

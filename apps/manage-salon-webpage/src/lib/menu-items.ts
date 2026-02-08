@@ -14,17 +14,17 @@ export interface MenuItem {
 export const menuItems: MenuItem[] = [
   {
     icon: LayoutDashboard,
-    label: "Dashboard",
-    href: "/salon",
+    label: "Dein Salon",
+    href: "/salon/:salonId",
   },
   {
     icon: Earth,
     label: "Webseite",
-    href: "/salon/website",
+    href: "/salon/:salonId/website",
   },
   {
     icon: Settings,
     label: "Settings",
-    href: "/salon/settings",
+    href: "/salon/:salonId/settings",
   },
 ];

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { menuItems } from "@/lib/menu-items";
+import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 
 interface MenuListProps {
   onItemClick?: () => void;
@@ -10,11 +11,20 @@ interface MenuListProps {
 
 export function MenuList({ onItemClick }: MenuListProps) {
   const pathname = usePathname();
+  const { salonId } = useWebsiteRouteContext();
+
+  const resolvedItems = menuItems.map((item) => {
+    const withSalon = item.href.replace(":salonId", salonId);
+    return {
+      ...item,
+      href: withSalon,
+    };
+  });
 
   return (
     <nav className="flex-1 overflow-y-auto py-lg">
       <ul className="space-y-sm">
-        {menuItems.map((item) => {
+        {resolvedItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
 
