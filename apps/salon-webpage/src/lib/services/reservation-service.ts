@@ -23,7 +23,7 @@ export const useReservationStore = create<ReservationStore>((set) => ({
 
 // Create a new reservation
 export async function createReservation(
-  data: CreateReservationData
+  data: CreateReservationData,
 ): Promise<string> {
   const reservationId = generateReservationId();
 
@@ -61,7 +61,7 @@ export async function updateReservationUserDetails(
     userEmail: string;
     userName: string;
     userPhone?: string;
-  }
+  },
 ): Promise<boolean> {
   const reservation = reservationsStore.get(reservationId);
 

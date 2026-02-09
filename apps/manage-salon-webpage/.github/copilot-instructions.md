@@ -41,7 +41,6 @@ dein.salon is a professional, high-quality B2B platform for hair salons (managem
 - Effect: Classic, high-quality, subtle salon character
 - **DO NOT** use for body text in dashboard
 
-
 ### Layout Implementation
 
 - Main layout wrapper in `layout.tsx` or separate `MainLayout` component

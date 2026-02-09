@@ -37,7 +37,7 @@ export default function BookingSection({
       setIsLoadingAvailability(true);
       const availabilityData = await getServiceAvailability(
         specialist.id,
-        selectedService
+        selectedService,
       );
       setAvailability(availabilityData || []);
       setSelectedDay(null);
@@ -58,7 +58,7 @@ export default function BookingSection({
 
     try {
       const selectedServiceData = specialist.services.find(
-        (s) => s.name === selectedService
+        (s) => s.name === selectedService,
       );
 
       if (!selectedServiceData) {
@@ -80,7 +80,7 @@ export default function BookingSection({
       router.push(`/reservation/${reservationId}`);
     } catch (error) {
       alert(
-        "Fehler beim Erstellen der Reservierung. Bitte versuchen Sie es erneut."
+        "Fehler beim Erstellen der Reservierung. Bitte versuchen Sie es erneut.",
       );
       setIsCreatingReservation(false);
     }
@@ -91,7 +91,7 @@ export default function BookingSection({
   }
 
   const selectedServiceData = specialist.services.find(
-    (s) => s.name === selectedService
+    (s) => s.name === selectedService,
   );
 
   return (

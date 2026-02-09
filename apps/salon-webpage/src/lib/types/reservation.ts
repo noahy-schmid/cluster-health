@@ -13,7 +13,7 @@ export interface Reservation {
   userEmail?: string;
   userName?: string;
   userPhone?: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  status: "pending" | "confirmed" | "cancelled";
 }
 
 export interface CreateReservationData {

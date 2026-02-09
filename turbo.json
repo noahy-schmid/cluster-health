@@ -7,7 +7,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -19,17 +19,10 @@
       "cache": false,
       "persistent": true
     },
-    "docker:build": {
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
-    },
-    "docker:push": {
-      "dependsOn": ["docker:build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"]
-    },
-    "helm:lint": {
-      "dependsOn": ["^helm:lint"],
-      "inputs": ["$TURBO_DEFAULT$", "chart/**"]
+    "drizzle:generate": {
+      "dependsOn": ["^drizzle:generate"],
+      "inputs": ["$TURBO_DEFAULT$", "schema.ts"],
+      "outputs": ["drizzle/**"]
     }
   }
 }

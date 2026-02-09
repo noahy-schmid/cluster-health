@@ -27,7 +27,7 @@ export class SalonRepository {
       }
 
       return { success: true, data: created };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (
         error?.cause?.code === "23505" ||

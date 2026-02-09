@@ -1,6 +1,7 @@
 ### Task: Improve Menu Bar on Salon Webpage
 
 **Details:**
+
 - Add a logo to the salon webpage.
 - Make the logo size adjustable.
 - Add textual text on top of the menu bar.
