@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useSectionsStore } from "@/services/sections-store";
+import { useRouter } from "next/navigation";
+import { updateSection } from "@/api/sections-actions";
+import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import FormInput from "./FormInput";
 import ImageUrlList from "./ImageUrlList";
 import FormActions from "./FormActions";
@@ -9,26 +11,21 @@ import { AllSections, GallerySettings } from "@repo/website-database";
 
 interface GalleryFormProps {
   section: Extract<AllSections, { type: "gallery" }>;
-  onSave: () => void;
-  onCancel: () => void;
 }
 
-export default function GalleryForm({
-  section,
-  onSave,
-  onCancel,
-}: GalleryFormProps) {
-  const updateSection = useSectionsStore((state) => state.updateSection);
+export default function GalleryForm({ section }: GalleryFormProps) {
+  const router = useRouter();
+  const { salonId, websiteId } = useWebsiteRouteContext();
   const [settings, setSettings] = useState<GallerySettings>(section.settings);
   const [menuTitle, setMenuTitle] = useState<string>(section.menuTitle || "");
 
   const handleSave = async () => {
-    await updateSection({
+    await updateSection(websiteId ?? "", {
       ...section,
       settings,
       menuTitle: menuTitle.trim() === "" ? undefined : menuTitle,
     });
-    onSave();
+    router.replace(`/salon/${salonId}/website/${websiteId}`);
   };
 
   return (
@@ -63,7 +60,12 @@ export default function GalleryForm({
         onChange={(imageUrls) => setSettings({ ...settings, imageUrls })}
       />
 
-      <FormActions onCancel={onCancel} onSave={handleSave} />
+      <FormActions
+        onCancel={() =>
+          router.replace(`/salon/${salonId}/website/${websiteId}`)
+        }
+        onSave={handleSave}
+      />
     </div>
   );
 }

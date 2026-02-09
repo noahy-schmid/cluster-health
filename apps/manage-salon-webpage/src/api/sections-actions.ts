@@ -1,18 +1,11 @@
 "use server";
 
 import {
-  db,
-  sectionsTable,
-  textWithImageSectionsTable,
-  gallerySectionsTable,
-  galleryImagesTable,
   SectionType,
-  Section,
   AllSections,
   sectionRepository,
-  SectionRepository,
 } from "@repo/website-database";
-import { eq, and } from "drizzle-orm";
+import { WebsiteAccessGuard } from "@/api/guards/website-access-guard";
 
 /**
  * Server action to create a new section
@@ -23,6 +16,13 @@ export async function createSection(
   type: SectionType,
   position: number,
 ) {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
   const repository = sectionRepository();
   return await repository.createSection(websiteId, type, position);
 }
@@ -31,7 +31,34 @@ export async function createSection(
  * Server action to update an existing section
  */
 export async function updateSection(websiteId: string, section: AllSections) {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
   const repository = sectionRepository();
+
+  // Ensure the section being updated actually belongs to the given website
+  const fetchResult = await repository.fetchSections(websiteId);
+  if (!fetchResult.success || !fetchResult.sections) {
+    return {
+      success: false,
+      error: fetchResult.error || "Failed to load sections for update",
+    };
+  }
+
+  const ownsSection = fetchResult.sections.some(
+    (existingSection) => existingSection.id === section.id,
+  );
+
+  if (!ownsSection) {
+    return {
+      success: false,
+      error: "Section does not belong to this website",
+    };
+  }
   return await repository.updateSection(section);
 }
 
@@ -39,6 +66,13 @@ export async function updateSection(websiteId: string, section: AllSections) {
  * Server action to delete a section
  */
 export async function deleteSection(websiteId: string, id: string) {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
   const repository = sectionRepository();
   return await repository.deleteSection(websiteId, id);
 }
@@ -48,6 +82,13 @@ export async function deleteSection(websiteId: string, id: string) {
  * Takes websiteId and array of section IDs in their new order
  */
 export async function reorderSections(websiteId: string, sectionIds: string[]) {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
   const repository = sectionRepository();
   return await repository.reorderSections(websiteId, sectionIds);
 }
@@ -56,6 +97,13 @@ export async function reorderSections(websiteId: string, sectionIds: string[]) {
  * Server action to fetch all sections for a website
  */
 export async function fetchSections(websiteId: string) {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
   const repository = sectionRepository();
   const result = await repository.fetchSections(websiteId);
 

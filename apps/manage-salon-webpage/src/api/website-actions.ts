@@ -1,9 +1,11 @@
 "use server";
 
 import { HeroSettings } from "@/lib/types/section-types";
+import { WebsiteAccessGuard } from "@/api/guards/website-access-guard";
 import { db, websitesTable } from "@repo/website-database";
 import { eq } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import { cookies } from "next/headers";
+import { ManagementUserRepository } from "@repo/auth-domain";
 
 /**
  * Server action to create a new website
@@ -19,8 +21,33 @@ export async function createWebsite(): Promise<
       error: string;
     }
 > {
+  const session = (await cookies()).get("session");
+  if (!session?.value) {
+    return { success: false, error: "Sitzung abgelaufen" };
+  }
+
+  const authRepository = new ManagementUserRepository();
+  const authResult = await authRepository.authenticateToken(session.value);
+
+  if (!authResult.success) {
+    return { success: false, error: "Ungültige Sitzung" };
+  }
+
+  if (!authResult.data.salonId) {
+    return { success: false, error: "Kein Salon zugeordnet" };
+  }
+
+  const [existingWebsite] = await db
+    .select({ id: websitesTable.id })
+    .from(websitesTable)
+    .where(eq(websitesTable.salonId, authResult.data.salonId));
+
+  if (existingWebsite) {
+    return { success: false, error: "Website already exists" };
+  }
+
   const newWebsite: typeof websitesTable.$inferInsert = {
-    salonId: randomUUID(),
+    salonId: authResult.data.salonId,
     heroImage: "",
     logo: "",
     slug: `salon-${Date.now()}`,
@@ -51,6 +78,39 @@ export async function createWebsite(): Promise<
   }
 }
 
+/**
+ * Looks up the website for a salon that belongs to the current user.
+ * Returns the website ID if it exists.
+ */
+export async function getWebsiteIdForSalon(
+  salonId: string,
+): Promise<
+  { success: true; websiteId?: string } | { success: false; error: string }
+> {
+  const session = (await cookies()).get("session");
+  if (!session?.value) {
+    return { success: false, error: "Sitzung abgelaufen" };
+  }
+
+  const authRepository = new ManagementUserRepository();
+  const authResult = await authRepository.authenticateToken(session.value);
+
+  if (!authResult.success) {
+    return { success: false, error: "Ungultige Sitzung" };
+  }
+
+  if (!authResult.data.salonId || authResult.data.salonId !== salonId) {
+    return { success: false, error: "Kein Zugriff auf diesen Salon" };
+  }
+
+  const [existingWebsite] = await db
+    .select({ id: websitesTable.id })
+    .from(websitesTable)
+    .where(eq(websitesTable.salonId, salonId));
+
+  return { success: true, websiteId: existingWebsite?.id };
+}
+
 export async function getHeroSettings(websiteId: string): Promise<
   | {
       success: true;
@@ -61,6 +121,13 @@ export async function getHeroSettings(websiteId: string): Promise<
       error: string;
     }
 > {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
   try {
     const [website] = await db
       .select()
@@ -105,6 +172,13 @@ export async function updateHeroSettings(
       error: string;
     }
 > {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
   try {
     await db
       .update(websitesTable)
@@ -154,6 +228,13 @@ export async function getColorSettings(websiteId: string): Promise<
       error: string;
     }
 > {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
   try {
     const [website] = await db
       .select({
@@ -205,6 +286,13 @@ export async function updateColorSettings(
       error: string;
     }
 > {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
   try {
     await db
       .update(websitesTable)

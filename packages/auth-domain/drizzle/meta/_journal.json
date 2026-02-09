@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1770496363303,
+      "tag": "0000_exotic_paibok",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770496864849,
+      "tag": "0001_clear_enchantress",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770670283136,
+      "tag": "0002_kind_lockjaw",
+      "breakpoints": true
+    }
+  ]
+}

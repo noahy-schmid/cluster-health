@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useSectionsStore } from "@/services/sections-store";
+import { useRouter } from "next/navigation";
+import { updateSection } from "@/api/sections-actions";
+import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import FormInput from "./FormInput";
 import FormTextarea from "./FormTextarea";
 import FormActions from "./FormActions";
@@ -14,16 +16,11 @@ import { PlusIcon, TrashIcon } from "lucide-react";
 
 interface ReasonFormProps {
   section: Extract<AllSections, { type: "reason" }>;
-  onSave: () => void;
-  onCancel: () => void;
 }
 
-export default function ReasonForm({
-  section,
-  onSave,
-  onCancel,
-}: ReasonFormProps) {
-  const updateSection = useSectionsStore((state) => state.updateSection);
+export default function ReasonForm({ section }: ReasonFormProps) {
+  const router = useRouter();
+  const { salonId, websiteId } = useWebsiteRouteContext();
   const [settings, setSettings] = useState<ReasonSettings>(section.settings);
   const [menuTitle, setMenuTitle] = useState<string>(section.menuTitle || "");
   const [validationError, setValidationError] = useState<string>("");
@@ -54,12 +51,12 @@ export default function ReasonForm({
       return;
     }
 
-    await updateSection({
+    await updateSection(websiteId ?? "", {
       ...section,
       settings,
       menuTitle: menuTitle.trim() === "" ? undefined : menuTitle.trim(),
     });
-    onSave();
+    router.replace(`/salon/${salonId}/website/${websiteId}`);
   };
 
   const addItem = () => {
@@ -188,7 +185,12 @@ export default function ReasonForm({
         )}
       </div>
 
-      <FormActions onCancel={onCancel} onSave={handleSave} />
+      <FormActions
+        onCancel={() =>
+          router.replace(`/salon/${salonId}/website/${websiteId}`)
+        }
+        onSave={handleSave}
+      />
     </div>
   );
 }
