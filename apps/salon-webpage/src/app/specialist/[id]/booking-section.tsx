@@ -26,6 +26,7 @@ export default function BookingSection({
 
   // Load availability when service is selected
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- reset local UI state when inputs change */
     if (!specialist || !selectedService) {
       setAvailability([]);
       setSelectedDay(null);
@@ -46,6 +47,7 @@ export default function BookingSection({
     };
 
     loadAvailability();
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [selectedService, specialist]);
 
   const handleBooking = async () => {
@@ -78,7 +80,7 @@ export default function BookingSection({
 
       // Redirect to reservation page
       router.push(`/reservation/${reservationId}`);
-    } catch (error) {
+    } catch (_error) {
       alert(
         "Fehler beim Erstellen der Reservierung. Bitte versuchen Sie es erneut.",
       );
@@ -89,10 +91,6 @@ export default function BookingSection({
   if (!specialist) {
     return null;
   }
-
-  const selectedServiceData = specialist.services.find(
-    (s) => s.name === selectedService,
-  );
 
   return (
     <div className="bg-bg rounded-2xl shadow-lg p-6 md:p-8">

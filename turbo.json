@@ -10,7 +10,10 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["@repo/eslint-config#build"]
+    },
+    "lint:fix": {
+      "dependsOn": ["^lint:fix", "@repo/eslint-config#build"]
     },
     "check-types": {
       "dependsOn": ["^check-types"]

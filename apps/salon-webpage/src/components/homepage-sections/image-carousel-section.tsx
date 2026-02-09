@@ -143,6 +143,7 @@ export default function ImageCarouselSection({
       slider.removeEventListener("scroll", handleScroll);
       clearTimeout(scrollTimeout);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Scroll to center the image when currentIndex changes

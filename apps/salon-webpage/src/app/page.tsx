@@ -3,7 +3,6 @@ import styles from "../styles/menu.module.css";
 import { CircleChevronDown } from "lucide-react";
 import ImageTextSection from "@/components/homepage-sections/image-text-section";
 import StaffSlider from "@/components/homepage-sections/staff-slider";
-import StickyMenuBar from "@/components/sticky-menu-bar";
 import ContactForm from "@/app/contact-form";
 import { getStaffMembers } from "@/lib/services/staff-service";
 import FeatureListSection from "@/components/homepage-sections/feature-list-section";
@@ -12,16 +11,6 @@ import ImageCarouselSection from "@/components/homepage-sections/image-carousel-
 export default async function Home() {
   // Load staff data on the server
   const staffMembers = await getStaffMembers();
-
-  const menuItems = [
-    { id: "uber-uns", text: "Über Uns" },
-    { id: "service", text: "Service" },
-    { id: "trends", text: "Trends" },
-    { id: "haarprodukte", text: "Haarprodukte" },
-    { id: "preise", text: "Preise" },
-    { id: "team", text: "Unser Team" },
-    { id: "booking", text: "Buchen" },
-  ];
 
   return (
     <>

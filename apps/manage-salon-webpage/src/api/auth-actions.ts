@@ -4,7 +4,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import z from "zod";
-import { ManagementUserRepository } from "@repo/auth-domain";
+import {
+  ManagementUserRepository,
+  ManagementAuthTokenPayload,
+} from "@repo/auth-domain";
 
 const loginActionSchema = z.object({
   email: z.email(),
