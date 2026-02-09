@@ -65,7 +65,7 @@ export async function createSalonAction(
     return {
       success: false,
       errors: {
-        form: { errors: ["Ungultige Sitzung. Bitte erneut anmelden."] },
+        form: { errors: ["Ungültige Sitzung. Bitte erneut anmelden."] },
       },
     };
   }
@@ -137,6 +137,7 @@ export async function createSalonAction(
     expires: tokenResult.data.payload.expiresAt,
     secure: true,
     httpOnly: true,
+    sameSite: "strict",
   });
 
   redirect(`/salon/${createResult.data.id}`);

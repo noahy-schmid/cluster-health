@@ -1,7 +1,6 @@
-import { time } from "drizzle-orm/pg-core";
 import { timestamp } from "drizzle-orm/pg-core";
 import { pgSchema } from "drizzle-orm/pg-core";
-import { integer, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { text, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const authSchema = pgSchema("auth");
 
@@ -10,7 +9,7 @@ export const managementUserTable = authSchema.table("management_user", {
   email: varchar({ length: 255 }).notNull().unique(),
   passwordHash: text().notNull(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  passwortUpdatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  passwordUpdatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   salonId: uuid(),
 });
 

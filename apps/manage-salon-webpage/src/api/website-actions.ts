@@ -30,7 +30,7 @@ export async function createWebsite(): Promise<
   const authResult = await authRepository.authenticateToken(session.value);
 
   if (!authResult.success) {
-    return { success: false, error: "Ungultige Sitzung" };
+    return { success: false, error: "Ungültige Sitzung" };
   }
 
   if (!authResult.data.salonId) {

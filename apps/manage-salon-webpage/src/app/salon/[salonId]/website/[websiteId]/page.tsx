@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchSections } from "@/api/sections-actions";
 import { getHeroSettings } from "@/api/website-actions";
-import WebsiteEditorClient from "../../../../../components/website/WebsiteEditorClient";
+import WebsiteEditorClient from "@/components/website/WebsiteEditorClient";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import { HeroSettings } from "@/lib/types/section-types";
 import { AllSections } from "@repo/website-database";

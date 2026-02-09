@@ -163,13 +163,12 @@ export class ManagementUserRepository {
   ): Promise<Result<ManagementAuthTokenPayload, string>> {
     try {
       const secret = this.getJwtSecret();
-      const { payload } = await jwtVerify(token, secret);
+      const { payload } = await jwtVerify(token, secret, {
+        issuer: "dein.salon",
+      });
 
       // Validate payload structure
-      if (
-        typeof payload.userId !== "string" ||
-        !Array.isArray(payload.roles)
-      ) {
+      if (typeof payload.userId !== "string" || !Array.isArray(payload.roles)) {
         return { success: false, errors: "Invalid token payload" };
       }
 

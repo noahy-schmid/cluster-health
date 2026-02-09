@@ -39,6 +39,26 @@ export async function updateSection(websiteId: string, section: AllSections) {
   }
 
   const repository = sectionRepository();
+
+  // Ensure the section being updated actually belongs to the given website
+  const fetchResult = await repository.fetchSections(websiteId);
+  if (!fetchResult.success || !fetchResult.sections) {
+    return {
+      success: false,
+      error: fetchResult.error || "Failed to load sections for update",
+    };
+  }
+
+  const ownsSection = fetchResult.sections.some(
+    (existingSection) => existingSection.id === section.id,
+  );
+
+  if (!ownsSection) {
+    return {
+      success: false,
+      error: "Section does not belong to this website",
+    };
+  }
   return await repository.updateSection(section);
 }
 
