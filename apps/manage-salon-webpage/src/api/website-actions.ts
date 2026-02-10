@@ -1,11 +1,17 @@
 "use server";
 
-import { HeroSettings } from "@/lib/types/section-types";
 import { WebsiteAccessGuard } from "@/api/guards/website-access-guard";
 import { db, websitesTable } from "@repo/website-database";
 import { eq } from "drizzle-orm";
+import { Effect } from "effect";
 import { cookies } from "next/headers";
 import { ManagementUserRepository } from "@repo/auth-domain";
+
+import {
+  WebsiteHeroRepository,
+  WebsiteHeroRepositoryLive,
+  HeroSettings,
+} from "@repo/website-database";
 
 /**
  * Server action to create a new website
@@ -128,36 +134,31 @@ export async function getHeroSettings(websiteId: string): Promise<
     return { success: false, error: access.error };
   }
 
-  try {
-    const [website] = await db
-      .select()
-      .from(websitesTable)
-      .where(eq(websitesTable.id, websiteId))
-      .limit(1);
+  const program = Effect.gen(function* () {
+    const repository = yield* WebsiteHeroRepository;
+    return yield* repository.fetchHeroSettings(websiteId).pipe(
+      Effect.map((settings) => ({
+        success: true as const,
+        settings,
+      })),
+      Effect.catchTags({
+        WebsiteHeroInvalidTextColorError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Invalid hero text color",
+          }),
+        WebsiteHeroNotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Website not found",
+          }),
+      }),
+    );
+  });
 
-    if (!website) {
-      return {
-        success: false,
-        error: "Website not found",
-      };
-    }
-
-    return {
-      success: true,
-      settings: {
-        backgroundImageUrl: website.heroImage,
-        logoImageUrl: website.logo,
-        title: website.title,
-        subtitle: website.subtitle,
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching hero settings:", error);
-    return {
-      success: false,
-      error: "Failed to fetch hero settings",
-    };
-  }
+  return await Effect.runPromise(
+    Effect.provide(program, WebsiteHeroRepositoryLive),
+  );
 }
 
 export async function updateHeroSettings(
@@ -179,25 +180,30 @@ export async function updateHeroSettings(
     return { success: false, error: access.error };
   }
 
-  try {
-    await db
-      .update(websitesTable)
-      .set({
-        heroImage: settings.backgroundImageUrl,
-        logo: settings.logoImageUrl,
-        title: settings.title,
-        subtitle: settings.subtitle,
-      })
-      .where(eq(websitesTable.id, websiteId));
+  const program = Effect.gen(function* () {
+    const repository = yield* WebsiteHeroRepository;
+    return yield* repository.updateHeroSettings(websiteId, settings).pipe(
+      Effect.map(() => ({ success: true as const })),
+      Effect.catchTags({
+        WebsiteHeroNotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Website not found",
+          }),
+      }),
+      Effect.catchAll((error) => {
+        console.error("Error updating hero settings:", error);
+        return Effect.succeed({
+          success: false as const,
+          error: "Failed to update hero settings",
+        });
+      }),
+    );
+  });
 
-    return { success: true };
-  } catch (error) {
-    console.error("Error updating hero settings:", error);
-    return {
-      success: false,
-      error: "Failed to update hero settings",
-    };
-  }
+  return await Effect.runPromise(
+    Effect.provide(program, WebsiteHeroRepositoryLive),
+  );
 }
 
 export interface ColorSettings {

@@ -25,7 +25,12 @@ export default function HeroEditPage() {
         return;
       }
 
-      setHeroSettings(result.settings);
+      setHeroSettings({
+        backgroundImageUrl: result.settings.heroImage,
+        logoImageUrl: result.settings.logo,
+        title: result.settings.title,
+        subtitle: result.settings.subtitle,
+      });
     };
 
     loadSettings();

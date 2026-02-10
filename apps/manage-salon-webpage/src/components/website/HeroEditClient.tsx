@@ -18,7 +18,13 @@ export default function HeroEditClient({
   const { salonId, websiteId } = useWebsiteRouteContext();
 
   const handleSave = async (settings: HeroSettings) => {
-    await updateHeroSettings(websiteId ?? "", settings);
+    await updateHeroSettings(websiteId ?? "", {
+      heroImage: settings.backgroundImageUrl,
+      logo: settings.logoImageUrl,
+      title: settings.title,
+      subtitle: settings.subtitle,
+      textColor: "light", // TODO: allow user to choose text color
+    });
     router.replace(`/salon/${salonId}/website/${websiteId}`);
   };
 

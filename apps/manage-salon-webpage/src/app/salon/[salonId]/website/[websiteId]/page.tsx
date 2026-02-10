@@ -35,7 +35,12 @@ export default function WebsiteEditorPage() {
       }
 
       setSections(sectionsResult.sections ?? []);
-      setHeroSettings(heroResult.settings);
+      setHeroSettings({
+        backgroundImageUrl: heroResult.settings.heroImage,
+        logoImageUrl: heroResult.settings.logo,
+        title: heroResult.settings.title,
+        subtitle: heroResult.settings.subtitle,
+      });
     };
 
     loadData();
