@@ -6,7 +6,6 @@ import { redirect } from "next/navigation";
 import z from "zod";
 import {
   ManagementUserRepository,
-  ManagementAuthTokenPayload,
 } from "@repo/auth-domain";
 
 const loginActionSchema = z.object({
