@@ -4,9 +4,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import z from "zod";
-import {
-  ManagementUserRepository,
-} from "@repo/auth-domain";
+import { ManagementUserRepository } from "@repo/auth-domain";
 
 const loginActionSchema = z.object({
   email: z.email(),
@@ -49,11 +47,21 @@ async function setSessionCookie(
 ): Promise<void> {
   const expires = payload.expiresAt;
 
-  (await cookies()).set("session", token, {
+  const production = process.env.NODE_ENV === "production";
+
+  console.log(
+    "Setting session cookie with token:",
+    token,
+    "expires at:",
     expires,
-    secure: true,
+  );
+
+  (await cookies()).set("session", token, {
+    secure: production,
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
+    path: "/",
+    expires,
   });
 }
 
