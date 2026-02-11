@@ -20,7 +20,7 @@ import { EmptySectionPlaceholder } from "@/components/website/EmptySectionPlaceh
 import { SectionCard } from "@/components/website/section-cards/SectionCard";
 import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
-import { Palette, Settings } from "lucide-react";
+import { ExternalLink, Palette, Settings } from "lucide-react";
 import HeroCard from "@/components/website/section-cards/HeroCard";
 import { AllSections, HeroSettings } from "@repo/website-database";
 import {
@@ -28,6 +28,7 @@ import {
   reorderSections as reorderSectionsAction,
 } from "@/api/sections-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
+import { getWebsiteSlug } from "@/api/website-actions";
 
 interface WebsiteEditorClientProps {
   initialSections: AllSections[];
@@ -140,9 +141,15 @@ export default function WebsiteEditorClient({
               router.push(`/salon/${salonId}/website/${websiteId}/colors`),
           },
           {
-            icon: Settings,
-            text: "Einstellungen",
-            onClick: () => {},
+            icon: ExternalLink,
+            text: "Öffnen",
+            onClick: () => {
+              getWebsiteSlug(websiteId ?? "").then((result) => {
+                if (result.success) {
+                  window.open(`http://localhost:3001/salon/${result.slug}`, "_blank");
+                }
+              });
+            },
           },
         ]}
       />

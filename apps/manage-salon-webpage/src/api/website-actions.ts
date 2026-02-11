@@ -84,6 +84,50 @@ export async function createWebsite(): Promise<
   }
 }
 
+export async function getWebsiteSlug(websiteId: string): Promise<
+  | {
+      success: true;
+      slug: string;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  try {
+    const [website] = await db
+      .select({ slug: websitesTable.slug })
+      .from(websitesTable)
+      .where(eq(websitesTable.id, websiteId))
+      .limit(1);
+
+    if (!website) {
+      return {
+        success: false,
+        error: "Website not found",
+      };
+    }
+
+    return {
+      success: true,
+      slug: website.slug,
+    };
+  } catch (error) {
+    console.error("Error fetching website slug:", error);
+    return {
+      success: false,
+      error: "Failed to fetch website slug",
+    };
+  }
+}
+
 /**
  * Looks up the website for a salon that belongs to the current user.
  * Returns the website ID if it exists.
