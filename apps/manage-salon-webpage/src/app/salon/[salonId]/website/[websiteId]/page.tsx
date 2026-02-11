@@ -6,8 +6,7 @@ import { fetchSections } from "@/api/sections-actions";
 import { getHeroSettings } from "@/api/website-actions";
 import WebsiteEditorClient from "@/components/website/WebsiteEditorClient";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import { HeroSettings } from "@/lib/types/section-types";
-import { AllSections } from "@repo/website-database";
+import { AllSections, HeroSettings } from "@repo/website-database";
 import PageHeader from "@/components/PageHeader";
 
 export default function WebsiteEditorPage() {
@@ -35,12 +34,7 @@ export default function WebsiteEditorPage() {
       }
 
       setSections(sectionsResult.sections ?? []);
-      setHeroSettings({
-        backgroundImageUrl: heroResult.settings.heroImage,
-        logoImageUrl: heroResult.settings.logo,
-        title: heroResult.settings.title,
-        subtitle: heroResult.settings.subtitle,
-      });
+      setHeroSettings(heroResult.settings);
     };
 
     loadData();
@@ -57,7 +51,7 @@ export default function WebsiteEditorPage() {
   return (
     <WebsiteEditorClient
       initialSections={sections}
-      initialHeroSettings={heroSettings}
+      heroSettings={heroSettings}
     />
   );
 }

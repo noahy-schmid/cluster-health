@@ -1,15 +1,14 @@
-import { HeroSettings } from "@/lib/types/section-types";
 import { ImageIcon } from "lucide-react";
 import SectionHeader from "./SectionHeader";
+import { HeroSettings } from "@repo/website-database";
 
 interface HeroCardProps {
   settings: HeroSettings;
 }
 
 export default function HeroCard({ settings }: HeroCardProps) {
-  const hasBackground =
-    settings.backgroundImageUrl && settings.backgroundImageUrl.trim() !== "";
-  const hasLogo = settings.logoImageUrl && settings.logoImageUrl.trim() !== "";
+  const hasBackground = settings.heroImage && settings.heroImage.trim() !== "";
+  const hasLogo = settings.logo && settings.logo.trim() !== "";
 
   return (
     <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg hover:shadow-md transition-shadow">
@@ -21,7 +20,7 @@ export default function HeroCard({ settings }: HeroCardProps) {
         {hasBackground ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={settings.backgroundImageUrl}
+            src={settings.heroImage}
             alt="Hero Background"
             className="w-full h-full object-cover"
           />
@@ -42,7 +41,7 @@ export default function HeroCard({ settings }: HeroCardProps) {
           <div className="absolute bottom-4 left-4 z-10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={settings.logoImageUrl}
+              src={settings.logo}
               alt="Logo"
               className="w-20 h-20 object-contain"
             />
@@ -54,7 +53,9 @@ export default function HeroCard({ settings }: HeroCardProps) {
         )}
 
         {/* Title and Subtitle - Centered */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white z-10 w-full px-4">
+        <div
+          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10 w-full px-4 ${settings.textColor === "dark" ? "text-fg-strong" : "text-bg-2"}`}
+        >
           <h4 className="text-lg md:text-2xl font-bold mb-2 drop-shadow-lg">
             {settings.title || "Kein Titel"}
           </h4>

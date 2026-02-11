@@ -22,8 +22,7 @@ import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
 import { Palette, Settings } from "lucide-react";
 import HeroCard from "@/components/website/section-cards/HeroCard";
-import { AllSections } from "@repo/website-database";
-import { HeroSettings } from "@/lib/types/section-types";
+import { AllSections, HeroSettings } from "@repo/website-database";
 import {
   deleteSection as deleteSectionAction,
   reorderSections as reorderSectionsAction,
@@ -32,17 +31,16 @@ import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 
 interface WebsiteEditorClientProps {
   initialSections: AllSections[];
-  initialHeroSettings: HeroSettings;
+  heroSettings: HeroSettings;
 }
 
 export default function WebsiteEditorClient({
   initialSections,
-  initialHeroSettings,
+  heroSettings,
 }: WebsiteEditorClientProps) {
   const router = useRouter();
   const { salonId, websiteId } = useWebsiteRouteContext();
   const [sections, setSections] = useState<AllSections[]>(initialSections);
-  const [heroSettings] = useState<HeroSettings>(initialHeroSettings);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

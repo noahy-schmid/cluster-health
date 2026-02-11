@@ -1,55 +1,19 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getHeroSettings } from "@/api/website-actions";
 import HeroEditClient from "@/components/website/HeroEditClient";
-import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import { HeroSettings } from "@/lib/types/section-types";
+import { redirect } from "next/navigation";
 
-export default function HeroEditPage() {
-  const router = useRouter();
-  const { salonId, websiteId } = useWebsiteRouteContext();
-  const [heroSettings, setHeroSettings] = useState<HeroSettings | undefined>(
-    undefined,
-  );
+export default async function HeroEditPage({
+  params,
+}: {
+  params: Promise<{ salonId: string; websiteId: string }>;
+}) {
+  const { websiteId, salonId } = await params;
+  const heroSettings = await getHeroSettings(websiteId);
 
-  useEffect(() => {
-    const loadSettings = async () => {
-      if (!websiteId) return;
-
-      const result = await getHeroSettings(websiteId);
-
-      if (!result.success) {
-        router.replace(`/salon/${salonId}`);
-        return;
-      }
-
-      setHeroSettings({
-        backgroundImageUrl: result.settings.heroImage,
-        logoImageUrl: result.settings.logo,
-        title: result.settings.title,
-        subtitle: result.settings.subtitle,
-      });
-    };
-
-    loadSettings();
-  }, [router, salonId, websiteId]);
-
-  if (!heroSettings) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <HeroEditClient
-          initialSettings={{
-            backgroundImageUrl: "",
-            logoImageUrl: "",
-            title: "",
-            subtitle: "",
-          }}
-        />
-      </div>
-    );
+  if (!heroSettings.success) {
+    console.error("Failed to load hero settings:", heroSettings.error);
+    redirect(`/salon/${salonId}/website/${websiteId}`);
   }
 
-  return <HeroEditClient initialSettings={heroSettings} />;
+  return <HeroEditClient initialSettings={heroSettings.settings} />;
 }
