@@ -1,16 +1,19 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
-  "globalEnv": ["DATABASE_URL", "JWT_SECRET"],
+  "globalEnv": ["DATABASE_URL", "JWT_SECRET", "NODE_ENV"],
   "envMode": "strict",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["@repo/eslint-config#build"]
+    },
+    "lint:fix": {
+      "dependsOn": ["^lint:fix", "@repo/eslint-config#build"]
     },
     "check-types": {
       "dependsOn": ["^check-types"]
@@ -19,17 +22,10 @@
       "cache": false,
       "persistent": true
     },
-    "docker:build": {
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
-    },
-    "docker:push": {
-      "dependsOn": ["docker:build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"]
-    },
-    "helm:lint": {
-      "dependsOn": ["^helm:lint"],
-      "inputs": ["$TURBO_DEFAULT$", "chart/**"]
+    "drizzle:generate": {
+      "dependsOn": ["^drizzle:generate"],
+      "inputs": ["$TURBO_DEFAULT$", "**/schema.ts"],
+      "outputs": ["drizzle/**"]
     }
   }
 }

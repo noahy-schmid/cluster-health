@@ -18,15 +18,17 @@ const getNextNDays = (n: number): Date[] => {
 // Get specific weekdays from the next 14 days
 const getWeekdays = (weekdayIndices: number[]): Date[] => {
   return getNextNDays(14).filter((date) =>
-    weekdayIndices.includes(date.getDay())
+    weekdayIndices.includes(date.getDay()),
   );
 };
 
 // Weekday indices: 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday
 
 // Internal type that includes availability (not exported to consumers)
-interface StaffMemberWithAvailability
-  extends Omit<StaffMemberDetailed, "services"> {
+interface StaffMemberWithAvailability extends Omit<
+  StaffMemberDetailed,
+  "services"
+> {
   services: {
     name: string;
     duration: string;

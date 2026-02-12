@@ -10,7 +10,11 @@ interface ThreeStepsProps {
   className?: string;
 }
 
-export default function ThreeSteps({ title, steps, className = "" }: ThreeStepsProps) {
+export default function ThreeSteps({
+  title,
+  steps,
+  className = "",
+}: ThreeStepsProps) {
   return (
     <div className={`max-w-6xl mx-auto bg-white rounded-2xl p-6 ${className}`}>
       <h2 className="text-3xl md:text-4xl font-bold font-sans text-primary-dark mb-8 text-center">
@@ -25,9 +29,7 @@ export default function ThreeSteps({ title, steps, className = "" }: ThreeStepsP
             <h4 className="font-sans text-2xl font-bold text-primary-dark mt-4">
               {step.header}
             </h4>
-            <p className="text-gray-600 text-lg mt-2">
-              {step.body}
-            </p>
+            <p className="text-gray-600 text-lg mt-2">{step.body}</p>
           </div>
         ))}
       </div>

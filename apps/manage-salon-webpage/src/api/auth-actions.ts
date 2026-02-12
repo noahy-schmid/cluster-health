@@ -47,11 +47,14 @@ async function setSessionCookie(
 ): Promise<void> {
   const expires = payload.expiresAt;
 
+  const production = process.env.NODE_ENV === "production";
+
   (await cookies()).set("session", token, {
-    expires,
-    secure: true,
+    secure: production,
     httpOnly: true,
     sameSite: "strict",
+    path: "/",
+    expires,
   });
 }
 

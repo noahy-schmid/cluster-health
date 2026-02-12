@@ -29,6 +29,7 @@ After making code changes, always check the modified files for errors using the 
 6. This also applies when changing the signature of functions, types, or classes that already exist. _Always_ present the proposed signature changes to the user for approval before implementing.
 
 **Before implementing Logic:**
+
 1. If in any doubt about details of an implementation use the `askQuestions` tool to clarify requirements before proceeding with the implementation. This applies to any implementation task, including small functions or methods.
 
 ## Guidelines for NextJS Frontends

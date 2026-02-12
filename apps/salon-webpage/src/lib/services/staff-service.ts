@@ -32,7 +32,7 @@ export async function getStaffMembers(): Promise<StaffMemberBasic[]> {
  * Does NOT include availability - use getServiceAvailability for that
  */
 export async function getStaffMemberById(
-  id: string
+  id: string,
 ): Promise<StaffMemberDetailed | null> {
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -66,7 +66,7 @@ export async function getStaffMemberById(
  */
 export async function getServiceAvailability(
   staffId: string,
-  serviceName: string
+  serviceName: string,
 ): Promise<ServiceAvailability[] | null> {
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 100));

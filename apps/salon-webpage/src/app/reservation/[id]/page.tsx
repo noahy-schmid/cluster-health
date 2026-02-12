@@ -2,15 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  User,
-  Mail,
-  Phone,
-  CheckCircle,
-} from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, CheckCircle } from "lucide-react";
 import { Reservation } from "@/lib/types/reservation";
 import {
   getReservation,
@@ -64,7 +56,7 @@ export default function ReservationPage() {
         } else {
           setError("Reservierung nicht gefunden");
         }
-      } catch (err) {
+      } catch (_err) {
         setError("Fehler beim Laden der Reservierung");
       } finally {
         setIsLoading(false);
@@ -111,7 +103,7 @@ export default function ReservationPage() {
         alert("Fehler beim Speichern der Daten");
         setPageState("initial");
       }
-    } catch (err) {
+    } catch (_err) {
       alert("Ein Fehler ist aufgetreten");
       setPageState("initial");
     }

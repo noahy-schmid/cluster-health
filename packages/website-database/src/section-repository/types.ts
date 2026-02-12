@@ -1,4 +1,8 @@
-export type SectionType = "text-with-image" | "gallery" | "center-text" | "reason";
+export type SectionType =
+  | "text-with-image"
+  | "gallery"
+  | "center-text"
+  | "reason";
 
 // Settings for Text with Image section
 export interface TextWithImageSettings {

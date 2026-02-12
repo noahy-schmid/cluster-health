@@ -39,7 +39,10 @@ export default function ReasonCard({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
             {settings.items.slice(0, 4).map((item, index) => (
-              <div key={index} className="p-sm rounded-md border border-border text-center">
+              <div
+                key={index}
+                className="p-sm rounded-md border border-border text-center"
+              >
                 {item.imageUrl && item.imageUrl.trim() !== "" && (
                   <div className="w-32 h-32 rounded-full overflow-hidden mb-sm mx-auto">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

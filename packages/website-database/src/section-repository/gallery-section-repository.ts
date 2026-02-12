@@ -77,11 +77,12 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
     try {
       return await db.transaction(async (tx) => {
         // Update sections table via base repository
-        const updatedSections = await this.baseSectionRepo.updateSectionMetadata(
-          section.id,
-          { menuTitle: section.menuTitle ?? null },
-          tx,
-        );
+        const updatedSections =
+          await this.baseSectionRepo.updateSectionMetadata(
+            section.id,
+            { menuTitle: section.menuTitle ?? null },
+            tx,
+          );
 
         // If no rows were updated, section doesn't exist - stop here
         if (updatedSections.length === 0) {
@@ -124,7 +125,10 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
   async fetchSection(id: string): Promise<FetchSectionResult<"gallery">> {
     try {
       // Fetch the section from sections table via base repository
-      const dbSection = await this.baseSectionRepo.fetchSectionById(id, "gallery");
+      const dbSection = await this.baseSectionRepo.fetchSectionById(
+        id,
+        "gallery",
+      );
 
       if (!dbSection) {
         return { success: false, error: "Gallery section not found" };
@@ -166,4 +170,3 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
     }
   }
 }
-

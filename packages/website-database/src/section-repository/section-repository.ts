@@ -29,7 +29,10 @@ export class SectionRepository {
         position,
       );
     } else if (type === "center-text") {
-      return await this.centerTextSectionRepo.createSection(websiteId, position);
+      return await this.centerTextSectionRepo.createSection(
+        websiteId,
+        position,
+      );
     } else if (type === "reason") {
       return await this.reasonSectionRepo.createSection(websiteId, position);
     }

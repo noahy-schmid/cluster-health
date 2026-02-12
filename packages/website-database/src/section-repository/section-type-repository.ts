@@ -26,7 +26,9 @@ export interface SectionTypeRepository<T extends SectionType> {
     position: number,
   ) => Promise<CreateSectionResult<T>>;
 
-  updateSection: (section: Omit<Section<T>, "type" | "order">) => Promise<boolean>;
+  updateSection: (
+    section: Omit<Section<T>, "type" | "order">,
+  ) => Promise<boolean>;
 
   fetchSection: (id: string) => Promise<FetchSectionResult<T>>;
 }

@@ -5,19 +5,18 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "lint:fix": "turbo run lint:fix",
+    "format": "prettier --check \"**/*.{ts,tsx,md}\"",
+    "format:fix": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "docker:build": "turbo run docker:build",
-    "docker:push": "turbo run docker:push",
-    "docker:login": "source ../secrets.env && echo $GHCR_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin",
-    "helm:lint": "turbo run helm:lint",
-    "helm:umbrella:dep:update": "cd my-services-chart && helm dependency update",
-    "helm:umbrella:lint": "cd my-services-chart && helm lint .",
-    "helm:umbrella:install": "bash scripts/helm-install.sh"
+    "prepare": "husky install",
+    "drizzle:generate": "turbo run drizzle:generate"
   },
   "devDependencies": {
+    "eslint-plugin-turbo": "^2.5.0",
+    "husky": "^9.1.7",
     "prettier": "^3.8.1",
-    "turbo": "^2.8.2",
+    "turbo": "^2.8.3",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@10.17.1",

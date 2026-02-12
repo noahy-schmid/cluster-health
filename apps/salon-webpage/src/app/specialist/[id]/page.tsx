@@ -17,7 +17,7 @@ export default function SpecialistPage() {
 
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [specialist, setSpecialist] = useState<StaffMemberDetailed | null>(
-    null
+    null,
   );
   const [isLoading, setIsLoading] = useState(true);
 

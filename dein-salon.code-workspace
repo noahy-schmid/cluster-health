@@ -17,6 +17,10 @@
       "path": "apps/manage-salon-webpage",
     },
     {
+      "name": "frontend | ui-components",
+      "path": "packages/ui",
+    },
+    {
       "name": "backend | website-domain",
       "path": "packages/website-database",
     },
@@ -26,8 +30,8 @@
     },
     { "name": "backend | auth-domain", "path": "packages/auth-domain" },
     {
-      "name": "frontend | ui-components",
-      "path": "packages/ui",
+      "name": "infrastructure | eslint-config",
+      "path": "packages/eslint-config",
     },
   ],
   "settings": {
