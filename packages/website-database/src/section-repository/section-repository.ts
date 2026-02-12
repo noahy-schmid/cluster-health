@@ -8,23 +8,28 @@ import { ReasonSectionRepository } from "./reason-section-repository";
 import { BaseSectionRepository } from "./base-section-repository";
 
 export class SectionRepository {
+  private readonly repositoryMap: Record<
+    SectionType,
+    GallerySectionRepository | TextWithImageSectionRepository | CenterTextSectionRepository | ReasonSectionRepository
+  >;
+
   constructor(
     private baseSectionRepo: BaseSectionRepository,
     private gallerySectionRepo: GallerySectionRepository,
     private textWithImageSectionRepo: TextWithImageSectionRepository,
     private centerTextSectionRepo: CenterTextSectionRepository,
     private reasonSectionRepo: ReasonSectionRepository,
-  ) {}
-
-  private getRepositoryForType(type: SectionType) {
-    const repositoryMap = {
+  ) {
+    this.repositoryMap = {
       gallery: this.gallerySectionRepo,
       "text-with-image": this.textWithImageSectionRepo,
       "center-text": this.centerTextSectionRepo,
       reason: this.reasonSectionRepo,
     };
+  }
 
-    return repositoryMap[type];
+  private getRepositoryForType(type: SectionType) {
+    return this.repositoryMap[type];
   }
 
   async createSection(
