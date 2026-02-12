@@ -146,7 +146,10 @@ export default function WebsiteEditorClient({
             onClick: () => {
               getWebsiteSlug(websiteId ?? "").then((result) => {
                 if (result.success) {
-                  window.open(`http://localhost:3001/salon/${result.slug}`, "_blank");
+                  window.open(
+                    `http://localhost:3001/salon/${result.slug}`,
+                    "_blank",
+                  );
                 }
               });
             },

@@ -40,6 +40,14 @@ export interface WebsiteHeroRepository {
     never
   >;
 
+  fetchHeroSettingsBySalonSlug(
+    salonSlug: string,
+  ): Effect.Effect<
+    HeroSettings,
+    WebsiteHeroNotFoundError | WebsiteHeroInvalidTextColorError | Error,
+    never
+  >;
+
   /**
    * Update hero settings for the given website.
    * @param websiteId Website id owning the hero settings.
@@ -62,65 +70,108 @@ export const WebsiteHeroRepository = Context.GenericTag<WebsiteHeroRepository>(
 /**
  * Live service layer for WebsiteHeroRepository.
  */
-export const WebsiteHeroRepositoryLive = Layer.succeed(WebsiteHeroRepository, {
-  fetchHeroSettings: (websiteId: string) =>
-    Effect.gen(function* () {
-      const [row] = yield* Effect.promise(async () => {
-        return await db
-          .select({
-            heroImage: websitesTable.heroImage,
-            logo: websitesTable.logo,
-            title: websitesTable.title,
-            subtitle: websitesTable.subtitle,
-            textColor: websitesTable.textColor,
-          })
-          .from(websitesTable)
-          .where(eq(websitesTable.id, websiteId));
+export const WebsiteHeroRepositoryLive = Layer.effect(
+  WebsiteHeroRepository,
+  Effect.gen(function* () {
+    yield* Effect.log("Initializing WebsiteHeroRepositoryLive");
+    const mapRowToSettings = (
+      websiteId: string,
+      row?: {
+        heroImage: string;
+        logo: string;
+        title: string;
+        subtitle: string;
+        textColor: string;
+      },
+    ): Effect.Effect<
+      HeroSettings,
+      WebsiteHeroInvalidTextColorError | WebsiteHeroNotFoundError,
+      never
+    > =>
+      Effect.gen(function* () {
+        if (!row) {
+          return yield* Effect.fail(
+            new WebsiteHeroNotFoundError({ websiteId }),
+          );
+        }
+
+        const textColor = row.textColor;
+        if (textColor !== "light" && textColor !== "dark") {
+          return yield* Effect.fail(
+            new WebsiteHeroInvalidTextColorError({
+              websiteId,
+              textColor,
+            }),
+          );
+        }
+
+        return {
+          ...row,
+          textColor,
+        };
       });
 
-      if (!row) {
-        return yield* Effect.fail(new WebsiteHeroNotFoundError({ websiteId }));
-      }
+    return {
+      fetchHeroSettings: (websiteId: string) =>
+        Effect.gen(function* () {
+          const [row] = yield* Effect.promise(async () => {
+            return await db
+              .select({
+                heroImage: websitesTable.heroImage,
+                logo: websitesTable.logo,
+                title: websitesTable.title,
+                subtitle: websitesTable.subtitle,
+                textColor: websitesTable.textColor,
+              })
+              .from(websitesTable)
+              .where(eq(websitesTable.id, websiteId));
+          });
 
-      const textColor = row.textColor;
-      if (textColor !== "light" && textColor !== "dark") {
-        return yield* Effect.fail(
-          new WebsiteHeroInvalidTextColorError({
-            websiteId,
-            textColor,
-          }),
-        );
-      }
+          return yield* mapRowToSettings(websiteId, row);
+        }),
 
-      return {
-        heroImage: row.heroImage,
-        logo: row.logo,
-        title: row.title,
-        subtitle: row.subtitle,
-        textColor,
-      };
-    }),
-  updateHeroSettings: (websiteId: string, settings: HeroSettings) =>
-    Effect.gen(function* () {
-      const dbResult = yield* Effect.promise(async () => {
-        const result = await db
-          .update(websitesTable)
-          .set({
-            heroImage: settings.heroImage,
-            logo: settings.logo,
-            title: settings.title,
-            subtitle: settings.subtitle,
-            textColor: settings.textColor,
-          })
-          .where(eq(websitesTable.id, websiteId))
-          .returning({ id: websitesTable.id });
-        return result;
-      });
+      fetchHeroSettingsBySalonSlug: (salonSlug: string) =>
+        Effect.gen(function* () {
+          const [row] = yield* Effect.promise(async () => {
+            return await db
+              .select({
+                heroImage: websitesTable.heroImage,
+                logo: websitesTable.logo,
+                title: websitesTable.title,
+                subtitle: websitesTable.subtitle,
+                textColor: websitesTable.textColor,
+              })
+              .from(websitesTable)
+              .where(eq(websitesTable.slug, salonSlug))
+              .limit(1);
+          });
+          return yield* mapRowToSettings(salonSlug, row);
+        }),
+      updateHeroSettings: (websiteId: string, settings: HeroSettings) =>
+        Effect.gen(function* () {
+          const dbResult = yield* Effect.promise(async () => {
+            const result = await db
+              .update(websitesTable)
+              .set({
+                heroImage: settings.heroImage,
+                logo: settings.logo,
+                title: settings.title,
+                subtitle: settings.subtitle,
+                textColor: settings.textColor,
+              })
+              .where(eq(websitesTable.id, websiteId))
+              .returning({ id: websitesTable.id });
+            return result;
+          });
 
-      yield* Effect.log("Hero for website was updated", websiteId);
+          yield* Effect.log("Hero for website was updated", websiteId);
 
-      if (dbResult.length === 0) {
-        return yield* Effect.fail(new WebsiteHeroNotFoundError({ websiteId }));
-      }
-    }),
-});
+          if (dbResult.length === 0) {
+            return yield* Effect.fail(
+              new WebsiteHeroNotFoundError({ websiteId }),
+            );
+          }
+        }),
+    };
+  }),
+);

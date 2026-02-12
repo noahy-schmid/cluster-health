@@ -1,14 +1,11 @@
 "use server";
 
-import { db, websitesTable } from "@repo/website-database";
-import { eq } from "drizzle-orm";
-
-export interface HeroSettings {
-  backgroundImageUrl: string;
-  logoImageUrl: string;
-  title: string;
-  subtitle: string;
-}
+import {
+  HeroSettings,
+  WebsiteHeroRepository,
+  WebsiteHeroRepositoryLive,
+} from "@repo/website-database";
+import { Effect } from "effect";
 
 /**
  * Server action to fetch hero settings for a salon by its slug
@@ -18,34 +15,21 @@ export async function fetchHeroSettingsBySalonSlug(salonSlug: string): Promise<{
   settings?: HeroSettings;
   error?: string;
 }> {
-  try {
-    const [website] = await db
-      .select()
-      .from(websitesTable)
-      .where(eq(websitesTable.slug, salonSlug))
-      .limit(1);
+  const fetchEffect = Effect.gen(function* () {
+    const repo = yield* WebsiteHeroRepository;
+    return yield* repo.fetchHeroSettingsBySalonSlug(salonSlug).pipe(
+      Effect.map((settings) => ({ success: true, settings })),
+      Effect.catchTag("WebsiteHeroNotFoundError", () =>
+        Effect.succeed({ success: false, error: "Website not found" }),
+      ),
+      Effect.catchAll((error) =>
+        Effect.succeed({
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        }),
+      ),
+    );
+  }).pipe(Effect.provide(WebsiteHeroRepositoryLive));
 
-    if (!website) {
-      return {
-        success: false,
-        error: "Website not found",
-      };
-    }
-
-    return {
-      success: true,
-      settings: {
-        backgroundImageUrl: website.heroImage,
-        logoImageUrl: website.logo,
-        title: website.title,
-        subtitle: website.subtitle,
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching hero settings:", error);
-    return {
-      success: false,
-      error: "Failed to fetch hero settings",
-    };
-  }
+  return await Effect.runPromise(fetchEffect);
 }
