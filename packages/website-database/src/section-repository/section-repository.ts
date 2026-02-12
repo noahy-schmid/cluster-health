@@ -16,47 +16,32 @@ export class SectionRepository {
     private reasonSectionRepo: ReasonSectionRepository,
   ) {}
 
+  private getRepositoryForType(type: SectionType) {
+    const repositoryMap = {
+      gallery: this.gallerySectionRepo,
+      "text-with-image": this.textWithImageSectionRepo,
+      "center-text": this.centerTextSectionRepo,
+      reason: this.reasonSectionRepo,
+    };
+
+    return repositoryMap[type];
+  }
+
   async createSection(
     websiteId: string,
     type: SectionType,
     position: number,
   ): Promise<{ success: boolean; section?: AllSections; error?: string }> {
-    if (type === "gallery") {
-      return await this.gallerySectionRepo.createSection(websiteId, position);
-    } else if (type === "text-with-image") {
-      return await this.textWithImageSectionRepo.createSection(
-        websiteId,
-        position,
-      );
-    } else if (type === "center-text") {
-      return await this.centerTextSectionRepo.createSection(
-        websiteId,
-        position,
-      );
-    } else if (type === "reason") {
-      return await this.reasonSectionRepo.createSection(websiteId, position);
-    }
-
-    return { success: false, error: "Invalid section type" };
+    const repository = this.getRepositoryForType(type);
+    return await repository.createSection(websiteId, position);
   }
 
   async updateSection(
     section: AllSections,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      let result: boolean;
-
-      if (section.type === "gallery") {
-        result = await this.gallerySectionRepo.updateSection(section);
-      } else if (section.type === "text-with-image") {
-        result = await this.textWithImageSectionRepo.updateSection(section);
-      } else if (section.type === "center-text") {
-        result = await this.centerTextSectionRepo.updateSection(section);
-      } else if (section.type === "reason") {
-        result = await this.reasonSectionRepo.updateSection(section);
-      } else {
-        return { success: false, error: "Invalid section type" };
-      }
+      const repository = this.getRepositoryForType(section.type);
+      const result = await repository.updateSection(section);
 
       return result
         ? { success: true }
@@ -127,34 +112,10 @@ export class SectionRepository {
 
       // Fetch details for each section based on type
       for (const dbSection of dbSections) {
-        if (dbSection.type === "text-with-image") {
-          const result = await this.textWithImageSectionRepo.fetchSection(
-            dbSection.id,
-          );
-          if (result.success) {
-            sections.push(result.section);
-          }
-        } else if (dbSection.type === "gallery") {
-          const result = await this.gallerySectionRepo.fetchSection(
-            dbSection.id,
-          );
-          if (result.success) {
-            sections.push(result.section);
-          }
-        } else if (dbSection.type === "center-text") {
-          const result = await this.centerTextSectionRepo.fetchSection(
-            dbSection.id,
-          );
-          if (result.success) {
-            sections.push(result.section);
-          }
-        } else if (dbSection.type === "reason") {
-          const result = await this.reasonSectionRepo.fetchSection(
-            dbSection.id,
-          );
-          if (result.success) {
-            sections.push(result.section);
-          }
+        const repository = this.getRepositoryForType(dbSection.type);
+        const result = await repository.fetchSection(dbSection.id);
+        if (result.success) {
+          sections.push(result.section);
         }
       }
 
