@@ -6,11 +6,12 @@ import { useCallback, useEffect, useRef } from "react";
  * @param delay The delay in milliseconds
  * @returns A debounced version of the callback
  */
-export function useDebounce<T extends (...args: never[]) => void>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useDebounce<T extends (...args: any[]) => void>(
   callback: T,
   delay: number,
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const timeoutRef = useRef<NodeJS.Timeout>();
   const callbackRef = useRef(callback);
 
   // Update callback ref when it changes
@@ -37,7 +38,7 @@ export function useDebounce<T extends (...args: never[]) => void>(
         callbackRef.current(...args);
       }, delay);
     },
-    [delay]
+    [delay],
   );
 
   return debouncedFn as T;
