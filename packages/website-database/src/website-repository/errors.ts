@@ -5,11 +5,11 @@ import { Data } from "effect";
  */
 export class WebsiteHeroNotFoundError extends Data.TaggedError(
   "WebsiteHeroNotFoundError",
-)<{ websiteId: string }> {}
+)<{ websiteId?: string }> {}
 
 /**
  * Raised when the stored hero text color is invalid.
  */
 export class WebsiteHeroInvalidTextColorError extends Data.TaggedError(
   "WebsiteHeroInvalidTextColorError",
-)<{ websiteId: string; textColor: string }> {}
+)<{ websiteId?: string; textColor: string }> {}

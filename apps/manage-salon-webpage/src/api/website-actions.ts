@@ -12,6 +12,7 @@ import {
   WebsiteHeroRepositoryLive,
   HeroSettings,
 } from "@repo/website-database";
+import { redirect, RedirectType } from "next/navigation";
 
 /**
  * Server action to create a new website
@@ -366,4 +367,15 @@ export async function updateColorSettings(
       error: "Failed to update color settings",
     };
   }
+}
+
+export async function openWebsite(websiteId: string) {
+  const slugResult = await getWebsiteSlug(websiteId);
+
+  if (!slugResult.success) {
+    console.error("Error fetching website slug:", slugResult.error);
+    return;
+  }
+
+  redirect(`http://localhost:3001/salon/${slugResult.slug}`, RedirectType.replace);
 }

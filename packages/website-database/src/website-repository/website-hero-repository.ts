@@ -67,15 +67,12 @@ export const WebsiteHeroRepository = Context.GenericTag<WebsiteHeroRepository>(
   "@repo/website-database/WebsiteHeroRepository",
 );
 
-/**
- * Live service layer for WebsiteHeroRepository.
- */
-export const WebsiteHeroRepositoryLive = Layer.effect(
-  WebsiteHeroRepository,
+const genWebsiteHeroRepositoryLive: Effect.Effect<WebsiteHeroRepository> =
   Effect.gen(function* () {
     yield* Effect.log("Initializing WebsiteHeroRepositoryLive");
+
     const mapRowToSettings = (
-      websiteId: string,
+      websiteId?: string,
       row?: {
         heroImage: string;
         logo: string;
@@ -111,26 +108,28 @@ export const WebsiteHeroRepositoryLive = Layer.effect(
         };
       });
 
-    return {
-      fetchHeroSettings: (websiteId: string) =>
-        Effect.gen(function* () {
-          const [row] = yield* Effect.promise(async () => {
-            return await db
-              .select({
-                heroImage: websitesTable.heroImage,
-                logo: websitesTable.logo,
-                title: websitesTable.title,
-                subtitle: websitesTable.subtitle,
-                textColor: websitesTable.textColor,
-              })
-              .from(websitesTable)
-              .where(eq(websitesTable.id, websiteId));
-          });
+    const fetchHeroSettings: WebsiteHeroRepository["fetchHeroSettings"] = (
+      websiteId,
+    ) =>
+      Effect.gen(function* () {
+        const [row] = yield* Effect.promise(async () => {
+          return await db
+            .select({
+              heroImage: websitesTable.heroImage,
+              logo: websitesTable.logo,
+              title: websitesTable.title,
+              subtitle: websitesTable.subtitle,
+              textColor: websitesTable.textColor,
+            })
+            .from(websitesTable)
+            .where(eq(websitesTable.id, websiteId));
+        });
 
-          return yield* mapRowToSettings(websiteId, row);
-        }),
+        return yield* mapRowToSettings(websiteId, row);
+      });
 
-      fetchHeroSettingsBySalonSlug: (salonSlug: string) =>
+    const fetchHeroSettingsBySalonSlug: WebsiteHeroRepository["fetchHeroSettingsBySalonSlug"] =
+      (salonSlug) =>
         Effect.gen(function* () {
           const [row] = yield* Effect.promise(async () => {
             return await db
@@ -145,33 +144,49 @@ export const WebsiteHeroRepositoryLive = Layer.effect(
               .where(eq(websitesTable.slug, salonSlug))
               .limit(1);
           });
-          return yield* mapRowToSettings(salonSlug, row);
-        }),
-      updateHeroSettings: (websiteId: string, settings: HeroSettings) =>
-        Effect.gen(function* () {
-          const dbResult = yield* Effect.promise(async () => {
-            const result = await db
-              .update(websitesTable)
-              .set({
-                heroImage: settings.heroImage,
-                logo: settings.logo,
-                title: settings.title,
-                subtitle: settings.subtitle,
-                textColor: settings.textColor,
-              })
-              .where(eq(websitesTable.id, websiteId))
-              .returning({ id: websitesTable.id });
-            return result;
-          });
+          return yield* mapRowToSettings(undefined, row);
+        });
 
-          yield* Effect.log("Hero for website was updated", websiteId);
+    const updateHeroSettings: WebsiteHeroRepository["updateHeroSettings"] = (
+      websiteId,
+      settings,
+    ) =>
+      Effect.gen(function* () {
+        const dbResult = yield* Effect.promise(async () => {
+          const result = await db
+            .update(websitesTable)
+            .set({
+              heroImage: settings.heroImage,
+              logo: settings.logo,
+              title: settings.title,
+              subtitle: settings.subtitle,
+              textColor: settings.textColor,
+            })
+            .where(eq(websitesTable.id, websiteId))
+            .returning({ id: websitesTable.id });
+          return result;
+        });
 
-          if (dbResult.length === 0) {
-            return yield* Effect.fail(
-              new WebsiteHeroNotFoundError({ websiteId }),
-            );
-          }
-        }),
+        yield* Effect.log("Hero for website was updated", websiteId);
+
+        if (dbResult.length === 0) {
+          return yield* Effect.fail(
+            new WebsiteHeroNotFoundError({ websiteId }),
+          );
+        }
+      });
+
+    return {
+      fetchHeroSettings,
+      fetchHeroSettingsBySalonSlug,
+      updateHeroSettings,
     };
-  }),
+  });
+
+/**
+ * Live service layer for WebsiteHeroRepository.
+ */
+export const WebsiteHeroRepositoryLive = Layer.effect(
+  WebsiteHeroRepository,
+  genWebsiteHeroRepositoryLive,
 );

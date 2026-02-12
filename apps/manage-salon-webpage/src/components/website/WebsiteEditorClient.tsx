@@ -16,7 +16,6 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { EmptySectionPlaceholder } from "@/components/website/EmptySectionPlaceholder";
 import { SectionCard } from "@/components/website/section-cards/SectionCard";
 import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
@@ -28,7 +27,7 @@ import {
   reorderSections as reorderSectionsAction,
 } from "@/api/sections-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import { getWebsiteSlug } from "@/api/website-actions";
+import { getWebsiteSlug, openWebsite } from "@/api/website-actions";
 
 interface WebsiteEditorClientProps {
   initialSections: AllSections[];
@@ -115,19 +114,6 @@ export default function WebsiteEditorClient({
     router.push(`/salon/${salonId}/website/${websiteId}/start/hero`);
   };
 
-  if (sections.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <PageHeader
-          title="Webseite bearbeiten"
-          subtitle="Erstellen und verwalten Sie die Abschnitte Ihrer Salon-Webseite"
-        />
-
-        <EmptySectionPlaceholder onAddSection={() => handleAddSection()} />
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-4xl mx-auto">
       <PageHeader
@@ -144,14 +130,7 @@ export default function WebsiteEditorClient({
             icon: ExternalLink,
             text: "Öffnen",
             onClick: () => {
-              getWebsiteSlug(websiteId ?? "").then((result) => {
-                if (result.success) {
-                  window.open(
-                    `http://localhost:3001/salon/${result.slug}`,
-                    "_blank",
-                  );
-                }
-              });
+              openWebsite(websiteId ?? "");
             },
           },
         ]}
@@ -192,6 +171,7 @@ export default function WebsiteEditorClient({
           strategy={verticalListSortingStrategy}
         >
           <div>
+            <AddSectionButton onClick={() => handleAddSection(0)} />
             {sections.map((section, index) => (
               <div key={section.id}>
                 <SectionCard

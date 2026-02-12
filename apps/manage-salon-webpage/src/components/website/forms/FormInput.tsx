@@ -31,7 +31,7 @@ export default function FormInput({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={() => onBlur && onBlur()}
+        onBlur={() => onBlur?.()}
         placeholder={placeholder}
         required={required}
         className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal"
