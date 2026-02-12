@@ -1,11 +1,17 @@
 "use server";
 
-import { HeroSettings } from "@/lib/types/section-types";
 import { WebsiteAccessGuard } from "@/api/guards/website-access-guard";
 import { db, websitesTable } from "@repo/website-database";
 import { eq } from "drizzle-orm";
+import { Effect } from "effect";
 import { cookies } from "next/headers";
 import { ManagementUserRepository } from "@repo/auth-domain";
+
+import {
+  WebsiteHeroRepository,
+  WebsiteHeroRepositoryLive,
+  HeroSettings,
+} from "@repo/website-database";
 
 /**
  * Server action to create a new website
@@ -78,6 +84,50 @@ export async function createWebsite(): Promise<
   }
 }
 
+export async function getWebsiteSlug(websiteId: string): Promise<
+  | {
+      success: true;
+      slug: string;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
+  const guard = new WebsiteAccessGuard();
+  const access = await guard.canEditWebsite(websiteId);
+
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  try {
+    const [website] = await db
+      .select({ slug: websitesTable.slug })
+      .from(websitesTable)
+      .where(eq(websitesTable.id, websiteId))
+      .limit(1);
+
+    if (!website) {
+      return {
+        success: false,
+        error: "Website not found",
+      };
+    }
+
+    return {
+      success: true,
+      slug: website.slug,
+    };
+  } catch (error) {
+    console.error("Error fetching website slug:", error);
+    return {
+      success: false,
+      error: "Failed to fetch website slug",
+    };
+  }
+}
+
 /**
  * Looks up the website for a salon that belongs to the current user.
  * Returns the website ID if it exists.
@@ -128,36 +178,31 @@ export async function getHeroSettings(websiteId: string): Promise<
     return { success: false, error: access.error };
   }
 
-  try {
-    const [website] = await db
-      .select()
-      .from(websitesTable)
-      .where(eq(websitesTable.id, websiteId))
-      .limit(1);
+  const program = Effect.gen(function* () {
+    const repository = yield* WebsiteHeroRepository;
+    return yield* repository.fetchHeroSettings(websiteId).pipe(
+      Effect.map((settings) => ({
+        success: true as const,
+        settings,
+      })),
+      Effect.catchTags({
+        WebsiteHeroInvalidTextColorError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Invalid hero text color",
+          }),
+        WebsiteHeroNotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Website not found",
+          }),
+      }),
+    );
+  });
 
-    if (!website) {
-      return {
-        success: false,
-        error: "Website not found",
-      };
-    }
-
-    return {
-      success: true,
-      settings: {
-        backgroundImageUrl: website.heroImage,
-        logoImageUrl: website.logo,
-        title: website.title,
-        subtitle: website.subtitle,
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching hero settings:", error);
-    return {
-      success: false,
-      error: "Failed to fetch hero settings",
-    };
-  }
+  return await Effect.runPromise(
+    Effect.provide(program, WebsiteHeroRepositoryLive),
+  );
 }
 
 export async function updateHeroSettings(
@@ -179,25 +224,30 @@ export async function updateHeroSettings(
     return { success: false, error: access.error };
   }
 
-  try {
-    await db
-      .update(websitesTable)
-      .set({
-        heroImage: settings.backgroundImageUrl,
-        logo: settings.logoImageUrl,
-        title: settings.title,
-        subtitle: settings.subtitle,
-      })
-      .where(eq(websitesTable.id, websiteId));
+  const program = Effect.gen(function* () {
+    const repository = yield* WebsiteHeroRepository;
+    return yield* repository.updateHeroSettings(websiteId, settings).pipe(
+      Effect.map(() => ({ success: true as const })),
+      Effect.catchTags({
+        WebsiteHeroNotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Website not found",
+          }),
+      }),
+      Effect.catchAll((error) => {
+        console.error("Error updating hero settings:", error);
+        return Effect.succeed({
+          success: false as const,
+          error: "Failed to update hero settings",
+        });
+      }),
+    );
+  });
 
-    return { success: true };
-  } catch (error) {
-    console.error("Error updating hero settings:", error);
-    return {
-      success: false,
-      error: "Failed to update hero settings",
-    };
-  }
+  return await Effect.runPromise(
+    Effect.provide(program, WebsiteHeroRepositoryLive),
+  );
 }
 
 export interface ColorSettings {
@@ -316,4 +366,50 @@ export async function updateColorSettings(
       error: "Failed to update color settings",
     };
   }
+}
+
+export async function openWebsite(websiteId: string): Promise<
+  | {
+      success: true;
+      url: string;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
+  const slugResult = await getWebsiteSlug(websiteId);
+
+  if (!slugResult.success) {
+    console.error("Error fetching website slug:", slugResult.error);
+    return { success: false, error: slugResult.error };
+  }
+
+  const salonUrlEnv = process.env.SALON_URL;
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (!salonUrlEnv && isProduction) {
+    Effect.runSync(
+      Effect.logError(
+        "SALON_URL environment variable is not set in production",
+      ),
+    );
+    return {
+      success: false,
+      error: "Salon URL is not configured",
+    };
+  }
+
+  if (!salonUrlEnv && !isProduction) {
+    Effect.runSync(
+      Effect.logWarning(
+        "SALON_URL environment variable is not set. Falling back to http://localhost:3001 for development.",
+      ),
+    );
+  }
+
+  const salonUrl = salonUrlEnv || "http://localhost:3001";
+  const url = `${salonUrl}/salon/${slugResult.slug}`;
+
+  return { success: true, url };
 }

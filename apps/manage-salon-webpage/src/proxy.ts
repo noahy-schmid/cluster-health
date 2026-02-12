@@ -84,8 +84,6 @@ async function handleOnboardingRoute(req: NextRequest): Promise<NextResponse> {
 async function handleSalonRoute(req: NextRequest): Promise<NextResponse> {
   const tokenResult = await auth(req);
 
-  console.log("Token result:", tokenResult);
-
   if (!tokenResult.success) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }

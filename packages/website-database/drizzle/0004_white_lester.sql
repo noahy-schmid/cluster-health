@@ -1,0 +1,1 @@
+ALTER TABLE "websites" ADD COLUMN "textColor" varchar DEFAULT 'light' NOT NULL;

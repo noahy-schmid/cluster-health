@@ -7,6 +7,7 @@ import {
   sectionRepository,
 } from "@repo/website-database";
 import { eq } from "drizzle-orm";
+import { oklch } from "culori";
 
 /**
  * Server action to fetch all sections for a salon by its slug
@@ -47,6 +48,7 @@ export interface WebsiteColors {
   foregroundStrong: string;
   accent: string;
   onAccent: string;
+  mode?: "light" | "dark";
 }
 
 /**
@@ -77,6 +79,9 @@ export async function fetchColorsBySalonSlug(salonSlug: string): Promise<{
       return { success: false, error: "Website not found" };
     }
 
+    const bgOkLch = oklch(website.colorBackgroundBase);
+    const fgOkLch = oklch(website.colorForegroundBase);
+
     return {
       success: true,
       colors: {
@@ -88,6 +93,7 @@ export async function fetchColorsBySalonSlug(salonSlug: string): Promise<{
         foregroundStrong: website.colorForegroundStrong,
         accent: website.colorAccent,
         onAccent: website.colorOnAccent,
+        mode: (bgOkLch?.l ?? 0) > (fgOkLch?.l ?? 0) ? "light" : "dark",
       },
     };
   } catch (error) {

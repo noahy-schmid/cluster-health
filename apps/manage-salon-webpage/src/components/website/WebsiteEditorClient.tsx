@@ -16,33 +16,31 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { EmptySectionPlaceholder } from "@/components/website/EmptySectionPlaceholder";
 import { SectionCard } from "@/components/website/section-cards/SectionCard";
 import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
-import { Palette, Settings } from "lucide-react";
+import { ExternalLink, Palette, Settings } from "lucide-react";
 import HeroCard from "@/components/website/section-cards/HeroCard";
-import { AllSections } from "@repo/website-database";
-import { HeroSettings } from "@/lib/types/section-types";
+import { AllSections, HeroSettings } from "@repo/website-database";
 import {
   deleteSection as deleteSectionAction,
   reorderSections as reorderSectionsAction,
 } from "@/api/sections-actions";
+import { openWebsite } from "@/api/website-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 
 interface WebsiteEditorClientProps {
   initialSections: AllSections[];
-  initialHeroSettings: HeroSettings;
+  heroSettings: HeroSettings;
 }
 
 export default function WebsiteEditorClient({
   initialSections,
-  initialHeroSettings,
+  heroSettings,
 }: WebsiteEditorClientProps) {
   const router = useRouter();
   const { salonId, websiteId } = useWebsiteRouteContext();
   const [sections, setSections] = useState<AllSections[]>(initialSections);
-  const [heroSettings] = useState<HeroSettings>(initialHeroSettings);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -116,19 +114,6 @@ export default function WebsiteEditorClient({
     router.push(`/salon/${salonId}/website/${websiteId}/start/hero`);
   };
 
-  if (sections.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <PageHeader
-          title="Webseite bearbeiten"
-          subtitle="Erstellen und verwalten Sie die Abschnitte Ihrer Salon-Webseite"
-        />
-
-        <EmptySectionPlaceholder onAddSection={() => handleAddSection()} />
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-4xl mx-auto">
       <PageHeader
@@ -142,9 +127,16 @@ export default function WebsiteEditorClient({
               router.push(`/salon/${salonId}/website/${websiteId}/colors`),
           },
           {
-            icon: Settings,
-            text: "Einstellungen",
-            onClick: () => {},
+            icon: ExternalLink,
+            text: "Öffnen",
+            onClick: async () => {
+              const result = await openWebsite(websiteId ?? "");
+              if (result.success) {
+                window.open(result.url, "_blank");
+              } else {
+                console.error("Failed to open website:", result.error);
+              }
+            },
           },
         ]}
       />
@@ -184,6 +176,7 @@ export default function WebsiteEditorClient({
           strategy={verticalListSortingStrategy}
         >
           <div>
+            <AddSectionButton onClick={() => handleAddSection(0)} />
             {sections.map((section, index) => (
               <div key={section.id}>
                 <SectionCard

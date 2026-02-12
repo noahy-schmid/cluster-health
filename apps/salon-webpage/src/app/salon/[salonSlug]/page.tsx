@@ -58,7 +58,7 @@ export default async function SalonPage({
         menuItems={menuItems}
         logoUrl={
           heroResult.success && heroResult.settings
-            ? heroResult.settings.logoImageUrl
+            ? heroResult.settings.logo
             : "/images/logo.png"
         }
       />

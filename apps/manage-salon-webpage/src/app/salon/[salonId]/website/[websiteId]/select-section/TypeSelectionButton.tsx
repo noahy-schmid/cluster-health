@@ -37,7 +37,7 @@ export default function SectionTypeSelectionButton({
   return (
     <button
       onClick={() => handleSelectType(info.type)}
-      className="bg-bg-1 border border-border rounded-lg p-lg hover:bg-bg-2 hover:shadow-md transition-all text-left group"
+      className="bg-bg-1 border border-border rounded-lg p-lg hover:bg-bg-2 hover:shadow-md transition-all text-left group cursor-pointer"
     >
       <div className="flex items-center gap-md mb-md">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">

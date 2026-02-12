@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 3001",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=3",
@@ -12,7 +12,9 @@
   "dependencies": {
     "@repo/ui": "workspace:*",
     "@repo/website-database": "workspace:*",
+    "culori": "^4",
     "drizzle-orm": "^0.45.1",
+    "effect": "^3.19.16",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.544.0",
     "next": "16.1.6",
@@ -23,9 +25,10 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@repo/typescript-config": "workspace:*",
     "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4",
+    "@types/culori": "^4.0.1",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

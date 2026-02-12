@@ -34,11 +34,11 @@ export default async function SalonLayout({
             `,
           }}
         />
-        {children}
+        <div className="bg-salon-bg-base text-salon-fg-base">{children}</div>
       </>
     );
   }
 
   // If no colors available, just render children without custom colors
-  return <>{children}</>;
+  return <div>{children}</div>;
 }

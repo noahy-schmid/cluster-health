@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { fetchHeroSettingsBySalonSlug } from "@/api/hero-actions";
+import { fetchColorsBySalonSlug } from "@/api/sections-actions";
 import { CircleChevronDown } from "lucide-react";
 
 interface HeroProps {
@@ -8,12 +9,23 @@ interface HeroProps {
 
 export default async function Hero({ salonSlug }: HeroProps) {
   const { settings } = await fetchHeroSettingsBySalonSlug(salonSlug);
+  const { colors } = await fetchColorsBySalonSlug(salonSlug);
+  const mode = colors?.mode ?? "light";
 
   // Fallback to default images if settings not found
-  const backgroundImage = settings?.backgroundImageUrl || "/images/hair.png";
-  const logo = settings?.logoImageUrl || "/images/logo.png";
+  const backgroundImage = settings?.heroImage || "/images/hair.png";
+  const logo = settings?.logo || "/images/logo.png";
   const title = settings?.title || "Wir lieben Haare";
   const subtitle = settings?.subtitle || "Herzlich Willkommen in unserem Salon";
+
+  const textColorClass =
+    settings?.textColor === "light"
+      ? mode === "light"
+        ? "text-salon-bg-2"
+        : "text-salon-fg-strong"
+      : mode === "light"
+        ? "text-salon-fg-strong"
+        : "text-salon-bg-2";
 
   return (
     <section className="relative">
@@ -34,7 +46,9 @@ export default async function Hero({ salonSlug }: HeroProps) {
       />
 
       {/* Hero slogan - only visible on tablet/desktop */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-salon-fg-strong z-4 hidden md:block">
+      <div
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center ${textColorClass} z-4 hidden md:block`}
+      >
         <h1 className="text-5xl font-bold text-shadow-2xl mb-4">{title}</h1>
         <p className="text-lg opacity-90 text-shadow-xl font-light">
           {subtitle}

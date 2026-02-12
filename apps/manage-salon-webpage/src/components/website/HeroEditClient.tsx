@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import HeroForm from "@/components/website/forms/HeroForm";
-import { HeroSettings } from "@/lib/types/section-types";
+import { HeroSettings } from "@repo/website-database";
 import { updateHeroSettings } from "@/api/website-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
+import HeroCard from "@/components/website/section-cards/HeroCard";
+import { useState } from "react";
 
 interface HeroEditClientProps {
   initialSettings: HeroSettings;
@@ -16,9 +18,17 @@ export default function HeroEditClient({
 }: HeroEditClientProps) {
   const router = useRouter();
   const { salonId, websiteId } = useWebsiteRouteContext();
+  const [previewSettings, setPreviewSettings] =
+    useState<HeroSettings>(initialSettings);
 
   const handleSave = async (settings: HeroSettings) => {
-    await updateHeroSettings(websiteId ?? "", settings);
+    await updateHeroSettings(websiteId ?? "", {
+      heroImage: settings.heroImage,
+      logo: settings.logo,
+      title: settings.title,
+      subtitle: settings.subtitle,
+      textColor: settings.textColor,
+    });
     router.replace(`/salon/${salonId}/website/${websiteId}`);
   };
 
@@ -32,11 +42,16 @@ export default function HeroEditClient({
       <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg">
         <HeroForm
           settings={initialSettings}
+          onFieldChange={(s) => setPreviewSettings(s)}
           onCancel={() =>
             router.replace(`/salon/${salonId}/website/${websiteId}`)
           }
           onSave={handleSave}
         />
+      </div>
+
+      <div className="mt-lg max-w-4xl mx-auto">
+        <HeroCard settings={previewSettings} />
       </div>
     </div>
   );

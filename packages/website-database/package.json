@@ -27,6 +27,7 @@
   "dependencies": {
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
+    "effect": "^3.19.16",
     "pg": "^8.18.0"
   }
 }
