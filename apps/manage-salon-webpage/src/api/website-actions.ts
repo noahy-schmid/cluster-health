@@ -12,7 +12,6 @@ import {
   WebsiteHeroRepositoryLive,
   HeroSettings,
 } from "@repo/website-database";
-import { redirect, RedirectType } from "next/navigation";
 
 /**
  * Server action to create a new website
@@ -369,13 +368,25 @@ export async function updateColorSettings(
   }
 }
 
-export async function openWebsite(websiteId: string) {
+export async function openWebsite(websiteId: string): Promise<
+  | {
+      success: true;
+      url: string;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
   const slugResult = await getWebsiteSlug(websiteId);
 
   if (!slugResult.success) {
     console.error("Error fetching website slug:", slugResult.error);
-    return;
+    return { success: false, error: slugResult.error };
   }
 
-  redirect(`http://localhost:3001/salon/${slugResult.slug}`, RedirectType.replace);
+  const salonUrl = process.env.SALON_URL || "http://localhost:3001";
+  const url = `${salonUrl}/salon/${slugResult.slug}`;
+
+  return { success: true, url };
 }

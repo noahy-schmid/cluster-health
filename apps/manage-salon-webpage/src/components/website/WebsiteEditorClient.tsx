@@ -26,8 +26,8 @@ import {
   deleteSection as deleteSectionAction,
   reorderSections as reorderSectionsAction,
 } from "@/api/sections-actions";
+import { openWebsite } from "@/api/website-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import { getWebsiteSlug, openWebsite } from "@/api/website-actions";
 
 interface WebsiteEditorClientProps {
   initialSections: AllSections[];
@@ -129,8 +129,13 @@ export default function WebsiteEditorClient({
           {
             icon: ExternalLink,
             text: "Öffnen",
-            onClick: () => {
-              openWebsite(websiteId ?? "");
+            onClick: async () => {
+              const result = await openWebsite(websiteId ?? "");
+              if (result.success) {
+                window.open(result.url, "_blank");
+              } else {
+                console.error("Failed to open website:", result.error);
+              }
             },
           },
         ]}
