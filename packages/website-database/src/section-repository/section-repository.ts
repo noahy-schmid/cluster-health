@@ -29,7 +29,11 @@ export class SectionRepository {
   }
 
   private getRepositoryForType(type: SectionType) {
-    return this.repositoryMap[type];
+    const repository = this.repositoryMap[type];
+    if (!repository) {
+      throw new Error(`Invalid section type: ${type}`);
+    }
+    return repository;
   }
 
   async createSection(
@@ -37,8 +41,15 @@ export class SectionRepository {
     type: SectionType,
     position: number,
   ): Promise<{ success: boolean; section?: AllSections; error?: string }> {
-    const repository = this.getRepositoryForType(type);
-    return await repository.createSection(websiteId, position);
+    try {
+      const repository = this.getRepositoryForType(type);
+      return await repository.createSection(websiteId, position);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("Invalid section type")) {
+        return { success: false, error: error.message };
+      }
+      throw error;
+    }
   }
 
   async updateSection(
@@ -52,6 +63,9 @@ export class SectionRepository {
         ? { success: true }
         : { success: false, error: "Failed to update section" };
     } catch (error) {
+      if (error instanceof Error && error.message.includes("Invalid section type")) {
+        return { success: false, error: error.message };
+      }
       console.error("Error updating section:", error);
       return { success: false, error: "Failed to update section" };
     }
@@ -117,10 +131,19 @@ export class SectionRepository {
 
       // Fetch details for each section based on type
       for (const dbSection of dbSections) {
-        const repository = this.getRepositoryForType(dbSection.type);
-        const result = await repository.fetchSection(dbSection.id);
-        if (result.success) {
-          sections.push(result.section);
+        try {
+          const repository = this.getRepositoryForType(dbSection.type);
+          const result = await repository.fetchSection(dbSection.id);
+          if (result.success) {
+            sections.push(result.section);
+          }
+        } catch (error) {
+          // Skip sections with invalid types but log the error
+          if (error instanceof Error && error.message.includes("Invalid section type")) {
+            console.error(`Skipping section ${dbSection.id}: ${error.message}`);
+          } else {
+            throw error;
+          }
         }
       }
 
