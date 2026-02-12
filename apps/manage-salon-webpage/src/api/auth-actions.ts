@@ -49,17 +49,10 @@ async function setSessionCookie(
 
   const production = process.env.NODE_ENV === "production";
 
-  console.log(
-    "Setting session cookie with token:",
-    token,
-    "expires at:",
-    expires,
-  );
-
   (await cookies()).set("session", token, {
     secure: production,
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
     expires,
   });

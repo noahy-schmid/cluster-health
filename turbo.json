@@ -24,7 +24,7 @@
     },
     "drizzle:generate": {
       "dependsOn": ["^drizzle:generate"],
-      "inputs": ["$TURBO_DEFAULT$", "schema.ts"],
+      "inputs": ["$TURBO_DEFAULT$", "**/schema.ts"],
       "outputs": ["drizzle/**"]
     }
   }
