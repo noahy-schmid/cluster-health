@@ -45,7 +45,7 @@ export class SectionRepository {
       const repository = this.getRepositoryForType(type);
       return await repository.createSection(websiteId, position);
     } catch (error) {
-      if (error instanceof Error && error.message.includes("Invalid section type")) {
+      if (error instanceof Error && error.message.startsWith("Invalid section type:")) {
         return { success: false, error: error.message };
       }
       throw error;
@@ -63,7 +63,7 @@ export class SectionRepository {
         ? { success: true }
         : { success: false, error: "Failed to update section" };
     } catch (error) {
-      if (error instanceof Error && error.message.includes("Invalid section type")) {
+      if (error instanceof Error && error.message.startsWith("Invalid section type:")) {
         return { success: false, error: error.message };
       }
       console.error("Error updating section:", error);
@@ -139,7 +139,7 @@ export class SectionRepository {
           }
         } catch (error) {
           // Skip sections with invalid types but log the error
-          if (error instanceof Error && error.message.includes("Invalid section type")) {
+          if (error instanceof Error && error.message.startsWith("Invalid section type:")) {
             console.error(`Skipping section ${dbSection.id}: ${error.message}`);
           } else {
             throw error;
