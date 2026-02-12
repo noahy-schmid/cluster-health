@@ -385,7 +385,30 @@ export async function openWebsite(websiteId: string): Promise<
     return { success: false, error: slugResult.error };
   }
 
-  const salonUrl = process.env.SALON_URL || "http://localhost:3001";
+  const salonUrlEnv = process.env.SALON_URL;
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (!salonUrlEnv && isProduction) {
+    Effect.runSync(
+      Effect.logError(
+        "SALON_URL environment variable is not set in production",
+      ),
+    );
+    return {
+      success: false,
+      error: "Salon URL is not configured",
+    };
+  }
+
+  if (!salonUrlEnv && !isProduction) {
+    Effect.runSync(
+      Effect.logWarning(
+        "SALON_URL environment variable is not set. Falling back to http://localhost:3001 for development.",
+      ),
+    );
+  }
+
+  const salonUrl = salonUrlEnv || "http://localhost:3001";
   const url = `${salonUrl}/salon/${slugResult.slug}`;
 
   return { success: true, url };
