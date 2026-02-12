@@ -5,6 +5,7 @@ import FormInput from "./FormInput";
 import FormToggle from "./FormToggle";
 import FormActions from "./FormActions";
 import { HeroSettings } from "@repo/website-database";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 interface HeroFormProps {
   settings: HeroSettings;
@@ -21,6 +22,13 @@ export default function HeroForm({
 }: HeroFormProps) {
   const [settings, setSettings] = useState<HeroSettings>(initialSettings);
 
+  // Debounce the onFieldChange callback to avoid race conditions
+  const debouncedFieldChange = useDebounce((newSettings: HeroSettings) => {
+    if (onFieldChange) {
+      onFieldChange(newSettings);
+    }
+  }, 300);
+
   const handleSave = async () => {
     onSave(settings);
   };
@@ -30,9 +38,10 @@ export default function HeroForm({
       <FormInput
         label="Hintergrundbild URL"
         value={settings.heroImage}
-        onChange={(value) => setSettings({ ...settings, heroImage: value })}
-        onBlur={() => {
-          if (onFieldChange) onFieldChange(settings);
+        onChange={(value) => {
+          const newSettings = { ...settings, heroImage: value };
+          setSettings(newSettings);
+          debouncedFieldChange(newSettings);
         }}
         placeholder="https://example.com/background.jpg"
         type="url"
@@ -43,9 +52,10 @@ export default function HeroForm({
       <FormInput
         label="Logo URL"
         value={settings.logo}
-        onChange={(value) => setSettings({ ...settings, logo: value })}
-        onBlur={() => {
-          if (onFieldChange) onFieldChange(settings);
+        onChange={(value) => {
+          const newSettings = { ...settings, logo: value };
+          setSettings(newSettings);
+          debouncedFieldChange(newSettings);
         }}
         placeholder="https://example.com/logo.png"
         type="url"
@@ -56,9 +66,10 @@ export default function HeroForm({
       <FormInput
         label="Titel"
         value={settings.title}
-        onChange={(value) => setSettings({ ...settings, title: value })}
-        onBlur={() => {
-          if (onFieldChange) onFieldChange(settings);
+        onChange={(value) => {
+          const newSettings = { ...settings, title: value };
+          setSettings(newSettings);
+          debouncedFieldChange(newSettings);
         }}
         placeholder="Willkommen in unserem Salon"
         required
@@ -84,9 +95,10 @@ export default function HeroForm({
       <FormInput
         label="Untertitel"
         value={settings.subtitle}
-        onChange={(value) => setSettings({ ...settings, subtitle: value })}
-        onBlur={() => {
-          if (onFieldChange) onFieldChange(settings);
+        onChange={(value) => {
+          const newSettings = { ...settings, subtitle: value };
+          setSettings(newSettings);
+          debouncedFieldChange(newSettings);
         }}
         placeholder="Ihr Stil, unsere Leidenschaft"
         required
