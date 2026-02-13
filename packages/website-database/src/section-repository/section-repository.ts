@@ -1,6 +1,6 @@
 import { db, sectionsTable } from "../index";
 import { eq, and } from "drizzle-orm";
-import { AllSections, SectionType } from "./types";
+import { AllSections, SectionType, Result } from "./types";
 import { GallerySectionRepository } from "./gallery-section-repository";
 import { TextWithImageSectionRepository } from "./text-with-image-section-repository";
 import { CenterTextSectionRepository } from "./center-text-section-repository";
@@ -8,82 +8,82 @@ import { ReasonSectionRepository } from "./reason-section-repository";
 import { BaseSectionRepository } from "./base-section-repository";
 
 export class SectionRepository {
+  private readonly repositoryMap: Record<
+    SectionType,
+    GallerySectionRepository | TextWithImageSectionRepository | CenterTextSectionRepository | ReasonSectionRepository
+  >;
+
   constructor(
     private baseSectionRepo: BaseSectionRepository,
     private gallerySectionRepo: GallerySectionRepository,
     private textWithImageSectionRepo: TextWithImageSectionRepository,
     private centerTextSectionRepo: CenterTextSectionRepository,
     private reasonSectionRepo: ReasonSectionRepository,
-  ) {}
+  ) {
+    this.repositoryMap = {
+      gallery: this.gallerySectionRepo,
+      "text-with-image": this.textWithImageSectionRepo,
+      "center-text": this.centerTextSectionRepo,
+      reason: this.reasonSectionRepo,
+    };
+  }
+
+  private getRepositoryForType(type: SectionType) {
+    const repository = this.repositoryMap[type];
+    if (!repository) {
+      throw new Error(`Invalid section type: ${type}`);
+    }
+    return repository;
+  }
 
   async createSection(
     websiteId: string,
     type: SectionType,
     position: number,
-  ): Promise<{ success: boolean; section?: AllSections; error?: string }> {
-    if (type === "gallery") {
-      return await this.gallerySectionRepo.createSection(websiteId, position);
-    } else if (type === "text-with-image") {
-      return await this.textWithImageSectionRepo.createSection(
-        websiteId,
-        position,
-      );
-    } else if (type === "center-text") {
-      return await this.centerTextSectionRepo.createSection(
-        websiteId,
-        position,
-      );
-    } else if (type === "reason") {
-      return await this.reasonSectionRepo.createSection(websiteId, position);
+  ): Promise<Result<AllSections, string>> {
+    try {
+      const repository = this.getRepositoryForType(type);
+      return await repository.createSection(websiteId, position);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("Invalid section type:")) {
+        return { success: false, errors: error.message };
+      }
+      throw error;
     }
-
-    return { success: false, error: "Invalid section type" };
   }
 
   async updateSection(
     section: AllSections,
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<Result<void, string>> {
     try {
-      let result: boolean;
-
-      if (section.type === "gallery") {
-        result = await this.gallerySectionRepo.updateSection(section);
-      } else if (section.type === "text-with-image") {
-        result = await this.textWithImageSectionRepo.updateSection(section);
-      } else if (section.type === "center-text") {
-        result = await this.centerTextSectionRepo.updateSection(section);
-      } else if (section.type === "reason") {
-        result = await this.reasonSectionRepo.updateSection(section);
-      } else {
-        return { success: false, error: "Invalid section type" };
-      }
-
-      return result
-        ? { success: true }
-        : { success: false, error: "Failed to update section" };
+      const repository = this.getRepositoryForType(section.type);
+      return await repository.updateSection(section);
     } catch (error) {
+      if (error instanceof Error && error.message.startsWith("Invalid section type:")) {
+        return { success: false, errors: error.message };
+      }
       console.error("Error updating section:", error);
-      return { success: false, error: "Failed to update section" };
+      return { success: false, errors: "Failed to update section" };
     }
   }
 
   async deleteSection(
     websiteId: string,
     id: string,
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<Result<void, string>> {
     try {
       await this.baseSectionRepo.deleteSectionById(id, websiteId);
-      return { success: true };
+      return { success: true, data: undefined };
     } catch (error) {
       console.error("Error deleting section:", error);
-      return { success: false, error: "Failed to delete section" };
+      return { success: false, errors: "Failed to delete section" };
     }
   }
 
   async reorderSections(
     websiteId: string,
     sectionIds: string[],
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<Result<void, string>> {
     try {
       await db.transaction(async (tx) => {
         // Update order for each section within a single transaction
@@ -103,18 +103,14 @@ export class SectionRepository {
         }
       });
 
-      return { success: true };
+      return { success: true, data: undefined };
     } catch (error) {
       console.error("Error reordering sections:", error);
-      return { success: false, error: "Failed to reorder sections" };
+      return { success: false, errors: "Failed to reorder sections" };
     }
   }
 
-  async fetchSections(websiteId: string): Promise<{
-    success: boolean;
-    sections?: AllSections[];
-    error?: string;
-  }> {
+  async fetchSections(websiteId: string): Promise<Result<AllSections[], string>> {
     try {
       // Fetch all sections for the website
       const dbSections = await db
@@ -127,41 +123,26 @@ export class SectionRepository {
 
       // Fetch details for each section based on type
       for (const dbSection of dbSections) {
-        if (dbSection.type === "text-with-image") {
-          const result = await this.textWithImageSectionRepo.fetchSection(
-            dbSection.id,
-          );
+        try {
+          const repository = this.getRepositoryForType(dbSection.type);
+          const result = await repository.fetchSection(dbSection.id);
           if (result.success) {
-            sections.push(result.section);
+            sections.push(result.data);
           }
-        } else if (dbSection.type === "gallery") {
-          const result = await this.gallerySectionRepo.fetchSection(
-            dbSection.id,
-          );
-          if (result.success) {
-            sections.push(result.section);
-          }
-        } else if (dbSection.type === "center-text") {
-          const result = await this.centerTextSectionRepo.fetchSection(
-            dbSection.id,
-          );
-          if (result.success) {
-            sections.push(result.section);
-          }
-        } else if (dbSection.type === "reason") {
-          const result = await this.reasonSectionRepo.fetchSection(
-            dbSection.id,
-          );
-          if (result.success) {
-            sections.push(result.section);
+        } catch (error) {
+          // Skip sections with invalid types but log the error
+          if (error instanceof Error && error.message.startsWith("Invalid section type:")) {
+            console.error(`Skipping section ${dbSection.id}: ${error.message}`);
+          } else {
+            throw error;
           }
         }
       }
 
-      return { success: true, sections };
+      return { success: true, data: sections };
     } catch (error) {
       console.error("Error fetching sections:", error);
-      return { success: false, error: "Failed to fetch sections" };
+      return { success: false, errors: "Failed to fetch sections" };
     }
   }
 }
