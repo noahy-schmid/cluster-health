@@ -11,7 +11,7 @@ export function useDebounce<T extends (...args: any[]) => void>(
   callback: T,
   delay: number,
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout>(undefined);
   const callbackRef = useRef(callback);
 
   // Update callback ref when it changes
