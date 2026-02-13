@@ -24,25 +24,25 @@ export default async function SalonPage({
     fetchHeroSettingsBySalonSlug(salonSlug),
   ]);
 
-  const { success, sections, error } = sectionsResult;
+  const { success, data, errors } = sectionsResult;
 
   const menuItems: MenuItem[] =
-    sections
+    data
       ?.filter((section) => section.menuTitle)
       .map((section) => ({
         id: sluggify(section.menuTitle!),
         text: section.menuTitle!,
       })) || [];
 
-  if (!success || !sections) {
+  if (!success || !data) {
     return (
       <div className="container mx-auto px-md py-lg">
-        <p className="text-destructive">{error || "Failed to load sections"}</p>
+        <p className="text-destructive">{errors || "Failed to load sections"}</p>
       </div>
     );
   }
 
-  if (sections.length === 0) {
+  if (data.length === 0) {
     return (
       <div className="container mx-auto px-md py-lg">
         <p className="text-muted-foreground">No sections available yet.</p>
@@ -64,7 +64,7 @@ export default async function SalonPage({
       />
 
       <div className="w-full bg-salon-bg-base">
-        {sections.map((section, index) => (
+        {data.map((section, index) => (
           <div
             key={section.id}
             id={sluggify(section.menuTitle || `section-${index + 1}`)}
