@@ -4,39 +4,43 @@ import {
   db,
   websitesTable,
   AllSections,
-  sectionRepository,
+  SectionRepository,
+  SectionRepositoryLive,
+  Result,
 } from "@repo/website-database";
 import { eq } from "drizzle-orm";
 import { oklch } from "culori";
+import { Effect } from "effect";
 
 /**
  * Server action to fetch all sections for a salon by its slug
  */
-export async function fetchSectionsBySalonSlug(salonSlug: string): Promise<{
-  success: boolean;
-  sections?: AllSections[];
-  error?: string;
-}> {
+export async function fetchSectionsBySalonSlug(
+  salonSlug: string,
+): Promise<Result<AllSections[], string>> {
   const [website] = await db
     .select()
     .from(websitesTable)
     .where(eq(websitesTable.slug, salonSlug));
 
   if (!website) {
-    return { success: false, error: "Website not found" };
+    return { success: false, errors: "Website not found" };
   }
 
-  const repository = sectionRepository();
-  const fetchResult = await repository.fetchSections(website.id);
+  const fetchEffect = Effect.gen(function* () {
+    const repo = yield* SectionRepository;
+    return yield* repo.fetchSections(website.id).pipe(
+      Effect.map((data) => ({ success: true as const, data })),
+      Effect.catchAll((error) =>
+        Effect.succeed({
+          success: false as const,
+          errors: error instanceof Error ? error.message : "Failed to fetch sections",
+        }),
+      ),
+    );
+  }).pipe(Effect.provide(SectionRepositoryLive));
 
-  if (!fetchResult.success) {
-    return {
-      success: false,
-      error: fetchResult.error || "Failed to fetch sections",
-    };
-  }
-
-  return { success: true, sections: fetchResult.sections };
+  return await Effect.runPromise(fetchEffect);
 }
 
 export interface WebsiteColors {
