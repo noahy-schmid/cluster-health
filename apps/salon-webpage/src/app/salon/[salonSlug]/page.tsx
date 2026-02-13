@@ -37,7 +37,9 @@ export default async function SalonPage({
   if (!success || !data) {
     return (
       <div className="container mx-auto px-md py-lg">
-        <p className="text-destructive">{errors || "Failed to load sections"}</p>
+        <p className="text-destructive">
+          {errors || "Failed to load sections"}
+        </p>
       </div>
     );
   }
