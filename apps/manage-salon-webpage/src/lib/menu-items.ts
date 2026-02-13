@@ -3,6 +3,7 @@ import {
   Settings,
   type LucideIcon,
   Earth,
+  Users,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -21,6 +22,11 @@ export const menuItems: MenuItem[] = [
     icon: Earth,
     label: "Webseite",
     href: "/salon/:salonId/website",
+  },
+  {
+    icon: Users,
+    label: "Stylisten",
+    href: "/salon/:salonId/stylists",
   },
   {
     icon: Settings,

@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   pgSchema,
+  text,
   timestamp,
   uniqueIndex,
   uuid,
@@ -27,3 +28,16 @@ export const salonsTable = salonSchema.table(
     ),
   }),
 );
+
+export const stylistsTable = salonSchema.table("stylists", {
+  id: uuid().primaryKey().defaultRandom(),
+  salonId: uuid()
+    .notNull()
+    .references(() => salonsTable.id, { onDelete: "cascade" }),
+  name: varchar({ length: 255 }).notNull(),
+  subtitle: varchar({ length: 255 }).notNull(),
+  description: text().notNull(),
+  profileImage: varchar({ length: 500 }).notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
