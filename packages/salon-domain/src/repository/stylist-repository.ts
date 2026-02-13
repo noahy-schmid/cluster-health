@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
 import { db } from "../database";
 import { stylistsTable } from "../schema";
-import { CreateStylistInput, Result, Stylist, UpdateStylistInput } from "../types";
+import {
+  CreateStylistInput,
+  Result,
+  Stylist,
+  UpdateStylistInput,
+} from "../types";
 
 export class StylistRepository {
   /**
@@ -9,7 +14,9 @@ export class StylistRepository {
    * @param input - Stylist details including salonId.
    * @returns Result with the created stylist or an error message.
    */
-  async createStylist(input: CreateStylistInput): Promise<Result<Stylist, string>> {
+  async createStylist(
+    input: CreateStylistInput,
+  ): Promise<Result<Stylist, string>> {
     try {
       const [created] = await db
         .insert(stylistsTable)
@@ -38,7 +45,9 @@ export class StylistRepository {
    * @param salonId - Salon ID to fetch stylists for.
    * @returns Result with array of stylists or an error message.
    */
-  async fetchStylistsBySalonId(salonId: string): Promise<Result<Stylist[], string>> {
+  async fetchStylistsBySalonId(
+    salonId: string,
+  ): Promise<Result<Stylist[], string>> {
     try {
       const stylists = await db
         .select()

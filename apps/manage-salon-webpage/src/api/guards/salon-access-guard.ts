@@ -11,7 +11,9 @@ export class SalonAccessGuard {
    */
   public async canAccessSalon(
     salonId: string,
-  ): Promise<{ success: true; salonId: string } | { success: false; error: string }> {
+  ): Promise<
+    { success: true; salonId: string } | { success: false; error: string }
+  > {
     const session = (await cookies()).get("session");
     if (!session?.value) {
       return { success: false, error: "Sitzung abgelaufen" };
