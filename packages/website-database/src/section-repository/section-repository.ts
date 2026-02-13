@@ -1,6 +1,6 @@
 import { db, sectionsTable } from "../index";
 import { eq, and } from "drizzle-orm";
-import { AllSections, SectionType } from "./types";
+import { AllSections, SectionType, Result } from "./types";
 import { GallerySectionRepository } from "./gallery-section-repository";
 import { TextWithImageSectionRepository } from "./text-with-image-section-repository";
 import { CenterTextSectionRepository } from "./center-text-section-repository";
@@ -40,13 +40,13 @@ export class SectionRepository {
     websiteId: string,
     type: SectionType,
     position: number,
-  ): Promise<{ success: boolean; section?: AllSections; error?: string }> {
+  ): Promise<Result<AllSections, string>> {
     try {
       const repository = this.getRepositoryForType(type);
       return await repository.createSection(websiteId, position);
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("Invalid section type:")) {
-        return { success: false, error: error.message };
+        return { success: false, errors: error.message };
       }
       throw error;
     }
@@ -54,40 +54,36 @@ export class SectionRepository {
 
   async updateSection(
     section: AllSections,
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<Result<void, string>> {
     try {
       const repository = this.getRepositoryForType(section.type);
-      const result = await repository.updateSection(section);
-
-      return result
-        ? { success: true }
-        : { success: false, error: "Failed to update section" };
+      return await repository.updateSection(section);
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("Invalid section type:")) {
-        return { success: false, error: error.message };
+        return { success: false, errors: error.message };
       }
       console.error("Error updating section:", error);
-      return { success: false, error: "Failed to update section" };
+      return { success: false, errors: "Failed to update section" };
     }
   }
 
   async deleteSection(
     websiteId: string,
     id: string,
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<Result<void, string>> {
     try {
       await this.baseSectionRepo.deleteSectionById(id, websiteId);
-      return { success: true };
+      return { success: true, data: undefined };
     } catch (error) {
       console.error("Error deleting section:", error);
-      return { success: false, error: "Failed to delete section" };
+      return { success: false, errors: "Failed to delete section" };
     }
   }
 
   async reorderSections(
     websiteId: string,
     sectionIds: string[],
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<Result<void, string>> {
     try {
       await db.transaction(async (tx) => {
         // Update order for each section within a single transaction
@@ -107,18 +103,14 @@ export class SectionRepository {
         }
       });
 
-      return { success: true };
+      return { success: true, data: undefined };
     } catch (error) {
       console.error("Error reordering sections:", error);
-      return { success: false, error: "Failed to reorder sections" };
+      return { success: false, errors: "Failed to reorder sections" };
     }
   }
 
-  async fetchSections(websiteId: string): Promise<{
-    success: boolean;
-    sections?: AllSections[];
-    error?: string;
-  }> {
+  async fetchSections(websiteId: string): Promise<Result<AllSections[], string>> {
     try {
       // Fetch all sections for the website
       const dbSections = await db
@@ -135,7 +127,7 @@ export class SectionRepository {
           const repository = this.getRepositoryForType(dbSection.type);
           const result = await repository.fetchSection(dbSection.id);
           if (result.success) {
-            sections.push(result.section);
+            sections.push(result.data);
           }
         } catch (error) {
           // Skip sections with invalid types but log the error
@@ -147,10 +139,10 @@ export class SectionRepository {
         }
       }
 
-      return { success: true, sections };
+      return { success: true, data: sections };
     } catch (error) {
       console.error("Error fetching sections:", error);
-      return { success: false, error: "Failed to fetch sections" };
+      return { success: false, errors: "Failed to fetch sections" };
     }
   }
 }

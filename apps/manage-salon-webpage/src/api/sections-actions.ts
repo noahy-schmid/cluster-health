@@ -4,6 +4,7 @@ import {
   SectionType,
   AllSections,
   sectionRepository,
+  Result,
 } from "@repo/website-database";
 import { WebsiteAccessGuard } from "@/api/guards/website-access-guard";
 
@@ -15,12 +16,12 @@ export async function createSection(
   websiteId: string,
   type: SectionType,
   position: number,
-) {
+): Promise<Result<AllSections, string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
   const repository = sectionRepository();
@@ -30,33 +31,33 @@ export async function createSection(
 /**
  * Server action to update an existing section
  */
-export async function updateSection(websiteId: string, section: AllSections) {
+export async function updateSection(websiteId: string, section: AllSections): Promise<Result<void, string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
   const repository = sectionRepository();
 
   // Ensure the section being updated actually belongs to the given website
   const fetchResult = await repository.fetchSections(websiteId);
-  if (!fetchResult.success || !fetchResult.sections) {
+  if (!fetchResult.success) {
     return {
       success: false,
-      error: fetchResult.error || "Failed to load sections for update",
+      errors: fetchResult.errors || "Failed to load sections for update",
     };
   }
 
-  const ownsSection = fetchResult.sections.some(
+  const ownsSection = fetchResult.data.some(
     (existingSection) => existingSection.id === section.id,
   );
 
   if (!ownsSection) {
     return {
       success: false,
-      error: "Section does not belong to this website",
+      errors: "Section does not belong to this website",
     };
   }
   return await repository.updateSection(section);
@@ -65,12 +66,12 @@ export async function updateSection(websiteId: string, section: AllSections) {
 /**
  * Server action to delete a section
  */
-export async function deleteSection(websiteId: string, id: string) {
+export async function deleteSection(websiteId: string, id: string): Promise<Result<void, string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
   const repository = sectionRepository();
@@ -81,12 +82,12 @@ export async function deleteSection(websiteId: string, id: string) {
  * Server action to reorder sections
  * Takes websiteId and array of section IDs in their new order
  */
-export async function reorderSections(websiteId: string, sectionIds: string[]) {
+export async function reorderSections(websiteId: string, sectionIds: string[]): Promise<Result<void, string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
   const repository = sectionRepository();
@@ -96,23 +97,14 @@ export async function reorderSections(websiteId: string, sectionIds: string[]) {
 /**
  * Server action to fetch all sections for a website
  */
-export async function fetchSections(websiteId: string) {
+export async function fetchSections(websiteId: string): Promise<Result<AllSections[], string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
   const repository = sectionRepository();
-  const result = await repository.fetchSections(websiteId);
-
-  if (result.success && result.sections) {
-    return { success: true, sections: result.sections };
-  } else {
-    return {
-      success: false,
-      error: result.error || "Failed to fetch sections",
-    };
-  }
+  return await repository.fetchSections(websiteId);
 }

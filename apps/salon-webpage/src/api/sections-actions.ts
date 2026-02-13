@@ -5,37 +5,25 @@ import {
   websitesTable,
   AllSections,
   sectionRepository,
+  Result,
 } from "@repo/website-database";
 import { eq } from "drizzle-orm";
 
 /**
  * Server action to fetch all sections for a salon by its slug
  */
-export async function fetchSectionsBySalonSlug(salonSlug: string): Promise<{
-  success: boolean;
-  sections?: AllSections[];
-  error?: string;
-}> {
+export async function fetchSectionsBySalonSlug(salonSlug: string): Promise<Result<AllSections[], string>> {
   const [website] = await db
     .select()
     .from(websitesTable)
     .where(eq(websitesTable.slug, salonSlug));
 
   if (!website) {
-    return { success: false, error: "Website not found" };
+    return { success: false, errors: "Website not found" };
   }
 
   const repository = sectionRepository();
-  const fetchResult = await repository.fetchSections(website.id);
-
-  if (!fetchResult.success) {
-    return {
-      success: false,
-      error: fetchResult.error || "Failed to fetch sections",
-    };
-  }
-
-  return { success: true, sections: fetchResult.sections };
+  return await repository.fetchSections(website.id);
 }
 
 export interface WebsiteColors {

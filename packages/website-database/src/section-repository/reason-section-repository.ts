@@ -1,12 +1,8 @@
 import { db } from "../database";
 import { reasonSectionsTable, reasonItemsTable } from "../schema";
 import { eq } from "drizzle-orm";
-import { Section, ReasonItem } from "./types";
-import {
-  SectionTypeRepository,
-  CreateSectionResult,
-  FetchSectionResult,
-} from "./section-type-repository";
+import { Section, ReasonItem, Result } from "./types";
+import { SectionTypeRepository } from "./section-type-repository";
 import { BaseSectionRepository } from "./base-section-repository";
 
 export class ReasonSectionRepository implements SectionTypeRepository<"reason"> {
@@ -39,7 +35,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
   async createSection(
     websiteId: string,
     position: number,
-  ): Promise<CreateSectionResult<"reason">> {
+  ): Promise<Result<Section<"reason">, string>> {
     try {
       const result = await db.transaction(async (tx) => {
         // Insert into sections table via base repository
@@ -51,7 +47,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
         );
 
         if (!insertedSection) {
-          return { success: false, error: "Failed to insert section" } as const;
+          return { success: false, errors: "Failed to insert section" } as const;
         }
 
         // Insert into reason_sections table with defaults
@@ -67,7 +63,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
         if (!insertedReasonSection) {
           return {
             success: false,
-            error: "Failed to insert reason section",
+            errors: "Failed to insert reason section",
           } as const;
         }
 
@@ -102,28 +98,27 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
           menuTitle: insertedSection.menuTitle ?? undefined,
         };
 
-        return { success: true, section: newSection } as const;
+        return { success: true, data: newSection } as const;
       });
 
       return result;
     } catch (error) {
       console.error("Error creating reason section:", error);
-      return { success: false, error: "Failed to create reason section" };
+      return { success: false, errors: "Failed to create reason section" };
     }
   }
 
   async updateSection(
     section: Omit<Section<"reason">, "type" | "order">,
-  ): Promise<boolean> {
+  ): Promise<Result<void, string>> {
     try {
       // Validate items
       const validation = this.validateReasonItems(section.settings.items);
       if (!validation.valid) {
-        console.error("Validation error:", validation.error);
-        return false;
+        return { success: false, errors: validation.error || "Validation failed" };
       }
 
-      return await db.transaction(async (tx) => {
+      await db.transaction(async (tx) => {
         // Update sections table via base repository
         const updatedSections =
           await this.baseSectionRepo.updateSectionMetadata(
@@ -133,7 +128,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
           );
 
         if (updatedSections.length === 0) {
-          return false;
+          throw new Error("Section not found");
         }
 
         // Update reason_sections table
@@ -160,16 +155,19 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
             order: index,
           })),
         );
-
-        return true;
       });
+
+      return { success: true, data: undefined };
     } catch (error) {
       console.error("Error updating reason section:", error);
-      return false;
+      if (error instanceof Error && error.message === "Section not found") {
+        return { success: false, errors: "Section not found" };
+      }
+      return { success: false, errors: "Failed to update section" };
     }
   }
 
-  async fetchSection(id: string): Promise<FetchSectionResult<"reason">> {
+  async fetchSection(id: string): Promise<Result<Section<"reason">, string>> {
     try {
       // Fetch the section from sections table via base repository
       const dbSection = await this.baseSectionRepo.fetchSectionById(
@@ -178,7 +176,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
       );
 
       if (!dbSection) {
-        return { success: false, error: "Reason section not found" };
+        return { success: false, errors: "Reason section not found" };
       }
 
       // Fetch reason details
@@ -188,7 +186,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
         .where(eq(reasonSectionsTable.id, id));
 
       if (!reasonSection) {
-        return { success: false, error: "Reason section details not found" };
+        return { success: false, errors: "Reason section details not found" };
       }
 
       // Fetch items for this reason section
@@ -214,10 +212,10 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
         menuTitle: dbSection.menuTitle ?? undefined,
       };
 
-      return { success: true, section };
+      return { success: true, data: section };
     } catch (error) {
       console.error("Error fetching reason section:", error);
-      return { success: false, error: "Failed to fetch reason section" };
+      return { success: false, errors: "Failed to fetch reason section" };
     }
   }
 }

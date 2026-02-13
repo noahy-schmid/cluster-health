@@ -21,12 +21,12 @@ export default function ReasonEditPage() {
 
       const result = await fetchSections(websiteId);
 
-      if (!result.success || !result.sections) {
+      if (!result.success) {
         router.replace(`/salon/${salonId}`);
         return;
       }
 
-      const found = result.sections.find((item) => item.id === sectionId);
+      const found = result.data.find((item) => item.id === sectionId);
 
       if (!found || found.type !== "reason") {
         router.replace(`/salon/${salonId}/website/${websiteId}`);

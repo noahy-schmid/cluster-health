@@ -24,7 +24,7 @@ export default async function SalonPage({
     fetchHeroSettingsBySalonSlug(salonSlug),
   ]);
 
-  const { success, sections, error } = sectionsResult;
+  const { success, data: sections, errors: error } = sectionsResult;
 
   const menuItems: MenuItem[] =
     sections

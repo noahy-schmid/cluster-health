@@ -34,7 +34,7 @@ export default function WebsiteEditorPage() {
         return;
       }
 
-      setSections(sectionsResult.sections ?? []);
+      setSections(sectionsResult.data ?? []);
       setHeroSettings(heroResult.settings);
     };
 
