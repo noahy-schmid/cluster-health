@@ -34,7 +34,8 @@ export async function fetchSectionsBySalonSlug(
       Effect.catchAll((error) =>
         Effect.succeed({
           success: false as const,
-          errors: error instanceof Error ? error.message : "Failed to fetch sections",
+          errors:
+            error instanceof Error ? error.message : "Failed to fetch sections",
         }),
       ),
     );
