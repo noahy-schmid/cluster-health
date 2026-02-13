@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Stylist } from "@repo/salon-domain";
 import { createStylist, updateStylist } from "@/api/stylists-actions";
 import FormInput from "@/components/website/forms/FormInput";
@@ -26,6 +27,7 @@ export default function StylistForm({
   const [profileImage, setProfileImage] = useState(stylist?.profileImage || "");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
+  const [imageError, setImageError] = useState(false);
 
   const handleSave = async () => {
     if (!name || !subtitle || !description || !profileImage) {
@@ -103,29 +105,38 @@ export default function StylistForm({
         <FormInput
           label="Profilbild URL"
           value={profileImage}
-          onChange={setProfileImage}
+          onChange={(value) => {
+            setProfileImage(value);
+            setImageError(false);
+          }}
           placeholder="https://example.com/image.jpg"
           type="url"
           required
           helperText="Gib die URL zum Profilbild ein"
         />
 
-        {profileImage && (
+        {profileImage && !imageError && (
           <div className="flex flex-col gap-sm">
             <label className="text-sm font-normal text-fg-strong">
               Vorschau
             </label>
-            <div className="aspect-square max-w-xs rounded-lg overflow-hidden">
-              <img
+            <div className="aspect-square max-w-xs rounded-lg overflow-hidden relative">
+              <Image
                 src={profileImage}
                 alt="Vorschau"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "";
-                  e.currentTarget.alt = "Bild konnte nicht geladen werden";
-                }}
+                fill
+                className="object-cover"
+                onError={() => setImageError(true)}
               />
             </div>
+          </div>
+        )}
+
+        {imageError && (
+          <div className="p-md bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-700">
+              Bild konnte nicht geladen werden. Bitte überprüfe die URL.
+            </p>
           </div>
         )}
 

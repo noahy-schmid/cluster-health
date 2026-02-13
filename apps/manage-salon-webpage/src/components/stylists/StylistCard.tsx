@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Pencil, Trash2 } from "lucide-react";
 import { Stylist } from "@repo/salon-domain";
 import { deleteStylist } from "@/api/stylists-actions";
@@ -40,10 +41,11 @@ export default function StylistCard({ stylist, salonId }: StylistCardProps) {
   return (
     <div className="bg-bg-1 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <div className="aspect-square relative">
-        <img
+        <Image
           src={stylist.profileImage}
           alt={stylist.name}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
         />
       </div>
       <div className="p-md">
