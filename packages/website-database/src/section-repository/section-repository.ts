@@ -90,13 +90,15 @@ export const SectionRepository = Context.GenericTag<SectionRepository>(
   "@repo/website-database/SectionRepository",
 );
 
-const genSectionRepositoryLive: Effect.Effect<SectionRepository> =
-  Effect.gen(function* () {
+const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
+  function* () {
     yield* Effect.log("Initializing SectionRepositoryLive");
 
     const baseRepo = new BaseSectionRepository();
     const gallerySectionRepo = new GallerySectionRepository(baseRepo);
-    const textWithImageSectionRepo = new TextWithImageSectionRepository(baseRepo);
+    const textWithImageSectionRepo = new TextWithImageSectionRepository(
+      baseRepo,
+    );
     const centerTextSectionRepo = new CenterTextSectionRepository(baseRepo);
     const reasonSectionRepo = new ReasonSectionRepository(baseRepo);
 
@@ -140,7 +142,7 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> =
     ) =>
       Effect.gen(function* () {
         const repository = yield* getRepositoryForType(type);
-        
+
         const result = yield* Effect.promise(() =>
           repository.createSection(websiteId, position),
         );
@@ -178,10 +180,7 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> =
         yield* Effect.log("Section updated", section.id);
       });
 
-    const deleteSection: SectionRepository["deleteSection"] = (
-      websiteId,
-      id,
-    ) =>
+    const deleteSection: SectionRepository["deleteSection"] = (websiteId, id) =>
       Effect.gen(function* () {
         yield* Effect.promise(() =>
           baseRepo.deleteSectionById(id, websiteId),
@@ -191,7 +190,8 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> =
               new SectionDeleteError({
                 sectionId: id,
                 websiteId,
-                message: error instanceof Error ? error.message : "Unknown error",
+                message:
+                  error instanceof Error ? error.message : "Unknown error",
               }),
             ),
           ),
@@ -227,7 +227,8 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> =
             Effect.fail(
               new SectionReorderError({
                 websiteId,
-                message: error instanceof Error ? error.message : "Unknown error",
+                message:
+                  error instanceof Error ? error.message : "Unknown error",
               }),
             ),
           ),
@@ -293,7 +294,8 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> =
       reorderSections,
       fetchSections,
     };
-  });
+  },
+);
 
 /**
  * Live service layer for SectionRepository.
@@ -308,16 +310,18 @@ export const SectionRepositoryLive = Layer.effect(
  * @deprecated Use SectionRepository Effect service instead.
  */
 export const sectionRepository = () => {
-  const baseRepo = new BaseSectionRepository();
-  
   return {
-    async createSection(websiteId: string, type: SectionType, position: number) {
+    async createSection(
+      websiteId: string,
+      type: SectionType,
+      position: number,
+    ) {
       const repo = await Effect.runPromise(
         Effect.gen(function* () {
           return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive))
+        }).pipe(Effect.provide(SectionRepositoryLive)),
       );
-      
+
       return await Effect.runPromise(
         repo.createSection(websiteId, type, position).pipe(
           Effect.map((data) => ({ success: true as const, data })),
@@ -330,17 +334,20 @@ export const sectionRepository = () => {
         ),
       );
     },
-    
+
     async updateSection(section: AllSections) {
       const repo = await Effect.runPromise(
         Effect.gen(function* () {
           return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive))
+        }).pipe(Effect.provide(SectionRepositoryLive)),
       );
-      
+
       return await Effect.runPromise(
         repo.updateSection(section).pipe(
-          Effect.map(() => ({ success: true as const, data: undefined as void })),
+          Effect.map(() => ({
+            success: true as const,
+            data: undefined as void,
+          })),
           Effect.catchAll((error) =>
             Effect.succeed({
               success: false as const,
@@ -350,17 +357,20 @@ export const sectionRepository = () => {
         ),
       );
     },
-    
+
     async deleteSection(websiteId: string, id: string) {
       const repo = await Effect.runPromise(
         Effect.gen(function* () {
           return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive))
+        }).pipe(Effect.provide(SectionRepositoryLive)),
       );
-      
+
       return await Effect.runPromise(
         repo.deleteSection(websiteId, id).pipe(
-          Effect.map(() => ({ success: true as const, data: undefined as void })),
+          Effect.map(() => ({
+            success: true as const,
+            data: undefined as void,
+          })),
           Effect.catchAll((error) =>
             Effect.succeed({
               success: false as const,
@@ -370,17 +380,20 @@ export const sectionRepository = () => {
         ),
       );
     },
-    
+
     async reorderSections(websiteId: string, sectionIds: string[]) {
       const repo = await Effect.runPromise(
         Effect.gen(function* () {
           return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive))
+        }).pipe(Effect.provide(SectionRepositoryLive)),
       );
-      
+
       return await Effect.runPromise(
         repo.reorderSections(websiteId, sectionIds).pipe(
-          Effect.map(() => ({ success: true as const, data: undefined as void })),
+          Effect.map(() => ({
+            success: true as const,
+            data: undefined as void,
+          })),
           Effect.catchAll((error) =>
             Effect.succeed({
               success: false as const,
@@ -390,14 +403,14 @@ export const sectionRepository = () => {
         ),
       );
     },
-    
+
     async fetchSections(websiteId: string) {
       const repo = await Effect.runPromise(
         Effect.gen(function* () {
           return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive))
+        }).pipe(Effect.provide(SectionRepositoryLive)),
       );
-      
+
       return await Effect.runPromise(
         repo.fetchSections(websiteId).pipe(
           Effect.map((data) => ({ success: true as const, data })),

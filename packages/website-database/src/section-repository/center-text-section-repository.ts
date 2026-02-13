@@ -101,7 +101,9 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
     }
   }
 
-  async fetchSection(id: string): Promise<Result<Section<"center-text">, string>> {
+  async fetchSection(
+    id: string,
+  ): Promise<Result<Section<"center-text">, string>> {
     try {
       // Fetch the section from sections table via base repository
       const dbSection = await this.baseSectionRepo.fetchSectionById(

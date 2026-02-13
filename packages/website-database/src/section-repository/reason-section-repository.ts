@@ -22,7 +22,8 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
     if (itemsWithImages.length > 0 && itemsWithImages.length !== items.length) {
       return {
         success: false,
-        errors: "Either all reasons must have images or none should have images",
+        errors:
+          "Either all reasons must have images or none should have images",
       };
     }
 
