@@ -1,12 +1,8 @@
 import { db } from "../database";
 import { textWithImageSectionsTable } from "../schema";
 import { eq } from "drizzle-orm";
-import { Section } from "./types";
-import {
-  SectionTypeRepository,
-  CreateSectionResult,
-  FetchSectionResult,
-} from "./section-type-repository";
+import { Section, Result } from "./types";
+import { SectionTypeRepository } from "./section-type-repository";
 import { BaseSectionRepository } from "./base-section-repository";
 
 export class TextWithImageSectionRepository implements SectionTypeRepository<"text-with-image"> {
@@ -15,69 +11,71 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
   async createSection(
     websiteId: string,
     position: number,
-  ): Promise<CreateSectionResult<"text-with-image">> {
+  ): Promise<Result<Section<"text-with-image">, string>> {
     try {
-      const result = await db.transaction(async (tx) => {
-        // Insert into sections table via base repository
-        const insertedSection = await this.baseSectionRepo.createSection(
-          websiteId,
-          "text-with-image",
-          position,
-          tx,
-        );
+      const result = await db.transaction(
+        async (tx): Promise<Result<Section<"text-with-image">, string>> => {
+          // Insert into sections table via base repository
+          const insertedSection = await this.baseSectionRepo.createSection(
+            websiteId,
+            "text-with-image",
+            position,
+            tx,
+          );
 
-        if (!insertedSection) {
-          return { success: false as const, error: "Failed to insert section" };
-        }
+          if (!insertedSection) {
+            return { success: false, errors: "Failed to insert section" };
+          }
 
-        // Insert into text_with_image_sections table
-        const [insertedTextSection] = await tx
-          .insert(textWithImageSectionsTable)
-          .values({
+          // Insert into text_with_image_sections table
+          const [insertedTextSection] = await tx
+            .insert(textWithImageSectionsTable)
+            .values({
+              id: insertedSection.id,
+              title: "New Text with Image Section",
+              content: "Add your text here",
+              image: "",
+            })
+            .returning();
+
+          if (!insertedTextSection) {
+            return {
+              success: false,
+              errors: "Failed to insert text with image section",
+            };
+          }
+
+          const newSection: Section<"text-with-image"> = {
             id: insertedSection.id,
-            title: "New Text with Image Section",
-            content: "Add your text here",
-            image: "",
-          })
-          .returning();
-
-        if (!insertedTextSection) {
-          return {
-            success: false as const,
-            error: "Failed to insert text with image section",
+            type: "text-with-image",
+            settings: {
+              imageUrl: insertedTextSection.image,
+              title: insertedTextSection.title,
+              text: insertedTextSection.content,
+            },
+            order: insertedSection.order,
+            menuTitle: insertedSection.menuTitle ?? undefined,
           };
-        }
 
-        const newSection: Section<"text-with-image"> = {
-          id: insertedSection.id,
-          type: "text-with-image",
-          settings: {
-            imageUrl: insertedTextSection.image,
-            title: insertedTextSection.title,
-            text: insertedTextSection.content,
-          },
-          order: insertedSection.order,
-          menuTitle: insertedSection.menuTitle ?? undefined,
-        };
-
-        return { success: true as const, section: newSection };
-      });
+          return { success: true, data: newSection };
+        },
+      );
 
       return result;
     } catch (error) {
       console.error("Error creating text with image section:", error);
       return {
         success: false,
-        error: "Failed to create text with image section",
+        errors: "Failed to create text with image section",
       };
     }
   }
 
   async updateSection(
     section: Omit<Section<"text-with-image">, "type" | "order">,
-  ): Promise<boolean> {
+  ): Promise<Result<void, string>> {
     try {
-      return await db.transaction(async (tx) => {
+      await db.transaction(async (tx) => {
         // Update sections table via base repository
         const updatedSections =
           await this.baseSectionRepo.updateSectionMetadata(
@@ -88,7 +86,7 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
 
         // If no rows were updated, section doesn't exist - stop here
         if (updatedSections.length === 0) {
-          return false;
+          throw new Error("Section not found");
         }
 
         // Update text_with_image_sections table
@@ -100,18 +98,17 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
             image: section.settings.imageUrl,
           })
           .where(eq(textWithImageSectionsTable.id, section.id));
-
-        return true;
       });
+      return { success: true, data: undefined };
     } catch (error) {
       console.error("Error updating text with image section:", error);
-      return false;
+      return { success: false, errors: "Failed to update section" };
     }
   }
 
   async fetchSection(
     id: string,
-  ): Promise<FetchSectionResult<"text-with-image">> {
+  ): Promise<Result<Section<"text-with-image">, string>> {
     try {
       // Fetch the section from sections table via base repository
       const dbSection = await this.baseSectionRepo.fetchSectionById(
@@ -120,7 +117,7 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
       );
 
       if (!dbSection) {
-        return { success: false, error: "Text with image section not found" };
+        return { success: false, errors: "Text with image section not found" };
       }
 
       // Fetch text with image details
@@ -132,7 +129,7 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
       if (!textSection) {
         return {
           success: false,
-          error: "Text with image section details not found",
+          errors: "Text with image section details not found",
         };
       }
 
@@ -148,12 +145,12 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
         menuTitle: dbSection.menuTitle ?? undefined,
       };
 
-      return { success: true, section };
+      return { success: true, data: section };
     } catch (error) {
       console.error("Error fetching text with image section:", error);
       return {
         success: false,
-        error: "Failed to fetch text with image section",
+        errors: "Failed to fetch text with image section",
       };
     }
   }

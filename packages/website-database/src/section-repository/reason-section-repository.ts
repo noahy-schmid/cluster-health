@@ -1,25 +1,18 @@
 import { db } from "../database";
 import { reasonSectionsTable, reasonItemsTable } from "../schema";
 import { eq } from "drizzle-orm";
-import { Section, ReasonItem } from "./types";
-import {
-  SectionTypeRepository,
-  CreateSectionResult,
-  FetchSectionResult,
-} from "./section-type-repository";
+import { Section, Result, ReasonItem } from "./types";
+import { SectionTypeRepository } from "./section-type-repository";
 import { BaseSectionRepository } from "./base-section-repository";
 
 export class ReasonSectionRepository implements SectionTypeRepository<"reason"> {
   constructor(private baseSectionRepo: BaseSectionRepository) {}
 
   // Validation helper
-  private validateReasonItems(items: ReasonItem[]): {
-    valid: boolean;
-    error?: string;
-  } {
+  private validateReasonItems(items: ReasonItem[]): Result<void, string> {
     // Check count
     if (items.length < 2 || items.length > 4) {
-      return { valid: false, error: "Reason section must have 2-4 items" };
+      return { success: false, errors: "Reason section must have 2-4 items" };
     }
 
     // Check image consistency
@@ -28,102 +21,104 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
     );
     if (itemsWithImages.length > 0 && itemsWithImages.length !== items.length) {
       return {
-        valid: false,
-        error: "Either all reasons must have images or none should have images",
+        success: false,
+        errors:
+          "Either all reasons must have images or none should have images",
       };
     }
 
-    return { valid: true };
+    return { success: true, data: undefined };
   }
 
   async createSection(
     websiteId: string,
     position: number,
-  ): Promise<CreateSectionResult<"reason">> {
+  ): Promise<Result<Section<"reason">, string>> {
     try {
-      const result = await db.transaction(async (tx) => {
-        // Insert into sections table via base repository
-        const insertedSection = await this.baseSectionRepo.createSection(
-          websiteId,
-          "reason",
-          position,
-          tx,
-        );
+      const result = await db.transaction(
+        async (tx): Promise<Result<Section<"reason">, string>> => {
+          // Insert into sections table via base repository
+          const insertedSection = await this.baseSectionRepo.createSection(
+            websiteId,
+            "reason",
+            position,
+            tx,
+          );
 
-        if (!insertedSection) {
-          return { success: false, error: "Failed to insert section" } as const;
-        }
+          if (!insertedSection) {
+            return { success: false, errors: "Failed to insert section" };
+          }
 
-        // Insert into reason_sections table with defaults
-        const [insertedReasonSection] = await tx
-          .insert(reasonSectionsTable)
-          .values({
+          // Insert into reason_sections table with defaults
+          const [insertedReasonSection] = await tx
+            .insert(reasonSectionsTable)
+            .values({
+              id: insertedSection.id,
+              title: "Warum wir?",
+              subtitle: "Entdecken Sie, was uns auszeichnet",
+            })
+            .returning();
+
+          if (!insertedReasonSection) {
+            return {
+              success: false,
+              errors: "Failed to insert reason section",
+            };
+          }
+
+          // Create 2 default items
+          await tx.insert(reasonItemsTable).values([
+            {
+              reasonSectionId: insertedSection.id,
+              title: "Grund 1",
+              description: "Beschreibung für Grund 1",
+              order: 0,
+            },
+            {
+              reasonSectionId: insertedSection.id,
+              title: "Grund 2",
+              description: "Beschreibung für Grund 2",
+              order: 1,
+            },
+          ]);
+
+          const newSection: Section<"reason"> = {
             id: insertedSection.id,
-            title: "Warum wir?",
-            subtitle: "Entdecken Sie, was uns auszeichnet",
-          })
-          .returning();
+            type: "reason",
+            settings: {
+              title: insertedReasonSection.title,
+              subtitle: insertedReasonSection.subtitle,
+              items: [
+                { title: "Grund 1", description: "Beschreibung für Grund 1" },
+                { title: "Grund 2", description: "Beschreibung für Grund 2" },
+              ],
+            },
+            order: insertedSection.order,
+            menuTitle: insertedSection.menuTitle ?? undefined,
+          };
 
-        if (!insertedReasonSection) {
-          return {
-            success: false,
-            error: "Failed to insert reason section",
-          } as const;
-        }
-
-        // Create 2 default items
-        await tx.insert(reasonItemsTable).values([
-          {
-            reasonSectionId: insertedSection.id,
-            title: "Grund 1",
-            description: "Beschreibung für Grund 1",
-            order: 0,
-          },
-          {
-            reasonSectionId: insertedSection.id,
-            title: "Grund 2",
-            description: "Beschreibung für Grund 2",
-            order: 1,
-          },
-        ]);
-
-        const newSection: Section<"reason"> = {
-          id: insertedSection.id,
-          type: "reason",
-          settings: {
-            title: insertedReasonSection.title,
-            subtitle: insertedReasonSection.subtitle,
-            items: [
-              { title: "Grund 1", description: "Beschreibung für Grund 1" },
-              { title: "Grund 2", description: "Beschreibung für Grund 2" },
-            ],
-          },
-          order: insertedSection.order,
-          menuTitle: insertedSection.menuTitle ?? undefined,
-        };
-
-        return { success: true, section: newSection } as const;
-      });
+          return { success: true, data: newSection };
+        },
+      );
 
       return result;
     } catch (error) {
       console.error("Error creating reason section:", error);
-      return { success: false, error: "Failed to create reason section" };
+      return { success: false, errors: "Failed to create reason section" };
     }
   }
 
   async updateSection(
     section: Omit<Section<"reason">, "type" | "order">,
-  ): Promise<boolean> {
+  ): Promise<Result<void, string>> {
     try {
       // Validate items
       const validation = this.validateReasonItems(section.settings.items);
-      if (!validation.valid) {
-        console.error("Validation error:", validation.error);
-        return false;
+      if (!validation.success) {
+        return validation;
       }
 
-      return await db.transaction(async (tx) => {
+      await db.transaction(async (tx) => {
         // Update sections table via base repository
         const updatedSections =
           await this.baseSectionRepo.updateSectionMetadata(
@@ -132,8 +127,9 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
             tx,
           );
 
+        // If no rows were updated, section doesn't exist - stop here
         if (updatedSections.length === 0) {
-          return false;
+          throw new Error("Section not found");
         }
 
         // Update reason_sections table
@@ -160,16 +156,15 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
             order: index,
           })),
         );
-
-        return true;
       });
+      return { success: true, data: undefined };
     } catch (error) {
       console.error("Error updating reason section:", error);
-      return false;
+      return { success: false, errors: "Failed to update section" };
     }
   }
 
-  async fetchSection(id: string): Promise<FetchSectionResult<"reason">> {
+  async fetchSection(id: string): Promise<Result<Section<"reason">, string>> {
     try {
       // Fetch the section from sections table via base repository
       const dbSection = await this.baseSectionRepo.fetchSectionById(
@@ -178,7 +173,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
       );
 
       if (!dbSection) {
-        return { success: false, error: "Reason section not found" };
+        return { success: false, errors: "Reason section not found" };
       }
 
       // Fetch reason details
@@ -188,7 +183,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
         .where(eq(reasonSectionsTable.id, id));
 
       if (!reasonSection) {
-        return { success: false, error: "Reason section details not found" };
+        return { success: false, errors: "Reason section details not found" };
       }
 
       // Fetch items for this reason section
@@ -214,10 +209,10 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
         menuTitle: dbSection.menuTitle ?? undefined,
       };
 
-      return { success: true, section };
+      return { success: true, data: section };
     } catch (error) {
       console.error("Error fetching reason section:", error);
-      return { success: false, error: "Failed to fetch reason section" };
+      return { success: false, errors: "Failed to fetch reason section" };
     }
   }
 }

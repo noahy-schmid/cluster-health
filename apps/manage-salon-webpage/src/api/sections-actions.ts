@@ -3,9 +3,12 @@
 import {
   SectionType,
   AllSections,
-  sectionRepository,
+  SectionRepository,
+  SectionRepositoryLive,
+  Result,
 } from "@repo/website-database";
 import { WebsiteAccessGuard } from "@/api/guards/website-access-guard";
+import { Effect } from "effect";
 
 /**
  * Server action to create a new section
@@ -15,104 +18,185 @@ export async function createSection(
   websiteId: string,
   type: SectionType,
   position: number,
-) {
+): Promise<Result<AllSections, string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
-  const repository = sectionRepository();
-  return await repository.createSection(websiteId, type, position);
+  const createEffect = Effect.gen(function* () {
+    const repo = yield* SectionRepository;
+    return yield* repo.createSection(websiteId, type, position).pipe(
+      Effect.map((data) => ({ success: true as const, data })),
+      Effect.catchTag("InvalidSectionTypeError", (error) =>
+        Effect.succeed({
+          success: false as const,
+          errors: `Invalid section type: ${error.sectionType}`,
+        }),
+      ),
+      Effect.catchTag("SectionError", (error) =>
+        Effect.succeed({
+          success: false as const,
+          errors: error.message || "Failed to create section",
+        }),
+      ),
+    );
+  }).pipe(Effect.provide(SectionRepositoryLive));
+
+  return await Effect.runPromise(createEffect);
 }
 
 /**
  * Server action to update an existing section
  */
-export async function updateSection(websiteId: string, section: AllSections) {
+export async function updateSection(
+  websiteId: string,
+  section: AllSections,
+): Promise<Result<void, string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
-  const repository = sectionRepository();
+  const updateEffect = Effect.gen(function* () {
+    const repo = yield* SectionRepository;
 
-  // Ensure the section being updated actually belongs to the given website
-  const fetchResult = await repository.fetchSections(websiteId);
-  if (!fetchResult.success || !fetchResult.sections) {
-    return {
-      success: false,
-      error: fetchResult.error || "Failed to load sections for update",
-    };
-  }
+    // Ensure the section being updated actually belongs to the given website
+    const fetchResult = yield* repo.fetchSections(websiteId).pipe(
+      Effect.catchAll((error) =>
+        Effect.fail({
+          success: false as const,
+          errors:
+            error instanceof Error
+              ? error.message
+              : "Failed to load sections for update",
+        }),
+      ),
+    );
 
-  const ownsSection = fetchResult.sections.some(
-    (existingSection) => existingSection.id === section.id,
+    const ownsSection = fetchResult.some(
+      (existingSection) => existingSection.id === section.id,
+    );
+
+    if (!ownsSection) {
+      return yield* Effect.fail({
+        success: false as const,
+        errors: "Section does not belong to this website",
+      });
+    }
+
+    return yield* repo.updateSection(section).pipe(
+      Effect.map(() => ({ success: true as const, data: undefined as void })),
+      Effect.catchAll((error) =>
+        Effect.succeed({
+          success: false as const,
+          errors: error instanceof Error ? error.message : "Unknown error",
+        }),
+      ),
+    );
+  }).pipe(
+    Effect.provide(SectionRepositoryLive),
+    Effect.catchAll((error) => Effect.succeed(error)),
   );
 
-  if (!ownsSection) {
-    return {
-      success: false,
-      error: "Section does not belong to this website",
-    };
-  }
-  return await repository.updateSection(section);
+  return await Effect.runPromise(updateEffect);
 }
 
 /**
  * Server action to delete a section
  */
-export async function deleteSection(websiteId: string, id: string) {
+export async function deleteSection(
+  websiteId: string,
+  id: string,
+): Promise<Result<void, string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
-  const repository = sectionRepository();
-  return await repository.deleteSection(websiteId, id);
+  const deleteEffect = Effect.gen(function* () {
+    const repo = yield* SectionRepository;
+    return yield* repo.deleteSection(websiteId, id).pipe(
+      Effect.map(() => ({ success: true as const, data: undefined as void })),
+      Effect.catchAll((error) =>
+        Effect.succeed({
+          success: false as const,
+          errors: error instanceof Error ? error.message : "Unknown error",
+        }),
+      ),
+    );
+  }).pipe(Effect.provide(SectionRepositoryLive));
+
+  return await Effect.runPromise(deleteEffect);
 }
 
 /**
  * Server action to reorder sections
  * Takes websiteId and array of section IDs in their new order
  */
-export async function reorderSections(websiteId: string, sectionIds: string[]) {
+export async function reorderSections(
+  websiteId: string,
+  sectionIds: string[],
+): Promise<Result<void, string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
-  const repository = sectionRepository();
-  return await repository.reorderSections(websiteId, sectionIds);
+  const reorderEffect = Effect.gen(function* () {
+    const repo = yield* SectionRepository;
+    return yield* repo.reorderSections(websiteId, sectionIds).pipe(
+      Effect.map(() => ({ success: true as const, data: undefined as void })),
+      Effect.catchAll((error) =>
+        Effect.succeed({
+          success: false as const,
+          errors: `${error.name}: ${error.message}`,
+        }),
+      ),
+    );
+  }).pipe(Effect.provide(SectionRepositoryLive));
+
+  return await Effect.runPromise(reorderEffect);
 }
 
 /**
  * Server action to fetch all sections for a website
  */
-export async function fetchSections(websiteId: string) {
+export async function fetchSections(
+  websiteId: string,
+): Promise<Result<AllSections[], string>> {
   const guard = new WebsiteAccessGuard();
   const access = await guard.canEditWebsite(websiteId);
 
   if (!access.success) {
-    return { success: false, error: access.error };
+    return { success: false, errors: access.error };
   }
 
-  const repository = sectionRepository();
-  const result = await repository.fetchSections(websiteId);
+  const fetchEffect = Effect.gen(function* () {
+    const repo = yield* SectionRepository;
+    return yield* repo.fetchSections(websiteId).pipe(
+      Effect.tap((sections) =>
+        Effect.log(
+          `Fetched sections for website ${websiteId}: ${JSON.stringify(sections)}`,
+        ),
+      ),
+      Effect.map((data) => ({ success: true as const, data })),
+      Effect.catchAll((error) =>
+        Effect.succeed({
+          success: false as const,
+          errors: `${error.name}: ${error.message}`,
+        }),
+      ),
+    );
+  }).pipe(Effect.provide(SectionRepositoryLive));
 
-  if (result.success && result.sections) {
-    return { success: true, sections: result.sections };
-  } else {
-    return {
-      success: false,
-      error: result.error || "Failed to fetch sections",
-    };
-  }
+  return await Effect.runPromise(fetchEffect);
 }

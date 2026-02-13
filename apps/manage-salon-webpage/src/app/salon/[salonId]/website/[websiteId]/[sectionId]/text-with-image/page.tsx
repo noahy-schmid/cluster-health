@@ -21,12 +21,12 @@ export default function TextWithImageEditPage() {
 
       const result = await fetchSections(websiteId);
 
-      if (!result.success || !result.sections) {
+      if (!result.success || !result.data) {
         router.replace(`/salon/${salonId}`);
         return;
       }
 
-      const found = result.sections.find((item) => item.id === sectionId);
+      const found = result.data.find((item) => item.id === sectionId);
 
       if (!found || found.type !== "text-with-image") {
         router.replace(`/salon/${salonId}/website/${websiteId}`);
