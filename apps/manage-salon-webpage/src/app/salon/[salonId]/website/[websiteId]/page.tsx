@@ -29,6 +29,11 @@ export default function WebsiteEditorPage() {
       ]);
 
       if (!sectionsResult.success || !heroResult.success) {
+        console.error(
+          "Failed to load website data:",
+          sectionsResult.success ? null : sectionsResult.errors,
+          heroResult.success ? null : heroResult.error,
+        );
         router.replace(`/salon/${salonId}`);
         return;
       }

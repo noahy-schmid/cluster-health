@@ -15,43 +15,11 @@ export class InvalidSectionTypeError extends Data.TaggedError(
 )<{ sectionType: string }> {}
 
 /**
- * Raised when a section create operation fails.
+ * Raised when a section operation fails.
  */
-export class SectionCreateError extends Data.TaggedError("SectionCreateError")<{
-  websiteId: string;
-  sectionType: string;
-  message?: string;
-}> {}
-
-/**
- * Raised when a section update operation fails.
- */
-export class SectionUpdateError extends Data.TaggedError("SectionUpdateError")<{
-  sectionId: string;
-  message?: string;
-}> {}
-
-/**
- * Raised when a section delete operation fails.
- */
-export class SectionDeleteError extends Data.TaggedError("SectionDeleteError")<{
-  sectionId: string;
-  websiteId: string;
-  message?: string;
-}> {}
-
-/**
- * Raised when a section fetch operation fails.
- */
-export class SectionFetchError extends Data.TaggedError("SectionFetchError")<{
+export class SectionError extends Data.TaggedError("SectionError")<{
   websiteId?: string;
+  sectionType?: string;
   sectionId?: string;
-  message?: string;
+  message: string;
 }> {}
-
-/**
- * Raised when a section reorder operation fails.
- */
-export class SectionReorderError extends Data.TaggedError(
-  "SectionReorderError",
-)<{ websiteId: string; message?: string }> {}

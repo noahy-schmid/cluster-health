@@ -24,7 +24,17 @@ export default async function SalonPage({
     fetchHeroSettingsBySalonSlug(salonSlug),
   ]);
 
-  const { success, data, errors } = sectionsResult;
+  if (!sectionsResult.success) {
+    return (
+      <div className="container mx-auto px-md py-lg">
+        <p className="text-destructive">
+          {sectionsResult.errors || "Failed to load sections"}
+        </p>
+      </div>
+    );
+  }
+
+  const { data } = sectionsResult;
 
   const menuItems: MenuItem[] =
     data
@@ -33,16 +43,6 @@ export default async function SalonPage({
         id: sluggify(section.menuTitle!),
         text: section.menuTitle!,
       })) || [];
-
-  if (!success || !data) {
-    return (
-      <div className="container mx-auto px-md py-lg">
-        <p className="text-destructive">
-          {errors || "Failed to load sections"}
-        </p>
-      </div>
-    );
-  }
 
   if (data.length === 0) {
     return (

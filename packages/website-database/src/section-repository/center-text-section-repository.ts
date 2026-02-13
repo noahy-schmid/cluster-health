@@ -23,7 +23,10 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
         );
 
         if (!insertedSection) {
-          return { success: false, errors: "Failed to insert section" };
+          return {
+            success: false as const,
+            errors: "Failed to insert section",
+          };
         }
 
         // Insert into center_text_sections table
@@ -38,7 +41,7 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
 
         if (!insertedCenterTextSection) {
           return {
-            success: false,
+            success: false as const,
             errors: "Failed to insert center text section",
           };
         }
@@ -54,7 +57,7 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
           menuTitle: insertedSection.menuTitle ?? undefined,
         };
 
-        return { success: true, data: newSection };
+        return { success: true as const, data: newSection };
       });
 
       return result;

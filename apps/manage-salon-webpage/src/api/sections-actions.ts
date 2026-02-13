@@ -36,19 +36,11 @@ export async function createSection(
           errors: `Invalid section type: ${error.sectionType}`,
         }),
       ),
-      Effect.catchTag("SectionCreateError", (error) =>
+      Effect.catchTag("SectionError", (error) =>
         Effect.succeed({
           success: false as const,
           errors: error.message || "Failed to create section",
         }),
-      ),
-      Effect.catchAll((error) =>
-        Effect.logError("Error creating section", error).pipe(
-          Effect.map(() => ({
-            success: false as const,
-            errors: error instanceof Error ? error.message : "Unknown error",
-          })),
-        ),
       ),
     );
   }).pipe(Effect.provide(SectionRepositoryLive));
@@ -166,7 +158,7 @@ export async function reorderSections(
       Effect.catchAll((error) =>
         Effect.succeed({
           success: false as const,
-          errors: error instanceof Error ? error.message : "Unknown error",
+          errors: `${error.name}: ${error.message}`,
         }),
       ),
     );
@@ -191,12 +183,16 @@ export async function fetchSections(
   const fetchEffect = Effect.gen(function* () {
     const repo = yield* SectionRepository;
     return yield* repo.fetchSections(websiteId).pipe(
+      Effect.tap((sections) =>
+        Effect.log(
+          `Fetched sections for website ${websiteId}: ${JSON.stringify(sections)}`,
+        ),
+      ),
       Effect.map((data) => ({ success: true as const, data })),
       Effect.catchAll((error) =>
         Effect.succeed({
           success: false as const,
-          errors:
-            error instanceof Error ? error.message : "Failed to fetch sections",
+          errors: `${error.name}: ${error.message}`,
         }),
       ),
     );

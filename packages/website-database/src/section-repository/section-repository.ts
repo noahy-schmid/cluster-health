@@ -10,12 +10,9 @@ import { BaseSectionRepository } from "./base-section-repository";
 import {
   SectionNotFoundError,
   InvalidSectionTypeError,
-  SectionCreateError,
-  SectionUpdateError,
-  SectionDeleteError,
-  SectionFetchError,
-  SectionReorderError,
+  SectionError,
 } from "./errors";
+import { SectionTypeRepository } from "./section-type-repository";
 
 /**
  * Effect service for managing website sections.
@@ -32,11 +29,7 @@ export interface SectionRepository {
     websiteId: string,
     type: SectionType,
     position: number,
-  ): Effect.Effect<
-    AllSections,
-    InvalidSectionTypeError | SectionCreateError | Error,
-    never
-  >;
+  ): Effect.Effect<AllSections, InvalidSectionTypeError | SectionError, never>;
 
   /**
    * Update an existing section.
@@ -47,7 +40,7 @@ export interface SectionRepository {
     section: AllSections,
   ): Effect.Effect<
     void,
-    InvalidSectionTypeError | SectionUpdateError | SectionNotFoundError | Error,
+    InvalidSectionTypeError | SectionError | SectionNotFoundError,
     never
   >;
 
@@ -60,7 +53,7 @@ export interface SectionRepository {
   deleteSection(
     websiteId: string,
     id: string,
-  ): Effect.Effect<void, SectionDeleteError | Error, never>;
+  ): Effect.Effect<void, SectionError, never>;
 
   /**
    * Reorder sections for a website.
@@ -71,7 +64,7 @@ export interface SectionRepository {
   reorderSections(
     websiteId: string,
     sectionIds: string[],
-  ): Effect.Effect<void, SectionReorderError | Error, never>;
+  ): Effect.Effect<void, SectionError, never>;
 
   /**
    * Fetch all sections for a website.
@@ -80,7 +73,11 @@ export interface SectionRepository {
    */
   fetchSections(
     websiteId: string,
-  ): Effect.Effect<AllSections[], SectionFetchError | Error, never>;
+  ): Effect.Effect<
+    AllSections[],
+    SectionError | InvalidSectionTypeError,
+    never
+  >;
 }
 
 /**
@@ -104,10 +101,8 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
 
     const repositoryMap: Record<
       SectionType,
-      | GallerySectionRepository
-      | TextWithImageSectionRepository
-      | CenterTextSectionRepository
-      | ReasonSectionRepository
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      SectionTypeRepository<any>
     > = {
       gallery: gallerySectionRepo,
       "text-with-image": textWithImageSectionRepo,
@@ -118,10 +113,8 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
     const getRepositoryForType = (
       type: SectionType,
     ): Effect.Effect<
-      | GallerySectionRepository
-      | TextWithImageSectionRepository
-      | CenterTextSectionRepository
-      | ReasonSectionRepository,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      SectionTypeRepository<any>,
       InvalidSectionTypeError,
       never
     > =>
@@ -149,7 +142,7 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
 
         if (!result.success) {
           return yield* Effect.fail(
-            new SectionCreateError({
+            new SectionError({
               websiteId,
               sectionType: type,
               message: result.errors,
@@ -170,8 +163,9 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
 
         if (!result.success) {
           return yield* Effect.fail(
-            new SectionUpdateError({
+            new SectionError({
               sectionId: section.id,
+              sectionType: section.type,
               message: result.errors,
             }),
           );
@@ -182,16 +176,15 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
 
     const deleteSection: SectionRepository["deleteSection"] = (websiteId, id) =>
       Effect.gen(function* () {
-        yield* Effect.promise(() =>
+        yield* Effect.tryPromise(() =>
           baseRepo.deleteSectionById(id, websiteId),
         ).pipe(
           Effect.catchAll((error) =>
             Effect.fail(
-              new SectionDeleteError({
+              new SectionError({
                 sectionId: id,
                 websiteId,
-                message:
-                  error instanceof Error ? error.message : "Unknown error",
+                message: `${error.name}: ${error.message}`,
               }),
             ),
           ),
@@ -205,7 +198,44 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
       sectionIds,
     ) =>
       Effect.gen(function* () {
-        yield* Effect.promise(() =>
+        const sectionIdsInWebsite = yield* Effect.tryPromise(() =>
+          db
+            .select({ id: sectionsTable.id })
+            .from(sectionsTable)
+            .where(eq(sectionsTable.websiteId, websiteId)),
+        ).pipe(
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new SectionError({
+                websiteId,
+                message: `${error.name}: ${error.message}`,
+              }),
+            ),
+          ),
+        );
+
+        if (sectionIds.length !== sectionIdsInWebsite.length) {
+          return yield* Effect.fail(
+            new SectionError({
+              websiteId,
+              message: `Provided sectionIds length (${sectionIds.length}) does not match number of sections in website (${sectionIdsInWebsite.length})`,
+            }),
+          );
+        }
+
+        const sectionIdsSet = new Set(sectionIds);
+        if (
+          !sectionIdsInWebsite.every((section) => sectionIdsSet.has(section.id))
+        ) {
+          return yield* Effect.fail(
+            new SectionError({
+              websiteId,
+              message: `Provided sectionIds do not match sections in website`,
+            }),
+          );
+        }
+
+        yield* Effect.tryPromise(() =>
           db.transaction(async (tx) => {
             for (let i = 0; i < sectionIds.length; i++) {
               const sectionId = sectionIds[i];
@@ -225,10 +255,9 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
         ).pipe(
           Effect.catchAll((error) =>
             Effect.fail(
-              new SectionReorderError({
+              new SectionError({
                 websiteId,
-                message:
-                  error instanceof Error ? error.message : "Unknown error",
+                message: `${error.name}: ${error.message}`,
               }),
             ),
           ),
@@ -239,50 +268,67 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
 
     const fetchSections: SectionRepository["fetchSections"] = (websiteId) =>
       Effect.gen(function* () {
-        const dbSections = yield* Effect.promise(() =>
+        const dbSections = yield* Effect.tryPromise(() =>
           db
             .select()
             .from(sectionsTable)
             .where(eq(sectionsTable.websiteId, websiteId))
             .orderBy(sectionsTable.order),
-        );
-
-        const sections: AllSections[] = [];
-
-        for (const dbSection of dbSections) {
-          const sectionResult = yield* Effect.gen(function* () {
-            const repository = yield* getRepositoryForType(dbSection.type);
-            const result = yield* Effect.promise(() =>
-              repository.fetchSection(dbSection.id),
-            );
-
-            if (result.success) {
-              return result.data;
-            }
-            return yield* Effect.fail(
-              new SectionFetchError({
-                sectionId: dbSection.id,
+        ).pipe(
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new SectionError({
                 websiteId,
-                message: result.errors,
-              }),
-            );
-          }).pipe(
-            Effect.catchTag("InvalidSectionTypeError", (error) =>
-              Effect.gen(function* () {
-                yield* Effect.logError(
-                  `Skipping section ${dbSection.id}: Invalid type ${error.sectionType}`,
-                );
-                return undefined;
+                message: `${error.name}: ${error.message}`,
               }),
             ),
-            Effect.flatten,
-            Effect.option,
-          );
+          ),
+        );
 
-          if (sectionResult._tag === "Some") {
-            sections.push(sectionResult.value);
-          }
-        }
+        const sections: AllSections[] = yield* Effect.forEach(
+          dbSections,
+          (dbSection) =>
+            Effect.gen(function* () {
+              const repository = yield* getRepositoryForType(
+                dbSection.type as SectionType,
+              );
+              const result = yield* Effect.tryPromise(() =>
+                repository.fetchSection(dbSection.id),
+              ).pipe(
+                Effect.catchAll((error) =>
+                  Effect.fail(
+                    new SectionError({
+                      sectionId: dbSection.id,
+                      websiteId,
+                      sectionType: dbSection.type,
+                      message: `${error.name}: ${error.message}`,
+                    }),
+                  ),
+                ),
+              );
+              if (!result.success) {
+                return yield* Effect.fail(
+                  new SectionError({
+                    sectionId: dbSection.id,
+                    websiteId,
+                    message: result.errors,
+                  }),
+                );
+              }
+              return result.data;
+            }).pipe(
+              Effect.tapErrorTag("InvalidSectionTypeError", (error) =>
+                Effect.logError(
+                  "Found section with invalid type during fetchSections",
+                  {
+                    websiteId,
+                    sectionId: dbSection.id,
+                    sectionType: error.sectionType,
+                  },
+                ),
+              ),
+            ),
+        );
 
         return sections;
       });
