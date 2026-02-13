@@ -79,7 +79,9 @@ export async function updateSection(
         Effect.fail({
           success: false as const,
           errors:
-            error instanceof Error ? error.message : "Failed to load sections for update",
+            error instanceof Error
+              ? error.message
+              : "Failed to load sections for update",
         }),
       ),
     );
@@ -193,7 +195,8 @@ export async function fetchSections(
       Effect.catchAll((error) =>
         Effect.succeed({
           success: false as const,
-          errors: error instanceof Error ? error.message : "Failed to fetch sections",
+          errors:
+            error instanceof Error ? error.message : "Failed to fetch sections",
         }),
       ),
     );
