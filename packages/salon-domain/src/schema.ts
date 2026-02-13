@@ -1,12 +1,12 @@
 import { sql } from "drizzle-orm";
 import {
   pgSchema,
-  text,
   timestamp,
   uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import { text } from "drizzle-orm/pg-core";
 
 export const salonSchema = pgSchema("salon");
 

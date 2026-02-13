@@ -30,7 +30,18 @@ export default function StylistForm({
   const [imageError, setImageError] = useState(false);
 
   const handleSave = async () => {
-    if (!name || !subtitle || !description || !profileImage) {
+    // Trim whitespace and validate
+    const trimmedName = name.trim();
+    const trimmedSubtitle = subtitle.trim();
+    const trimmedDescription = description.trim();
+    const trimmedProfileImage = profileImage.trim();
+
+    if (
+      !trimmedName ||
+      !trimmedSubtitle ||
+      !trimmedDescription ||
+      !trimmedProfileImage
+    ) {
       setError("Bitte fülle alle Pflichtfelder aus");
       return;
     }
@@ -43,19 +54,19 @@ export default function StylistForm({
       if (stylist) {
         // Update existing stylist
         result = await updateStylist(salonId, stylist.id, {
-          name,
-          subtitle,
-          description,
-          profileImage,
+          name: trimmedName,
+          subtitle: trimmedSubtitle,
+          description: trimmedDescription,
+          profileImage: trimmedProfileImage,
         });
       } else {
         // Create new stylist
         result = await createStylist({
           salonId,
-          name,
-          subtitle,
-          description,
-          profileImage,
+          name: trimmedName,
+          subtitle: trimmedSubtitle,
+          description: trimmedDescription,
+          profileImage: trimmedProfileImage,
         });
       }
 

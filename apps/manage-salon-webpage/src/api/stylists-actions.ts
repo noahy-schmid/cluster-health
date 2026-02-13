@@ -70,7 +70,10 @@ export async function fetchStylist(salonId: string, stylistId: string) {
 
   // Verify the stylist belongs to the salon
   if (result.data.salonId !== salonId) {
-    return { success: false, error: "Stylist does not belong to this salon" };
+    return {
+      success: false,
+      error: "Stylist gehört nicht zu diesem Salon",
+    };
   }
 
   return { success: true, stylist: result.data };
@@ -100,7 +103,10 @@ export async function updateStylist(
   }
 
   if (fetchResult.data.salonId !== salonId) {
-    return { success: false, error: "Stylist does not belong to this salon" };
+    return {
+      success: false,
+      error: "Stylist gehört nicht zu diesem Salon",
+    };
   }
 
   const result = await repository.updateStylist(stylistId, updates);
@@ -132,7 +138,10 @@ export async function deleteStylist(salonId: string, stylistId: string) {
   }
 
   if (fetchResult.data.salonId !== salonId) {
-    return { success: false, error: "Stylist does not belong to this salon" };
+    return {
+      success: false,
+      error: "Stylist gehört nicht zu diesem Salon",
+    };
   }
 
   const result = await repository.deleteStylist(stylistId);
