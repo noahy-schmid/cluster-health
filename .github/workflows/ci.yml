@@ -12,6 +12,11 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    
+    env:
+      DATABASE_URL: ${{ vars.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      NODE_ENV: production
 
     steps:
       - name: Checkout code
