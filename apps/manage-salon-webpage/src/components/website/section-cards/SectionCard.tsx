@@ -8,6 +8,7 @@ import GalleryCard from "./GalleryCard";
 import ReasonCard from "./ReasonCard";
 import CenterTextCard from "./CenterTextCard";
 import { AllSections } from "@repo/website-database";
+import FlatIconButton from "@/components/FlatIconButton";
 
 interface SectionCardProps {
   section: AllSections;
@@ -45,10 +46,10 @@ export function SectionCard({
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing p-2 hover:bg-bg-1 rounded transition-colors touch-none mt-md"
+          className="cursor-grab active:cursor-grabbing p-2 hover:bg-bg-1 rounded transition-colors touch-none mt-md lg:bg-transparent bg-bg-1"
           aria-label="Abschnitt verschieben"
         >
-          <GripVertical className="w-5 h-5 text-fg-muted" />
+          <GripVertical className="w-icon-base h-icon-base lg:text-fg-muted text-fg-normal" />
         </button>
 
         {/* Section Content */}
@@ -56,20 +57,23 @@ export function SectionCard({
 
         {/* Action Buttons */}
         <div className="flex flex-col items-center gap-2 mt-md">
-          <button
+          <FlatIconButton
+            icon={Settings}
             onClick={() => onSettings(section.id)}
-            className="p-2 hover:bg-bg-1 rounded group"
-            aria-label="Edit section"
-          >
-            <Settings className="w-5 h-5 text-fg-muted group-hover:text-fg-normal" />
-          </button>
-          <button
-            onClick={() => onDelete(section.id)}
-            className="p-2 hover:bg-bg-1 rounded group"
-            aria-label="Delete section"
-          >
-            <Trash2 className="w-5 h-5 text-fg-muted group-hover:text-red-600" />
-          </button>
+            elevation={0}
+            ariaLabel="Edit section"
+          />
+          <FlatIconButton
+            icon={Trash2}
+            onClick={() => {
+              if (confirm("Möchtest du diesen Abschnitt wirklich löschen?")) {
+                onDelete(section.id);
+              }
+            }}
+            elevation={0}
+            isError
+            ariaLabel="Delete section"
+          />
         </div>
       </div>
     </div>

@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import StylistForm from "@/components/stylists/StylistForm";
+import StylistForm, {
+  StylistFormData,
+} from "@/components/stylists/StylistForm";
 import BackButton from "@/components/BackButton";
-import { fetchStylist } from "@/api/stylists-actions";
+import { fetchStylist, updateStylist } from "@/api/stylists-actions";
 import { Stylist } from "@repo/salon-domain";
 
 interface EditStylistPageProps {
@@ -48,6 +50,18 @@ export default function EditStylistPage({ params }: EditStylistPageProps) {
     loadStylist();
   }, [salonId, stylistId, router]);
 
+  const handleSubmit = async (data: StylistFormData) => {
+    if (!stylist) return;
+
+    const result = await updateStylist(salonId, stylist.id, data);
+
+    if (!result.success) {
+      throw new Error(result.error || "Fehler beim Speichern");
+    }
+
+    router.push(`/salon/${salonId}/stylists`);
+  };
+
   if (isLoading || !stylist) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -64,10 +78,10 @@ export default function EditStylistPage({ params }: EditStylistPageProps) {
         subtitle={`Bearbeite die Details von ${stylist.name}`}
       />
       <StylistForm
-        salonId={salonId}
         stylist={stylist}
-        onSuccess={() => router.push(`/salon/${salonId}/stylists`)}
+        onSubmit={handleSubmit}
         onCancel={() => router.push(`/salon/${salonId}/stylists`)}
+        saveLabel="Änderungen speichern"
       />
     </div>
   );

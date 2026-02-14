@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import StylistForm from "@/components/stylists/StylistForm";
+import StylistForm, {
+  StylistFormData,
+} from "@/components/stylists/StylistForm";
 import BackButton from "@/components/BackButton";
+import { createStylist } from "@/api/stylists-actions";
 
 interface CreateStylistPageProps {
   params: Promise<{ salonId: string }>;
@@ -22,6 +25,19 @@ export default function CreateStylistPage({ params }: CreateStylistPageProps) {
     loadParams();
   }, [params]);
 
+  const handleSubmit = async (data: StylistFormData) => {
+    const result = await createStylist({
+      salonId,
+      ...data,
+    });
+
+    if (!result.success) {
+      throw new Error(result.error || "Fehler beim Erstellen");
+    }
+
+    router.push(`/salon/${salonId}/stylists`);
+  };
+
   if (!salonId) {
     return null;
   }
@@ -34,9 +50,9 @@ export default function CreateStylistPage({ params }: CreateStylistPageProps) {
         subtitle="Füge einen neuen Stylisten zu deinem Team hinzu"
       />
       <StylistForm
-        salonId={salonId}
-        onSuccess={() => router.push(`/salon/${salonId}/stylists`)}
+        onSubmit={handleSubmit}
         onCancel={() => router.push(`/salon/${salonId}/stylists`)}
+        saveLabel="Stylist erstellen"
       />
     </div>
   );
