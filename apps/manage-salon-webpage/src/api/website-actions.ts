@@ -187,10 +187,14 @@ export async function getHeroSettings(websiteId: string): Promise<
       })),
       Effect.catchTags({
         WebsiteHeroInvalidTextColorError: () =>
-          Effect.succeed({
-            success: false as const,
-            error: "Invalid hero text color",
-          }),
+          Effect.logError(
+            `Found invalid hero text color for website ${websiteId}`,
+          ).pipe(
+            Effect.map(() => ({
+              success: false as const,
+              error: "Invalid hero text color",
+            })),
+          ),
         WebsiteHeroNotFoundError: () =>
           Effect.succeed({
             success: false as const,

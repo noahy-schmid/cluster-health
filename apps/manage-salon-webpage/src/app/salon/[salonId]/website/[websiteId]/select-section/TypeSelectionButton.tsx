@@ -23,9 +23,9 @@ export default function SectionTypeSelectionButton({
       parseInt(position, 10),
     );
 
-    if (section?.success && section.section) {
+    if (section?.success && section.data) {
       router.replace(
-        `/salon/${salonId}/website/${websiteId}/${section.section.id}/${section.section.type}`,
+        `/salon/${salonId}/website/${websiteId}/${section.data.id}/${section.data.type}`,
       );
     } else {
       router.push(`/salon/${salonId}/website/${websiteId}`);

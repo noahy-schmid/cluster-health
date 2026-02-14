@@ -1,12 +1,8 @@
 import { db } from "../database";
 import { gallerySectionsTable, galleryImagesTable } from "../schema";
 import { eq } from "drizzle-orm";
-import { Section } from "./types";
-import {
-  SectionTypeRepository,
-  CreateSectionResult,
-  FetchSectionResult,
-} from "./section-type-repository";
+import { Section, Result } from "./types";
+import { SectionTypeRepository } from "./section-type-repository";
 import { BaseSectionRepository } from "./base-section-repository";
 
 export class GallerySectionRepository implements SectionTypeRepository<"gallery"> {
@@ -15,10 +11,10 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
   async createSection(
     websiteId: string,
     position: number,
-  ): Promise<CreateSectionResult<"gallery">> {
+  ): Promise<Result<Section<"gallery">, string>> {
     try {
       const result = await db.transaction(
-        async (tx): Promise<CreateSectionResult<"gallery">> => {
+        async (tx): Promise<Result<Section<"gallery">, string>> => {
           // Insert into sections table via base repository within the transaction
           const insertedSection = await this.baseSectionRepo.createSection(
             websiteId,
@@ -28,7 +24,7 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
           );
 
           if (!insertedSection) {
-            return { success: false, error: "Failed to insert section" };
+            return { success: false, errors: "Failed to insert section" };
           }
 
           // Insert into gallery_sections table within the same transaction
@@ -44,7 +40,7 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
           if (!insertedGallerySection) {
             return {
               success: false,
-              error: "Failed to insert gallery section",
+              errors: "Failed to insert gallery section",
             };
           }
 
@@ -60,22 +56,22 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
             menuTitle: insertedSection.menuTitle ?? undefined,
           };
 
-          return { success: true, section: newSection };
+          return { success: true, data: newSection };
         },
       );
 
       return result;
     } catch (error) {
       console.error("Error creating gallery section:", error);
-      return { success: false, error: "Failed to create gallery section" };
+      return { success: false, errors: "Failed to create gallery section" };
     }
   }
 
   async updateSection(
     section: Omit<Section<"gallery">, "type" | "order">,
-  ): Promise<boolean> {
+  ): Promise<Result<void, string>> {
     try {
-      return await db.transaction(async (tx) => {
+      await db.transaction(async (tx) => {
         // Update sections table via base repository
         const updatedSections =
           await this.baseSectionRepo.updateSectionMetadata(
@@ -86,7 +82,7 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
 
         // If no rows were updated, section doesn't exist - stop here
         if (updatedSections.length === 0) {
-          return false;
+          throw new Error("Section not found");
         }
 
         // Update gallery_sections table
@@ -113,16 +109,15 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
             })),
           );
         }
-
-        return true;
       });
+      return { success: true, data: undefined };
     } catch (error) {
       console.error("Error updating gallery section:", error);
-      return false;
+      return { success: false, errors: "Failed to update section" };
     }
   }
 
-  async fetchSection(id: string): Promise<FetchSectionResult<"gallery">> {
+  async fetchSection(id: string): Promise<Result<Section<"gallery">, string>> {
     try {
       // Fetch the section from sections table via base repository
       const dbSection = await this.baseSectionRepo.fetchSectionById(
@@ -131,7 +126,7 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
       );
 
       if (!dbSection) {
-        return { success: false, error: "Gallery section not found" };
+        return { success: false, errors: "Gallery section not found" };
       }
 
       // Fetch gallery details
@@ -141,7 +136,7 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
         .where(eq(gallerySectionsTable.id, id));
 
       if (!gallerySection) {
-        return { success: false, error: "Gallery section details not found" };
+        return { success: false, errors: "Gallery section details not found" };
       }
 
       // Fetch images for this gallery
@@ -163,10 +158,10 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
         menuTitle: dbSection.menuTitle ?? undefined,
       };
 
-      return { success: true, section };
+      return { success: true, data: section };
     } catch (error) {
       console.error("Error fetching gallery section:", error);
-      return { success: false, error: "Failed to fetch gallery section" };
+      return { success: false, errors: "Failed to fetch gallery section" };
     }
   }
 }

@@ -1,34 +1,14 @@
-import { Section, SectionType } from "./types";
-
-export type CreateSectionResult<T extends SectionType> =
-  | {
-      success: true;
-      section: Section<T>;
-    }
-  | {
-      success: false;
-      error: string;
-    };
-
-export type FetchSectionResult<T extends SectionType> =
-  | {
-      success: true;
-      section: Section<T>;
-    }
-  | {
-      success: false;
-      error: string;
-    };
+import { Section, SectionType, Result } from "./types";
 
 export interface SectionTypeRepository<T extends SectionType> {
   createSection: (
     websiteId: string,
     position: number,
-  ) => Promise<CreateSectionResult<T>>;
+  ) => Promise<Result<Section<T>, string>>;
 
   updateSection: (
     section: Omit<Section<T>, "type" | "order">,
-  ) => Promise<boolean>;
+  ) => Promise<Result<void, string>>;
 
-  fetchSection: (id: string) => Promise<FetchSectionResult<T>>;
+  fetchSection: (id: string) => Promise<Result<Section<T>, string>>;
 }

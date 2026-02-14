@@ -1,12 +1,8 @@
 import { db } from "../database";
 import { centerTextSectionsTable } from "../schema";
 import { eq } from "drizzle-orm";
-import { Section } from "./types";
-import {
-  SectionTypeRepository,
-  CreateSectionResult,
-  FetchSectionResult,
-} from "./section-type-repository";
+import { Section, Result } from "./types";
+import { SectionTypeRepository } from "./section-type-repository";
 import { BaseSectionRepository } from "./base-section-repository";
 
 export class CenterTextSectionRepository implements SectionTypeRepository<"center-text"> {
@@ -15,7 +11,7 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
   async createSection(
     websiteId: string,
     position: number,
-  ): Promise<CreateSectionResult<"center-text">> {
+  ): Promise<Result<Section<"center-text">, string>> {
     try {
       const result = await db.transaction(async (tx) => {
         // Insert into sections table via base repository
@@ -27,7 +23,10 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
         );
 
         if (!insertedSection) {
-          return { success: false as const, error: "Failed to insert section" };
+          return {
+            success: false as const,
+            errors: "Failed to insert section",
+          };
         }
 
         // Insert into center_text_sections table
@@ -43,7 +42,7 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
         if (!insertedCenterTextSection) {
           return {
             success: false as const,
-            error: "Failed to insert center text section",
+            errors: "Failed to insert center text section",
           };
         }
 
@@ -58,7 +57,7 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
           menuTitle: insertedSection.menuTitle ?? undefined,
         };
 
-        return { success: true as const, section: newSection };
+        return { success: true as const, data: newSection };
       });
 
       return result;
@@ -66,16 +65,16 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
       console.error("Error creating center text section:", error);
       return {
         success: false,
-        error: "Failed to create center text section",
+        errors: "Failed to create center text section",
       };
     }
   }
 
   async updateSection(
     section: Omit<Section<"center-text">, "type" | "order">,
-  ): Promise<boolean> {
+  ): Promise<Result<void, string>> {
     try {
-      return await db.transaction(async (tx) => {
+      await db.transaction(async (tx) => {
         // Update sections table via base repository
         const updatedSections =
           await this.baseSectionRepo.updateSectionMetadata(
@@ -86,7 +85,7 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
 
         // If no rows were updated, section doesn't exist - stop here
         if (updatedSections.length === 0) {
-          return false;
+          throw new Error("Section not found");
         }
 
         // Update center_text_sections table
@@ -97,16 +96,17 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
             content: section.settings.content,
           })
           .where(eq(centerTextSectionsTable.id, section.id));
-
-        return true;
       });
+      return { success: true, data: undefined };
     } catch (error) {
       console.error("Error updating center text section:", error);
-      return false;
+      return { success: false, errors: "Failed to update section" };
     }
   }
 
-  async fetchSection(id: string): Promise<FetchSectionResult<"center-text">> {
+  async fetchSection(
+    id: string,
+  ): Promise<Result<Section<"center-text">, string>> {
     try {
       // Fetch the section from sections table via base repository
       const dbSection = await this.baseSectionRepo.fetchSectionById(
@@ -115,7 +115,7 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
       );
 
       if (!dbSection) {
-        return { success: false, error: "Center text section not found" };
+        return { success: false, errors: "Center text section not found" };
       }
 
       // Fetch center text details
@@ -127,7 +127,7 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
       if (!centerTextSection) {
         return {
           success: false,
-          error: "Center text section details not found",
+          errors: "Center text section details not found",
         };
       }
 
@@ -142,12 +142,12 @@ export class CenterTextSectionRepository implements SectionTypeRepository<"cente
         menuTitle: dbSection.menuTitle ?? undefined,
       };
 
-      return { success: true, section };
+      return { success: true, data: section };
     } catch (error) {
       console.error("Error fetching center text section:", error);
       return {
         success: false,
-        error: "Failed to fetch center text section",
+        errors: "Failed to fetch center text section",
       };
     }
   }

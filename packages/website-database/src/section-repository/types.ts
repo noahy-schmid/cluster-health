@@ -1,3 +1,7 @@
+export type Result<T, E> =
+  | { success: true; data: T }
+  | { success: false; errors: E };
+
 export type SectionType =
   | "text-with-image"
   | "gallery"
