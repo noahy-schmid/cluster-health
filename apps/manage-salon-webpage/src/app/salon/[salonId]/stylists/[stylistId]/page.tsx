@@ -58,7 +58,7 @@ export default function EditStylistPage({ params }: EditStylistPageProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <BackButton href={`/salon/${salonId}/stylists`} />
+      <BackButton text="Zurück" />
       <PageHeader
         title="Stylist bearbeiten"
         subtitle={`Bearbeite die Details von ${stylist.name}`}

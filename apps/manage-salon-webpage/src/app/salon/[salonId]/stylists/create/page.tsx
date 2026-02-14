@@ -28,7 +28,7 @@ export default function CreateStylistPage({ params }: CreateStylistPageProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <BackButton href={`/salon/${salonId}/stylists`} />
+      <BackButton text="Zurück" />
       <PageHeader
         title="Neuer Stylist"
         subtitle="Füge einen neuen Stylisten zu deinem Team hinzu"
