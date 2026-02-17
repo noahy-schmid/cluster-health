@@ -4,7 +4,7 @@
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { Stylist } from "@repo/salon-domain";
-import { deleteStylist } from "@/api/stylists-actions";
+import { deleteStylist } from "@/app/salon/[salonId]/stylists/stylist.actions";
 import { useState } from "react";
 import FlatIconButton from "@/components/FlatIconButton";
 import FlatIconTextButton from "@/components/FlatIconTextButton";
@@ -42,12 +42,12 @@ export default function StylistCard({ stylist, salonId }: StylistCardProps) {
   };
 
   return (
-    <div className="bg-bg-1 rounded-lg overflow-hidden shadow-sm border border-border w-[280px] flex flex-col">
+    <div className="bg-bg-1 rounded-lg overflow-hidden shadow-sm border border-border sm:w-[280px] flex flex-col">
       <div className="aspect-square">
         <img
           src={stylist.profileImage}
           alt={stylist.name}
-          className="object-cover w-full h-full"
+          className="object-cover w-full h-full aspect-square"
         />
       </div>
       <div className="p-lg flex flex-col justify-between grow">

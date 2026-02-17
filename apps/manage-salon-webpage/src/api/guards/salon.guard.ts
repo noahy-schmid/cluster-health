@@ -1,7 +1,6 @@
 import "server-only";
 
-import { cookies } from "next/headers";
-import { ManagementUserRepository } from "@repo/auth-domain";
+import { AuthGuard } from "./auth.guard";
 
 export class SalonAccessGuard {
   /**
@@ -9,28 +8,22 @@ export class SalonAccessGuard {
    * @param salonId - Salon ID to check access for.
    * @returns Result with salonId on success or error message on failure.
    */
-  public async canAccessSalon(
+  public static async canAccessSalon(
     salonId: string,
   ): Promise<
     { success: true; salonId: string } | { success: false; error: string }
   > {
-    const session = (await cookies()).get("session");
-    if (!session?.value) {
-      return { success: false, error: "Sitzung abgelaufen" };
-    }
+    const authToken = await AuthGuard.getAuthToken();
 
-    const authRepository = new ManagementUserRepository();
-    const authResult = await authRepository.authenticateToken(session.value);
-
-    if (!authResult.success) {
+    if (!authToken) {
       return { success: false, error: "Ungültige Sitzung" };
     }
 
-    if (!authResult.data.salonId) {
+    if (!authToken.salonId) {
       return { success: false, error: "Kein Salon zugeordnet" };
     }
 
-    if (authResult.data.salonId !== salonId) {
+    if (authToken.salonId !== salonId) {
       return { success: false, error: "Nicht autorisiert" };
     }
 

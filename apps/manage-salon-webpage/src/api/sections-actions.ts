@@ -7,7 +7,7 @@ import {
   SectionRepositoryLive,
   Result,
 } from "@repo/website-database";
-import { WebsiteAccessGuard } from "@/api/guards/website-access-guard";
+import { WebsiteAccessGuard } from "@/api/guards/website.guard";
 import { Effect } from "effect";
 
 /**

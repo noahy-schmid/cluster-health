@@ -7,7 +7,10 @@ import StylistForm, {
   StylistFormData,
 } from "@/components/stylists/StylistForm";
 import BackButton from "@/components/BackButton";
-import { fetchStylist, updateStylist } from "@/api/stylists-actions";
+import {
+  fetchStylist,
+  updateStylist,
+} from "@/app/salon/[salonId]/stylists/stylist.actions";
 import { Stylist } from "@repo/salon-domain";
 
 interface EditStylistPageProps {
@@ -43,7 +46,7 @@ export default function EditStylistPage({ params }: EditStylistPageProps) {
         return;
       }
 
-      setStylist(result.stylist);
+      setStylist(result.data);
       setIsLoading(false);
     };
 

@@ -7,7 +7,7 @@ import StylistForm, {
   StylistFormData,
 } from "@/components/stylists/StylistForm";
 import BackButton from "@/components/BackButton";
-import { createStylist } from "@/api/stylists-actions";
+import { createStylist } from "@/app/salon/[salonId]/stylists/stylist.actions";
 
 interface CreateStylistPageProps {
   params: Promise<{ salonId: string }>;

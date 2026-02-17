@@ -1,5 +1,5 @@
 import PageHeader from "@/components/PageHeader";
-import { fetchStylists } from "@/api/stylists-actions";
+import { fetchStylists } from "@/app/salon/[salonId]/stylists/stylist.actions";
 import StylistList from "./StylistList";
 import StylistsPageHeader from "./StylistsPageHeader";
 
@@ -27,7 +27,7 @@ export default async function StylistsPage({ params }: StylistsPageProps) {
     );
   }
 
-  const stylists = result.stylists || [];
+  const stylists = result.data || [];
 
   return (
     <div className="max-w-4xl mx-auto">
