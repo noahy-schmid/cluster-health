@@ -5,9 +5,8 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  text,
 } from "drizzle-orm/pg-core";
-import { text } from "drizzle-orm/pg-core";
-
 export const salonSchema = pgSchema("salon");
 
 export const salonsTable = salonSchema.table(

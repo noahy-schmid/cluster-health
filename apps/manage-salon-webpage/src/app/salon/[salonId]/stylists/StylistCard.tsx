@@ -24,15 +24,17 @@ export default function StylistCard({ stylist, salonId }: StylistCardProps) {
 
   const handleDelete = async () => {
     if (isDeleting) return;
+    setIsDeleting(true);
     if (!confirm(`Möchtest du ${stylist.name} wirklich löschen?`)) {
       return;
     }
 
-    setIsDeleting(true);
     const result = await deleteStylist(salonId, stylist.id);
 
     if (!result.success) {
-      alert(`Fehler beim Löschen: ${result.error}`);
+      alert(
+        `Fehler beim Löschen. Bitte überprüfe deine Internetverbindung und deine Berechtigungen und versuche es erneut.\n\nTechnische Details: ${result.error}`,
+      );
       setIsDeleting(false);
       return;
     }

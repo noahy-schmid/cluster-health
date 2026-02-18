@@ -8,21 +8,26 @@ export const StylistSchema = Schema.Struct({
     Schema.nonEmptyString({ message: () => "Salon ID cannot be empty" }),
   ),
   name: Schema.String.pipe(
-    Schema.nonEmptyString({ message: () => "Stylist name cannot be empty" }),
     Schema.compose(Schema.Trim),
+    Schema.nonEmptyString({ message: () => "Stylist name cannot be empty" }),
   ),
   subtitle: Schema.String.pipe(
+    Schema.compose(Schema.Trim),
     Schema.nonEmptyString({
       message: () => "Stylist subtitle cannot be empty",
     }),
-    Schema.compose(Schema.Trim),
   ),
-  description: Schema.String.pipe(Schema.compose(Schema.Trim)),
+  description: Schema.String.pipe(
+    Schema.compose(Schema.Trim),
+    Schema.nonEmptyString({
+      message: () => "Stylist description cannot be empty",
+    }),
+  ),
   profileImage: Schema.String.pipe(
+    Schema.compose(Schema.Trim),
     Schema.nonEmptyString({
       message: () => "Profile image URL cannot be empty",
     }),
-    Schema.compose(Schema.Trim),
   ),
 });
 
@@ -36,7 +41,7 @@ export const CreateStylistInputSchema = StylistSchema.pipe(
 
 /**
  * Schema for updating an existing stylist.
- * All fields are optional but must be valid if provided.
+ * The salonId cannot be updated, and createdAt/updatedAt are managed by the system, so they are omitted from the input.
  */
 export const UpdateStylistInputSchema = StylistSchema.pipe(
   Schema.omit("salonId", "createdAt", "updatedAt", "id"),

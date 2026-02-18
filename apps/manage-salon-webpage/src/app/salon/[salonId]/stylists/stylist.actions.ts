@@ -101,7 +101,13 @@ export async function fetchStylist(
   }).pipe(
     Effect.catchTags({
       StylistNotFoundError: (error) =>
-        Effect.succeed({ success: false as const, error: error.message }),
+        Effect.succeed({
+          success: false as const,
+          error:
+            error.stylistId != null
+              ? `${error.message} (Stylist ID: ${error.stylistId})`
+              : error.message,
+        }),
       StylistDatabaseError: (error) =>
         Effect.succeed({ success: false as const, error: error.message }),
     }),
