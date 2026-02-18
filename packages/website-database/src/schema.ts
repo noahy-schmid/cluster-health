@@ -81,3 +81,11 @@ export const reasonItemsTable = pgTable("reason_items", {
   imageUrl: varchar(),
   order: integer().notNull(),
 });
+
+export const stylistsSectionsTable = pgTable("stylists_sections", {
+  id: uuid()
+    .primaryKey()
+    .references(() => sectionsTable.id, { onDelete: "cascade" }),
+  title: varchar().notNull(),
+  subtitle: varchar().notNull(),
+});

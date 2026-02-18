@@ -36,6 +36,13 @@
       "when": 1770764978253,
       "tag": "0004_white_lester",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771454099652,
+      "tag": "0005_sparkling_trish_tilby",
+      "breakpoints": true
     }
   ]
 }
