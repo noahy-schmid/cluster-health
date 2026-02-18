@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import StylistCard from "./stylist-card";
+import ChevronButton from "../chevron-button";
 
 interface StylistMember {
   id: string;
@@ -164,23 +164,15 @@ export default function StylistsSlider({ stylists }: StylistsSliderProps) {
 
       {/* Navigation Buttons */}
       {isDesktop && currentIndex > 0 && (
-        <button
+        <ChevronButton
           onClick={goToPrevious}
-          className="absolute left-0 top-1/2 -translate-y-1/2 bg-salon-fg-base text-salon-bg-base rounded-full p-3 shadow-lg hover:opacity-90 transition z-10 m-2"
-          aria-label="Previous"
-        >
-          <ChevronLeft size={24} />
-        </button>
+          ariaLabel="Previous"
+          direction="left"
+        />
       )}
 
       {isDesktop && currentIndex < stylists.length - 1 && (
-        <button
-          onClick={goToNext}
-          className="absolute right-0 top-1/2 -translate-y-1/2 bg-salon-fg-base text-salon-bg-base rounded-full p-3 shadow-lg hover:opacity-90 transition z-10 m-2"
-          aria-label="Next"
-        >
-          <ChevronRight size={24} />
-        </button>
+        <ChevronButton onClick={goToNext} ariaLabel="Next" direction="right" />
       )}
 
       {/* Pagination Dots - One per card */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import ChevronButton from "../chevron-button";
 
 type Props = {
   images?: string[];
@@ -226,21 +226,17 @@ export default function ImageCarouselSection({
         {/* Navigation Buttons - Desktop Only */}
         {isDesktop && (
           <>
-            <button
+            <ChevronButton
               onClick={goToPrevious}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-fg text-bg rounded-full p-3 shadow-lg hover:opacity-90 transition z-10"
-              aria-label="Previous"
-            >
-              <ChevronLeft size={24} />
-            </button>
+              ariaLabel="Previous"
+              direction="left"
+            />
 
-            <button
+            <ChevronButton
               onClick={goToNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-fg text-bg rounded-full p-3 shadow-lg hover:opacity-90 transition z-10"
-              aria-label="Next"
-            >
-              <ChevronRight size={24} />
-            </button>
+              ariaLabel="Next"
+              direction="right"
+            />
           </>
         )}
       </div>
