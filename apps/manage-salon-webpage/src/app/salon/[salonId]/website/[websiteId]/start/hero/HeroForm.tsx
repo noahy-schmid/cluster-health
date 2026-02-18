@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import FormInput from "./FormInput";
-import FormToggle from "./FormToggle";
-import FormActions from "./FormActions";
 import { HeroSettings } from "@repo/website-database";
-import { useDebounce } from "../../../hooks/useDebounce";
+import { useDebounce } from "@/hooks/useDebounce";
+import FormInput from "@/components/website/forms/FormInput";
+import FormToggle from "@/components/website/forms/FormToggle";
+import FormActions from "@/components/website/forms/FormActions";
 
 interface HeroFormProps {
   settings: HeroSettings;

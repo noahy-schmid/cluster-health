@@ -1,6 +1,6 @@
 import { getHeroSettings } from "@/api/website-actions";
-import HeroEditClient from "@/components/website/HeroEditClient";
 import { redirect } from "next/navigation";
+import HeroEditClient from "./HeroEditClient";
 
 export default async function HeroEditPage({
   params,
