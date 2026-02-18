@@ -10,6 +10,7 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
+    "@repo/salon-domain": "workspace:*",
     "@repo/ui": "workspace:*",
     "@repo/website-database": "workspace:*",
     "culori": "^4",

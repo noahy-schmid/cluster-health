@@ -71,7 +71,11 @@ export default async function SalonPage({
             key={section.id}
             id={sluggify(section.menuTitle || `section-${index + 1}`)}
           >
-            <SectionRenderer section={section} order={index} />
+            <SectionRenderer
+              section={section}
+              order={index}
+              salonSlug={salonSlug}
+            />
           </div>
         ))}
       </div>
