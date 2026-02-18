@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchSections } from "@/api/sections-actions";
 import PageHeader from "@/components/PageHeader";
-import CenterTextForm from "@/components/website/forms/CenterTextForm";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import { AllSections } from "@repo/website-database";
+import CenterTextForm from "./CenterTextForm";
 
 export default function CenterTextEditPage() {
   const router = useRouter();
