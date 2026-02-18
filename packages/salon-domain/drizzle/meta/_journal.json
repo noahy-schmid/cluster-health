@@ -15,6 +15,13 @@
       "when": 1770670264521,
       "tag": "0001_safe_morg",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771099557133,
+      "tag": "0002_equal_warhawk",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { WebsiteAccessGuard } from "@/api/guards/website-access-guard";
+import { WebsiteAccessGuard } from "@/api/guards/website.guard";
 import { db, websitesTable } from "@repo/website-database";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
