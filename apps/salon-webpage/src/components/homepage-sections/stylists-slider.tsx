@@ -140,13 +140,15 @@ export default function StylistsSlider({ stylists }: StylistsSliderProps) {
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
         }}
+        role="region"
+        aria-label="Stylist Carousel"
       >
         <div className="flex gap-4 md:gap-6">
           <div className="block flex-shrink-0 w-[16px] md:w-[calc(50%-200px-12px)]"></div>
 
           {stylists.map((stylist, index) => (
             <div
-              key={index}
+              key={stylist.id}
               data-card-index={index}
               className={`flex-shrink-0 snap-center w-[calc(100%-64px)] md:w-[400px] py-4`}
             >
@@ -179,7 +181,7 @@ export default function StylistsSlider({ stylists }: StylistsSliderProps) {
       <div className="flex justify-center gap-2 mt-6 flex-wrap">
         {stylists.map((stylist, index) => (
           <button
-            key={index}
+            key={stylist.id}
             onClick={() => goToCard(index)}
             className={`transition-all ${
               index === currentIndex
