@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchSections } from "@/api/sections-actions";
 import PageHeader from "@/components/PageHeader";
-import GalleryForm from "@/components/website/forms/GalleryForm";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import { AllSections } from "@repo/website-database";
+import GalleryForm from "./GalleryForm";
 
 export default function GalleryEditPage() {
   const router = useRouter();

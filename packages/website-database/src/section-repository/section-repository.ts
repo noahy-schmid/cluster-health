@@ -6,6 +6,7 @@ import { GallerySectionRepository } from "./gallery-section-repository";
 import { TextWithImageSectionRepository } from "./text-with-image-section-repository";
 import { CenterTextSectionRepository } from "./center-text-section-repository";
 import { ReasonSectionRepository } from "./reason-section-repository";
+import { StylistsSectionRepository } from "./stylists-section-repository";
 import { BaseSectionRepository } from "./base-section-repository";
 import {
   SectionNotFoundError,
@@ -98,6 +99,7 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
     );
     const centerTextSectionRepo = new CenterTextSectionRepository(baseRepo);
     const reasonSectionRepo = new ReasonSectionRepository(baseRepo);
+    const stylistsSectionRepo = new StylistsSectionRepository(baseRepo);
 
     const repositoryMap: Record<
       SectionType,
@@ -108,6 +110,7 @@ const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
       "text-with-image": textWithImageSectionRepo,
       "center-text": centerTextSectionRepo,
       reason: reasonSectionRepo,
+      "stylists-section": stylistsSectionRepo,
     };
 
     const getRepositoryForType = (
@@ -350,124 +353,3 @@ export const SectionRepositoryLive = Layer.effect(
   SectionRepository,
   genSectionRepositoryLive,
 );
-
-/**
- * Legacy factory function for non-Effect consumers.
- * @deprecated Use SectionRepository Effect service instead.
- */
-export const sectionRepository = () => {
-  return {
-    async createSection(
-      websiteId: string,
-      type: SectionType,
-      position: number,
-    ) {
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
-          return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive)),
-      );
-
-      return await Effect.runPromise(
-        repo.createSection(websiteId, type, position).pipe(
-          Effect.map((data) => ({ success: true as const, data })),
-          Effect.catchAll((error) =>
-            Effect.succeed({
-              success: false as const,
-              errors: error instanceof Error ? error.message : "Unknown error",
-            }),
-          ),
-        ),
-      );
-    },
-
-    async updateSection(section: AllSections) {
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
-          return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive)),
-      );
-
-      return await Effect.runPromise(
-        repo.updateSection(section).pipe(
-          Effect.map(() => ({
-            success: true as const,
-            data: undefined as void,
-          })),
-          Effect.catchAll((error) =>
-            Effect.succeed({
-              success: false as const,
-              errors: error instanceof Error ? error.message : "Unknown error",
-            }),
-          ),
-        ),
-      );
-    },
-
-    async deleteSection(websiteId: string, id: string) {
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
-          return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive)),
-      );
-
-      return await Effect.runPromise(
-        repo.deleteSection(websiteId, id).pipe(
-          Effect.map(() => ({
-            success: true as const,
-            data: undefined as void,
-          })),
-          Effect.catchAll((error) =>
-            Effect.succeed({
-              success: false as const,
-              errors: error instanceof Error ? error.message : "Unknown error",
-            }),
-          ),
-        ),
-      );
-    },
-
-    async reorderSections(websiteId: string, sectionIds: string[]) {
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
-          return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive)),
-      );
-
-      return await Effect.runPromise(
-        repo.reorderSections(websiteId, sectionIds).pipe(
-          Effect.map(() => ({
-            success: true as const,
-            data: undefined as void,
-          })),
-          Effect.catchAll((error) =>
-            Effect.succeed({
-              success: false as const,
-              errors: error instanceof Error ? error.message : "Unknown error",
-            }),
-          ),
-        ),
-      );
-    },
-
-    async fetchSections(websiteId: string) {
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
-          return yield* SectionRepository;
-        }).pipe(Effect.provide(SectionRepositoryLive)),
-      );
-
-      return await Effect.runPromise(
-        repo.fetchSections(websiteId).pipe(
-          Effect.map((data) => ({ success: true as const, data })),
-          Effect.catchAll((error) =>
-            Effect.succeed({
-              success: false as const,
-              errors: error instanceof Error ? error.message : "Unknown error",
-            }),
-          ),
-        ),
-      );
-    },
-  };
-};

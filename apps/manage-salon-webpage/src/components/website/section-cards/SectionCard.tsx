@@ -7,6 +7,7 @@ import TextWithImageCard from "./TextWithImageCard";
 import GalleryCard from "./GalleryCard";
 import ReasonCard from "./ReasonCard";
 import CenterTextCard from "./CenterTextCard";
+import StylistsCard from "./StylistsCard";
 import { AllSections } from "@repo/website-database";
 import FlatIconButton from "@/components/FlatIconButton";
 
@@ -112,6 +113,15 @@ function renderSectionContent(section: AllSections) {
     case "reason":
       return (
         <ReasonCard
+          settings={section.settings}
+          order={section.order}
+          menuTitle={section.menuTitle}
+        />
+      );
+
+    case "stylists-section":
+      return (
+        <StylistsCard
           settings={section.settings}
           order={section.order}
           menuTitle={section.menuTitle}

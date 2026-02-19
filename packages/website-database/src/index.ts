@@ -1,7 +1,6 @@
 import "dotenv/config";
 
 export {
-  sectionRepository,
   SectionRepository,
   SectionRepositoryLive,
 } from "./section-repository/section-repository";

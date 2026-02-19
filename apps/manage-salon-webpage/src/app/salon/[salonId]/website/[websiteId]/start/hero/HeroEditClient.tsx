@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import HeroForm from "@/components/website/forms/HeroForm";
 import { HeroSettings } from "@repo/website-database";
 import { updateHeroSettings } from "@/api/website-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import HeroCard from "@/components/website/section-cards/HeroCard";
 import { useState } from "react";
+import HeroForm from "./HeroForm";
 
 interface HeroEditClientProps {
   initialSettings: HeroSettings;

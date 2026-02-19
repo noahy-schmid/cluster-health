@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateSection } from "@/api/sections-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import FormInput from "./FormInput";
-import FormTextarea from "./FormTextarea";
-import FormActions from "./FormActions";
 import { AllSections, CenterTextSettings } from "@repo/website-database";
+import FormInput from "@/components/website/forms/FormInput";
+import FormActions from "@/components/website/forms/FormActions";
+import FormTextarea from "@/components/website/forms/FormTextarea";
 
 interface CenterTextFormProps {
   section: Extract<AllSections, { type: "center-text" }>;

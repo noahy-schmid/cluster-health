@@ -3,7 +3,14 @@
 import { SectionType } from "@repo/website-database";
 import SectionTypeSelectionButton from "./TypeSelectionButton";
 import { Suspense } from "react";
-import { ImageIcon, Images, AlignCenter, List, LucideIcon } from "lucide-react";
+import {
+  ImageIcon,
+  Images,
+  AlignCenter,
+  List,
+  Users,
+  LucideIcon,
+} from "lucide-react";
 
 export type SectionTypeInfo = {
   type: SectionType;
@@ -36,6 +43,12 @@ const sectionTypes: SectionTypeInfo[] = [
     label: "Zentrierter Text",
     description: "Einfacher Text-Abschnitt mit Titel und Inhalt",
     icon: AlignCenter,
+  },
+  {
+    type: "stylists-section",
+    label: "Team",
+    description: "Zeigen Sie Ihr Team von professionellen Stylisten",
+    icon: Users,
   },
 ];
 

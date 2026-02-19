@@ -6,7 +6,8 @@ export type SectionType =
   | "text-with-image"
   | "gallery"
   | "center-text"
-  | "reason";
+  | "reason"
+  | "stylists-section";
 
 // Settings for Text with Image section
 export interface TextWithImageSettings {
@@ -40,11 +41,18 @@ export interface ReasonSettings {
   items: ReasonItem[];
 }
 
+// Settings for Stylists section
+export interface StylistsSettings {
+  title: string;
+  subtitle: string;
+}
+
 type TypeToSettings = {
   "text-with-image": TextWithImageSettings;
   gallery: GallerySettings;
   "center-text": CenterTextSettings;
   reason: ReasonSettings;
+  "stylists-section": StylistsSettings;
 };
 
 export type Section<T extends SectionType> = {

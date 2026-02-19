@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateSection } from "@/api/sections-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import FormInput from "./FormInput";
-import ImageUrlList from "./ImageUrlList";
-import FormActions from "./FormActions";
 import { AllSections, GallerySettings } from "@repo/website-database";
+import FormInput from "@/components/website/forms/FormInput";
+import ImageUrlList from "@/components/website/forms/ImageUrlList";
+import FormActions from "@/components/website/forms/FormActions";
 
 interface GalleryFormProps {
   section: Extract<AllSections, { type: "gallery" }>;

@@ -6,13 +6,13 @@ import { fetchSections } from "@/api/sections-actions";
 import PageHeader from "@/components/PageHeader";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import { AllSections } from "@repo/website-database";
-import ReasonForm from "./ReasonForm";
+import StylistsForm from "./StylistsForm";
 
-export default function ReasonEditPage() {
+export default function StylistsEditPage() {
   const router = useRouter();
   const { salonId, websiteId, sectionId } = useWebsiteRouteContext();
   const [section, setSection] = useState<
-    Extract<AllSections, { type: "reason" }> | undefined
+    Extract<AllSections, { type: "stylists-section" }> | undefined
   >(undefined);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function ReasonEditPage() {
 
       const found = result.data.find((item) => item.id === sectionId);
 
-      if (!found || found.type !== "reason") {
+      if (!found || found.type !== "stylists-section") {
         router.replace(`/salon/${salonId}/website/${websiteId}`);
         return;
       }
@@ -43,7 +43,7 @@ export default function ReasonEditPage() {
     return (
       <div className="max-w-4xl mx-auto">
         <PageHeader
-          title="Gründe Abschnitt bearbeiten"
+          title="Team Abschnitt bearbeiten"
           subtitle="Lade Abschnitt..."
         />
       </div>
@@ -53,12 +53,12 @@ export default function ReasonEditPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <PageHeader
-        title="Gründe Abschnitt bearbeiten"
-        subtitle="Passen Sie die Gründe für diesen Abschnitt an."
+        title="Team Abschnitt bearbeiten"
+        subtitle="Passen Sie den Titel und Untertitel für diesen Abschnitt an."
       />
 
       <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg">
-        <ReasonForm key={section.id} section={section} />
+        <StylistsForm key={section.id} section={section} />
       </div>
     </div>
   );

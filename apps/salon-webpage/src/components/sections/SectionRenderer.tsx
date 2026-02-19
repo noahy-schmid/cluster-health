@@ -2,16 +2,19 @@ import ImageTextSection from "../homepage-sections/image-text-section";
 import ImageCarouselSection from "../homepage-sections/image-carousel-section";
 import CenterTextSection from "../homepage-sections/center-text-section";
 import ReasonSection from "../homepage-sections/reason-section";
+import StylistsSection from "../homepage-sections/stylists-section";
 import { AllSections } from "@repo/website-database";
 
 interface SectionRendererProps {
   section: AllSections;
   order: number;
+  salonSlug: string;
 }
 
 export default function SectionRenderer({
   section,
   order,
+  salonSlug,
 }: SectionRendererProps) {
   switch (section.type) {
     case "text-with-image":
@@ -36,6 +39,10 @@ export default function SectionRenderer({
       return <CenterTextSection settings={section.settings} />;
     case "reason":
       return <ReasonSection settings={section.settings} />;
+    case "stylists-section":
+      return (
+        <StylistsSection settings={section.settings} salonSlug={salonSlug} />
+      );
     default:
       return null;
   }
