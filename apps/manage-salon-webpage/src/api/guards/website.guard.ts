@@ -1,9 +1,8 @@
 import "server-only";
 
-import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { db, websitesTable } from "@repo/website-database";
-import { ManagementUserRepository } from "@repo/auth-domain";
+import { AuthGuard } from "./auth.guard";
 
 export class WebsiteAccessGuard {
   /**
@@ -11,22 +10,16 @@ export class WebsiteAccessGuard {
    * @param websiteId - Website ID to check access for.
    * @returns Result with void on success or error message on failure.
    */
-  public async canEditWebsite(
+  public static async canEditWebsite(
     websiteId: string,
   ): Promise<{ success: true } | { success: false; error: string }> {
-    const session = (await cookies()).get("session");
-    if (!session?.value) {
-      return { success: false, error: "Sitzung abgelaufen" };
-    }
+    const session = await AuthGuard.getAuthToken();
 
-    const authRepository = new ManagementUserRepository();
-    const authResult = await authRepository.authenticateToken(session.value);
-
-    if (!authResult.success) {
+    if (!session) {
       return { success: false, error: "Ungültige Sitzung" };
     }
 
-    if (!authResult.data.salonId) {
+    if (!session.salonId) {
       return { success: false, error: "Kein Salon zugeordnet" };
     }
 
@@ -39,7 +32,7 @@ export class WebsiteAccessGuard {
       return { success: false, error: "Website nicht gefunden" };
     }
 
-    if (website.salonId !== authResult.data.salonId) {
+    if (website.salonId !== session.salonId) {
       return { success: false, error: "Nicht autorisiert" };
     }
 

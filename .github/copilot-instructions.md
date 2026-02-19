@@ -95,6 +95,13 @@ After making code changes, always check the modified files for errors using the 
 - Name action files with `-actions.ts` suffix (e.g., `sections-actions.ts`, `website-actions.ts`)
 - Server actions provide better integration with React Server Components and forms
 
+### Import Statements
+
+- **NEVER use dynamic imports** (e.g., `await import(...)`)
+- **ALWAYS use static imports** at the top of the file
+- Dynamic imports should not be used even if you think they avoid circular dependencies
+- If there are circular dependency issues, refactor the code structure instead
+
 ## Do's and Don'ts
 
 ### Do:

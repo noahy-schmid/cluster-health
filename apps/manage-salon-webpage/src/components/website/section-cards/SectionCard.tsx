@@ -9,7 +9,7 @@ import ReasonCard from "./ReasonCard";
 import CenterTextCard from "./CenterTextCard";
 import StylistsCard from "./StylistsCard";
 import { AllSections } from "@repo/website-database";
-import FlatIconButton from "@/components/FlatIconButton";
+import FlatIconButton from "@/components/buttons/FlatIconButton";
 
 interface SectionCardProps {
   section: AllSections;

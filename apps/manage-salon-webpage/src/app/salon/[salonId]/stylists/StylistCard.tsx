@@ -6,8 +6,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Stylist } from "@repo/salon-domain";
 import { deleteStylist } from "@/app/salon/[salonId]/stylists/stylist.actions";
 import { useState } from "react";
-import FlatIconButton from "@/components/FlatIconButton";
-import FlatIconTextButton from "@/components/FlatIconTextButton";
+import FlatIconButton from "@/components/buttons/FlatIconButton";
+import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 
 interface StylistCardProps {
   stylist: Stylist;

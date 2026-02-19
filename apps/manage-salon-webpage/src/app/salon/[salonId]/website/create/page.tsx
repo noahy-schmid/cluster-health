@@ -1,64 +1,38 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import { createWebsite } from "@/api/website-actions";
-import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
+import { getWebsiteInitialValues } from "../settings.actions";
+import WebsiteCreateClient from "./client";
+import { redirect } from "next/navigation";
 
-export default function WebsiteCreatePage() {
-  const router = useRouter();
-  const { salonId } = useWebsiteRouteContext();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default async function WebsiteCreatePage({
+  params,
+}: {
+  params: Promise<{ salonId: string }>;
+}) {
+  const { salonId } = await params;
 
-  const handleCreate = async () => {
-    setIsSubmitting(true);
-    setError(null);
+  const initialValuesResult = await getWebsiteInitialValues();
 
-    const result = await createWebsite();
-
-    if (result.success) {
-      router.replace(`/salon/${salonId}/website/${result.websiteId}`);
-      return;
-    }
-
-    setError(result.error);
-    setIsSubmitting(false);
-  };
+  if (!initialValuesResult.success) {
+    // If we can't get initial values, redirect back to salon page
+    redirect(`/salon/${salonId}`);
+  }
 
   return (
     <div className="max-w-3xl mx-auto">
       <PageHeader
         title="Webseite erstellen"
-        subtitle="Erstellen Sie Ihre neue Salon-Webseite und starten Sie mit der Anpassung."
+        subtitle="Konfigurieren Sie die grundlegenden Einstellungen für Ihre neue Salon-Webseite."
       />
 
-      <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg flex flex-col gap-lg">
-        <p className="text-fg-normal">
-          Sie konnen jetzt Ihre Salon-Webseite erstellen. Danach gelangen Sie
-          direkt in den Editor.
-        </p>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <div className="flex items-center gap-sm">
-          <button
-            type="button"
-            onClick={handleCreate}
-            disabled={isSubmitting}
-            className="px-md py-sm rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-60"
-          >
-            {isSubmitting ? "Erstelle..." : "Webseite erstellen"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.replace(`/salon/${salonId}`)}
-            className="px-md py-sm rounded-md border border-border text-fg-normal hover:bg-bg-2"
-          >
-            Abbrechen
-          </button>
-        </div>
+      <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg">
+        <WebsiteCreateClient
+          salonId={salonId}
+          initialValues={{
+            slug: initialValuesResult.slug,
+            title: initialValuesResult.title,
+            faviconUrl: initialValuesResult.faviconUrl,
+          }}
+        />
       </div>
     </div>
   );

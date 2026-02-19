@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import SectionHeader from "./SectionHeader";
 import { StylistsSettings } from "@repo/website-database";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import FlatIconTextButton from "@/components/FlatIconTextButton";
+import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 
 interface StylistsCardProps {
   settings: StylistsSettings;
