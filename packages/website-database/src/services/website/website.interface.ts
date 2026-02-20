@@ -68,7 +68,10 @@ export interface WebsiteService {
     updates: UpdateWebsiteSettingsInput,
   ): Effect.Effect<
     WebsiteSettings,
-    WebsiteNotFoundError | WebsiteDatabaseError | WebsiteValidationError,
+    | WebsiteNotFoundError
+    | WebsiteDatabaseError
+    | WebsiteValidationError
+    | WebsiteAlreadyExistsError,
     never
   >;
 }

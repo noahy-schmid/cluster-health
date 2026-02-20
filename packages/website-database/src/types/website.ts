@@ -16,7 +16,9 @@ const WebsiteSchema = Schema.Struct({
     Schema.compose(Schema.Trim),
     Schema.nonEmptyString({ message: () => "Title cannot be empty" }),
   ),
-  favicon: Schema.String.pipe(Schema.compose(Schema.Trim), Schema.Option),
+  favicon: Schema.OptionFromSelf(
+    Schema.String.pipe(Schema.compose(Schema.Trim)),
+  ),
   subtitle: Schema.String.pipe(Schema.compose(Schema.Trim)),
   heroImage: Schema.String.pipe(Schema.compose(Schema.Trim)),
   heroTitle: Schema.String.pipe(Schema.compose(Schema.Trim)),

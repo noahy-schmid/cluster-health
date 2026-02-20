@@ -3,8 +3,13 @@
 import { AuthGuard } from "@/api/guards/auth.guard";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
 import { SalonRepository } from "@repo/salon-domain";
-import { db, websitesTable } from "@repo/website-database";
-import { eq } from "drizzle-orm";
+import { Effect, Option } from "effect";
+import {
+  WebsiteService,
+  WebsiteAlreadyExistsError,
+  type WebsiteId,
+} from "@repo/website-database";
+import { WebsiteLayer } from "@repo/website-database/src/layers";
 
 /**
  * Helper function to convert a string to a URL-friendly slug
@@ -69,13 +74,13 @@ export async function getWebsiteInitialValues(): Promise<
  * Server action to create a new website with custom settings
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
- * @param _faviconUrl - Optional URL to favicon image (not yet stored in DB)
+ * @param faviconUrl - Optional URL to favicon image
  * @returns Result with the created website ID or error
  */
 export async function createWebsite(
   slug: string,
   title: string,
-  _faviconUrl: string,
+  faviconUrl: string,
 ): Promise<
   | {
       success: true;
@@ -96,46 +101,36 @@ export async function createWebsite(
     return { success: false, error: "Kein Salon zugeordnet" };
   }
 
-  // Check if website already exists for this salon
-  const [existingWebsite] = await db
-    .select({ id: websitesTable.id })
-    .from(websitesTable)
-    .where(eq(websitesTable.salonId, authToken.salonId));
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const service = yield* WebsiteService;
+      return yield* service
+        .createWebsite({
+          salonId: authToken.salonId,
+          slug,
+          title,
+          favicon: faviconUrl ? Option.some(faviconUrl) : Option.none<string>(),
+        })
+        .pipe(
+          Effect.map((websiteId) => ({ websiteId, success: true as const })),
+        );
+    }).pipe(
+      Effect.catchTag("WebsiteAlreadyExistsError", (error) => {
+        if (error.slug) {
+          return Effect.succeed({
+            success: false as const,
+            error: "Dieser Slug wird bereits verwendet",
+          });
+        }
+        return Effect.succeed({
+          success: false as const,
+          error: "Für diesen Salon existiert bereits eine Website",
+        });
+      }),
 
-  if (existingWebsite) {
-    return { success: false, error: "Website already exists" };
-  }
-
-  const newWebsite: typeof websitesTable.$inferInsert = {
-    salonId: authToken.salonId,
-    heroImage: "",
-    logo: "",
-    slug: slug,
-    title: title,
-    subtitle: "Willkommen auf meiner Salon Webseite",
-    colorBackgroundBase: "#FAF8F6",
-    colorBackgroundElevation1: "#FFFFFF",
-    colorBackgroundElevation2: "#F5F3F1",
-    colorForegroundBase: "#1A1A1A",
-    colorForegroundMuted: "#6B6B6B",
-    colorForegroundStrong: "#000000",
-    colorAccent: "#B8845F",
-    colorOnAccent: "#FFFFFF",
-  };
-
-  try {
-    const insertedWebsite = await db
-      .insert(websitesTable)
-      .values(newWebsite)
-      .returning();
-    return { success: true, websiteId: insertedWebsite[0].id };
-  } catch (error) {
-    console.error("Error creating website:", error);
-    return {
-      success: false,
-      error: "Failed to create website",
-    };
-  }
+      Effect.provide(WebsiteLayer),
+    ),
+  );
 }
 
 /**
@@ -143,14 +138,14 @@ export async function createWebsite(
  * @param websiteId - ID of the website to update
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
- * @param _faviconUrl - Optional URL to favicon image (not yet stored in DB)
+ * @param faviconUrl - Optional URL to favicon image
  * @returns Result indicating success or error
  */
 export async function updateWebsiteSettings(
   websiteId: string,
   slug: string,
   title: string,
-  _faviconUrl: string,
+  faviconUrl: string,
 ): Promise<
   | {
       success: true;
@@ -167,22 +162,30 @@ export async function updateWebsiteSettings(
   }
 
   try {
-    await db
-      .update(websitesTable)
-      .set({
-        slug: slug,
-        title: title,
-        // Note: faviconUrl is not stored in the database yet
-        // but we accept it for future use
-      })
-      .where(eq(websitesTable.id, websiteId));
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const service = yield* WebsiteService;
+        return yield* service.updateWebsiteSettings(websiteId as WebsiteId, {
+          slug,
+          title,
+          favicon: faviconUrl ? Option.some(faviconUrl) : Option.none(),
+        });
+      }).pipe(Effect.provide(WebsiteLayer)),
+    );
 
     return { success: true };
   } catch (error) {
+    // Handle specific business errors
+    if (error instanceof WebsiteAlreadyExistsError) {
+      if (error.slug) {
+        return { success: false, error: "Dieser Slug wird bereits verwendet" };
+      }
+    }
+
     console.error("Error updating website settings:", error);
     return {
       success: false,
-      error: "Failed to update settings",
+      error: "Fehler beim Aktualisieren der Einstellungen",
     };
   }
 }

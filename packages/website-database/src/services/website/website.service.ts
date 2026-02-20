@@ -1,7 +1,6 @@
 import { Effect, Layer, Option, Schema } from "effect";
 import type {
   CreateWebsiteInput,
-  UpdateWebsiteSettingsInput,
   WebsiteId,
   WebsiteSettings,
 } from "../../types/website";
@@ -68,6 +67,10 @@ const make = Effect.gen(function* () {
       );
 
       if (!salonExistsResult) {
+        yield* Effect.logWarning(
+          "Tried to create website for non-existent salon ID: ",
+          validatedInput.salonId,
+        );
         return yield* Effect.fail(
           new WebsiteValidationError({
             message: `Salon with ID ${validatedInput.salonId} does not exist`,
@@ -99,14 +102,17 @@ const make = Effect.gen(function* () {
 
       // Try to create website and catch duplicate key errors
       const result = yield* websiteRepo.createWebsite(insertData).pipe(
+        Effect.tapError((error) =>
+          Effect.logError("Failed to create website:", error),
+        ),
         Effect.mapError((error) => {
-          if (error.cause?.code === "23505") {
-            if (error.cause?.constraint === "websites_salonId_key") {
+          if (error.cause?.cause?.code === "23505") {
+            if (error.cause?.cause?.constraint === "websites_salonId_unique") {
               return new WebsiteAlreadyExistsError({
                 salonId: validatedInput.salonId,
               });
             }
-            if (error.cause?.constraint === "websites_slug_key") {
+            if (error.cause?.cause?.constraint === "websites_slug_unique") {
               return new WebsiteAlreadyExistsError({
                 slug: validatedInput.slug,
               });
@@ -135,31 +141,28 @@ const make = Effect.gen(function* () {
       return mapToWebsiteSettings(websiteOption.value);
     });
 
-  const getWebsiteSettingsBySalonId = (
-    salonId: string,
-  ): Effect.Effect<
-    WebsiteSettings,
-    WebsiteNotFoundError | WebsiteDatabaseError,
-    never
-  > =>
-    Effect.gen(function* () {
-      const websiteOption = yield* websiteRepo.getWebsiteBySalonId(salonId);
+  const getWebsiteSettingsBySalonId: WebsiteService["getWebsiteSettingsBySalonId"] =
+    (
+      salonId: string,
+    ): Effect.Effect<
+      WebsiteSettings,
+      WebsiteNotFoundError | WebsiteDatabaseError,
+      never
+    > =>
+      Effect.gen(function* () {
+        const websiteOption = yield* websiteRepo.getWebsiteBySalonId(salonId);
 
-      if (Option.isNone(websiteOption)) {
-        return yield* Effect.fail(new WebsiteNotFoundError({ salonId }));
-      }
+        if (Option.isNone(websiteOption)) {
+          return yield* Effect.fail(new WebsiteNotFoundError({ salonId }));
+        }
 
-      return mapToWebsiteSettings(websiteOption.value);
-    });
+        return mapToWebsiteSettings(websiteOption.value);
+      });
 
-  const updateWebsiteSettings = (
-    id: WebsiteId,
-    updates: UpdateWebsiteSettingsInput,
-  ): Effect.Effect<
-    WebsiteSettings,
-    WebsiteNotFoundError | WebsiteDatabaseError | WebsiteValidationError,
-    never
-  > =>
+  const updateWebsiteSettings: WebsiteService["updateWebsiteSettings"] = (
+    id,
+    updates,
+  ) =>
     Effect.gen(function* () {
       // Validate input
       const validatedUpdates = yield* Schema.decode(
@@ -186,10 +189,23 @@ const make = Effect.gen(function* () {
       }
 
       // Update website
-      const updatedWebsiteOption = yield* websiteRepo.updateWebsite(
-        id,
-        updateData,
-      );
+      const updatedWebsiteOption = yield* websiteRepo
+        .updateWebsite(id, updateData)
+        .pipe(
+          Effect.mapError((error) => {
+            if (error.cause?.cause?.code === "23505") {
+              if (error.cause?.cause?.constraint === "websites_slug_unique") {
+                return new WebsiteAlreadyExistsError({
+                  slug: validatedUpdates.slug,
+                });
+              }
+            }
+            return new WebsiteDatabaseError({
+              message: `Failed to update website with ID ${id}`,
+              cause: error,
+            });
+          }),
+        );
 
       if (Option.isNone(updatedWebsiteOption)) {
         return yield* Effect.fail(new WebsiteNotFoundError({ websiteId: id }));

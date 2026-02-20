@@ -13,120 +13,120 @@ const make = Effect.gen(function* () {
 
   const createWebsite: WebsiteRepository["createWebsite"] = (input) =>
     Effect.gen(function* () {
-      try {
-        const [created] = yield* Effect.promise(async () => {
-          return await db.insert(websitesTable).values(input).returning();
-        });
-
-        if (!created) {
-          return yield* Effect.fail(
+      const [created] = yield* Effect.tryPromise(async () => {
+        return await db.insert(websitesTable).values(input).returning();
+      }).pipe(
+        Effect.catchAll((error) => {
+          return Effect.fail(
             new WebsiteDatabaseError({
-              message: "Failed to create website - no result returned",
+              message: "Failed to create website",
+              cause: error.cause,
             }),
           );
-        }
+        }),
+      );
 
-        return created;
-      } catch (error) {
+      if (!created) {
         return yield* Effect.fail(
           new WebsiteDatabaseError({
-            message: "Failed to create website",
-            cause: error,
+            message: "Failed to create website - no result returned",
           }),
         );
       }
+
+      return created;
     });
 
   const getWebsiteById: WebsiteRepository["getWebsiteById"] = (id) =>
     Effect.gen(function* () {
-      try {
-        const [website] = yield* Effect.promise(async () => {
-          return await db
-            .select()
-            .from(websitesTable)
-            .where(eq(websitesTable.id, id))
-            .limit(1);
-        });
+      const [website] = yield* Effect.tryPromise(async () => {
+        return await db
+          .select()
+          .from(websitesTable)
+          .where(eq(websitesTable.id, id))
+          .limit(1);
+      }).pipe(
+        Effect.catchAll((error) => {
+          return Effect.fail(
+            new WebsiteDatabaseError({
+              message: `Failed to fetch website by id: ${id}`,
+              cause: error.cause,
+            }),
+          );
+        }),
+      );
 
-        return Option.fromNullable(website);
-      } catch (error) {
-        return yield* Effect.fail(
-          new WebsiteDatabaseError({
-            message: `Failed to fetch website by id: ${id}`,
-            cause: error,
-          }),
-        );
-      }
+      return Option.fromNullable(website);
     });
 
   const getWebsiteBySalonId: WebsiteRepository["getWebsiteBySalonId"] = (
     salonId,
   ) =>
     Effect.gen(function* () {
-      try {
-        const [website] = yield* Effect.promise(async () => {
-          return await db
-            .select()
-            .from(websitesTable)
-            .where(eq(websitesTable.salonId, salonId))
-            .limit(1);
-        });
+      const [website] = yield* Effect.tryPromise(async () => {
+        return await db
+          .select()
+          .from(websitesTable)
+          .where(eq(websitesTable.salonId, salonId))
+          .limit(1);
+      }).pipe(
+        Effect.catchAll((error) => {
+          return Effect.fail(
+            new WebsiteDatabaseError({
+              message: `Failed to fetch website by salon id: ${salonId}`,
+              cause: error.cause,
+            }),
+          );
+        }),
+      );
 
-        return Option.fromNullable(website);
-      } catch (error) {
-        return yield* Effect.fail(
-          new WebsiteDatabaseError({
-            message: `Failed to fetch website by salon id: ${salonId}`,
-            cause: error,
-          }),
-        );
-      }
+      return Option.fromNullable(website);
     });
 
   const hasWebsiteForSalonId: WebsiteRepository["hasWebsiteForSalonId"] = (
     salonId,
   ) =>
     Effect.gen(function* () {
-      try {
-        const [result] = yield* Effect.promise(async () => {
-          return await db
-            .select({ id: websitesTable.id })
-            .from(websitesTable)
-            .where(eq(websitesTable.salonId, salonId))
-            .limit(1);
-        });
+      const [result] = yield* Effect.tryPromise(async () => {
+        return await db
+          .select({ id: websitesTable.id })
+          .from(websitesTable)
+          .where(eq(websitesTable.salonId, salonId))
+          .limit(1);
+      }).pipe(
+        Effect.catchAll((error) => {
+          return Effect.fail(
+            new WebsiteDatabaseError({
+              message: `Failed to check if salon has website: ${salonId}`,
+              cause: error.cause,
+            }),
+          );
+        }),
+      );
 
-        return !!result;
-      } catch (error) {
-        return yield* Effect.fail(
-          new WebsiteDatabaseError({
-            message: `Failed to check if salon has website: ${salonId}`,
-            cause: error,
-          }),
-        );
-      }
+      return !!result;
     });
 
   const updateWebsite: WebsiteRepository["updateWebsite"] = (id, updates) =>
     Effect.gen(function* () {
-      try {
-        const [updated] = yield* Effect.promise(async () => {
-          return await db
-            .update(websitesTable)
-            .set(updates)
-            .where(eq(websitesTable.id, id))
-            .returning();
-        });
+      const [updated] = yield* Effect.tryPromise(async () => {
+        return await db
+          .update(websitesTable)
+          .set(updates)
+          .where(eq(websitesTable.id, id))
+          .returning();
+      }).pipe(
+        Effect.catchAll((error) => {
+          return Effect.fail(
+            new WebsiteDatabaseError({
+              message: `Failed to update website: ${id}`,
+              cause: error.cause,
+            }),
+          );
+        }),
+      );
 
-        return Option.fromNullable(updated);
-      } catch (error) {
-        return yield* Effect.fail(
-          new WebsiteDatabaseError({
-            message: `Failed to update website: ${id}`,
-            cause: error,
-          }),
-        );
-      }
+      return Option.fromNullable(updated);
     });
 
   return {
