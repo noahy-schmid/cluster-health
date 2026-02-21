@@ -100,30 +100,13 @@ const make = Effect.gen(function* () {
         colorOnAccent: "#ffffff",
       };
 
-      // Try to create website and catch duplicate key errors
-      const result = yield* websiteRepo.createWebsite(insertData).pipe(
-        Effect.tapError((error) =>
-          Effect.logError("Failed to create website:", error),
-        ),
-        Effect.mapError((error) => {
-          if (error.cause?.cause?.code === "23505") {
-            if (error.cause?.cause?.constraint === "websites_salonId_unique") {
-              return new WebsiteAlreadyExistsError({
-                salonId: validatedInput.salonId,
-              });
-            }
-            if (error.cause?.cause?.constraint === "websites_slug_unique") {
-              return new WebsiteAlreadyExistsError({
-                slug: validatedInput.slug,
-              });
-            }
-          }
-          return new WebsiteDatabaseError({
-            message: "Failed to create website",
-            cause: error,
-          });
-        }),
-      );
+      const result = yield* websiteRepo
+        .createWebsite(insertData)
+        .pipe(
+          Effect.tapError((error) =>
+            Effect.logError("Failed to create website:", error),
+          ),
+        );
 
       return result.id as WebsiteId;
     });
@@ -207,24 +190,10 @@ const make = Effect.gen(function* () {
         updateData.favicon = Option.getOrNull(validatedUpdates.favicon);
       }
 
-      // Update website
-      const updatedWebsiteOption = yield* websiteRepo
-        .updateWebsite(id, updateData)
-        .pipe(
-          Effect.mapError((error) => {
-            if (error.cause?.cause?.code === "23505") {
-              if (error.cause?.cause?.constraint === "websites_slug_unique") {
-                return new WebsiteAlreadyExistsError({
-                  slug: validatedUpdates.slug,
-                });
-              }
-            }
-            return new WebsiteDatabaseError({
-              message: `Failed to update website with ID ${id}`,
-              cause: error,
-            });
-          }),
-        );
+      const updatedWebsiteOption = yield* websiteRepo.updateWebsite(
+        id,
+        updateData,
+      );
 
       if (Option.isNone(updatedWebsiteOption)) {
         return yield* Effect.fail(new WebsiteNotFoundError({ websiteId: id }));

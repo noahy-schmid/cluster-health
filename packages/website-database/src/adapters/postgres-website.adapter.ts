@@ -2,7 +2,10 @@ import { Effect, Layer, Option } from "effect";
 import { eq } from "drizzle-orm";
 import { db } from "../database";
 import { websitesTable } from "../schema";
-import { WebsiteDatabaseError } from "../types/website-errors";
+import {
+  WebsiteAlreadyExistsError,
+  WebsiteDatabaseError,
+} from "../types/website-errors";
 import { WebsiteRepository } from "../ports/website.port";
 
 /**
@@ -13,19 +16,30 @@ const make = Effect.gen(function* () {
 
   const createWebsite: WebsiteRepository["createWebsite"] = (input) =>
     Effect.gen(function* () {
-      const [created] = yield* Effect.tryPromise(async () => {
-        return await db.insert(websitesTable).values(input).returning();
-      }).pipe(
-        Effect.catchAll((error) => {
-          return Effect.fail(
-            new WebsiteDatabaseError({
-              message: "Failed to create website",
-              cause: error.cause,
-            }),
-          );
+      const rows = yield* Effect.tryPromise(() =>
+        db.insert(websitesTable).values(input).returning(),
+      ).pipe(
+        Effect.mapError((error) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const cause = (error.cause as any)?.cause;
+          if (cause?.code === "23505") {
+            if (cause?.constraint === "websites_salonId_unique") {
+              return new WebsiteAlreadyExistsError({
+                salonId: input.salonId,
+              });
+            }
+            if (cause?.constraint === "websites_slug_unique") {
+              return new WebsiteAlreadyExistsError({ slug: input.slug });
+            }
+          }
+          return new WebsiteDatabaseError({
+            message: "Failed to create website",
+            cause: error,
+          });
         }),
       );
 
+      const created = rows[0];
       if (!created) {
         return yield* Effect.fail(
           new WebsiteDatabaseError({
@@ -131,24 +145,31 @@ const make = Effect.gen(function* () {
 
   const updateWebsite: WebsiteRepository["updateWebsite"] = (id, updates) =>
     Effect.gen(function* () {
-      const [updated] = yield* Effect.tryPromise(async () => {
-        return await db
+      const rows = yield* Effect.tryPromise(() =>
+        db
           .update(websitesTable)
           .set(updates)
           .where(eq(websitesTable.id, id))
-          .returning();
-      }).pipe(
-        Effect.catchAll((error) => {
-          return Effect.fail(
-            new WebsiteDatabaseError({
+          .returning(),
+      ).pipe(
+        Effect.mapError(
+          (error): WebsiteDatabaseError | WebsiteAlreadyExistsError => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const cause = (error.cause as any)?.cause;
+            if (cause?.code === "23505") {
+              if (cause?.constraint === "websites_slug_unique") {
+                return new WebsiteAlreadyExistsError({ slug: updates.slug });
+              }
+            }
+            return new WebsiteDatabaseError({
               message: `Failed to update website: ${id}`,
-              cause: error.cause,
-            }),
-          );
-        }),
+              cause: error,
+            });
+          },
+        ),
       );
 
-      return Option.fromNullable(updated);
+      return Option.fromNullable(rows[0]);
     });
 
   return {

@@ -1,5 +1,8 @@
 import { Context, Effect, Option } from "effect";
-import type { WebsiteDatabaseError } from "../types/website-errors";
+import type {
+  WebsiteAlreadyExistsError,
+  WebsiteDatabaseError,
+} from "../types/website-errors";
 import { websitesTable } from "../schema";
 
 export type SelectDatabaseWebsite = typeof websitesTable.$inferSelect;
@@ -16,7 +19,11 @@ export interface WebsiteRepository {
    */
   createWebsite(
     input: InsertDatabaseWebsite,
-  ): Effect.Effect<SelectDatabaseWebsite, WebsiteDatabaseError, never>;
+  ): Effect.Effect<
+    SelectDatabaseWebsite,
+    WebsiteDatabaseError | WebsiteAlreadyExistsError,
+    never
+  >;
 
   /**
    * Fetches a website by its unique ID.
@@ -77,7 +84,7 @@ export interface WebsiteRepository {
     updates: Partial<InsertDatabaseWebsite>,
   ): Effect.Effect<
     Option.Option<SelectDatabaseWebsite>,
-    WebsiteDatabaseError,
+    WebsiteDatabaseError | WebsiteAlreadyExistsError,
     never
   >;
 }
