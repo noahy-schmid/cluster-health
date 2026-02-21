@@ -16,6 +16,7 @@ interface WebsiteSettingsFormProps {
   onCancel: () => void;
   isSubmitting: boolean;
   error?: string;
+  saveLabel?: string;
 }
 
 export default function WebsiteSettingsForm({
@@ -24,6 +25,7 @@ export default function WebsiteSettingsForm({
   onCancel,
   isSubmitting,
   error,
+  saveLabel = "Webseite erstellen",
 }: WebsiteSettingsFormProps) {
   const [slug, setSlug] = useState(initialValues.slug);
   const [title, setTitle] = useState(initialValues.title);
@@ -74,7 +76,7 @@ export default function WebsiteSettingsForm({
       <FormActions
         onSave={handleSave}
         onCancel={onCancel}
-        saveLabel="Webseite erstellen"
+        saveLabel={saveLabel}
         isSaving={isSubmitting}
       />
     </form>

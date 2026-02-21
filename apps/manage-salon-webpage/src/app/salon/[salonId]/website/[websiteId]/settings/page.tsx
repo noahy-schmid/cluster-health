@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getWebsiteSettings } from "../../../settings.actions";
+import { getWebsiteSettings } from "../../settings.actions";
 import WebsiteSettingsPageClient from "./client";
 
 export default async function WebsiteSettingsPage({

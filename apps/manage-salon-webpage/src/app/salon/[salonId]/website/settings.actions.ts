@@ -71,6 +71,65 @@ export async function getWebsiteInitialValues(): Promise<
 }
 
 /**
+ * Server action to get the current website settings
+ * @param websiteId - ID of the website
+ * @returns Current website settings or error
+ */
+export async function getWebsiteSettings(websiteId: string): Promise<
+  | {
+      success: true;
+      slug: string;
+      title: string;
+      faviconUrl: string;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
+  const canAccess = await WebsiteAccessGuard.canEditWebsite(websiteId);
+
+  if (!canAccess.success) {
+    return { success: false, error: canAccess.error };
+  }
+
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const service = yield* WebsiteService;
+      const settings = yield* service.getWebsiteSettingsById(
+        websiteId as WebsiteId,
+      );
+
+      return {
+        success: true as const,
+        slug: settings.slug,
+        title: settings.title,
+        faviconUrl: Option.getOrElse(settings.favicon, () => ""),
+      };
+    }).pipe(
+      Effect.catchTags({
+        WebsiteNotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Website nicht gefunden",
+          }),
+        WebsiteDatabaseError: (error) =>
+          Effect.gen(function* () {
+            yield* Effect.logError(
+              `Database error fetching website settings: ${error.message}`,
+            );
+            return {
+              success: false as const,
+              error: "Fehler beim Laden der Einstellungen",
+            };
+          }),
+      }),
+      Effect.provide(WebsiteLayer),
+    ),
+  );
+}
+
+/**
  * Server action to create a new website with custom settings
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
