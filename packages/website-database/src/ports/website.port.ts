@@ -45,6 +45,19 @@ export interface WebsiteRepository {
   >;
 
   /**
+   * Fetches a website by its slug.
+   * @param slug Website slug to look up.
+   * @returns Effect that resolves to the website.
+   */
+  getWebsiteBySlug(
+    slug: string,
+  ): Effect.Effect<
+    Option.Option<SelectDatabaseWebsite>,
+    WebsiteDatabaseError,
+    never
+  >;
+
+  /**
    * Checks if a salon has a website.
    * @param salonId the salon ID to check.
    * @returns Effect that resolves to true if the salon has a website, false otherwise.

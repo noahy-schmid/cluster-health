@@ -57,6 +57,19 @@ export interface WebsiteService {
   >;
 
   /**
+   * Fetches website settings by slug.
+   * @param slug Website slug to look up.
+   * @returns Effect that resolves to the website settings.
+   */
+  getWebsiteSettingsBySlug(
+    slug: string,
+  ): Effect.Effect<
+    WebsiteSettings,
+    WebsiteNotFoundError | WebsiteDatabaseError,
+    never
+  >;
+
+  /**
    * Updates website settings with schema validation.
    * Only updates slug and title fields.
    * @param id Website ID to update.

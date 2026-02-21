@@ -5,7 +5,7 @@ import { Data } from "effect";
  */
 export class WebsiteNotFoundError extends Data.TaggedError(
   "WebsiteNotFoundError",
-)<{ websiteId?: string; salonId?: string }> {}
+)<{ websiteId?: string; salonId?: string; websiteSlug?: string }> {}
 
 /**
  * Raised when a database operation fails unexpectedly.

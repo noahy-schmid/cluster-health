@@ -159,6 +159,25 @@ const make = Effect.gen(function* () {
         return mapToWebsiteSettings(websiteOption.value);
       });
 
+  const getWebsiteSettingsBySlug: WebsiteService["getWebsiteSettingsBySlug"] = (
+    slug: string,
+  ): Effect.Effect<
+    WebsiteSettings,
+    WebsiteNotFoundError | WebsiteDatabaseError,
+    never
+  > =>
+    Effect.gen(function* () {
+      const websiteOption = yield* websiteRepo.getWebsiteBySlug(slug);
+
+      if (Option.isNone(websiteOption)) {
+        return yield* Effect.fail(
+          new WebsiteNotFoundError({ websiteSlug: slug }),
+        );
+      }
+
+      return mapToWebsiteSettings(websiteOption.value);
+    });
+
   const updateWebsiteSettings: WebsiteService["updateWebsiteSettings"] = (
     id,
     updates,
@@ -218,6 +237,7 @@ const make = Effect.gen(function* () {
     createWebsite,
     getWebsiteSettingsById,
     getWebsiteSettingsBySalonId,
+    getWebsiteSettingsBySlug,
     updateWebsiteSettings,
   } satisfies WebsiteService;
 });

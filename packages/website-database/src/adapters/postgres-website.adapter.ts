@@ -83,6 +83,28 @@ const make = Effect.gen(function* () {
       return Option.fromNullable(website);
     });
 
+  const getWebsiteBySlug: WebsiteRepository["getWebsiteBySlug"] = (slug) =>
+    Effect.gen(function* () {
+      const [website] = yield* Effect.tryPromise(async () => {
+        return await db
+          .select()
+          .from(websitesTable)
+          .where(eq(websitesTable.slug, slug))
+          .limit(1);
+      }).pipe(
+        Effect.catchAll((error) => {
+          return Effect.fail(
+            new WebsiteDatabaseError({
+              message: `Failed to fetch website by slug: ${slug}`,
+              cause: error.cause,
+            }),
+          );
+        }),
+      );
+
+      return Option.fromNullable(website);
+    });
+
   const hasWebsiteForSalonId: WebsiteRepository["hasWebsiteForSalonId"] = (
     salonId,
   ) =>
@@ -133,6 +155,7 @@ const make = Effect.gen(function* () {
     createWebsite,
     getWebsiteById,
     getWebsiteBySalonId,
+    getWebsiteBySlug,
     hasWebsiteForSalonId,
     updateWebsite,
   } satisfies WebsiteRepository;

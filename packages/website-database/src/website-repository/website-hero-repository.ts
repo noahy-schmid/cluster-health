@@ -117,7 +117,7 @@ const genWebsiteHeroRepositoryLive: Effect.Effect<WebsiteHeroRepository> =
             .select({
               heroImage: websitesTable.heroImage,
               logo: websitesTable.logo,
-              title: websitesTable.title,
+              title: websitesTable.heroTitle,
               subtitle: websitesTable.subtitle,
               textColor: websitesTable.textColor,
             })
@@ -136,7 +136,7 @@ const genWebsiteHeroRepositoryLive: Effect.Effect<WebsiteHeroRepository> =
               .select({
                 heroImage: websitesTable.heroImage,
                 logo: websitesTable.logo,
-                title: websitesTable.title,
+                title: websitesTable.heroTitle,
                 subtitle: websitesTable.subtitle,
                 textColor: websitesTable.textColor,
               })
@@ -158,7 +158,7 @@ const genWebsiteHeroRepositoryLive: Effect.Effect<WebsiteHeroRepository> =
             .set({
               heroImage: settings.heroImage,
               logo: settings.logo,
-              title: settings.title,
+              heroTitle: settings.title,
               subtitle: settings.subtitle,
               textColor: settings.textColor,
             })
