@@ -45,11 +45,11 @@ export default function Dropdown({ isOpen, onClose, items }: DropdownProps) {
       ref={dropdownRef}
       className="absolute right-0 mt-xs bg-bg-1 rounded-lg shadow-lg border border-border min-w-[250px] max-w-[300px] z-50"
     >
-      {items.map((item, index) => {
+      {items.map((item) => {
         const Icon = item.icon;
         return (
           <button
-            key={index}
+            key={item.text}
             onClick={() => {
               item.onClick();
               onClose();

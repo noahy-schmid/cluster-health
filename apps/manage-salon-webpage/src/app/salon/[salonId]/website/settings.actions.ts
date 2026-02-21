@@ -4,11 +4,7 @@ import { AuthGuard } from "@/api/guards/auth.guard";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
 import { SalonRepository } from "@repo/salon-domain";
 import { Effect, Option } from "effect";
-import {
-  WebsiteService,
-  WebsiteAlreadyExistsError,
-  type WebsiteId,
-} from "@repo/website-database";
+import { WebsiteService, type WebsiteId } from "@repo/website-database";
 import { WebsiteLayer } from "@repo/website-database/src/layers";
 
 /**
@@ -220,31 +216,36 @@ export async function updateWebsiteSettings(
     return { success: false, error: canAccess.error };
   }
 
-  try {
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const service = yield* WebsiteService;
-        return yield* service.updateWebsiteSettings(websiteId as WebsiteId, {
-          slug,
-          title,
-          favicon: faviconUrl ? Option.some(faviconUrl) : Option.none(),
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const service = yield* WebsiteService;
+      yield* service.updateWebsiteSettings(websiteId as WebsiteId, {
+        slug,
+        title,
+        favicon: faviconUrl ? Option.some(faviconUrl) : Option.none(),
+      });
+      return { success: true as const };
+    }).pipe(
+      Effect.catchTag("WebsiteAlreadyExistsError", (error) => {
+        if (error.slug) {
+          return Effect.succeed({
+            success: false as const,
+            error: "Dieser Slug wird bereits verwendet",
+          });
+        }
+        return Effect.succeed({
+          success: false as const,
+          error: "Fehler beim Aktualisieren der Einstellungen",
         });
-      }).pipe(Effect.provide(WebsiteLayer)),
-    );
-
-    return { success: true };
-  } catch (error) {
-    // Handle specific business errors
-    if (error instanceof WebsiteAlreadyExistsError) {
-      if (error.slug) {
-        return { success: false, error: "Dieser Slug wird bereits verwendet" };
-      }
-    }
-
-    console.error("Error updating website settings:", error);
-    return {
-      success: false,
-      error: "Fehler beim Aktualisieren der Einstellungen",
-    };
-  }
+      }),
+      Effect.catchAll((error) => {
+        console.error("Error updating website settings:", error);
+        return Effect.succeed({
+          success: false as const,
+          error: "Fehler beim Aktualisieren der Einstellungen",
+        });
+      }),
+      Effect.provide(WebsiteLayer),
+    ),
+  );
 }

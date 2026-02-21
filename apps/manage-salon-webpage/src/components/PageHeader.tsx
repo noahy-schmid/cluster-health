@@ -56,23 +56,41 @@ export default function PageHeader({
           )}
         </div>
 
-        {/* Single action: Show as button on desktop only */}
+        {/* Single action: Show dropdown on mobile, inline button on desktop */}
         {actions && actions.length > 0 && !hasMultipleActions && (
-          <div className="hidden md:block">
-            {actions.map((action, index) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={index}
-                  onClick={action.onClick}
-                  className="p-sm flex items-center rounded-md hover:bg-bg-1 text-fg-muted hover:text-fg-normal font-normal text-base gap-sm cursor-pointer"
-                >
-                  <Icon className="w-8 h-8 " />
-                  {action.text}
-                </button>
-              );
-            })}
-          </div>
+          <>
+            {/* Mobile: dropdown */}
+            <div className="relative md:hidden">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="p-sm flex items-center rounded-md hover:bg-bg-1 text-fg-muted hover:text-fg-normal font-normal text-base cursor-pointer"
+                aria-label="Actions menu"
+              >
+                <MoreVertical className="w-8 h-8" />
+              </button>
+              <Dropdown
+                isOpen={isDropdownOpen}
+                onClose={() => setIsDropdownOpen(false)}
+                items={actions as DropdownItem[]}
+              />
+            </div>
+            {/* Desktop: inline button */}
+            <div className="hidden md:block">
+              {actions.map((action, index) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={index}
+                    onClick={action.onClick}
+                    className="p-sm flex items-center rounded-md hover:bg-bg-1 text-fg-muted hover:text-fg-normal font-normal text-base gap-sm cursor-pointer"
+                  >
+                    <Icon className="w-8 h-8 " />
+                    {action.text}
+                  </button>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

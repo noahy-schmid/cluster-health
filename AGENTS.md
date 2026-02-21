@@ -18,3 +18,7 @@ You should read the following files on a need to know basis.
 
 - `AGENTS-Backend-Service.md`: Read this file before planning or modifying anythin that touches one of the backend domains (Also backend logic within the frontends).
 - `AGENTS-Frontend-UI.md`: Read this file before planning or modifying anything that touches the frontend.
+
+# Important 
+
+**NEVER use dynamic imports** (e.g., `await import(...)`)
