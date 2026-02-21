@@ -95,25 +95,9 @@ After making code changes, always check the modified files for errors using the 
 - Name action files with `-actions.ts` suffix (e.g., `sections-actions.ts`, `website-actions.ts`)
 - Server actions provide better integration with React Server Components and forms
 
-## Do's and Don'ts
+### Import Statements
 
-### Do:
-
-✅ Use CSS variables for all design tokens
-✅ Use Lucide React for icons
-✅ Make layouts responsive with mobile-first approach
-✅ Keep components small and focused
-✅ Use semantic HTML elements
-✅ Add proper TypeScript types
-✅ Test on both desktop and mobile viewports
-Do put state as close to where it's used as possible
-Do make reusable components in seperate files
-
-### Don't:
-
-❌ Don't hardcode colors, spacing, or font sizes
-❌ Don't use other icon libraries
-❌ Don't use inline styles unless absolutely necessary
-❌ Don't create overly complex component hierarchies
-❌ Don't forget accessibility features
-❌ Don't mix server and client components unnecessarily
+- **NEVER use dynamic imports** (e.g., `await import(...)`)
+- **ALWAYS use static imports** at the top of the file
+- Dynamic imports should not be used even if you think they avoid circular dependencies
+- If there are circular dependency issues, refactor the code structure instead

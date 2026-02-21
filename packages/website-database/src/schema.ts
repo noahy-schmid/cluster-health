@@ -2,13 +2,15 @@ import { integer, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const websitesTable = pgTable("websites", {
   id: uuid().primaryKey().defaultRandom(),
-  salonId: uuid().notNull(),
+  salonId: uuid().notNull().unique(),
   heroImage: varchar().notNull(),
   logo: varchar().notNull(),
-  title: varchar().notNull(),
+  heroTitle: varchar().notNull(),
   subtitle: varchar().notNull(),
   textColor: varchar().notNull().default("light"),
   slug: varchar().notNull().unique(),
+  title: varchar().notNull(),
+  favicon: varchar(),
   colorBackgroundBase: varchar().notNull(),
   colorBackgroundElevation1: varchar().notNull(),
   colorBackgroundElevation2: varchar().notNull(),

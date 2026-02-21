@@ -43,6 +43,13 @@
       "when": 1771454099652,
       "tag": "0005_sparkling_trish_tilby",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771612368950,
+      "tag": "0006_glossy_morlocks",
+      "breakpoints": true
     }
   ]
 }

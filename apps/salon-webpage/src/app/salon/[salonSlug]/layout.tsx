@@ -1,4 +1,35 @@
 import { fetchColorsBySalonSlug } from "@/api/sections-actions";
+import { fetchWebsiteMetadataSettingsBySalonSlug } from "@/api/website-settings-actions";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ salonSlug: string }>;
+}): Promise<Metadata> {
+  const { salonSlug } = await params;
+
+  const metadataResult =
+    await fetchWebsiteMetadataSettingsBySalonSlug(salonSlug);
+
+  if (metadataResult.success && metadataResult.settings) {
+    const { title, favicon } = metadataResult.settings;
+
+    return {
+      title,
+      ...(favicon && {
+        icons: {
+          icon: favicon,
+        },
+      }),
+    };
+  }
+
+  // Fallback metadata
+  return {
+    title: "Salon",
+  };
+}
 
 export default async function SalonLayout({
   children,

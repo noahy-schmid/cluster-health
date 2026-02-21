@@ -418,6 +418,9 @@ importers:
 
   packages/website-database:
     dependencies:
+      '@repo/salon-domain':
+        specifier: workspace:*
+        version: link:../salon-domain
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3

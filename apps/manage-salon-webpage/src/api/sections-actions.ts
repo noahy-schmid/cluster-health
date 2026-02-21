@@ -19,8 +19,7 @@ export async function createSection(
   type: SectionType,
   position: number,
 ): Promise<Result<AllSections, string>> {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, errors: access.error };
@@ -55,8 +54,7 @@ export async function updateSection(
   websiteId: string,
   section: AllSections,
 ): Promise<Result<void, string>> {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, errors: access.error };
@@ -113,8 +111,7 @@ export async function deleteSection(
   websiteId: string,
   id: string,
 ): Promise<Result<void, string>> {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, errors: access.error };
@@ -144,8 +141,7 @@ export async function reorderSections(
   websiteId: string,
   sectionIds: string[],
 ): Promise<Result<void, string>> {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, errors: access.error };
@@ -173,8 +169,7 @@ export async function reorderSections(
 export async function fetchSections(
   websiteId: string,
 ): Promise<Result<AllSections[], string>> {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, errors: access.error };

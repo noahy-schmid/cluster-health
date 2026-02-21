@@ -13,77 +13,6 @@ import {
   HeroSettings,
 } from "@repo/website-database";
 
-/**
- * Server action to create a new website
- * Returns the created website ID
- */
-export async function createWebsite(): Promise<
-  | {
-      success: true;
-      websiteId: string;
-    }
-  | {
-      success: false;
-      error: string;
-    }
-> {
-  const session = (await cookies()).get("session");
-  if (!session?.value) {
-    return { success: false, error: "Sitzung abgelaufen" };
-  }
-
-  const authRepository = new ManagementUserRepository();
-  const authResult = await authRepository.authenticateToken(session.value);
-
-  if (!authResult.success) {
-    return { success: false, error: "Ungültige Sitzung" };
-  }
-
-  if (!authResult.data.salonId) {
-    return { success: false, error: "Kein Salon zugeordnet" };
-  }
-
-  const [existingWebsite] = await db
-    .select({ id: websitesTable.id })
-    .from(websitesTable)
-    .where(eq(websitesTable.salonId, authResult.data.salonId));
-
-  if (existingWebsite) {
-    return { success: false, error: "Website already exists" };
-  }
-
-  const newWebsite: typeof websitesTable.$inferInsert = {
-    salonId: authResult.data.salonId,
-    heroImage: "",
-    logo: "",
-    slug: `salon-${Date.now()}`,
-    title: "Meine Salon Webseite",
-    subtitle: "Willkommen auf meiner Salon Webseite",
-    colorBackgroundBase: "#FAF8F6",
-    colorBackgroundElevation1: "#FFFFFF",
-    colorBackgroundElevation2: "#F5F3F1",
-    colorForegroundBase: "#1A1A1A",
-    colorForegroundMuted: "#6B6B6B",
-    colorForegroundStrong: "#000000",
-    colorAccent: "#B8845F",
-    colorOnAccent: "#FFFFFF",
-  };
-
-  try {
-    const insertedWebsite = await db
-      .insert(websitesTable)
-      .values(newWebsite)
-      .returning();
-    return { success: true, websiteId: insertedWebsite[0].id };
-  } catch (error) {
-    console.error("Error creating website:", error);
-    return {
-      success: false,
-      error: "Failed to create website",
-    };
-  }
-}
-
 export async function getWebsiteSlug(websiteId: string): Promise<
   | {
       success: true;
@@ -94,8 +23,7 @@ export async function getWebsiteSlug(websiteId: string): Promise<
       error: string;
     }
 > {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, error: access.error };
@@ -171,8 +99,7 @@ export async function getHeroSettings(websiteId: string): Promise<
       error: string;
     }
 > {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, error: access.error };
@@ -221,8 +148,7 @@ export async function updateHeroSettings(
       error: string;
     }
 > {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, error: access.error };
@@ -282,8 +208,7 @@ export async function getColorSettings(websiteId: string): Promise<
       error: string;
     }
 > {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, error: access.error };
@@ -340,8 +265,7 @@ export async function updateColorSettings(
       error: string;
     }
 > {
-  const guard = new WebsiteAccessGuard();
-  const access = await guard.canEditWebsite(websiteId);
+  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
   if (!access.success) {
     return { success: false, error: access.error };

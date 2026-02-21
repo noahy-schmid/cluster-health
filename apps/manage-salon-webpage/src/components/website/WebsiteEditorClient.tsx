@@ -121,6 +121,12 @@ export default function WebsiteEditorClient({
         subtitle="Erstellen und verwalten Sie die Abschnitte Ihrer Salon-Webseite"
         actions={[
           {
+            icon: Settings,
+            text: "Einstellungen",
+            onClick: () =>
+              router.push(`/salon/${salonId}/website/${websiteId}/settings`),
+          },
+          {
             icon: Palette,
             text: "Farbschema anpassen",
             onClick: () =>
