@@ -7,7 +7,7 @@ import { updateHeroSettings } from "@/api/website-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import HeroCard from "@/components/website/section-cards/HeroCard";
 import { useState } from "react";
-import HeroForm from "./HeroForm";
+import HeroForm from "./hero.form";
 
 interface HeroEditClientProps {
   initialSettings: HeroSettings;

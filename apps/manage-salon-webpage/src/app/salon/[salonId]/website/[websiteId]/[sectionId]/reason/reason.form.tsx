@@ -25,20 +25,19 @@ export default function ReasonForm({ section }: ReasonFormProps) {
   const [menuTitle, setMenuTitle] = useState<string>(section.menuTitle || "");
   const [validationError, setValidationError] = useState<string>("");
 
-  // Validation helper
   const validateItems = (items: ReasonItem[]): string => {
     if (items.length < 2) {
-      return "Mindestens 2 Gründe erforderlich";
+      return "Mindestens 2 Grunde erforderlich";
     }
     if (items.length > 4) {
-      return "Maximal 4 Gründe erlaubt";
+      return "Maximal 4 Grunde erlaubt";
     }
 
     const itemsWithImages = items.filter(
       (item) => item.imageUrl && item.imageUrl.trim() !== "",
     );
     if (itemsWithImages.length > 0 && itemsWithImages.length !== items.length) {
-      return "Entweder alle Gründe müssen Bilder haben oder keiner";
+      return "Entweder alle Grunde mussen Bilder haben oder keiner";
     }
 
     return "";
@@ -61,7 +60,7 @@ export default function ReasonForm({ section }: ReasonFormProps) {
 
   const addItem = () => {
     if (settings.items.length >= 4) {
-      setValidationError("Maximal 4 Gründe erlaubt");
+      setValidationError("Maximal 4 Grunde erlaubt");
       return;
     }
     setSettings({
@@ -94,11 +93,11 @@ export default function ReasonForm({ section }: ReasonFormProps) {
   return (
     <div className="flex flex-col gap-lg">
       <FormInput
-        label="Menü Titel (optional)"
+        label="Menu Titel (optional)"
         value={menuTitle}
         onChange={(value) => setMenuTitle(value)}
-        placeholder="Abschnitt im Menü anzeigen"
-        helperText="Wenn ein Titel angegeben wird, erscheint dieser Abschnitt im Navigationsmenü"
+        placeholder="Abschnitt im Menu anzeigen"
+        helperText="Wenn ein Titel angegeben wird, erscheint dieser Abschnitt im Navigationsmenu"
       />
 
       <FormInput
@@ -117,10 +116,9 @@ export default function ReasonForm({ section }: ReasonFormProps) {
         required
       />
 
-      {/* Reason Items */}
       <div className="flex flex-col gap-sm">
         <label className="text-sm font-normal text-fg-strong">
-          Gründe (2-4 erforderlich)
+          Grunde (2-4 erforderlich)
         </label>
 
         {settings.items.map((item, index) => (
@@ -176,7 +174,7 @@ export default function ReasonForm({ section }: ReasonFormProps) {
             className="flex items-center gap-sm px-md py-sm border border-dashed border-border rounded-md text-fg-normal hover:border-primary-700 hover:text-primary-700 transition-colors"
           >
             <PlusIcon className="w-5 h-5" />
-            <span>Grund hinzufügen</span>
+            <span>Grund hinzufugen</span>
           </button>
         )}
 

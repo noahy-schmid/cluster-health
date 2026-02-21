@@ -1,53 +1,24 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { fetchSections } from "@/api/sections-actions";
+import { redirect } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import TextWithImageForm from "./TextWithImageForm";
-import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import { AllSections } from "@repo/website-database";
+import TextWithImageForm from "./text-with-image.form";
 
-export default function TextWithImageEditPage() {
-  const router = useRouter();
-  const { salonId, websiteId, sectionId } = useWebsiteRouteContext();
-  const [section, setSection] = useState<
-    Extract<AllSections, { type: "text-with-image" }> | undefined
-  >(undefined);
+export default async function TextWithImageEditPage({
+  params,
+}: {
+  params: Promise<{ salonId: string; websiteId: string; sectionId: string }>;
+}) {
+  const { salonId, websiteId, sectionId } = await params;
+  const result = await fetchSections(websiteId);
 
-  useEffect(() => {
-    const loadSection = async () => {
-      if (!websiteId || !sectionId) return;
+  if (!result.success || !result.data) {
+    redirect(`/salon/${salonId}`);
+  }
 
-      const result = await fetchSections(websiteId);
+  const section = result.data.find((item) => item.id === sectionId);
 
-      if (!result.success || !result.data) {
-        router.replace(`/salon/${salonId}`);
-        return;
-      }
-
-      const found = result.data.find((item) => item.id === sectionId);
-
-      if (!found || found.type !== "text-with-image") {
-        router.replace(`/salon/${salonId}/website/${websiteId}`);
-        return;
-      }
-
-      setSection(found);
-    };
-
-    loadSection();
-  }, [router, salonId, websiteId, sectionId]);
-
-  if (!section) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <PageHeader
-          title="Text mit Bild bearbeiten"
-          subtitle="Lade Abschnitt..."
-        />
-      </div>
-    );
+  if (!section || section.type !== "text-with-image") {
+    redirect(`/salon/${salonId}/website/${websiteId}`);
   }
 
   return (

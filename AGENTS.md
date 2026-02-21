@@ -23,3 +23,5 @@ But if the rule applies you **MUST** read them before proceeding.
 # Important
 
 **NEVER use dynamic imports** (e.g., `await import(...)`)
+Make sure after you made changes, all formatting and linter rules pass. You can run a fix on them using `pnpm format:fix` and `pnpm lint:fix` in the root folder
+You should also check whether everything builds properly you can do that by running `pnpm build --filter <package-name>` in the root directory. You only need to do that for packages where you actually did changes. If you made a larger change though just execute the command without any filter to build everything.
