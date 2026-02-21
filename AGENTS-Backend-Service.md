@@ -1,7 +1,9 @@
 # Intro
+
 This file contains information for when you want to modify a backand service. It contains informations of how each backend domain should be structured and how naming conventions work.
 
 # Domain structure
+
 Each domain _should_ follow a ddd structure implemented using Effect-TS (documentation can be found [here](https://effect.website/llms.txt)) For packages where this structure is not completely adhered yet, the aim is to get there.
 
 - `/src`: Root folder containing `index.ts` to export interfaces and layers
@@ -16,7 +18,9 @@ Each domain _should_ follow a ddd structure implemented using Effect-TS (documen
 - `/src/errors.ts`: File for specifying errors that are allowed to be exposed outside of the domain boundary.
 
 ## Type definitions
+
 Type definitions are always done close to the interfaces, so ports always define their own in and output types, not depending on other types. Aggregates define their own types which are allowed to be derived from port types which are used but aggregates have strong ownership of their own definition and should not directly reflect how things are stored in the database but rather how the aggregate splits into entities and data objects. use-cases define their own types again being allowed to be derived from types defined by aggregates, however typically the in and output types of a use-case should only regard this use-case and no unneccessary fields should be exposed. The types of use-cases are the only ones exported beyond the domain boundary. UseCase Layers which are exported beyond the domain boundary are _always_ provided with all their dependencies, such that other domains can just use them easily. e.g. `CreateWebsiteUseCaseLive` layer depends on some aggregates and ports however they are provided for the layer thats exported from the domain.
 
 ## Errors
+
 Ports and Adapters need to make sure they convert errors thrown by whatever they connect to, to errors used within the domain. The error exposed by the port should be parsable completely without any knowledge of the connected ressource behind the adapter.
