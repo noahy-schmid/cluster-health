@@ -190,10 +190,13 @@ const make = Effect.gen(function* () {
         updateData.favicon = Option.getOrNull(validatedUpdates.favicon);
       }
 
-      const updatedWebsiteOption = yield* websiteRepo.updateWebsite(
-        id,
-        updateData,
-      );
+      const updatedWebsiteOption = yield* websiteRepo
+        .updateWebsite(id, updateData)
+        .pipe(
+          Effect.tapError((error) =>
+            Effect.logError("Failed to update website:", error),
+          ),
+        );
 
       if (Option.isNone(updatedWebsiteOption)) {
         return yield* Effect.fail(new WebsiteNotFoundError({ websiteId: id }));

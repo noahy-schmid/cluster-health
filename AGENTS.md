@@ -15,6 +15,7 @@ Most code is written using Effect-TS (documentation can be found [here](https://
 # More Information
 
 You should read the following files on a need to know basis.
+But if the rule applies you **MUST** read them before proceeding.
 
 - `AGENTS-Backend-Service.md`: Read this file before planning or modifying anythin that touches one of the backend domains (Also backend logic within the frontends).
 - `AGENTS-Frontend-UI.md`: Read this file before planning or modifying anything that touches the frontend.
