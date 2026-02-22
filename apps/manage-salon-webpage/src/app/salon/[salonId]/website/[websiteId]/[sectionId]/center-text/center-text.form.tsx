@@ -4,19 +4,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateSection } from "@/api/sections-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import { AllSections, TextWithImageSettings } from "@repo/website-database";
+import { AllSections, CenterTextSettings } from "@repo/website-database";
+import FormInput from "@/components/website/forms/FormInput";
 import FormActions from "@/components/website/forms/FormActions";
 import FormTextarea from "@/components/website/forms/FormTextarea";
-import FormInput from "@/components/website/forms/FormInput";
 
-interface TextWithImageFormProps {
-  section: Extract<AllSections, { type: "text-with-image" }>;
+interface CenterTextFormProps {
+  section: Extract<AllSections, { type: "center-text" }>;
 }
 
-export default function TextWithImageForm({ section }: TextWithImageFormProps) {
+export default function CenterTextForm({ section }: CenterTextFormProps) {
   const router = useRouter();
   const { salonId, websiteId } = useWebsiteRouteContext();
-  const [settings, setSettings] = useState<TextWithImageSettings>(
+  const [settings, setSettings] = useState<CenterTextSettings>(
     section.settings,
   );
   const [menuTitle, setMenuTitle] = useState<string>(section.menuTitle || "");
@@ -33,35 +33,26 @@ export default function TextWithImageForm({ section }: TextWithImageFormProps) {
   return (
     <div className="flex flex-col gap-lg">
       <FormInput
-        label="Menü Titel (optional)"
+        label="Menu Titel (optional)"
         value={menuTitle}
         onChange={(value) => setMenuTitle(value)}
-        placeholder="Abschnitt im Menü anzeigen"
-        helperText="Wenn ein Titel angegeben wird, erscheint dieser Abschnitt im Navigationsmenü"
-      />
-
-      <FormInput
-        label="Bild URL"
-        value={settings.imageUrl}
-        onChange={(value) => setSettings({ ...settings, imageUrl: value })}
-        placeholder="https://example.com/image.jpg"
-        type="url"
-        required
+        placeholder="Abschnitt im Menu anzeigen"
+        helperText="Wenn ein Titel angegeben wird, erscheint dieser Abschnitt im Navigationsmenu"
       />
 
       <FormInput
         label="Titel"
         value={settings.title}
         onChange={(value) => setSettings({ ...settings, title: value })}
-        placeholder="Abschnittstitel eingeben"
+        placeholder="Titel eingeben"
         required
       />
 
       <FormTextarea
-        label="Text"
-        value={settings.text}
-        onChange={(value) => setSettings({ ...settings, text: value })}
-        placeholder="Abschnittstext eingeben"
+        label="Inhalt"
+        value={settings.content}
+        onChange={(value) => setSettings({ ...settings, content: value })}
+        placeholder="Inhalt eingeben"
         rows={6}
         required
       />

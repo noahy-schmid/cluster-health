@@ -6,7 +6,7 @@ This file contains some rules of how to structure frontend applications
 
 - **Prefer server components by default** - maximize server-side rendering whenever possible
 - **Use client components only when necessary** - for interactivity, hooks, or browser APIs
-- When a page needs client-side code, create a `client.tsx` file next to the page file
+- When a page needs client-side code, create a `client.tsx` file next to the page file. ONLY do this tho if you cannot directly add the subcomponents of the `client.tsx` to the SSR page. e.g. if you have a page with a form that is a client side component, this form could directly be added to the page.
 - Example structure:
   ```
   page.tsx          # Server component (data fetching, layout)

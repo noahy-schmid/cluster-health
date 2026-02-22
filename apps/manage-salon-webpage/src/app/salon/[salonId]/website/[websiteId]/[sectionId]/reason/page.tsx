@@ -1,60 +1,31 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { fetchSections } from "@/api/sections-actions";
+import { redirect } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import { AllSections } from "@repo/website-database";
-import ReasonForm from "./ReasonForm";
+import ReasonForm from "./reason.form";
 
-export default function ReasonEditPage() {
-  const router = useRouter();
-  const { salonId, websiteId, sectionId } = useWebsiteRouteContext();
-  const [section, setSection] = useState<
-    Extract<AllSections, { type: "reason" }> | undefined
-  >(undefined);
+export default async function ReasonEditPage({
+  params,
+}: {
+  params: Promise<{ salonId: string; websiteId: string; sectionId: string }>;
+}) {
+  const { salonId, websiteId, sectionId } = await params;
+  const result = await fetchSections(websiteId);
 
-  useEffect(() => {
-    const loadSection = async () => {
-      if (!websiteId || !sectionId) return;
+  if (!result.success || !result.data) {
+    redirect(`/salon/${salonId}`);
+  }
 
-      const result = await fetchSections(websiteId);
+  const section = result.data.find((item) => item.id === sectionId);
 
-      if (!result.success || !result.data) {
-        router.replace(`/salon/${salonId}`);
-        return;
-      }
-
-      const found = result.data.find((item) => item.id === sectionId);
-
-      if (!found || found.type !== "reason") {
-        router.replace(`/salon/${salonId}/website/${websiteId}`);
-        return;
-      }
-
-      setSection(found);
-    };
-
-    loadSection();
-  }, [router, salonId, websiteId, sectionId]);
-
-  if (!section) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <PageHeader
-          title="Gründe Abschnitt bearbeiten"
-          subtitle="Lade Abschnitt..."
-        />
-      </div>
-    );
+  if (!section || section.type !== "reason") {
+    redirect(`/salon/${salonId}/website/${websiteId}`);
   }
 
   return (
     <div className="max-w-4xl mx-auto">
       <PageHeader
-        title="Gründe Abschnitt bearbeiten"
-        subtitle="Passen Sie die Gründe für diesen Abschnitt an."
+        title="Grunde Abschnitt bearbeiten"
+        subtitle="Passen Sie die Grunde für diesen Abschnitt an."
       />
 
       <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg">
