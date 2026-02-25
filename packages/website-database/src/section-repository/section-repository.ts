@@ -1,5 +1,4 @@
 import { Context, Effect, Layer } from "effect";
-import { db, sectionsTable } from "../index";
 import { eq, and } from "drizzle-orm";
 import { AllSections, SectionType } from "./types";
 import { GallerySectionRepository } from "./gallery-section-repository";
@@ -14,6 +13,8 @@ import {
   SectionError,
 } from "./errors";
 import { SectionTypeRepository } from "./section-type-repository";
+import { db } from "../database";
+import { sectionsTable } from "../schema";
 
 /**
  * Effect service for managing website sections.

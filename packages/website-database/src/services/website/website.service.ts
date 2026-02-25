@@ -18,7 +18,7 @@ import type { WebsiteService } from "./website.interface";
 import { WebsiteService as WebsiteServiceTag } from "./website.interface";
 import { SalonPort } from "../../ports/salon.port";
 import {
-  WebsiteRepository,
+  WebsitePort,
   type InsertDatabaseWebsite,
   type SelectDatabaseWebsite,
 } from "../../ports/website.port";
@@ -38,7 +38,7 @@ const mapToWebsiteSettings = (
  * Implementation of the WebsiteService using Effect.
  */
 const make = Effect.gen(function* () {
-  const websiteRepo = yield* WebsiteRepository;
+  const websiteRepo = yield* WebsitePort;
   const salonPort = yield* SalonPort;
 
   const createWebsite = (
