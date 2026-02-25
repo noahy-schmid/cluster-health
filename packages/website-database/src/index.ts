@@ -1,5 +1,6 @@
 import "dotenv/config";
 
+export { db } from "./database";
 export {
   SectionRepository,
   SectionRepositoryLive,

@@ -205,12 +205,26 @@ const make = Effect.gen(function* () {
       return mapToWebsiteSettings(updatedWebsiteOption.value);
     });
 
+  const websiteExistsForSalon: WebsiteService["websiteExistsForSalon"] = (
+    salonId: string,
+  ) =>
+    Effect.gen(function* () {
+      const websiteOption = yield* websiteRepo.getWebsiteBySalonId(salonId);
+
+      if (Option.isNone(websiteOption)) {
+        return Option.none();
+      }
+
+      return Option.some(websiteOption.value.id as WebsiteId);
+    });
+
   return {
     createWebsite,
     getWebsiteSettingsById,
     getWebsiteSettingsBySalonId,
     getWebsiteSettingsBySlug,
     updateWebsiteSettings,
+    websiteExistsForSalon,
   } satisfies WebsiteService;
 });
 

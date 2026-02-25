@@ -183,7 +183,7 @@ const make = Effect.gen(function* () {
         return yield* Effect.fail(new MediaNotFoundError({ mediaId }));
       }
 
-      return `${config.s3Url}/${record.s3Key}`;
+      return `${config.s3Url}/${config.s3BucketName}/${record.s3Key}`;
     });
 
   const getMediaById = (mediaId: string) =>

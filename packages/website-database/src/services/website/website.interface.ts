@@ -1,4 +1,4 @@
-import { Context, Effect } from "effect";
+import { Context, Effect, Option } from "effect";
 import type {
   CreateWebsiteInput,
   UpdateWebsiteSettingsInput,
@@ -87,6 +87,15 @@ export interface WebsiteService {
     | WebsiteAlreadyExistsError,
     never
   >;
+
+  /**
+   * Checks if a website exists for a given salon.
+   * @param salonId Salon ID to check.
+   * @returns Effect that resolves to the website ID if it exists, or none if not.
+   */
+  websiteExistsForSalon(
+    salonId: string,
+  ): Effect.Effect<Option.Option<WebsiteId>, WebsiteDatabaseError, never>;
 }
 
 /**
