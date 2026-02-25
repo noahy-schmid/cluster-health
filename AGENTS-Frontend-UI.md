@@ -21,7 +21,7 @@ Components that might contain domain logic or are just specific to the local pag
 
 # Server Actions
 
-All server communication is done through server actions. These should be placed inside the page directory for most purposes called `<some>.actions.ts`. For general purposes required more often they should be placed in the `/src/api` folder. Most logic in server actions is written in Effect-TS since these are just gateways to the backend domains. They can directly return the Effect.runPromise with all errors and logic handled inside effect. Server actions always return a type of {success: true, data: sth} | {success: false, error: string}
+All server communication is done through server actions. These should be placed inside the page (or component) directory for most purposes called `<some>.actions.ts`. For general purposes required more often (not in connection with the specific component or page) they should be placed in the `/src/api` folder. Most logic in server actions is written in Effect-TS since these are just gateways to the backend domains. They can directly return the Effect.runPromise with all errors and logic handled inside effect. Server actions always return a type of {success: true, data: sth} | {success: false, error: string}
 
 # Authentication
 
@@ -30,3 +30,11 @@ For authentication, guards within the `/src/api/guards` folder should be used, t
 # Forms
 
 Forms should always be contained in a seperate file and should be coupled to a server action which is called through the action property of the form! if they are only used on one page, put them in the page folder called `<some>.form.ts` otherwise they might live in the `src/components` folder. Also for specific fields within a form, search if that field already exists as a component in the components folder, if not, put one there.
+
+# State Management
+
+If you are building a complex component, that needs exhaustive state management. The state management should be outsourced to a file next to the component (e.g. `<some-component>.state.ts`) There, define a cutom hook with a reducer pattern if possible (state object and actions that can be performed on it). This reducer should also perform all logic or calls to backend services the component does.
+
+# Styling
+
+All styling is done through tailwindcss, there always custom properties are used if possible like `p-sm`, `font-focus`, `bg-bg-0` if no custom property exists you can add one in the `index.css` file but first search there for an existing one. Ask the user if you are not sure.

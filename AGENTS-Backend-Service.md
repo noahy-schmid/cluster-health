@@ -11,8 +11,8 @@ Each domain _should_ follow a ddd structure implemented using Effect-TS (documen
 - `/src/use-cases/<some>.interface.ts`: Contains the interface and Effect Tag for `<Some>UseCase`
 - `/src/use-cases/<some>.service.ts`: Contains the implementation to the interface
 - `/src/application`: Contains all files and folders of the application layer
-- `/src/application/<aggregate>`: Folder containing all files for a given aggregate like `Website` sometimes the aggregate will just live in one service, however if it becomes too verbose, the aggregate behaviour will be split in several services again called `<some>.interface.ts` for the interface and tag and `<some>.service.ts` for the implementation and the Layer definition.
-- `/src/ports`: In here all port interface definitions live, these are again just interfaces defined through `<some>.port.ts` with the interface being called `<Some>Port`. Everytime logic from a domain needs to access information outside the domain e.g. from another domain or a database or message-queue etc. a Port needs to be defined or extended.
+- `/src/application/<aggregate>`: Folder containing all files for a given aggregate like `Website` sometimes the aggregate will just live in one service, however if it becomes too verbose, the aggregate behaviour will be done using the Service pattern by effect. An aggregate may **never** directly interact with infrastructure (like databases) or other domains, they always need to communicate through ports!
+- `/src/ports`: In here all port interface definitions live, these are again just interfaces defined through `<some>.port.ts` with the interface being called `<Some>Port`. Everytime logic from a domain needs to access information outside the domain e.g. from another domain or a database or message-queue etc. a Port needs to be defined or extended. A port may not enforce business rules, that is the task of aggregate services.
 - `/src/adapters`: In here all adapter implementations are defined, always referencing some port and some technology, so e.g. Port `WebsitePort` which encapsulates the website db table, has a `PostgresWebsiteAdapter` livig in `postgres-website.adapter.ts`
 - `/src/schema.ts`: Contains the database schema regarding that domain. Each domain has their own namespace in the postgres database. If the schema needs to be extended, change it here. DO NOT generate migrations yourself, migrations are generated through `pnpm drizzle:generate`
 - `/src/errors.ts`: File for specifying errors that are allowed to be exposed outside of the domain boundary.
@@ -24,3 +24,23 @@ Type definitions are always done close to the interfaces, so ports always define
 ## Errors
 
 Ports and Adapters need to make sure they convert errors thrown by whatever they connect to, to errors used within the domain. The error exposed by the port should be parsable completely without any knowledge of the connected ressource behind the adapter.
+
+## Infrastructure Layer
+
+All configuration and infrastructure access must go through Effect layers:
+
+- `/src/infrastructure/config.interface.ts`: Configuration interface definition with all environment variables
+- `/src/infrastructure/config.service.ts`: Configuration layer implementation that reads from environment variables
+- `/src/infrastructure/database.interface.ts`: Database interface definition exposing the drizzle instance
+- `/src/infrastructure/database.service.ts`: Database layer that instantiates drizzle using config
+
+**Rules:**
+
+- **NEVER** access `process.env` directly in adapters or services
+- **ALWAYS** use a Configuration service to access configuration values
+- Database connections must be provided through Effect Layers, not imported directly
+- This enables easier testing and proper dependency injection
+
+# Exports
+
+Regarding exports outside of the domain package, **only** UseCases, their layers and types/errors they expose and expect as input may be exported. Every internal logic, like adapters and ports shall stay unexported.

@@ -1,7 +1,17 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
-  "globalEnv": ["DATABASE_URL", "JWT_SECRET", "NODE_ENV", "SALON_URL"],
+  "globalEnv": [
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "NODE_ENV",
+    "SALON_URL",
+    "S3_URL",
+    "S3_WEBSITE_ACCESS_KEY",
+    "S3_WEBSITE_SECRET_KEY",
+    "S3_WEBSITE_BUCKET_NAME",
+    "S3_REGION"
+  ],
   "envMode": "strict",
   "tasks": {
     "build": {
