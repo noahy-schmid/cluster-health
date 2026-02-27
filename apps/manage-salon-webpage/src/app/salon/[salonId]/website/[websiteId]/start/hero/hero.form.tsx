@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { HeroSettings } from "@repo/website-database";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import FormInput from "@/components/website/forms/FormInput";
 import FormToggle from "@/components/website/forms/FormToggle";
 import FormActions from "@/components/website/forms/FormActions";
+import MediaSelector from "@/components/media/media-selector";
 
 interface HeroFormProps {
   settings: HeroSettings;
@@ -20,9 +22,9 @@ export default function HeroForm({
   onCancel,
   onFieldChange,
 }: HeroFormProps) {
+  const { websiteId } = useWebsiteRouteContext();
   const [settings, setSettings] = useState<HeroSettings>(initialSettings);
 
-  // Debounce the onFieldChange callback to avoid race conditions
   const debouncedFieldChange = useDebounce((newSettings: HeroSettings) => {
     if (onFieldChange) {
       onFieldChange(newSettings);
@@ -33,32 +35,34 @@ export default function HeroForm({
     onSave(settings);
   };
 
+  const handleHeroImageChange = (mediaId: string) => {
+    const newSettings = { ...settings, heroImage: mediaId };
+    setSettings(newSettings);
+    debouncedFieldChange(newSettings);
+  };
+
+  const handleLogoChange = (mediaId: string) => {
+    const newSettings = { ...settings, logo: mediaId };
+    setSettings(newSettings);
+    debouncedFieldChange(newSettings);
+  };
+
   return (
     <div className="flex flex-col gap-lg">
-      <FormInput
-        label="Hintergrundbild URL"
-        value={settings.heroImage}
-        onChange={(value) => {
-          const newSettings = { ...settings, heroImage: value };
-          setSettings(newSettings);
-          debouncedFieldChange(newSettings);
-        }}
-        placeholder="https://example.com/background.jpg"
-        type="url"
+      <MediaSelector
+        websiteId={websiteId ?? ""}
+        label="Hintergrundbild"
+        value={settings.heroImage ?? ""}
+        onChange={handleHeroImageChange}
         required
         helperText="Das Hintergrundbild wird über den gesamten Hero-Bereich angezeigt"
       />
 
-      <FormInput
-        label="Logo URL"
-        value={settings.logo}
-        onChange={(value) => {
-          const newSettings = { ...settings, logo: value };
-          setSettings(newSettings);
-          debouncedFieldChange(newSettings);
-        }}
-        placeholder="https://example.com/logo.png"
-        type="url"
+      <MediaSelector
+        websiteId={websiteId ?? ""}
+        label="Logo"
+        value={settings.logo ?? ""}
+        onChange={handleLogoChange}
         required
         helperText="Das Logo wird im Hero-Bereich angezeigt"
       />

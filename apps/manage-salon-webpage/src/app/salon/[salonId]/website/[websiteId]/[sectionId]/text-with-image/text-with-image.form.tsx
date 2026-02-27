@@ -8,6 +8,7 @@ import { AllSections, TextWithImageSettings } from "@repo/website-database";
 import FormActions from "@/components/website/forms/FormActions";
 import FormTextarea from "@/components/website/forms/FormTextarea";
 import FormInput from "@/components/website/forms/FormInput";
+import MediaSelector from "@/components/media/media-selector";
 
 interface TextWithImageFormProps {
   section: Extract<AllSections, { type: "text-with-image" }>;
@@ -40,14 +41,12 @@ export default function TextWithImageForm({ section }: TextWithImageFormProps) {
         helperText="Wenn ein Titel angegeben wird, erscheint dieser Abschnitt im Navigationsmenu"
       />
 
-      <FormInput
-        label="Bild URL"
-        value={settings.imageUrl}
-        onChange={(value) => setSettings({ ...settings, imageUrl: value })}
-        placeholder="https://example.com/image.jpg"
-        type="url"
-        required
-      />
+      <MediaSelector
+        label="Bild"
+        websiteId={websiteId!}
+        value={settings.imageId}
+        onChange={(value) => setSettings({ ...settings, imageId: value })}
+      ></MediaSelector>
 
       <FormInput
         label="Titel"

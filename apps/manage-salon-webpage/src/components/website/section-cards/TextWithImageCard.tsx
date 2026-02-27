@@ -1,6 +1,11 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { ImageIcon } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import { TextWithImageSettings } from "@repo/website-database";
+import { getMediaUrl } from "@/api/media-actions";
 
 interface TextWithImageCardProps {
   settings: TextWithImageSettings;
@@ -13,7 +18,20 @@ export default function TextWithImageCard({
   order,
   menuTitle,
 }: TextWithImageCardProps) {
-  const hasImage = settings.imageUrl && settings.imageUrl.trim() !== "";
+  const hasImage = settings.imageId && settings.imageId.trim() !== "";
+
+  const { data: imageUrl } = useQuery({
+    queryKey: ["mediaUrl", settings.imageId],
+    queryFn: async () => {
+      if (!settings.imageId) return null;
+      const result = await getMediaUrl(settings.imageId);
+      if (result.success) {
+        return result.data;
+      }
+      return null;
+    },
+    enabled: !!settings.imageId,
+  });
 
   return (
     <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg hover:shadow-md transition-shadow">
@@ -26,9 +44,8 @@ export default function TextWithImageCard({
       <div className="grid md:grid-cols-2 gap-md">
         <div className="aspect-video bg-bg-2 rounded-md flex items-center justify-center overflow-hidden">
           {hasImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={settings.imageUrl}
+              src={imageUrl || settings.imageId}
               alt={settings.title}
               className="w-full h-full object-cover"
             />

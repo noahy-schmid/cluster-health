@@ -1,7 +1,7 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
-import { db, websitesTable } from "@repo/website-database";
+import { Effect, Option } from "effect";
+import { WebsiteService, WebsiteLayer } from "@repo/website-database";
 import { AuthGuard } from "./auth.guard";
 
 export class WebsiteAccessGuard {
@@ -23,19 +23,33 @@ export class WebsiteAccessGuard {
       return { success: false, error: "Kein Salon zugeordnet" };
     }
 
-    const [website] = await db
-      .select({ salonId: websitesTable.salonId })
-      .from(websitesTable)
-      .where(eq(websitesTable.id, websiteId));
+    const effect = Effect.gen(function* () {
+      const websiteService = yield* WebsiteService;
+      return yield* websiteService.websiteExistsForSalon(session.salonId!).pipe(
+        Effect.map((websiteIdOption) => {
+          if (Option.isNone(websiteIdOption)) {
+            return {
+              success: false as const,
+              error: "Keine Website für diesen Salon gefunden",
+            };
+          }
+          if (websiteIdOption.value !== websiteId) {
+            return {
+              success: false as const,
+              error: "Nicht autorisiert",
+            };
+          }
+          return { success: true as const };
+        }),
+        Effect.catchTag("WebsiteDatabaseError", (error) =>
+          Effect.succeed({
+            success: false as const,
+            error: `Datenbankfehler: ${error.message}`,
+          }),
+        ),
+      );
+    }).pipe(Effect.provide(WebsiteLayer));
 
-    if (!website) {
-      return { success: false, error: "Website nicht gefunden" };
-    }
-
-    if (website.salonId !== session.salonId) {
-      return { success: false, error: "Nicht autorisiert" };
-    }
-
-    return { success: true };
+    return await Effect.runPromise(effect);
   }
 }

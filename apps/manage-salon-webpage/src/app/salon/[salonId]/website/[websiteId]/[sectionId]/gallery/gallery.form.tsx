@@ -6,7 +6,7 @@ import { updateSection } from "@/api/sections-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import { AllSections, GallerySettings } from "@repo/website-database";
 import FormInput from "@/components/website/forms/FormInput";
-import ImageUrlList from "@/components/website/forms/ImageUrlList";
+import MediaSelectorList from "@/components/media/media-selector-list";
 import FormActions from "@/components/website/forms/FormActions";
 
 interface GalleryFormProps {
@@ -54,10 +54,11 @@ export default function GalleryForm({ section }: GalleryFormProps) {
         required
       />
 
-      <ImageUrlList
+      <MediaSelectorList
         label="Galleriebilder"
-        imageUrls={settings.imageUrls}
-        onChange={(imageUrls) => setSettings({ ...settings, imageUrls })}
+        value={settings.imageIds}
+        onChange={(imageIds) => setSettings({ ...settings, imageIds })}
+        websiteId={websiteId!}
       />
 
       <FormActions
