@@ -1,6 +1,6 @@
 import { Effect, Layer } from "effect";
 import { MediaPort, type InsertDatabaseMediaFile } from "../ports/media.port";
-import { MediaError, S3Error } from "../types/media-errors";
+import { MediaError } from "../types/media-errors";
 import { mediaFilesTable } from "../schema";
 import { eq } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
@@ -13,7 +13,7 @@ const makeMediaPort = Effect.gen(function* () {
   const insertMediaFile = (input: InsertDatabaseMediaFile) =>
     Effect.tryPromise(() => db.insert(mediaFilesTable).values(input)).pipe(
       Effect.mapError(
-        (error) =>
+        () =>
           new MediaError({
             message: "Failed to insert media file record",
           }),
@@ -30,9 +30,9 @@ const makeMediaPort = Effect.gen(function* () {
     ).pipe(
       Effect.map((rows) => rows[0] ?? null),
       Effect.mapError(
-        (error) =>
+        () =>
           new MediaError({
-            message: `Failed to fetch media file: ${error}`,
+            message: `Failed to fetch media file: ${mediaId}`,
           }),
       ),
     );
@@ -45,9 +45,9 @@ const makeMediaPort = Effect.gen(function* () {
         .where(eq(mediaFilesTable.salonId, salonId)),
     ).pipe(
       Effect.mapError(
-        (error) =>
+        () =>
           new MediaError({
-            message: `Failed to list media files for salon: ${error}`,
+            message: `Failed to list media files for salon: ${salonId}`,
           }),
       ),
     );
@@ -57,7 +57,7 @@ const makeMediaPort = Effect.gen(function* () {
       db.delete(mediaFilesTable).where(eq(mediaFilesTable.id, mediaId)),
     ).pipe(
       Effect.mapError(
-        (error) =>
+        () =>
           new MediaError({
             message: "Failed to delete media file record",
           }),
@@ -75,7 +75,7 @@ const makeMediaPort = Effect.gen(function* () {
         .where(eq(mediaFilesTable.id, mediaId)),
     ).pipe(
       Effect.mapError(
-        (error) =>
+        () =>
           new MediaError({
             message: "Failed to update media file upload confirmed status",
           }),
