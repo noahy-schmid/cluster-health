@@ -16,6 +16,7 @@
     "@repo/auth-domain": "workspace:*",
     "@repo/salon-domain": "workspace:*",
     "@repo/website-database": "workspace:*",
+    "@tanstack/react-query": "^5.90.21",
     "culori": "^4.0.2",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
