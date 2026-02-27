@@ -60,6 +60,7 @@
   --spacing-xl: 2rem; /* 32px */
   --spacing-2xl: 3rem; /* 48px */
 
+  --spacing-icon-sm: 1rem; /* 16px */
   --spacing-icon-base: 1.5rem; /* 24px */
   --spacing-icon-lg: 2rem; /* 32px */
 
@@ -101,9 +102,4 @@
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-
-  /* Icon sizes */
-  --icon-size-sm: 1rem; /* 16px */
-  --icon-size-md: 1.25rem; /* 20px */
-  --icon-size-lg: 1.5rem; /* 24px */
 }

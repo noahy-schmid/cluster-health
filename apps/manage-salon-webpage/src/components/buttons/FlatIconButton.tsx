@@ -1,6 +1,7 @@
 import { LucideIcon } from "lucide-react";
 
 type Elevation = 0 | 1;
+type IconButtonSize = "sm" | "md" | "lg";
 
 interface IconButtonProps {
   icon: LucideIcon;
@@ -8,6 +9,7 @@ interface IconButtonProps {
   elevation: Elevation;
   isError?: boolean;
   ariaLabel: string;
+  size?: IconButtonSize;
 }
 
 /**
@@ -18,6 +20,7 @@ interface IconButtonProps {
  * @param elevation - Hover background intensity (0=none, 1=subtle, 2=medium). Default: 1
  * @param isError - Whether to use error styling (red colors). Default: false
  * @param ariaLabel - Accessibility label for screen readers
+ * @param size - Size of the button (sm, md, lg). Default: md
  */
 export default function FlatIconButton({
   icon: Icon,
@@ -25,7 +28,30 @@ export default function FlatIconButton({
   elevation,
   isError = false,
   ariaLabel,
+  size = "md",
 }: IconButtonProps) {
+  const getSizeClasses = () => {
+    switch (size) {
+      case "sm":
+        return {
+          padding: "p-0",
+          icon: "w-icon-sm h-icon-sm",
+        };
+      case "lg":
+        return {
+          padding: "p-sm",
+          icon: "w-icon-lg h-icon-lg",
+        };
+      case "md":
+      default:
+        return {
+          padding: "p-sm",
+          icon: "w-icon-base h-icon-base",
+        };
+    }
+  };
+
+  const sizeClasses = getSizeClasses();
   const getBgClass = () => {
     if (isError) {
       return elevation === 0
@@ -48,10 +74,10 @@ export default function FlatIconButton({
   return (
     <button
       onClick={onClick}
-      className={`p-sm rounded group ${getBgClass()} cursor-pointer`}
+      className={`${sizeClasses.padding} rounded group ${getBgClass()} cursor-pointer`}
       aria-label={ariaLabel}
     >
-      <Icon className={`w-icon-base h-icon-base ${getIconColorClass()}`} />
+      <Icon className={`${sizeClasses.icon} ${getIconColorClass()}`} />
     </button>
   );
 }
