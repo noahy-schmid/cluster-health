@@ -20,7 +20,7 @@ export default function MediaSelectorList({
     onChange([...value, ""]);
   };
 
-  const handleRemove = (index: number) => {
+  const _handleRemove = (index: number) => {
     const newValue = value.filter((_, i) => i !== index);
     onChange(newValue);
   };

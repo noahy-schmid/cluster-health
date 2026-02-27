@@ -4,13 +4,8 @@ import { Effect, Option } from "effect";
 import { WebsiteService, WebsiteLayer } from "@repo/website-database";
 import { AuthGuard } from "./auth.guard";
 
-export class WebsiteAccessGuard {
-  /**
-   * Checks whether the current authenticated user can edit the given website.
-   * @param websiteId - Website ID to check access for.
-   * @returns Result with void on success or error message on failure.
-   */
-  public static async canEditWebsite(
+export const WebsiteAccessGuard = {
+  async canEditWebsite(
     websiteId: string,
   ): Promise<{ success: true } | { success: false; error: string }> {
     const session = await AuthGuard.getAuthToken();
@@ -51,5 +46,5 @@ export class WebsiteAccessGuard {
     }).pipe(Effect.provide(WebsiteLayer));
 
     return await Effect.runPromise(effect);
-  }
-}
+  },
+};

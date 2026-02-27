@@ -88,7 +88,7 @@ export async function updateSection(
     }
 
     return yield* repo.updateSection(section).pipe(
-      Effect.map(() => ({ success: true as const, data: undefined as void })),
+      Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchAll((error) =>
         Effect.succeed({
           success: false as const,
@@ -120,7 +120,7 @@ export async function deleteSection(
   const deleteEffect = Effect.gen(function* () {
     const repo = yield* SectionRepository;
     return yield* repo.deleteSection(websiteId, id).pipe(
-      Effect.map(() => ({ success: true as const, data: undefined as void })),
+      Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchAll((error) =>
         Effect.succeed({
           success: false as const,
@@ -150,7 +150,7 @@ export async function reorderSections(
   const reorderEffect = Effect.gen(function* () {
     const repo = yield* SectionRepository;
     return yield* repo.reorderSections(websiteId, sectionIds).pipe(
-      Effect.map(() => ({ success: true as const, data: undefined as void })),
+      Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchAll((error) =>
         Effect.succeed({
           success: false as const,

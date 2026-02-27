@@ -61,12 +61,12 @@ const makeFileStoragePort = Effect.gen(function* () {
         createPresignedPost(s3Client, {
           Bucket: policy.bucket,
           Key: policy.key,
-          Conditions: policy.conditions as Array<
+          Conditions: policy.conditions as (
             | ["starts-with", string, string]
             | ["eq", string, string]
             | ["content-length-range", number, number]
             | Record<string, string>
-          >,
+          )[],
           Expires: policy.expires,
         }),
       ).pipe(

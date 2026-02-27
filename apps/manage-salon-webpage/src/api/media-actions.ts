@@ -87,7 +87,7 @@ export async function confirmMediaUpload(
   const effect = Effect.gen(function* () {
     const mediaService = yield* MediaService;
     return yield* mediaService.confirmUpload(mediaId).pipe(
-      Effect.map(() => ({ success: true as const, data: undefined as void })),
+      Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchTag("MediaNotFoundError", (error) =>
         Effect.succeed({
           success: false as const,
@@ -157,7 +157,7 @@ export async function deleteMedia(
   const effect = Effect.gen(function* () {
     const mediaService = yield* MediaService;
     return yield* mediaService.deleteMedia(mediaId, websiteId).pipe(
-      Effect.map(() => ({ success: true as const, data: undefined as void })),
+      Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchTag("MediaNotFoundError", (error) =>
         Effect.succeed({
           success: false as const,

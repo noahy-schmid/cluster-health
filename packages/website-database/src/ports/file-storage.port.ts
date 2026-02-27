@@ -4,7 +4,7 @@ import type { S3Error } from "../types/media-errors";
 export interface PresignedPostPolicy {
   bucket: string;
   key: string;
-  conditions: Array<[string, ...unknown[]]>;
+  conditions: [string, ...unknown[]][];
   expires: number;
 }
 

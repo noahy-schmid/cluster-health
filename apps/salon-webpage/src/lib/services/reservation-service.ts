@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { Reservation, CreateReservationData } from "@/lib/types/reservation";
 
 // Mock storage for reservations
-const reservationsStore: Map<string, Reservation> = new Map();
+const reservationsStore = new Map<string, Reservation>();
 
 // Generate a unique reservation ID
 function generateReservationId(): string {

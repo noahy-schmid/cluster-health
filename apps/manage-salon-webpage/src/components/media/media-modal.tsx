@@ -72,7 +72,6 @@ export default function MediaModal({
       {state.activeTab === "upload" ? (
         <FileDropZone
           accept={ALLOWED_MIME_TYPES}
-          maxSize={10 * 1024 * 1024}
           onFileSelect={handleUpload}
           isUploading={state.isUploading}
           uploadProgress={state.uploadProgress}

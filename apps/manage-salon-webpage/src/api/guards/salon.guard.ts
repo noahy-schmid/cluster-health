@@ -2,13 +2,8 @@ import "server-only";
 
 import { AuthGuard } from "./auth.guard";
 
-export class SalonAccessGuard {
-  /**
-   * Checks whether the current authenticated user can access the given salon.
-   * @param salonId - Salon ID to check access for.
-   * @returns Result with salonId on success or error message on failure.
-   */
-  public static async canAccessSalon(
+export const SalonAccessGuard = {
+  async canAccessSalon(
     salonId: string,
   ): Promise<
     { success: true; salonId: string } | { success: false; error: string }
@@ -28,5 +23,5 @@ export class SalonAccessGuard {
     }
 
     return { success: true, salonId };
-  }
-}
+  },
+};

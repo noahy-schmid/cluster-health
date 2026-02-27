@@ -5,7 +5,6 @@ import { UploadIcon } from "lucide-react";
 
 interface FileDropZoneProps {
   accept?: string[];
-  maxSize?: number;
   onFileSelect: (file: File) => void;
   isUploading?: boolean;
   uploadProgress?: number;
@@ -16,7 +15,6 @@ interface FileDropZoneProps {
 
 export default function FileDropZone({
   accept = [],
-  maxSize,
   onFileSelect,
   isUploading = false,
   uploadProgress = 0,
