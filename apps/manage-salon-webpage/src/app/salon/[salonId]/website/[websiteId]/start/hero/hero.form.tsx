@@ -22,7 +22,7 @@ export default function HeroForm({
   onCancel,
   onFieldChange,
 }: HeroFormProps) {
-  const { websiteId } = useWebsiteRouteContext();
+  const { salonId } = useWebsiteRouteContext();
   const [settings, setSettings] = useState<HeroSettings>(initialSettings);
 
   const debouncedFieldChange = useDebounce((newSettings: HeroSettings) => {
@@ -50,7 +50,7 @@ export default function HeroForm({
   return (
     <div className="flex flex-col gap-lg">
       <MediaSelector
-        websiteId={websiteId ?? ""}
+        salonId={salonId ?? ""}
         label="Hintergrundbild"
         value={settings.heroImage ?? ""}
         onChange={handleHeroImageChange}
@@ -59,7 +59,7 @@ export default function HeroForm({
       />
 
       <MediaSelector
-        websiteId={websiteId ?? ""}
+        salonId={salonId ?? ""}
         label="Logo"
         value={settings.logo ?? ""}
         onChange={handleLogoChange}

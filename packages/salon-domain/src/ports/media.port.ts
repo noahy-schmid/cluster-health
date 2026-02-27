@@ -7,7 +7,7 @@ export type InsertDatabaseMediaFile = typeof mediaFilesTable.$inferInsert;
 
 export interface MediaFile {
   id: string;
-  websiteId: string;
+  salonId: string;
   fileName: string;
   mimeType: string;
   fileSize: number;
@@ -17,7 +17,7 @@ export interface MediaFile {
 }
 
 export interface PrepareUploadInput {
-  websiteId: string;
+  salonId: string;
   fileName: string;
   mimeType: string;
   fileSize: number;
@@ -43,8 +43,8 @@ export interface MediaPort {
     mediaId: string,
   ): Effect.Effect<SelectDatabaseMediaFile | null, MediaError | S3Error, never>;
 
-  findMediaFilesByWebsiteId(
-    websiteId: string,
+  findMediaFilesBySalonId(
+    salonId: string,
   ): Effect.Effect<SelectDatabaseMediaFile[], MediaError | S3Error, never>;
 
   deleteMediaFile(
@@ -53,5 +53,5 @@ export interface MediaPort {
 }
 
 export const MediaPort = Context.GenericTag<MediaPort>(
-  "@repo/website-database/MediaPort",
+  "@repo/salon-domain/MediaPort",
 );

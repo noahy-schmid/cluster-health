@@ -27,12 +27,12 @@ export interface MediaService {
   ): Effect.Effect<void, MediaError | MediaNotFoundError | S3Error, never>;
 
   listMedia(
-    websiteId: string,
+    salonId: string,
   ): Effect.Effect<MediaFile[], MediaError | S3Error, never>;
 
   deleteMedia(
     mediaId: string,
-    websiteId: string,
+    salonId: string,
   ): Effect.Effect<void, MediaError | MediaNotFoundError | S3Error, never>;
 
   getMediaUrl(
@@ -45,5 +45,5 @@ export interface MediaService {
 }
 
 export const MediaService = Context.GenericTag<MediaService>(
-  "@repo/website-database/MediaService",
+  "@repo/salon-domain/MediaService",
 );

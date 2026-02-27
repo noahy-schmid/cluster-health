@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
+  integer,
   pgSchema,
   timestamp,
   uniqueIndex,
@@ -39,4 +41,17 @@ export const stylistsTable = salonSchema.table("stylists", {
   profileImage: varchar({ length: 500 }).notNull(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const mediaFilesTable = salonSchema.table("media_files", {
+  id: uuid().primaryKey().defaultRandom(),
+  salonId: uuid()
+    .notNull()
+    .references(() => salonsTable.id, { onDelete: "cascade" }),
+  fileName: varchar().notNull(),
+  mimeType: varchar().notNull(),
+  fileSize: integer().notNull(),
+  s3Key: varchar().notNull(),
+  uploadConfirmed: boolean().default(false).notNull(),
+  createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
 });
