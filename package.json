@@ -13,6 +13,7 @@
     "drizzle:generate": "turbo run drizzle:generate"
   },
   "devDependencies": {
+    "@effect/language-service": "^0.77.0",
     "eslint-plugin-turbo": "^2.5.0",
     "husky": "^9.1.7",
     "prettier": "^3.8.1",
