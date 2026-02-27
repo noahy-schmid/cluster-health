@@ -3,9 +3,8 @@
 import {
   WebsiteHeroRepository,
   WebsiteHeroRepositoryLive,
-  MediaService,
-  MediaLayer,
 } from "@repo/website-database";
+import { MediaService, MediaLayer } from "@repo/salon-domain";
 import { Effect } from "effect";
 import { unstable_cache } from "next/cache";
 

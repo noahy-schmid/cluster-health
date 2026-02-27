@@ -161,7 +161,7 @@ export default function ReasonForm({ section }: ReasonFormProps) {
 
             <MediaSelector
               label="Bild (optional)"
-              websiteId={websiteId!}
+              salonId={salonId!}
               value={item.imageId}
               onChange={(value) => {
                 const newItems = [...settings.items];

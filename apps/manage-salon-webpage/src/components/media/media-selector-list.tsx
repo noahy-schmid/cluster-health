@@ -6,14 +6,14 @@ import MediaSelector from "./media-selector";
 interface MediaSelectorListProps {
   value: string[];
   onChange: (mediaIds: string[]) => void;
-  websiteId: string;
+  salonId: string;
   label: string;
 }
 
 export default function MediaSelectorList({
   value,
   onChange,
-  websiteId,
+  salonId,
   label,
 }: MediaSelectorListProps) {
   const handleAdd = () => {
@@ -40,7 +40,7 @@ export default function MediaSelectorList({
             key={index}
             value={mediaId}
             onChange={(newMediaId) => handleChange(index, newMediaId)}
-            websiteId={websiteId}
+            salonId={salonId}
             label=""
           />
         ))}

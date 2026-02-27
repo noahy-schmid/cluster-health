@@ -1,12 +1,12 @@
 import { Effect, Layer } from "effect";
 import { MediaPort, type InsertDatabaseMediaFile } from "../ports/media.port";
-import { S3Error } from "../types/media-errors";
+import { MediaError, S3Error } from "../types/media-errors";
 import { mediaFilesTable } from "../schema";
 import { eq } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
 
 const makeMediaPort = Effect.gen(function* () {
-  yield* Effect.log("Initializing MediaDatabaseAdapter");
+  yield* Effect.log("Initializing PostgresMediaAdapter");
 
   const { db } = yield* Database;
 
@@ -14,9 +14,8 @@ const makeMediaPort = Effect.gen(function* () {
     Effect.tryPromise(() => db.insert(mediaFilesTable).values(input)).pipe(
       Effect.mapError(
         (error) =>
-          new S3Error({
+          new MediaError({
             message: "Failed to insert media file record",
-            cause: error,
           }),
       ),
     );
@@ -32,25 +31,23 @@ const makeMediaPort = Effect.gen(function* () {
       Effect.map((rows) => rows[0] ?? null),
       Effect.mapError(
         (error) =>
-          new S3Error({
+          new MediaError({
             message: `Failed to fetch media file: ${error}`,
-            cause: error,
           }),
       ),
     );
 
-  const findMediaFilesByWebsiteId = (websiteId: string) =>
+  const findMediaFilesBySalonId = (salonId: string) =>
     Effect.tryPromise(() =>
       db
         .select()
         .from(mediaFilesTable)
-        .where(eq(mediaFilesTable.websiteId, websiteId)),
+        .where(eq(mediaFilesTable.salonId, salonId)),
     ).pipe(
       Effect.mapError(
         (error) =>
-          new S3Error({
-            message: `Failed to list media files for website: ${error}`,
-            cause: error,
+          new MediaError({
+            message: `Failed to list media files for salon: ${error}`,
           }),
       ),
     );
@@ -61,9 +58,8 @@ const makeMediaPort = Effect.gen(function* () {
     ).pipe(
       Effect.mapError(
         (error) =>
-          new S3Error({
+          new MediaError({
             message: "Failed to delete media file record",
-            cause: error,
           }),
       ),
     );
@@ -80,9 +76,8 @@ const makeMediaPort = Effect.gen(function* () {
     ).pipe(
       Effect.mapError(
         (error) =>
-          new S3Error({
+          new MediaError({
             message: "Failed to update media file upload confirmed status",
-            cause: error,
           }),
       ),
     );
@@ -90,7 +85,7 @@ const makeMediaPort = Effect.gen(function* () {
   return {
     insertMediaFile,
     findMediaFileById,
-    findMediaFilesByWebsiteId,
+    findMediaFilesBySalonId,
     deleteMediaFile,
     updateMediaFileUploadConfirmed,
   } satisfies MediaPort;
