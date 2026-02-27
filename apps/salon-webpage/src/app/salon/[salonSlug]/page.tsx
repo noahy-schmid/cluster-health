@@ -59,8 +59,8 @@ export default async function SalonPage({
       <StickyMenuBar
         menuItems={menuItems}
         logoUrl={
-          heroResult.success && heroResult.settings
-            ? heroResult.settings.logo
+          heroResult.success && heroResult.settings?.logoUrl
+            ? heroResult.settings.logoUrl
             : "/images/logo.png"
         }
       />

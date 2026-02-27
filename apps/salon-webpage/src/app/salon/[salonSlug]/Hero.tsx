@@ -13,8 +13,8 @@ export default async function Hero({ salonSlug }: HeroProps) {
   const mode = colors?.mode ?? "light";
 
   // Fallback to default images if settings not found
-  const backgroundImage = settings?.heroImage || "/images/hair.png";
-  const logo = settings?.logo || "/images/logo.png";
+  const backgroundImage = settings?.heroImageUrl || "/images/hair.png";
+  const logo = settings?.logoUrl || "/images/logo.png";
   const title = settings?.title || "Wir lieben Haare";
   const subtitle = settings?.subtitle || "Herzlich Willkommen in unserem Salon";
 

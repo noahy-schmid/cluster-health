@@ -22,7 +22,7 @@ export default function SectionRenderer({
         <ImageTextSection
           header={section.settings.title}
           text={section.settings.text}
-          imageSrc={section.settings.imageUrl}
+          imageId={section.settings.imageId}
           imageAlt={section.settings.title}
           swapOrder={order % 2 === 1}
         />
@@ -30,7 +30,7 @@ export default function SectionRenderer({
     case "gallery":
       return (
         <ImageCarouselSection
-          images={section.settings.imageUrls}
+          imageIds={section.settings.imageIds}
           title={section.settings.title}
           subtitle={section.settings.subtitle}
         />
