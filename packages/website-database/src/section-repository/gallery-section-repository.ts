@@ -50,7 +50,7 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
             settings: {
               title: insertedGallerySection.title,
               subtitle: insertedGallerySection.subtitle,
-              imageUrls: [],
+              imageIds: [],
             },
             order: insertedSection.order,
             menuTitle: insertedSection.menuTitle ?? undefined,
@@ -100,11 +100,11 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
           .where(eq(galleryImagesTable.gallerySectionId, section.id));
 
         // Insert new images
-        if (section.settings.imageUrls.length > 0) {
+        if (section.settings.imageIds.length > 0) {
           await tx.insert(galleryImagesTable).values(
-            section.settings.imageUrls.map((url, index) => ({
+            section.settings.imageIds.map((imageId, index) => ({
               gallerySectionId: section.id,
-              imageUrl: url,
+              imageUrl: imageId,
               order: index,
             })),
           );
@@ -152,7 +152,7 @@ export class GallerySectionRepository implements SectionTypeRepository<"gallery"
         settings: {
           title: gallerySection.title,
           subtitle: gallerySection.subtitle,
-          imageUrls: images.map((img) => img.imageUrl),
+          imageIds: images.map((img) => img.imageUrl),
         },
         order: dbSection.order,
         menuTitle: dbSection.menuTitle ?? undefined,

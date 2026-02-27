@@ -49,7 +49,7 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
             id: insertedSection.id,
             type: "text-with-image",
             settings: {
-              imageUrl: insertedTextSection.image,
+              imageId: insertedTextSection.image,
               title: insertedTextSection.title,
               text: insertedTextSection.content,
             },
@@ -95,7 +95,7 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
           .set({
             title: section.settings.title,
             content: section.settings.text,
-            image: section.settings.imageUrl,
+            image: section.settings.imageId,
           })
           .where(eq(textWithImageSectionsTable.id, section.id));
       });
@@ -137,7 +137,7 @@ export class TextWithImageSectionRepository implements SectionTypeRepository<"te
         id: dbSection.id,
         type: "text-with-image",
         settings: {
-          imageUrl: textSection.image,
+          imageId: textSection.image,
           title: textSection.title,
           text: textSection.content,
         },

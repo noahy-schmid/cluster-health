@@ -11,7 +11,7 @@ export type SectionType =
 
 // Settings for Text with Image section
 export interface TextWithImageSettings {
-  imageUrl: string;
+  imageId: string;
   title: string;
   text: string;
 }
@@ -20,7 +20,7 @@ export interface TextWithImageSettings {
 export interface GallerySettings {
   title: string;
   subtitle: string;
-  imageUrls: string[];
+  imageIds: string[];
 }
 
 export interface CenterTextSettings {
@@ -32,7 +32,7 @@ export interface CenterTextSettings {
 export interface ReasonItem {
   title: string;
   description: string;
-  imageUrl?: string;
+  imageId?: string;
 }
 
 export interface ReasonSettings {

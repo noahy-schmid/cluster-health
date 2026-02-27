@@ -17,7 +17,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
 
     // Check image consistency
     const itemsWithImages = items.filter(
-      (item) => item.imageUrl && item.imageUrl.trim() !== "",
+      (item) => item.imageId && item.imageId.trim() !== "",
     );
     if (itemsWithImages.length > 0 && itemsWithImages.length !== items.length) {
       return {
@@ -152,7 +152,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
             reasonSectionId: section.id,
             title: item.title,
             description: item.description,
-            imageUrl: item.imageUrl || null,
+            imageUrl: item.imageId || null,
             order: index,
           })),
         );
@@ -202,7 +202,7 @@ export class ReasonSectionRepository implements SectionTypeRepository<"reason"> 
           items: items.map((item) => ({
             title: item.title,
             description: item.description,
-            imageUrl: item.imageUrl || undefined,
+            imageId: item.imageUrl || undefined,
           })),
         },
         order: dbSection.order,
