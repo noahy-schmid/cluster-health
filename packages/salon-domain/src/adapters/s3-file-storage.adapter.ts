@@ -36,17 +36,7 @@ const createS3Client = (
 };
 
 const makeFileStoragePort = Effect.gen(function* () {
-  yield* Effect.log("Initializing S3FileStorageAdapter");
-
   const config = yield* Configuration;
-
-  yield* Effect.log("Initializing S3 client with config", {
-    s3Url: config.s3Url,
-    s3Region: config.s3Region,
-    s3AccessKey: config.s3AccessKey ? "****" : "(not set)",
-    s3SecretKey: config.s3SecretKey ? "****" : "(not set)",
-    s3BucketName: config.s3BucketName,
-  });
 
   const s3Client = createS3Client(
     config.s3Url,

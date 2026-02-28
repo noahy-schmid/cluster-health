@@ -1,13 +1,13 @@
 "use server";
 
 import { Effect } from "effect";
-import { MediaService, MediaLayer } from "@repo/website-database";
-import type { MediaFile as BackendMediaFile } from "@repo/website-database/src/ports/media.port";
-import { WebsiteAccessGuard } from "@/api/guards/website.guard";
+import { MediaService, MediaLayer } from "@repo/salon-domain";
+import type { MediaFile as BackendMediaFile } from "@repo/salon-domain/src/ports/media.port";
+import { SalonAccessGuard } from "@/api/guards/salon.guard";
 
 export interface MediaFile {
   id: string;
-  websiteId: string;
+  salonId: string;
   fileName: string;
   mimeType: string;
   fileSize: number;
@@ -22,7 +22,7 @@ export type Result<T, E = string> =
 
 const mapBackendMediaFile = (file: BackendMediaFile): MediaFile => ({
   id: file.id,
-  websiteId: file.websiteId,
+  salonId: file.salonId,
   fileName: file.fileName,
   mimeType: file.mimeType,
   fileSize: file.fileSize,
@@ -32,7 +32,7 @@ const mapBackendMediaFile = (file: BackendMediaFile): MediaFile => ({
 });
 
 export async function prepareMediaUpload(
-  websiteId: string,
+  salonId: string,
   fileName: string,
   mimeType: string,
   fileSize: number,
@@ -43,7 +43,7 @@ export async function prepareMediaUpload(
     uploadFields: Record<string, string>;
   }>
 > {
-  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
   if (!access.success) {
     return { success: false, errors: access.error };
   }
@@ -51,7 +51,7 @@ export async function prepareMediaUpload(
   const effect = Effect.gen(function* () {
     const mediaService = yield* MediaService;
     return yield* mediaService
-      .prepareUpload({ websiteId, fileName, mimeType, fileSize })
+      .prepareUpload({ salonId, fileName, mimeType, fileSize })
       .pipe(
         Effect.map((data) => ({ success: true as const, data })),
         Effect.tapError((error) =>
@@ -112,17 +112,15 @@ export async function confirmMediaUpload(
   return await Effect.runPromise(effect);
 }
 
-export async function listMedia(
-  websiteId: string,
-): Promise<Result<MediaFile[]>> {
-  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
+export async function listMedia(salonId: string): Promise<Result<MediaFile[]>> {
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
   if (!access.success) {
     return { success: false, errors: access.error };
   }
 
   const effect = Effect.gen(function* () {
     const mediaService = yield* MediaService;
-    return yield* mediaService.listMedia(websiteId).pipe(
+    return yield* mediaService.listMedia(salonId).pipe(
       Effect.map((files) => ({
         success: true as const,
         data: files.map(mapBackendMediaFile),
@@ -146,17 +144,17 @@ export async function listMedia(
 }
 
 export async function deleteMedia(
-  websiteId: string,
+  salonId: string,
   mediaId: string,
 ): Promise<Result<void>> {
-  const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
   if (!access.success) {
     return { success: false, errors: access.error };
   }
 
   const effect = Effect.gen(function* () {
     const mediaService = yield* MediaService;
-    return yield* mediaService.deleteMedia(mediaId, websiteId).pipe(
+    return yield* mediaService.deleteMedia(mediaId, salonId).pipe(
       Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchTag("MediaNotFoundError", (error) =>
         Effect.succeed({

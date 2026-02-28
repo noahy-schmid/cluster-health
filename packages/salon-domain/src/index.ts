@@ -13,4 +13,7 @@ export {
   type UpdateStylistInput,
   type Stylist,
 } from "./types/stylists";
-export { stylistsTable } from "./schema";
+export { stylistsTable, mediaFilesTable } from "./schema";
+export * from "./types/media-errors";
+export * from "./services/media/media.interface";
+export * from "./layers";

@@ -89,8 +89,6 @@ const genStylistServiceLive: Effect.Effect<
   never,
   StylistRepository
 > = Effect.gen(function* () {
-  yield* Effect.log("Initializing StylistServiceLive");
-
   const repository = yield* StylistRepository;
 
   const createStylist: StylistService["createStylist"] = (input) =>

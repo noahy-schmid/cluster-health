@@ -6,7 +6,7 @@ import { SalonPort } from "../ports/salon.port";
  * Adapter that implements SalonPort using the SalonRepository from salon-domain.
  */
 const make = Effect.gen(function* () {
-  yield* Effect.log("Initializing SalonDomainAdapter");
+  yield* Effect.succeed(undefined);
 
   const salonRepository = new SalonRepository();
 

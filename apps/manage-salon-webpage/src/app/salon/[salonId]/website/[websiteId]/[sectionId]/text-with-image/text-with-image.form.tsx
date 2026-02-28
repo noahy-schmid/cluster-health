@@ -43,7 +43,7 @@ export default function TextWithImageForm({ section }: TextWithImageFormProps) {
 
       <MediaSelector
         label="Bild"
-        websiteId={websiteId!}
+        salonId={salonId!}
         value={settings.imageId}
         onChange={(value) => setSettings({ ...settings, imageId: value })}
       ></MediaSelector>
