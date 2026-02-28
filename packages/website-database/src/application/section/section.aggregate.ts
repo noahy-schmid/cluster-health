@@ -1,4 +1,4 @@
-import { Context, Data, Effect, Layer } from "effect";
+import { Context, Effect, Layer } from "effect";
 import {
   SectionPort,
   type PortSectionType,
@@ -6,6 +6,11 @@ import {
   type PortSection,
   type PortReasonItem,
 } from "../../ports/section.port";
+import {
+  SectionError,
+  InvalidSectionTypeError,
+  SectionValidationError,
+} from "./errors";
 
 // --- Domain types (derived from port types) ---
 
@@ -36,39 +41,6 @@ export type Section<T extends SectionType> = {
 
 export type AllSections = { [K in SectionType]: Section<K> }[SectionType];
 
-// --- Domain errors ---
-
-/**
- * Raised when section settings fail business validation.
- */
-export class SectionValidationError extends Data.TaggedError(
-  "SectionValidationError",
-)<{ message: string }> {}
-
-/**
- * Raised when an invalid section type is provided.
- */
-export class InvalidSectionTypeError extends Data.TaggedError(
-  "InvalidSectionTypeError",
-)<{ sectionType: string }> {}
-
-/**
- * Raised when a section is not found.
- */
-export class SectionNotFoundError extends Data.TaggedError(
-  "SectionNotFoundError",
-)<{ sectionId?: string; websiteId?: string }> {}
-
-/**
- * Raised when a section operation fails.
- */
-export class SectionError extends Data.TaggedError("SectionError")<{
-  websiteId?: string;
-  sectionType?: string;
-  sectionId?: string;
-  message: string;
-}> {}
-
 // --- Mapping between port and domain ---
 
 const VALID_SECTION_TYPES: ReadonlySet<string> = new Set<SectionType>([
@@ -91,42 +63,6 @@ const toPort = (section: AllSections): PortAllSections =>
     menuTitle: section.menuTitle ?? null,
   }) as PortAllSections;
 
-// --- Business validation ---
-
-const validateReasonItems = (
-  items: ReasonItem[],
-): Effect.Effect<void, SectionValidationError> =>
-  Effect.gen(function* () {
-    if (items.length < 2 || items.length > 4) {
-      return yield* Effect.fail(
-        new SectionValidationError({
-          message: "Reason section must have 2-4 items",
-        }),
-      );
-    }
-
-    const itemsWithImages = items.filter(
-      (item) => item.imageId && item.imageId.trim() !== "",
-    );
-    if (itemsWithImages.length > 0 && itemsWithImages.length !== items.length) {
-      return yield* Effect.fail(
-        new SectionValidationError({
-          message:
-            "Either all reasons must have images or none should have images",
-        }),
-      );
-    }
-  });
-
-const validateSectionSettings = (
-  section: AllSections,
-): Effect.Effect<void, SectionValidationError> =>
-  Effect.gen(function* () {
-    if (section.type === "reason") {
-      yield* validateReasonItems(section.settings.items);
-    }
-  });
-
 /**
  * Extracts all media IDs referenced by a section's settings.
  */
@@ -146,24 +82,18 @@ export const extractMediaIds = (section: AllSections): string[] => {
   }
 };
 
-// --- Aggregate interface ---
+// --- Aggregate service ---
 
 /**
  * Section aggregate encapsulates business logic for website sections.
  */
 export interface SectionAggregate {
-  /**
-   * Creates a new section with default settings.
-   */
   createSection(
     websiteId: string,
     type: SectionType,
     position: number,
   ): Effect.Effect<AllSections, InvalidSectionTypeError | SectionError>;
 
-  /**
-   * Updates an existing section after validating business rules.
-   */
   updateSection(
     section: AllSections,
   ): Effect.Effect<
@@ -171,120 +101,136 @@ export interface SectionAggregate {
     InvalidSectionTypeError | SectionValidationError | SectionError
   >;
 
-  /**
-   * Deletes a section.
-   */
   deleteSection(
     websiteId: string,
     sectionId: string,
   ): Effect.Effect<void, SectionError>;
 
-  /**
-   * Reorders sections for a website, validating the provided IDs.
-   */
   reorderSections(
     websiteId: string,
     sectionIds: string[],
   ): Effect.Effect<void, SectionError>;
 
-  /**
-   * Fetches all sections for a website.
-   */
   fetchSections(websiteId: string): Effect.Effect<AllSections[], SectionError>;
 }
 
-/**
- * Context tag for the SectionAggregate service.
- */
 export const SectionAggregate = Context.GenericTag<SectionAggregate>(
   "@repo/website-database/SectionAggregate",
 );
 
-// --- Aggregate implementation ---
+export const SectionAggregateLive = Layer.effect(
+  SectionAggregate,
+  Effect.gen(function* () {
+    const sectionPort = yield* SectionPort;
 
-const make = Effect.gen(function* () {
-  const sectionPort = yield* SectionPort;
+    const createSection: SectionAggregate["createSection"] = (
+      websiteId,
+      type,
+      position,
+    ) =>
+      Effect.gen(function* () {
+        if (!VALID_SECTION_TYPES.has(type)) {
+          return yield* Effect.fail(
+            new InvalidSectionTypeError({ sectionType: type }),
+          );
+        }
 
-  const createSection: SectionAggregate["createSection"] = (
-    websiteId,
-    type,
-    position,
-  ) =>
-    Effect.gen(function* () {
-      if (!VALID_SECTION_TYPES.has(type)) {
-        return yield* Effect.fail(
-          new InvalidSectionTypeError({ sectionType: type }),
-        );
-      }
+        const portSection = yield* sectionPort
+          .createSection(websiteId, type, position)
+          .pipe(
+            Effect.mapError(
+              (error) =>
+                new SectionError({
+                  websiteId,
+                  sectionType: type,
+                  message: error.message,
+                }),
+            ),
+          );
 
-      const portSection = yield* sectionPort
-        .createSection(websiteId, type, position)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionError({
-                websiteId,
-                sectionType: type,
-                message: error.message,
-              }),
-          ),
-        );
+        return fromPort(portSection);
+      });
 
-      return fromPort(portSection);
-    });
+    const updateSection: SectionAggregate["updateSection"] = (section) =>
+      Effect.gen(function* () {
+        if (!VALID_SECTION_TYPES.has(section.type)) {
+          return yield* Effect.fail(
+            new InvalidSectionTypeError({ sectionType: section.type }),
+          );
+        }
 
-  const updateSection: SectionAggregate["updateSection"] = (section) =>
-    Effect.gen(function* () {
-      if (!VALID_SECTION_TYPES.has(section.type)) {
-        return yield* Effect.fail(
-          new InvalidSectionTypeError({ sectionType: section.type }),
-        );
-      }
-
-      yield* validateSectionSettings(section);
-
-      yield* sectionPort.updateSection(toPort(section)).pipe(
-        Effect.mapError(
-          (error) =>
-            new SectionError({
+        yield* sectionPort.updateSection(toPort(section)).pipe(
+          Effect.mapError((error) => {
+            if (error.message.includes("must have")) {
+              return new SectionValidationError({ message: error.message });
+            }
+            return new SectionError({
               sectionId: section.id,
               sectionType: section.type,
               message: error.message,
-            }),
-        ),
-      );
+            });
+          }),
+        );
 
-      yield* Effect.log("Section updated", section.id);
-    });
+        yield* Effect.log("Section updated", section.id);
+      });
 
-  const deleteSection: SectionAggregate["deleteSection"] = (
-    websiteId,
-    sectionId,
-  ) =>
-    Effect.gen(function* () {
-      yield* sectionPort.deleteSection(websiteId, sectionId).pipe(
-        Effect.mapError(
-          (error) =>
+    const deleteSection: SectionAggregate["deleteSection"] = (
+      websiteId,
+      sectionId,
+    ) =>
+      Effect.gen(function* () {
+        yield* sectionPort.deleteSection(websiteId, sectionId).pipe(
+          Effect.mapError(
+            (error) =>
+              new SectionError({
+                sectionId,
+                websiteId,
+                message: error.message,
+              }),
+          ),
+        );
+
+        yield* Effect.log("Section deleted", sectionId);
+      });
+
+    const reorderSections: SectionAggregate["reorderSections"] = (
+      websiteId,
+      sectionIds,
+    ) =>
+      Effect.gen(function* () {
+        const existingSections = yield* sectionPort
+          .fetchSectionsByWebsiteId(websiteId)
+          .pipe(
+            Effect.mapError(
+              (error) =>
+                new SectionError({
+                  websiteId,
+                  message: error.message,
+                }),
+            ),
+          );
+
+        if (sectionIds.length !== existingSections.length) {
+          return yield* Effect.fail(
             new SectionError({
-              sectionId,
               websiteId,
-              message: error.message,
+              message: `Provided sectionIds length (${sectionIds.length}) does not match number of sections in website (${existingSections.length})`,
             }),
-        ),
-      );
+          );
+        }
 
-      yield* Effect.log("Section deleted", sectionId);
-    });
+        const existingIdSet = new Set(existingSections.map((s) => s.id));
+        if (!sectionIds.every((id) => existingIdSet.has(id))) {
+          return yield* Effect.fail(
+            new SectionError({
+              websiteId,
+              message: "Provided sectionIds do not match sections in website",
+            }),
+          );
+        }
 
-  const reorderSections: SectionAggregate["reorderSections"] = (
-    websiteId,
-    sectionIds,
-  ) =>
-    Effect.gen(function* () {
-      // Validate that provided IDs match existing sections
-      const existingSections = yield* sectionPort
-        .fetchSectionsByWebsiteId(websiteId)
-        .pipe(
+        yield* sectionPort.reorderSections(websiteId, sectionIds).pipe(
           Effect.mapError(
             (error) =>
               new SectionError({
@@ -294,66 +240,32 @@ const make = Effect.gen(function* () {
           ),
         );
 
-      if (sectionIds.length !== existingSections.length) {
-        return yield* Effect.fail(
-          new SectionError({
-            websiteId,
-            message: `Provided sectionIds length (${sectionIds.length}) does not match number of sections in website (${existingSections.length})`,
-          }),
-        );
-      }
+        yield* Effect.log("Sections reordered for website", websiteId);
+      });
 
-      const existingIdSet = new Set(existingSections.map((s) => s.id));
-      if (!sectionIds.every((id) => existingIdSet.has(id))) {
-        return yield* Effect.fail(
-          new SectionError({
-            websiteId,
-            message: "Provided sectionIds do not match sections in website",
-          }),
-        );
-      }
+    const fetchSections: SectionAggregate["fetchSections"] = (websiteId) =>
+      Effect.gen(function* () {
+        const portSections = yield* sectionPort
+          .fetchSectionsByWebsiteId(websiteId)
+          .pipe(
+            Effect.mapError(
+              (error) =>
+                new SectionError({
+                  websiteId,
+                  message: error.message,
+                }),
+            ),
+          );
 
-      yield* sectionPort.reorderSections(websiteId, sectionIds).pipe(
-        Effect.mapError(
-          (error) =>
-            new SectionError({
-              websiteId,
-              message: error.message,
-            }),
-        ),
-      );
+        return portSections.map(fromPort);
+      });
 
-      yield* Effect.log("Sections reordered for website", websiteId);
-    });
-
-  const fetchSections: SectionAggregate["fetchSections"] = (websiteId) =>
-    Effect.gen(function* () {
-      const portSections = yield* sectionPort
-        .fetchSectionsByWebsiteId(websiteId)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionError({
-                websiteId,
-                message: error.message,
-              }),
-          ),
-        );
-
-      return portSections.map(fromPort);
-    });
-
-  return {
-    createSection,
-    updateSection,
-    deleteSection,
-    reorderSections,
-    fetchSections,
-  } satisfies SectionAggregate;
-});
-
-/**
- * Live layer for the SectionAggregate service.
- * Depends on SectionPort.
- */
-export const SectionAggregateLive = Layer.effect(SectionAggregate, make);
+    return {
+      createSection,
+      updateSection,
+      deleteSection,
+      reorderSections,
+      fetchSections,
+    } satisfies SectionAggregate;
+  }),
+);

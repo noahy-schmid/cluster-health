@@ -7,9 +7,18 @@ import { PostgresMediaAdapter } from "./adapters/postgres-media.adapter";
 import { S3FileStorageAdapter } from "./adapters/s3-file-storage.adapter";
 import { ConfigurationLayer } from "./infrastructure/config.service";
 import { DatabaseLayer } from "./infrastructure/database.service";
-import { SectionUseCaseLive } from "./use-cases/section.service";
 import { SectionAggregateLive } from "./application/section/section.aggregate";
-import { PostgresSectionAdapter } from "./adapters/postgres-section.adapter";
+import { PostgresSectionAdapter } from "./adapters/section/postgres-section.adapter";
+import { PostgresGallerySectionAdapter } from "./adapters/section/postgres-gallery-section.adapter";
+import { PostgresTextWithImageSectionAdapter } from "./adapters/section/postgres-text-with-image-section.adapter";
+import { PostgresCenterTextSectionAdapter } from "./adapters/section/postgres-center-text-section.adapter";
+import { PostgresReasonSectionAdapter } from "./adapters/section/postgres-reason-section.adapter";
+import { PostgresStylistsSectionAdapter } from "./adapters/section/postgres-stylists-section.adapter";
+import { CreateSectionUseCaseLive } from "./use-cases/create-section.use-case";
+import { UpdateSectionUseCaseLive } from "./use-cases/update-section.use-case";
+import { DeleteSectionUseCaseLive } from "./use-cases/delete-section.use-case";
+import { ReorderSectionsUseCaseLive } from "./use-cases/reorder-sections.use-case";
+import { ListSectionsUseCaseLive } from "./use-cases/list-sections.use-case";
 
 const InfrastructureLayer = DatabaseLayer.pipe(
   Layer.provideMerge(ConfigurationLayer),
@@ -27,11 +36,50 @@ export const MediaLayer = MediaServiceLive.pipe(
   Layer.provide(InfrastructureLayer),
 );
 
-export const SectionLayer = SectionUseCaseLive.pipe(
-  Layer.provide(SectionAggregateLive),
-  Layer.provide(PostgresSectionAdapter),
-  Layer.provide(PostgresWebsiteAdapter),
-  Layer.provide(PostgresMediaAdapter),
+const SectionTypeAdaptersLayer = Layer.mergeAll(
+  PostgresGallerySectionAdapter,
+  PostgresTextWithImageSectionAdapter,
+  PostgresCenterTextSectionAdapter,
+  PostgresReasonSectionAdapter,
+  PostgresStylistsSectionAdapter,
+);
+
+const SectionPortLayer = PostgresSectionAdapter.pipe(
+  Layer.provide(SectionTypeAdaptersLayer),
   Layer.provide(InfrastructureLayer),
+);
+
+const SectionAggregateLayer = SectionAggregateLive.pipe(
+  Layer.provide(SectionPortLayer),
+);
+
+const SectionDependenciesLayer = Layer.mergeAll(
+  SectionAggregateLayer,
+  PostgresWebsiteAdapter.pipe(Layer.provide(InfrastructureLayer)),
+  PostgresMediaAdapter.pipe(Layer.provide(InfrastructureLayer)),
+);
+
+export const CreateSectionUseCaseLayer = CreateSectionUseCaseLive.pipe(
+  Layer.provide(SectionDependenciesLayer),
+  Layer.orDie,
+);
+
+export const UpdateSectionUseCaseLayer = UpdateSectionUseCaseLive.pipe(
+  Layer.provide(SectionDependenciesLayer),
+  Layer.orDie,
+);
+
+export const DeleteSectionUseCaseLayer = DeleteSectionUseCaseLive.pipe(
+  Layer.provide(SectionDependenciesLayer),
+  Layer.orDie,
+);
+
+export const ReorderSectionsUseCaseLayer = ReorderSectionsUseCaseLive.pipe(
+  Layer.provide(SectionDependenciesLayer),
+  Layer.orDie,
+);
+
+export const ListSectionsUseCaseLayer = ListSectionsUseCaseLive.pipe(
+  Layer.provide(SectionDependenciesLayer),
   Layer.orDie,
 );
