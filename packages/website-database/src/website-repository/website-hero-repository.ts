@@ -69,8 +69,6 @@ export const WebsiteHeroRepository = Context.GenericTag<WebsiteHeroRepository>(
 
 const genWebsiteHeroRepositoryLive: Effect.Effect<WebsiteHeroRepository> =
   Effect.gen(function* () {
-    yield* Effect.log("Initializing WebsiteHeroRepositoryLive");
-
     const mapRowToSettings = (
       websiteId?: string,
       row?: {
