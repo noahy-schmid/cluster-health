@@ -16,7 +16,7 @@ import {
   ListSectionsUseCaseLayer,
 } from "@repo/website-database";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 
 /**
  * Server action to create a new section
@@ -112,8 +112,9 @@ export async function updateSection(
       ),
     );
   }).pipe(
-    Effect.provide(UpdateSectionUseCaseLayer),
-    Effect.provide(ListSectionsUseCaseLayer),
+    Effect.provide(
+      Layer.merge(UpdateSectionUseCaseLayer, ListSectionsUseCaseLayer),
+    ),
     Effect.catchAll((error) => Effect.succeed(error)),
   );
 

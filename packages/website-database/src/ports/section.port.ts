@@ -4,12 +4,15 @@ import { Context, Data, Effect } from "effect";
 
 /**
  * Raised when a section persistence operation fails at the database level.
+ * When `isValidation` is true, the error represents a business rule violation
+ * detected in the adapter (e.g. invalid item count).
  */
 export class SectionPersistenceError extends Data.TaggedError(
   "SectionPersistenceError",
 )<{
   message: string;
   cause?: unknown;
+  isValidation?: boolean;
 }> {}
 
 // --- Port-owned types ---

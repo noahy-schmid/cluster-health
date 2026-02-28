@@ -161,7 +161,7 @@ export const SectionAggregateLive = Layer.effect(
 
         yield* sectionPort.updateSection(toPort(section)).pipe(
           Effect.mapError((error) => {
-            if (error.message.includes("must have")) {
+            if (error.isValidation) {
               return new SectionValidationError({ message: error.message });
             }
             return new SectionError({

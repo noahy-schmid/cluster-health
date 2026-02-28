@@ -6,6 +6,9 @@ import { reasonSectionsTable, reasonItemsTable } from "../../schema";
 import type { PortReasonItem } from "../../ports/section.port";
 import { ReasonSectionAdapter } from "./section-type-adapter";
 
+const MIN_REASON_ITEMS = 2;
+const MAX_REASON_ITEMS = 4;
+
 const make = Effect.gen(function* () {
   const { db } = yield* Database;
 
@@ -127,10 +130,14 @@ const make = Effect.gen(function* () {
       items: PortReasonItem[];
     }) =>
       Effect.gen(function* () {
-        if (settings.items.length < 2 || settings.items.length > 4) {
+        if (
+          settings.items.length < MIN_REASON_ITEMS ||
+          settings.items.length > MAX_REASON_ITEMS
+        ) {
           return yield* Effect.fail(
             new SectionPersistenceError({
-              message: "Reason section must have 2-4 items",
+              message: `Reason section must have ${MIN_REASON_ITEMS}-${MAX_REASON_ITEMS} items`,
+              isValidation: true,
             }),
           );
         }
@@ -146,6 +153,7 @@ const make = Effect.gen(function* () {
             new SectionPersistenceError({
               message:
                 "Either all reasons must have images or none should have images",
+              isValidation: true,
             }),
           );
         }
