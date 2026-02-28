@@ -449,9 +449,6 @@ importers:
       '@types/pg':
         specifier: ^8.16.0
         version: 8.16.0
-      '@vitest/coverage-v8':
-        specifier: ^3.1.4
-        version: 3.2.4(vitest@3.2.4(@types/node@22.19.8)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@2.6.1)
@@ -461,9 +458,6 @@ importers:
       typescript:
         specifier: 5.9.2
         version: 5.9.2
-      vitest:
-        specifier: ^3.1.4
-        version: 3.2.4(@types/node@22.19.8)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/typescript-config: {}
 

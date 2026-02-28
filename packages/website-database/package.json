@@ -13,8 +13,6 @@
     "drizzle:generate": "drizzle-kit generate",
     "drizzle:push": "drizzle-kit push",
     "drizzle:migrate": "drizzle-kit migrate",
-    "test": "vitest",
-    "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
