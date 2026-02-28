@@ -7,6 +7,9 @@ import { PostgresMediaAdapter } from "./adapters/postgres-media.adapter";
 import { S3FileStorageAdapter } from "./adapters/s3-file-storage.adapter";
 import { ConfigurationLayer } from "./infrastructure/config.service";
 import { DatabaseLayer } from "./infrastructure/database.service";
+import { SectionUseCaseLive } from "./use-cases/section.service";
+import { SectionAggregateLive } from "./application/section/section.aggregate";
+import { PostgresSectionAdapter } from "./adapters/postgres-section.adapter";
 
 const InfrastructureLayer = DatabaseLayer.pipe(
   Layer.provideMerge(ConfigurationLayer),
@@ -22,4 +25,13 @@ export const MediaLayer = MediaServiceLive.pipe(
   Layer.provide(PostgresMediaAdapter),
   Layer.provide(S3FileStorageAdapter),
   Layer.provide(InfrastructureLayer),
+);
+
+export const SectionLayer = SectionUseCaseLive.pipe(
+  Layer.provide(SectionAggregateLive),
+  Layer.provide(PostgresSectionAdapter),
+  Layer.provide(PostgresWebsiteAdapter),
+  Layer.provide(PostgresMediaAdapter),
+  Layer.provide(InfrastructureLayer),
+  Layer.orDie,
 );

@@ -4,8 +4,8 @@ import {
   db,
   websitesTable,
   AllSections,
-  SectionRepository,
-  SectionRepositoryLive,
+  SectionUseCase,
+  SectionLayer,
   Result,
 } from "@repo/website-database";
 import { eq } from "drizzle-orm";
@@ -28,8 +28,8 @@ export async function fetchSectionsBySalonSlug(
   }
 
   const fetchEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.fetchSections(website.id).pipe(
+    const useCase = yield* SectionUseCase;
+    return yield* useCase.fetchSections(website.id).pipe(
       Effect.map((data) => ({ success: true as const, data })),
       Effect.catchAll((error) =>
         Effect.succeed({
@@ -39,7 +39,7 @@ export async function fetchSectionsBySalonSlug(
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(Effect.provide(SectionLayer));
 
   return await Effect.runPromise(fetchEffect);
 }

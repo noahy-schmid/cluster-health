@@ -3,8 +3,8 @@
 import {
   SectionType,
   AllSections,
-  SectionRepository,
-  SectionRepositoryLive,
+  SectionUseCase,
+  SectionLayer,
   Result,
 } from "@repo/website-database";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
@@ -26,13 +26,19 @@ export async function createSection(
   }
 
   const createEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.createSection(websiteId, type, position).pipe(
+    const useCase = yield* SectionUseCase;
+    return yield* useCase.createSection(websiteId, type, position).pipe(
       Effect.map((data) => ({ success: true as const, data })),
       Effect.catchTag("InvalidSectionTypeError", (error) =>
         Effect.succeed({
           success: false as const,
           errors: `Invalid section type: ${error.sectionType}`,
+        }),
+      ),
+      Effect.catchTag("SectionNotFoundError", () =>
+        Effect.succeed({
+          success: false as const,
+          errors: "Website not found",
         }),
       ),
       Effect.catchTag("SectionError", (error) =>
@@ -42,7 +48,7 @@ export async function createSection(
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(Effect.provide(SectionLayer));
 
   return await Effect.runPromise(createEffect);
 }
@@ -61,10 +67,10 @@ export async function updateSection(
   }
 
   const updateEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
+    const useCase = yield* SectionUseCase;
 
     // Ensure the section being updated actually belongs to the given website
-    const fetchResult = yield* repo.fetchSections(websiteId).pipe(
+    const fetchResult = yield* useCase.fetchSections(websiteId).pipe(
       Effect.catchAll((error) =>
         Effect.fail({
           success: false as const,
@@ -87,7 +93,7 @@ export async function updateSection(
       });
     }
 
-    return yield* repo.updateSection(section).pipe(
+    return yield* useCase.updateSection(section).pipe(
       Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchAll((error) =>
         Effect.succeed({
@@ -97,7 +103,7 @@ export async function updateSection(
       ),
     );
   }).pipe(
-    Effect.provide(SectionRepositoryLive),
+    Effect.provide(SectionLayer),
     Effect.catchAll((error) => Effect.succeed(error)),
   );
 
@@ -118,8 +124,8 @@ export async function deleteSection(
   }
 
   const deleteEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.deleteSection(websiteId, id).pipe(
+    const useCase = yield* SectionUseCase;
+    return yield* useCase.deleteSection(websiteId, id).pipe(
       Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchAll((error) =>
         Effect.succeed({
@@ -128,7 +134,7 @@ export async function deleteSection(
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(Effect.provide(SectionLayer));
 
   return await Effect.runPromise(deleteEffect);
 }
@@ -148,17 +154,17 @@ export async function reorderSections(
   }
 
   const reorderEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.reorderSections(websiteId, sectionIds).pipe(
+    const useCase = yield* SectionUseCase;
+    return yield* useCase.reorderSections(websiteId, sectionIds).pipe(
       Effect.map(() => ({ success: true as const, data: undefined })),
-      Effect.catchAll((error) =>
+      Effect.catchTag("SectionError", (error) =>
         Effect.succeed({
           success: false as const,
-          errors: `${error.name}: ${error.message}`,
+          errors: `${error._tag}: ${error.message}`,
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(Effect.provide(SectionLayer));
 
   return await Effect.runPromise(reorderEffect);
 }
@@ -176,22 +182,22 @@ export async function fetchSections(
   }
 
   const fetchEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.fetchSections(websiteId).pipe(
+    const useCase = yield* SectionUseCase;
+    return yield* useCase.fetchSections(websiteId).pipe(
       Effect.tap((sections) =>
         Effect.log(
           `Fetched sections for website ${websiteId}: ${JSON.stringify(sections)}`,
         ),
       ),
       Effect.map((data) => ({ success: true as const, data })),
-      Effect.catchAll((error) =>
+      Effect.catchTag("SectionError", (error) =>
         Effect.succeed({
           success: false as const,
-          errors: `${error.name}: ${error.message}`,
+          errors: `${error._tag}: ${error.message}`,
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(Effect.provide(SectionLayer));
 
   return await Effect.runPromise(fetchEffect);
 }
