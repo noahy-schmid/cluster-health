@@ -16,8 +16,8 @@ const makeConfiguration = Effect.gen(function* () {
     databaseUrl,
     s3Url: process.env.S3_URL || "",
     s3Region: process.env.S3_REGION || "us-east-1",
-    s3AccessKey: process.env.S3_WEBSITE_ACCESS_KEY || "",
-    s3SecretKey: process.env.S3_WEBSITE_SECRET_KEY || "",
+    s3AccessKey: process.env.S3_SALON_ACCESS_KEY || "",
+    s3SecretKey: process.env.S3_SALON_SECRET_KEY || "",
     s3BucketName: process.env.S3_WEBSITE_BUCKET_NAME || "salon-media",
   };
 

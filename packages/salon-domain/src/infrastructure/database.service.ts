@@ -13,7 +13,6 @@ const makeDatabase = Effect.acquireRelease(
       idleTimeoutMillis: 0,
       connectionTimeoutMillis: 1000,
     });
-    yield* Effect.log("Database connection pool created");
 
     const db = drizzle(pool);
 
@@ -27,7 +26,7 @@ const makeDatabase = Effect.acquireRelease(
       catch: (error) => {
         throw error;
       },
-    }).pipe(Effect.tap(() => Effect.log("Database connection pool closed"))),
+    }),
 );
 
 export const DatabaseLayer = Layer.scoped(Database, makeDatabase);

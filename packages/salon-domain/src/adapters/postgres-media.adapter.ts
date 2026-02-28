@@ -6,8 +6,6 @@ import { eq } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
 
 const makeMediaPort = Effect.gen(function* () {
-  yield* Effect.log("Initializing PostgresMediaAdapter");
-
   const { db } = yield* Database;
 
   const insertMediaFile = (input: InsertDatabaseMediaFile) =>

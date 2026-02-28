@@ -91,8 +91,6 @@ export const SectionRepository = Context.GenericTag<SectionRepository>(
 
 const genSectionRepositoryLive: Effect.Effect<SectionRepository> = Effect.gen(
   function* () {
-    yield* Effect.log("Initializing SectionRepositoryLive");
-
     const baseRepo = new BaseSectionRepository();
     const gallerySectionRepo = new GallerySectionRepository(baseRepo);
     const textWithImageSectionRepo = new TextWithImageSectionRepository(

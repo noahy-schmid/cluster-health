@@ -180,6 +180,7 @@ const make = Effect.gen(function* () {
       const record = yield* mediaPort.findMediaFileById(mediaId);
 
       if (!record) {
+        yield* Effect.logWarning(`Media file not found for ID: ${mediaId}`);
         return yield* Effect.fail(new MediaNotFoundError({ mediaId }));
       }
 

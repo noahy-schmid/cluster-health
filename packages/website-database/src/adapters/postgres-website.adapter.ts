@@ -12,8 +12,7 @@ import { Database } from "../infrastructure/database.interface";
  * PostgreSQL implementation of the WebsiteRepository using Drizzle ORM.
  */
 const make = Effect.gen(function* () {
-  yield* Effect.log("Initializing PostgresWebsiteAdapter");
-
+  yield* Effect.succeed(undefined);
   const { db } = yield* Database;
 
   const createWebsite: WebsitePort["createWebsite"] = (input) =>
