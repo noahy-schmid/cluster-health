@@ -15,8 +15,7 @@ RUN pnpm add -g turbo@^2
 COPY . .
 
 # Generate a partial monorepo with a pruned lockfile for a target workspace.
-# Assuming "my-stylist-frontend" is the name entered in the project's package.json: { name: "my-stylist-frontend" }
-RUN turbo prune my-stylist-frontend --docker
+RUN turbo prune salon-webpage --docker
 
 # Add lockfile and package.json's of isolated subworkspace
 FROM base AS installer
@@ -24,17 +23,13 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-ARG PATH_PREFIX
-ENV NEXT_PUBLIC_BASE_PATH=${PATH_PREFIX}
-RUN echo "Base path is set to: ${NEXT_PUBLIC_BASE_PATH}"
-
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
 # Build the project
 COPY --from=builder /app/out/full/ .
-RUN pnpm turbo run build --filter=my-stylist-frontend
+RUN pnpm turbo run build --filter=salon-webpage
 
 FROM base AS runner
 WORKDIR /app
@@ -46,8 +41,8 @@ USER nextjs
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=installer --chown=nextjs:nodejs /app/apps/my-stylist-frontend/.next/standalone ./
-COPY --from=installer --chown=nextjs:nodejs /app/apps/my-stylist-frontend/.next/static ./apps/my-stylist-frontend/.next/static
-COPY --from=installer --chown=nextjs:nodejs /app/apps/my-stylist-frontend/public ./apps/my-stylist-frontend/public
+COPY --from=installer --chown=nextjs:nodejs /app/apps/salon-webpage/.next/standalone ./
+COPY --from=installer --chown=nextjs:nodejs /app/apps/salon-webpage/.next/static ./apps/salon-webpage/.next/static
+COPY --from=installer --chown=nextjs:nodejs /app/apps/salon-webpage/public ./apps/salon-webpage/public
 
-CMD ["node", "apps/my-stylist-frontend/server.js"]
+CMD ["node", "apps/salon-webpage/server.js"]
