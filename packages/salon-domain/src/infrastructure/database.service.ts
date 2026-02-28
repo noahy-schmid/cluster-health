@@ -13,6 +13,7 @@ const makeDatabase = Effect.acquireRelease(
       idleTimeoutMillis: 0,
       connectionTimeoutMillis: 1000,
     });
+
     const db = drizzle(pool);
 
     return { db, pool };

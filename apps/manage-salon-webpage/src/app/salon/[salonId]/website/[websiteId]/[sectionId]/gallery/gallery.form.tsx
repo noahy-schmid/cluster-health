@@ -58,7 +58,7 @@ export default function GalleryForm({ section }: GalleryFormProps) {
         label="Galleriebilder"
         value={settings.imageIds}
         onChange={(imageIds) => setSettings({ ...settings, imageIds })}
-        websiteId={websiteId!}
+        salonId={salonId!}
       />
 
       <FormActions

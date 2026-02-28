@@ -22,6 +22,20 @@
       "when": 1771099557133,
       "tag": "0002_equal_warhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772230447640,
+      "tag": "0003_curly_forge",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772231051745,
+      "tag": "0004_wealthy_genesis",
+      "breakpoints": true
     }
   ]
 }

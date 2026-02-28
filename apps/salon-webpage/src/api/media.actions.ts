@@ -1,6 +1,6 @@
 "use server";
 
-import { MediaService, MediaLayer } from "@repo/website-database";
+import { MediaService, MediaLayer } from "@repo/salon-domain";
 import { Effect } from "effect";
 
 export async function getMediaUrl(

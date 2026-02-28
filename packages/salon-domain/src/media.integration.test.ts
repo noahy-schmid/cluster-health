@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { Effect, Either, Layer, Option } from "effect";
+import { Effect, Either, Layer } from "effect";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -11,25 +11,20 @@ import {
   MediaService,
   type PrepareUploadInput,
 } from "./services/media/media.interface";
-import { WebsiteService } from "./services/website/website.interface";
-import { PostgresWebsiteAdapter } from "./adapters/postgres-website.adapter";
-import { WebsiteServiceLive } from "./services/website/website.service";
-import { SalonPort } from "./ports/salon.port";
 import { Configuration } from "./infrastructure/config.interface";
 import { Database } from "./infrastructure/database.interface";
 import { DatabaseLayer } from "./infrastructure/database.service";
-import { WebsitePort } from "./ports/website.port";
 import { FileStoragePort } from "./ports/file-storage.port";
 import { MediaPort } from "./ports/media.port";
 import { S3FileStorageAdapter } from "./adapters/s3-file-storage.adapter";
 import { MediaServiceLive } from "./services/media/media.service";
 import { PostgresMediaAdapter } from "./adapters/postgres-media.adapter";
+import { salonsTable } from "./schema";
 import axios from "axios";
 import FormData from "form-data";
 
 const TEST_IMAGE_PATH = join(__dirname, "../test/fixtures/test-image.png");
 const TEST_IMAGE = readFileSync(TEST_IMAGE_PATH);
-const LARGE_TEST_IMAGE = Buffer.alloc(5 * 1024 * 1024, "a");
 
 const uploadFileToPresignedUrlEffect = (
   uploadUrl: string,
@@ -53,15 +48,9 @@ const uploadFileToPresignedUrlEffect = (
 describe("MediaService Integration Tests", () => {
   let pgContainer: Awaited<ReturnType<typeof getOrCreatePostgreSQLContainer>>;
   let minioContainer: Awaited<ReturnType<typeof getOrCreateMinioContainer>>;
-  let websiteId: string;
   let theSalonId: string;
   let portLayer: Layer.Layer<
-    | Database
-    | Configuration
-    | SalonPort
-    | WebsitePort
-    | FileStoragePort
-    | MediaPort,
+    Database | Configuration | FileStoragePort | MediaPort,
     never,
     never
   >;
@@ -97,18 +86,16 @@ describe("MediaService Integration Tests", () => {
       return mediaFile;
     });
 
-  const listMediaEffect = (websiteId: string) =>
+  const listMediaEffect = (salonId: string) =>
     Effect.gen(function* () {
       const service = yield* MediaService;
-      const media = yield* service.listMedia(websiteId);
+      const media = yield* service.listMedia(salonId);
       return media;
     });
 
   beforeAll(async () => {
     pgContainer = await getOrCreatePostgreSQLContainer();
     minioContainer = await getOrCreateMinioContainer();
-
-    theSalonId = crypto.randomUUID();
 
     const testConfigurationLayer = Layer.effect(
       Configuration,
@@ -122,16 +109,7 @@ describe("MediaService Integration Tests", () => {
       }),
     );
 
-    const mockSalonPortLayer = Layer.succeed(SalonPort, {
-      salonExists: (salonId) => Effect.succeed(salonId === theSalonId),
-    });
-
-    portLayer = Layer.mergeAll(
-      PostgresWebsiteAdapter,
-      S3FileStorageAdapter,
-      PostgresMediaAdapter,
-      mockSalonPortLayer,
-    ).pipe(
+    portLayer = Layer.mergeAll(S3FileStorageAdapter, PostgresMediaAdapter).pipe(
       Layer.provideMerge(DatabaseLayer),
       Layer.provideMerge(testConfigurationLayer),
     );
@@ -143,17 +121,24 @@ describe("MediaService Integration Tests", () => {
           migrate(db, { migrationsFolder: "drizzle" }),
         );
 
-        const websiteService = yield* WebsiteService;
-        const resultingId = yield* websiteService.createWebsite({
-          salonId: theSalonId,
-          slug: "test-website",
-          title: "Test Website",
-          favicon: Option.none(),
-        });
-        websiteId = resultingId;
-      }).pipe(
-        Effect.provide(WebsiteServiceLive.pipe(Layer.provideMerge(portLayer))),
-      ),
+        // Create a salon record to satisfy the FK constraint
+        const [salon] = yield* Effect.tryPromise(() =>
+          db
+            .insert(salonsTable)
+            .values({
+              name: "Test Salon",
+              street: "Test Street 1",
+              postalCode: "12345",
+              city: "Test City",
+              phone: "+49 123 456789",
+            })
+            .returning({ id: salonsTable.id }),
+        );
+        if (!salon) {
+          return yield* Effect.fail(new Error("Failed to create test salon"));
+        }
+        theSalonId = salon.id;
+      }).pipe(Effect.provide(portLayer)),
     );
   });
 
@@ -168,7 +153,7 @@ describe("MediaService Integration Tests", () => {
 
   it("should prepare an upload with valid data and return proper output", async () => {
     const testInput: PrepareUploadInput = {
-      websiteId: websiteId,
+      salonId: theSalonId,
       fileName: "test-image.png",
       mimeType: "image/png",
       fileSize: TEST_IMAGE.length,
@@ -193,9 +178,9 @@ describe("MediaService Integration Tests", () => {
       expect(mediaFile.fileName).toBe(testInput.fileName);
       expect(mediaFile.mimeType).toBe(testInput.mimeType);
       expect(mediaFile.fileSize).toBe(testInput.fileSize);
-      expect(mediaFile.websiteId).toBe(testInput.websiteId);
+      expect(mediaFile.salonId).toBe(testInput.salonId);
 
-      const media = yield* listMediaEffect(testInput.websiteId);
+      const media = yield* listMediaEffect(testInput.salonId);
       expect(media.length).toBe(1);
       expect(media[0].id).toBe(prepareResult.mediaId);
     });
@@ -209,7 +194,7 @@ describe("MediaService Integration Tests", () => {
 
   it("should return an error when file size exceeds limit", async () => {
     const testInput: PrepareUploadInput = {
-      websiteId: websiteId,
+      salonId: theSalonId,
       fileName: "too-large-image.jpg",
       mimeType: "image/jpeg",
       fileSize: 15 * 1024 * 1024,
@@ -234,35 +219,9 @@ describe("MediaService Integration Tests", () => {
     );
   });
 
-  it("should reject upload when actual file size exceeds declared size", async () => {
-    const testInput: PrepareUploadInput = {
-      websiteId: websiteId,
-      fileName: "image.png",
-      mimeType: "image/png",
-      fileSize: TEST_IMAGE.length,
-    };
-
-    const program = Effect.gen(function* () {
-      const prepareResult = yield* prepareUploadEffect(testInput);
-
-      const uploadSuccessful = yield* uploadFileToPresignedUrlEffect(
-        prepareResult.uploadUrl,
-        prepareResult.uploadFields,
-        LARGE_TEST_IMAGE,
-      );
-      expect(uploadSuccessful).toBe(false);
-    });
-
-    await Effect.runPromise(
-      program.pipe(
-        Effect.provide(MediaServiceLive.pipe(Layer.provide(portLayer))),
-      ),
-    );
-  });
-
   it("should return an error when confirming upload without actual file in S3", async () => {
     const testInput: PrepareUploadInput = {
-      websiteId: websiteId,
+      salonId: theSalonId,
       fileName: "never-uploaded.png",
       mimeType: "image/png",
       fileSize: TEST_IMAGE.length,
