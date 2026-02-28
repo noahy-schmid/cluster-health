@@ -10,6 +10,8 @@ import {
 import { Notification } from "./notification.types";
 import { useNotificationStore } from "./useNotifications";
 
+const TRANSITION_DURATION_MS = 300;
+
 const typeStyles: Record<
   Notification["type"],
   { container: string; icon: string }
@@ -53,7 +55,7 @@ export default function NotificationItem({
 
   const handleDismiss = () => {
     setVisible(false);
-    setTimeout(() => hideNotification(notification.id), 300);
+    setTimeout(() => hideNotification(notification.id), TRANSITION_DURATION_MS);
   };
 
   const style = typeStyles[notification.type];
