@@ -155,7 +155,7 @@ describe("MediaService Integration Tests", () => {
         Effect.provide(WebsiteServiceLive.pipe(Layer.provideMerge(portLayer))),
       ),
     );
-  });
+  }, 60_000);
 
   afterAll(async () => {
     if (pgContainer) {
