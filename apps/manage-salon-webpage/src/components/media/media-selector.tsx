@@ -11,7 +11,7 @@ interface MediaSelectorProps {
   value?: string;
 
   onChange: (mediaId: string) => void;
-  websiteId: string;
+  salonId: string;
   label: string;
   required?: boolean;
   helperText?: string;
@@ -20,7 +20,7 @@ interface MediaSelectorProps {
 export default function MediaSelector({
   value,
   onChange,
-  websiteId,
+  salonId,
   label,
   required,
   helperText,
@@ -85,7 +85,7 @@ export default function MediaSelector({
       </div>
       {helperText && <p className="text-sm text-fg-muted">{helperText}</p>}
       <MediaModal
-        websiteId={websiteId}
+        salonId={salonId}
         onSelect={handleSelect}
         onClose={() => setIsModalOpen(false)}
         isOpen={isModalOpen}

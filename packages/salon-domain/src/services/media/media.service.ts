@@ -19,7 +19,7 @@ import { Configuration } from "../../infrastructure/config.interface";
 
 const mapToMediaFile = (record: {
   id: string;
-  websiteId: string;
+  salonId: string;
   fileName: string;
   mimeType: string;
   fileSize: number;
@@ -28,7 +28,7 @@ const mapToMediaFile = (record: {
   createdAt: Date;
 }): MediaFile => ({
   id: record.id,
-  websiteId: record.websiteId,
+  salonId: record.salonId,
   fileName: record.fileName,
   mimeType: record.mimeType,
   fileSize: record.fileSize,
@@ -72,7 +72,7 @@ const make = Effect.gen(function* () {
       }
 
       const mediaId = crypto.randomUUID();
-      const keyPrefix = `${input.websiteId}/${mediaId}`;
+      const keyPrefix = `${input.salonId}/${mediaId}`;
       const s3Key = `${keyPrefix}/${input.fileName}`;
 
       yield* fileStoragePort.ensureBucketExists(config.s3BucketName);
@@ -89,7 +89,7 @@ const make = Effect.gen(function* () {
 
       const dbRecord: InsertDatabaseMediaFile = {
         id: mediaId,
-        websiteId: input.websiteId,
+        salonId: input.salonId,
         fileName: input.fileName,
         mimeType: input.mimeType,
         fileSize: input.fileSize,
@@ -151,18 +151,18 @@ const make = Effect.gen(function* () {
       yield* mediaPort.updateMediaFileUploadConfirmed(mediaId, true);
     });
 
-  const listMedia = (websiteId: string) =>
+  const listMedia = (salonId: string) =>
     Effect.gen(function* () {
-      const records = yield* mediaPort.findMediaFilesByWebsiteId(websiteId);
+      const records = yield* mediaPort.findMediaFilesBySalonId(salonId);
 
       return records.map(mapToMediaFile);
     });
 
-  const deleteMedia = (mediaId: string, websiteId: string) =>
+  const deleteMedia = (mediaId: string, salonId: string) =>
     Effect.gen(function* () {
       const record = yield* mediaPort.findMediaFileById(mediaId);
 
-      if (!record || record.websiteId !== websiteId) {
+      if (!record || record.salonId !== salonId) {
         return yield* Effect.fail(
           new MediaError({
             message: "Unauthorized to delete media file",
@@ -180,6 +180,7 @@ const make = Effect.gen(function* () {
       const record = yield* mediaPort.findMediaFileById(mediaId);
 
       if (!record) {
+        yield* Effect.logWarning(`Media file not found for ID: ${mediaId}`);
         return yield* Effect.fail(new MediaNotFoundError({ mediaId }));
       }
 

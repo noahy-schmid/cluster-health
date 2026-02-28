@@ -10,14 +10,14 @@ import { useMediaModalState } from "./media-modal.state";
 import { ALLOWED_MIME_TYPES } from "./media-utils";
 
 interface MediaModalProps {
-  websiteId: string;
+  salonId: string;
   onSelect: (mediaId: string) => void;
   onClose: () => void;
   isOpen: boolean;
 }
 
 export default function MediaModal({
-  websiteId,
+  salonId,
   onSelect,
   onClose,
   isOpen,
@@ -30,7 +30,7 @@ export default function MediaModal({
     handleDelete,
     setSelectedId,
   } = useMediaModalState({
-    websiteId,
+    salonId,
     onSelect,
     onClose,
   });

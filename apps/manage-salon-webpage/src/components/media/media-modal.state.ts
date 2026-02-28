@@ -71,13 +71,13 @@ function mediaModalReducer(
 }
 
 interface UseMediaModalStateParams {
-  websiteId: string;
+  salonId: string;
   onSelect: (mediaId: string) => void;
   onClose: () => void;
 }
 
 export function useMediaModalState({
-  websiteId,
+  salonId,
   onSelect,
   onClose,
 }: UseMediaModalStateParams) {
@@ -120,11 +120,11 @@ export function useMediaModalState({
   };
 
   const loadMedia = useCallback(async () => {
-    const result = await listMedia(websiteId);
+    const result = await listMedia(salonId);
     if (result.success) {
       setMedia(result.data);
     }
-  }, [websiteId]);
+  }, [salonId]);
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -140,7 +140,7 @@ export function useMediaModalState({
       try {
         setUploadProgress(20);
         const prepareResult = await prepareMediaUpload(
-          websiteId,
+          salonId,
           file.name,
           file.type,
           file.size,
@@ -186,7 +186,7 @@ export function useMediaModalState({
         setError("Upload fehlgeschlagen");
       }
     },
-    [websiteId, onSelect, onClose],
+    [salonId, onSelect, onClose],
   );
 
   const handleTabChange = useCallback(
@@ -208,14 +208,14 @@ export function useMediaModalState({
 
   const handleDelete = useCallback(
     async (mediaId: string) => {
-      const result = await deleteMedia(websiteId, mediaId);
+      const result = await deleteMedia(salonId, mediaId);
       if (result.success) {
         removeMediaItem(mediaId);
       } else {
         setError(result.errors || "Loeschen fehlgeschlagen");
       }
     },
-    [websiteId],
+    [salonId],
   );
 
   return {

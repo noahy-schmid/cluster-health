@@ -1,12 +1,4 @@
-import {
-  boolean,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { integer, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const websitesTable = pgTable("websites", {
   id: uuid().primaryKey().defaultRandom(),
@@ -98,17 +90,4 @@ export const stylistsSectionsTable = pgTable("stylists_sections", {
     .references(() => sectionsTable.id, { onDelete: "cascade" }),
   title: varchar().notNull(),
   subtitle: varchar().notNull(),
-});
-
-export const mediaFilesTable = pgTable("media_files", {
-  id: uuid().primaryKey().defaultRandom(),
-  websiteId: uuid()
-    .notNull()
-    .references(() => websitesTable.id, { onDelete: "cascade" }),
-  fileName: varchar().notNull(),
-  mimeType: varchar().notNull(),
-  fileSize: integer().notNull(),
-  s3Key: varchar().notNull(),
-  uploadConfirmed: boolean().default(false).notNull(),
-  createdAt: timestamp().defaultNow().notNull(),
 });

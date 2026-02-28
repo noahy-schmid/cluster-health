@@ -37,5 +37,5 @@ export interface FileStoragePort {
 }
 
 export const FileStoragePort = Context.GenericTag<FileStoragePort>(
-  "@repo/website-database/FileStoragePort",
+  "@repo/salon-domain/FileStoragePort",
 );
