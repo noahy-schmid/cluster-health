@@ -289,18 +289,141 @@ const stylistsHandler: SectionTypeHandler<"stylists-section"> = {
 
 // --- Handler registry ---
 
-const handlers: {
-  [K in PortSectionType]: SectionTypeHandler<K>;
-} = {
-  gallery: galleryHandler,
-  "text-with-image": textWithImageHandler,
-  "center-text": centerTextHandler,
-  reason: reasonHandler,
-  "stylists-section": stylistsHandler,
-};
+const VALID_SECTION_TYPES = new Set<string>([
+  "gallery",
+  "text-with-image",
+  "center-text",
+  "reason",
+  "stylists-section",
+]);
 
 const isValidSectionType = (type: string): type is PortSectionType =>
-  type in handlers;
+  VALID_SECTION_TYPES.has(type);
+
+/**
+ * Helper to dispatch updateTypeData for a given section.
+ * Uses a type-narrowing switch to maintain type safety across the union.
+ */
+async function dispatchUpdate(
+  dbInstance: NodePgDatabase,
+  section: PortAllSections,
+): Promise<void> {
+  switch (section.type) {
+    case "gallery":
+      return galleryHandler.updateTypeData(
+        dbInstance,
+        section.id,
+        section.settings,
+      );
+    case "text-with-image":
+      return textWithImageHandler.updateTypeData(
+        dbInstance,
+        section.id,
+        section.settings,
+      );
+    case "center-text":
+      return centerTextHandler.updateTypeData(
+        dbInstance,
+        section.id,
+        section.settings,
+      );
+    case "reason":
+      return reasonHandler.updateTypeData(
+        dbInstance,
+        section.id,
+        section.settings,
+      );
+    case "stylists-section":
+      return stylistsHandler.updateTypeData(
+        dbInstance,
+        section.id,
+        section.settings,
+      );
+  }
+}
+
+/**
+ * Helper to dispatch fetchTypeData and construct a PortAllSections object.
+ * Uses a type-narrowing switch to maintain type safety.
+ */
+async function dispatchFetch(
+  dbInstance: NodePgDatabase,
+  sectionId: string,
+  order: number,
+  menuTitle: string | null,
+  type: PortSectionType,
+): Promise<PortAllSections | undefined> {
+  switch (type) {
+    case "gallery": {
+      const s = await galleryHandler.fetchTypeData(dbInstance, sectionId);
+      return s
+        ? { id: sectionId, order, menuTitle, type, settings: s }
+        : undefined;
+    }
+    case "text-with-image": {
+      const s = await textWithImageHandler.fetchTypeData(dbInstance, sectionId);
+      return s
+        ? { id: sectionId, order, menuTitle, type, settings: s }
+        : undefined;
+    }
+    case "center-text": {
+      const s = await centerTextHandler.fetchTypeData(dbInstance, sectionId);
+      return s
+        ? { id: sectionId, order, menuTitle, type, settings: s }
+        : undefined;
+    }
+    case "reason": {
+      const s = await reasonHandler.fetchTypeData(dbInstance, sectionId);
+      return s
+        ? { id: sectionId, order, menuTitle, type, settings: s }
+        : undefined;
+    }
+    case "stylists-section": {
+      const s = await stylistsHandler.fetchTypeData(dbInstance, sectionId);
+      return s
+        ? { id: sectionId, order, menuTitle, type, settings: s }
+        : undefined;
+    }
+  }
+}
+
+/**
+ * Helper to dispatch createTypeData and construct a PortAllSections object.
+ * Uses a type-narrowing switch to maintain type safety.
+ */
+async function dispatchCreate(
+  dbInstance: NodePgDatabase,
+  sectionId: string,
+  order: number,
+  menuTitle: string | null,
+  type: PortSectionType,
+): Promise<PortAllSections> {
+  switch (type) {
+    case "gallery": {
+      const s = await galleryHandler.createTypeData(dbInstance, sectionId);
+      return { id: sectionId, order, menuTitle, type, settings: s };
+    }
+    case "text-with-image": {
+      const s = await textWithImageHandler.createTypeData(
+        dbInstance,
+        sectionId,
+      );
+      return { id: sectionId, order, menuTitle, type, settings: s };
+    }
+    case "center-text": {
+      const s = await centerTextHandler.createTypeData(dbInstance, sectionId);
+      return { id: sectionId, order, menuTitle, type, settings: s };
+    }
+    case "reason": {
+      const s = await reasonHandler.createTypeData(dbInstance, sectionId);
+      return { id: sectionId, order, menuTitle, type, settings: s };
+    }
+    case "stylists-section": {
+      const s = await stylistsHandler.createTypeData(dbInstance, sectionId);
+      return { id: sectionId, order, menuTitle, type, settings: s };
+    }
+  }
+}
 
 // --- Adapter implementation ---
 
@@ -325,19 +448,13 @@ const make = Effect.gen(function* () {
           throw new Error("Failed to insert base section");
         }
 
-        const handler = handlers[type];
-        const settings = await handler.createTypeData(
+        return dispatchCreate(
           tx as unknown as NodePgDatabase,
           baseSection.id,
-        );
-
-        return {
-          id: baseSection.id,
-          order: baseSection.order,
-          menuTitle: baseSection.menuTitle,
+          baseSection.order,
+          baseSection.menuTitle,
           type,
-          settings,
-        } as PortAllSections;
+        );
       }),
     ).pipe(
       Effect.mapError(
@@ -362,13 +479,7 @@ const make = Effect.gen(function* () {
           throw new Error(`Section not found: ${section.id}`);
         }
 
-        const handler = handlers[section.type];
-        await handler.updateTypeData(
-          tx as unknown as NodePgDatabase,
-          section.id,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          section.settings as any,
-        );
+        await dispatchUpdate(tx as unknown as NodePgDatabase, section);
       }),
     ).pipe(
       Effect.mapError(
@@ -461,14 +572,15 @@ const make = Effect.gen(function* () {
           continue;
         }
 
-        const handler = handlers[baseSection.type] as SectionTypeHandler<
-          typeof baseSection.type & PortSectionType
-        >;
-        const settings = yield* Effect.tryPromise(
-          () =>
-            handler.fetchTypeData(db, baseSection.id) as Promise<
-              Record<string, unknown> | undefined
-            >,
+        const sectionType = baseSection.type;
+        const section = yield* Effect.tryPromise(() =>
+          dispatchFetch(
+            db,
+            baseSection.id,
+            baseSection.order,
+            baseSection.menuTitle,
+            sectionType,
+          ),
         ).pipe(
           Effect.mapError(
             (error) =>
@@ -479,20 +591,14 @@ const make = Effect.gen(function* () {
           ),
         );
 
-        if (!settings) {
+        if (!section) {
           yield* Effect.logWarning(
             `Skipping section ${baseSection.id}: type-specific data not found`,
           );
           continue;
         }
 
-        results.push({
-          id: baseSection.id,
-          order: baseSection.order,
-          menuTitle: baseSection.menuTitle,
-          type: baseSection.type,
-          settings,
-        } as unknown as PortAllSections);
+        results.push(section);
       }
 
       return results;

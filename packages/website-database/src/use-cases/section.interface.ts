@@ -1,4 +1,14 @@
 import { Context, Effect } from "effect";
+import type {
+  AllSections,
+  SectionType,
+} from "../application/section/section.aggregate";
+import type {
+  SectionError,
+  InvalidSectionTypeError,
+  SectionValidationError,
+  SectionNotFoundError,
+} from "../application/section/section.aggregate";
 
 // --- Exported types (derived from aggregate types, exposed beyond domain boundary) ---
 
@@ -24,17 +34,6 @@ export {
 export type Result<T, E> =
   | { success: true; data: T }
   | { success: false; errors: E };
-
-// --- UseCase types ---
-
-import type {
-  AllSections,
-  SectionType,
-  SectionError,
-  InvalidSectionTypeError,
-  SectionValidationError,
-  SectionNotFoundError,
-} from "../application/section/section.aggregate";
 
 /**
  * Application service (use case) for managing website sections.
