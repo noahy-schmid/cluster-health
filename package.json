@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "build:docker": "pnpm --filter manage-salon-webpage docker:build && pnpm --filter salon-webpage docker:build && pnpm --filter my-stylist-frontend docker:build && pnpm --filter calendar-service docker:build",
+    "docker:build": "turbo run docker:build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
