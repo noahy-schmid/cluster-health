@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint --max-warnings=3",
-    "lint:fix": "eslint --fix"
+    "lint:fix": "eslint --fix",
+    "docker:build": "docker build -t manage-salon-webpage:latest -f Dockerfile ../../"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

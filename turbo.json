@@ -44,6 +44,10 @@
     "test:run": {
       "cache": false,
       "dependsOn": ["^build"]
+    },
+    "docker:build": {
+      "cache": false,
+      "dependsOn": []
     }
   }
 }
