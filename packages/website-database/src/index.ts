@@ -7,7 +7,7 @@ export * from "./schema";
 
 export * from "./types/website";
 export * from "./types/website-errors";
-export * from "./services/website/website.interface";
+export * from "./application/website/website.interface";
 export * from "./layers";
 
 // Section domain types (from aggregate, re-exported via use-cases)

@@ -44,23 +44,23 @@ export const UpdateSectionUseCaseLive = Layer.effect(
       mediaIds: string[],
     ): Effect.Effect<void, SectionValidationError> =>
       Effect.gen(function* () {
-        for (const mediaId of mediaIds) {
-          const mediaFile = yield* mediaPort.findMediaFileById(mediaId).pipe(
-            Effect.mapError(
-              () =>
-                new SectionValidationError({
-                  message: `Failed to verify media file: ${mediaId}`,
-                }),
-            ),
-          );
-
-          if (!mediaFile) {
-            return yield* Effect.fail(
+        const allMediaExist = yield* mediaPort.mediaIdsExist(mediaIds).pipe(
+          Effect.mapError(
+            (error) =>
               new SectionValidationError({
-                message: `Media file not found: ${mediaId}`,
+                message: `Failed to validate media references: ${error.message}`,
               }),
-            );
-          }
+          ),
+        );
+
+        if (!allMediaExist) {
+          return yield* Effect.fail(
+            new SectionValidationError({
+              message: `One or more media files not found for IDs: ${mediaIds.join(
+                ", ",
+              )}`,
+            }),
+          );
         }
       });
 

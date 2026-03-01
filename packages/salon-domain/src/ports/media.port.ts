@@ -1,7 +1,6 @@
-import { Context, Effect } from "effect";
-import type { MediaError, S3Error } from "../types/media-errors";
-import { mediaFilesTable } from "../schema";
+import { Context, Data, Effect } from "effect";
 
+<<<<<<<< HEAD:packages/salon-domain/src/ports/media.port.ts
 export type SelectDatabaseMediaFile = typeof mediaFilesTable.$inferSelect;
 export type InsertDatabaseMediaFile = typeof mediaFilesTable.$inferInsert;
 
@@ -50,6 +49,14 @@ export interface MediaPort {
   deleteMediaFile(
     mediaId: string,
   ): Effect.Effect<void, MediaError | S3Error, never>;
+========
+export class MediaPortError extends Data.TaggedError("MediaPortError")<{
+  readonly message: string;
+}> {}
+
+export interface MediaPort {
+  mediaIdsExist(mediaIds: string[]): Effect.Effect<boolean, MediaPortError>;
+>>>>>>>> af7e228 (Merge branch '57-file-management' into copilot/refactor-sections-structure):packages/website-database/src/ports/media.port.ts
 }
 
 export const MediaPort = Context.GenericTag<MediaPort>(

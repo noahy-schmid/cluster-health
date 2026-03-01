@@ -2,15 +2,11 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either, Layer, Option } from "effect";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { getOrCreatePostgreSQLContainer } from "@repo/test-fixtures";
-import { WebsiteService } from "./services/website/website.interface";
 import { PostgresWebsiteAdapter } from "./adapters/postgres-website.adapter";
-import { WebsiteServiceLive } from "./services/website/website.service";
 import { SalonPort } from "./ports/salon.port";
 import { Configuration } from "./infrastructure/config.interface";
 import { Database } from "./infrastructure/database.interface";
 import { DatabaseLayer } from "./infrastructure/database.service";
-import { PostgresMediaAdapter } from "./adapters/postgres-media.adapter";
-import { SectionAggregateLive } from "./application/section/section.aggregate";
 import { PostgresSectionAdapter } from "./adapters/section/postgres-section.adapter";
 import { PostgresGallerySectionAdapter } from "./adapters/section/postgres-gallery-section.adapter";
 import { PostgresTextWithImageSectionAdapter } from "./adapters/section/postgres-text-with-image-section.adapter";
@@ -36,7 +32,13 @@ import {
   type ReorderSectionsCommand,
 } from "./use-cases/reorder-sections.use-case";
 import { ReorderSectionsUseCaseLive } from "./use-cases/reorder-sections.use-case";
-import type { AllSections } from "./application/section/section.aggregate";
+import {
+  SectionAggregate,
+  type AllSections,
+} from "./application/section/section.aggregate";
+import { MediaPort } from "./ports/media.port";
+import { WebsiteService } from "./application/website/website.interface";
+import { WebsiteServiceLive } from "./application/website/website.service";
 
 describe("Section Use Cases Integration Tests", () => {
   let pgContainer: Awaited<ReturnType<typeof getOrCreatePostgreSQLContainer>>;
@@ -73,6 +75,11 @@ describe("Section Use Cases Integration Tests", () => {
       salonExists: (salonId) => Effect.succeed(salonId === theSalonId),
     });
 
+    const mockMediaPortLayer = Layer.succeed(MediaPort, {
+      mediaIdsExist: (ids) =>
+        Effect.succeed(ids.every((id) => id.startsWith("media-"))),
+    });
+
     const infrastructureLayer = DatabaseLayer.pipe(
       Layer.provideMerge(testConfigurationLayer),
     );
@@ -90,13 +97,13 @@ describe("Section Use Cases Integration Tests", () => {
       Layer.provide(infrastructureLayer),
     );
 
-    const aggregateLayer = SectionAggregateLive.pipe(
+    const aggregateLayer = SectionAggregate.DefaultWithoutDependencies.pipe(
       Layer.provide(sectionPortLayer),
     );
 
     const portsLayer = Layer.mergeAll(
       PostgresWebsiteAdapter.pipe(Layer.provide(infrastructureLayer)),
-      PostgresMediaAdapter.pipe(Layer.provide(infrastructureLayer)),
+      mockMediaPortLayer,
     );
 
     const depsLayer = Layer.mergeAll(aggregateLayer, portsLayer);

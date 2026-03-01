@@ -17,6 +17,7 @@ import {
 } from "@repo/website-database";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
 import { Effect, Layer } from "effect";
+import { MediaLayer } from "@repo/salon-domain";
 
 /**
  * Server action to create a new section
@@ -56,7 +57,10 @@ export async function createSection(
         }),
       ),
     );
-  }).pipe(Effect.provide(CreateSectionUseCaseLayer));
+  }).pipe(
+    Effect.provide(CreateSectionUseCaseLayer),
+    Effect.provide(MediaLayer),
+  );
 
   return await Effect.runPromise(program);
 }
@@ -115,6 +119,7 @@ export async function updateSection(
     Effect.provide(
       Layer.merge(UpdateSectionUseCaseLayer, ListSectionsUseCaseLayer),
     ),
+    Effect.provide(MediaLayer),
     Effect.catchAll((error) => Effect.succeed(error)),
   );
 
