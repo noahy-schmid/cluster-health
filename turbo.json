@@ -36,6 +36,14 @@
       "dependsOn": ["^drizzle:generate"],
       "inputs": ["$TURBO_DEFAULT$", "**/schema.ts"],
       "outputs": ["drizzle/**"]
+    },
+    "test": {
+      "cache": false,
+      "dependsOn": ["^build"]
+    },
+    "test:run": {
+      "cache": false,
+      "dependsOn": ["^build"]
     }
   }
 }

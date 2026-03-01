@@ -1,6 +1,6 @@
 import { Context, Effect } from "effect";
+import type { MediaError, S3Error } from "../types/media-errors";
 import { mediaFilesTable } from "../schema";
-import { MediaError } from "../types/media-errors";
 
 export type SelectDatabaseMediaFile = typeof mediaFilesTable.$inferSelect;
 export type InsertDatabaseMediaFile = typeof mediaFilesTable.$inferInsert;
@@ -32,22 +32,24 @@ export interface PrepareUploadOutput {
 export interface MediaPort {
   insertMediaFile(
     input: InsertDatabaseMediaFile,
-  ): Effect.Effect<void, MediaError, never>;
+  ): Effect.Effect<void, MediaError | S3Error, never>;
 
   updateMediaFileUploadConfirmed(
     mediaId: string,
     confirmed: boolean,
-  ): Effect.Effect<void, MediaError, never>;
+  ): Effect.Effect<void, MediaError | S3Error, never>;
 
   findMediaFileById(
     mediaId: string,
-  ): Effect.Effect<SelectDatabaseMediaFile | null, MediaError, never>;
+  ): Effect.Effect<SelectDatabaseMediaFile | null, MediaError | S3Error, never>;
 
   findMediaFilesBySalonId(
     salonId: string,
-  ): Effect.Effect<SelectDatabaseMediaFile[], MediaError, never>;
+  ): Effect.Effect<SelectDatabaseMediaFile[], MediaError | S3Error, never>;
 
-  deleteMediaFile(mediaId: string): Effect.Effect<void, MediaError, never>;
+  deleteMediaFile(
+    mediaId: string,
+  ): Effect.Effect<void, MediaError | S3Error, never>;
 }
 
 export const MediaPort = Context.GenericTag<MediaPort>(

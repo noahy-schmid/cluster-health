@@ -140,7 +140,7 @@ describe("MediaService Integration Tests", () => {
         theSalonId = salon.id;
       }).pipe(Effect.provide(portLayer)),
     );
-  });
+  }, 60_000);
 
   afterAll(async () => {
     if (pgContainer) {
