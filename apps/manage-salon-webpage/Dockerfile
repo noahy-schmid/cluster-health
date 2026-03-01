@@ -27,12 +27,17 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
+ARG DATABASE_URL=testdb
+ENV DATABASE_URL=${DATABASE_URL}
+
 # Build the project
 COPY --from=builder /app/out/full/ .
 RUN pnpm turbo run build --filter=manage-salon-webpage
 
 FROM base AS runner
 WORKDIR /app
+
+EXPOSE 3000
 
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs

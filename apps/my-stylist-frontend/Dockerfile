@@ -24,9 +24,8 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-ARG PATH_PREFIX
+ARG PATH_PREFIX=
 ENV NEXT_PUBLIC_BASE_PATH=${PATH_PREFIX}
-RUN echo "Base path is set to: ${NEXT_PUBLIC_BASE_PATH}"
 
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
@@ -38,6 +37,8 @@ RUN pnpm turbo run build --filter=my-stylist-frontend
 
 FROM base AS runner
 WORKDIR /app
+
+EXPOSE 3000
 
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs

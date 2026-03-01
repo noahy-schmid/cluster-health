@@ -34,6 +34,8 @@ RUN pnpm turbo run build --filter=salon-webpage
 FROM base AS runner
 WORKDIR /app
 
+EXPOSE 3000
+
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
