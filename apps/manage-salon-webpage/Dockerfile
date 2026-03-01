@@ -27,8 +27,7 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
-ARG DATABASE_URL=testdb
-ENV DATABASE_URL=${DATABASE_URL}
+ENV DATABASE_URL=placeholderdb
 
 # Build the project
 COPY --from=builder /app/out/full/ .

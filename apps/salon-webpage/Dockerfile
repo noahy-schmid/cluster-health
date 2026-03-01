@@ -27,6 +27,8 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
+ENV DATABASE_URL=placeholderdb
+
 # Build the project
 COPY --from=builder /app/out/full/ .
 RUN pnpm turbo run build --filter=salon-webpage
