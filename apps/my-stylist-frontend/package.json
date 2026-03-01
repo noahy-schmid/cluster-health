@@ -8,8 +8,6 @@
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "docker:build": "bash ../../scripts/docker-build-push.sh build my-stylist-frontend",
-    "docker:push": "bash ../../scripts/docker-build-push.sh push my-stylist-frontend",
     "helm:lint": "helm lint ./chart"
   },
   "dependencies": {
