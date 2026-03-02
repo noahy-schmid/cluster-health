@@ -17,7 +17,7 @@ const make = Effect.gen(function* () {
         return true;
       }
 
-      // This is a N+1 Problem query. We dont optimize for it now, but if it becomes a Problem, this needs to be optimized.
+      // This is a N+1 problem query. We don't optimize for it now, but if it becomes a problem, this needs to be optimized.
       const results = yield* Effect.all(
         mediaIds.map((mediaId: string) =>
           Effect.either(mediaService.getMediaById(mediaId)),
