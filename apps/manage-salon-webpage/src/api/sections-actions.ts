@@ -1,14 +1,23 @@
 "use server";
 
 import {
-  SectionType,
-  AllSections,
-  SectionRepository,
-  SectionRepositoryLive,
-  Result,
+  type SectionType,
+  type AllSections,
+  type Result,
+  CreateSectionUseCase,
+  CreateSectionUseCaseLayer,
+  UpdateSectionUseCase,
+  UpdateSectionUseCaseLayer,
+  DeleteSectionUseCase,
+  DeleteSectionUseCaseLayer,
+  ReorderSectionsUseCase,
+  ReorderSectionsUseCaseLayer,
+  ListSectionsUseCase,
+  ListSectionsUseCaseLayer,
 } from "@repo/website-database";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
+import { MediaLayer } from "@repo/salon-domain";
 
 /**
  * Server action to create a new section
@@ -25,14 +34,20 @@ export async function createSection(
     return { success: false, errors: access.error };
   }
 
-  const createEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.createSection(websiteId, type, position).pipe(
+  const program = Effect.gen(function* () {
+    const useCase = yield* CreateSectionUseCase;
+    return yield* useCase.execute({ websiteId, type, position }).pipe(
       Effect.map((data) => ({ success: true as const, data })),
       Effect.catchTag("InvalidSectionTypeError", (error) =>
         Effect.succeed({
           success: false as const,
           errors: `Invalid section type: ${error.sectionType}`,
+        }),
+      ),
+      Effect.catchTag("SectionNotFoundError", () =>
+        Effect.succeed({
+          success: false as const,
+          errors: "Website not found",
         }),
       ),
       Effect.catchTag("SectionError", (error) =>
@@ -42,9 +57,12 @@ export async function createSection(
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(
+    Effect.provide(CreateSectionUseCaseLayer),
+    Effect.provide(MediaLayer),
+  );
 
-  return await Effect.runPromise(createEffect);
+  return await Effect.runPromise(program);
 }
 
 /**
@@ -60,11 +78,12 @@ export async function updateSection(
     return { success: false, errors: access.error };
   }
 
-  const updateEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
+  const program = Effect.gen(function* () {
+    const listUseCase = yield* ListSectionsUseCase;
+    const updateUseCase = yield* UpdateSectionUseCase;
 
     // Ensure the section being updated actually belongs to the given website
-    const fetchResult = yield* repo.fetchSections(websiteId).pipe(
+    const fetchResult = yield* listUseCase.execute({ websiteId }).pipe(
       Effect.catchAll((error) =>
         Effect.fail({
           success: false as const,
@@ -87,7 +106,7 @@ export async function updateSection(
       });
     }
 
-    return yield* repo.updateSection(section).pipe(
+    return yield* updateUseCase.execute(section).pipe(
       Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchAll((error) =>
         Effect.succeed({
@@ -97,11 +116,14 @@ export async function updateSection(
       ),
     );
   }).pipe(
-    Effect.provide(SectionRepositoryLive),
+    Effect.provide(
+      Layer.merge(UpdateSectionUseCaseLayer, ListSectionsUseCaseLayer),
+    ),
+    Effect.provide(MediaLayer),
     Effect.catchAll((error) => Effect.succeed(error)),
   );
 
-  return await Effect.runPromise(updateEffect);
+  return await Effect.runPromise(program);
 }
 
 /**
@@ -117,9 +139,9 @@ export async function deleteSection(
     return { success: false, errors: access.error };
   }
 
-  const deleteEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.deleteSection(websiteId, id).pipe(
+  const program = Effect.gen(function* () {
+    const useCase = yield* DeleteSectionUseCase;
+    return yield* useCase.execute({ websiteId, sectionId: id }).pipe(
       Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchAll((error) =>
         Effect.succeed({
@@ -128,9 +150,9 @@ export async function deleteSection(
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(Effect.provide(DeleteSectionUseCaseLayer));
 
-  return await Effect.runPromise(deleteEffect);
+  return await Effect.runPromise(program);
 }
 
 /**
@@ -147,20 +169,20 @@ export async function reorderSections(
     return { success: false, errors: access.error };
   }
 
-  const reorderEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.reorderSections(websiteId, sectionIds).pipe(
+  const program = Effect.gen(function* () {
+    const useCase = yield* ReorderSectionsUseCase;
+    return yield* useCase.execute({ websiteId, sectionIds }).pipe(
       Effect.map(() => ({ success: true as const, data: undefined })),
-      Effect.catchAll((error) =>
+      Effect.catchTag("SectionError", (error) =>
         Effect.succeed({
           success: false as const,
-          errors: `${error.name}: ${error.message}`,
+          errors: `${error._tag}: ${error.message}`,
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(Effect.provide(ReorderSectionsUseCaseLayer));
 
-  return await Effect.runPromise(reorderEffect);
+  return await Effect.runPromise(program);
 }
 
 /**
@@ -175,23 +197,23 @@ export async function fetchSections(
     return { success: false, errors: access.error };
   }
 
-  const fetchEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.fetchSections(websiteId).pipe(
+  const program = Effect.gen(function* () {
+    const useCase = yield* ListSectionsUseCase;
+    return yield* useCase.execute({ websiteId }).pipe(
       Effect.tap((sections) =>
         Effect.log(
           `Fetched sections for website ${websiteId}: ${JSON.stringify(sections)}`,
         ),
       ),
       Effect.map((data) => ({ success: true as const, data })),
-      Effect.catchAll((error) =>
+      Effect.catchTag("SectionError", (error) =>
         Effect.succeed({
           success: false as const,
-          errors: `${error.name}: ${error.message}`,
+          errors: `${error._tag}: ${error.message}`,
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(Effect.provide(ListSectionsUseCaseLayer));
 
-  return await Effect.runPromise(fetchEffect);
+  return await Effect.runPromise(program);
 }

@@ -3,10 +3,10 @@
 import {
   db,
   websitesTable,
-  AllSections,
-  SectionRepository,
-  SectionRepositoryLive,
-  Result,
+  type AllSections,
+  type Result,
+  ListSectionsUseCase,
+  ListSectionsUseCaseLayer,
 } from "@repo/website-database";
 import { eq } from "drizzle-orm";
 import { oklch } from "culori";
@@ -27,9 +27,9 @@ export async function fetchSectionsBySalonSlug(
     return { success: false, errors: "Website not found" };
   }
 
-  const fetchEffect = Effect.gen(function* () {
-    const repo = yield* SectionRepository;
-    return yield* repo.fetchSections(website.id).pipe(
+  const program = Effect.gen(function* () {
+    const useCase = yield* ListSectionsUseCase;
+    return yield* useCase.execute({ websiteId: website.id }).pipe(
       Effect.map((data) => ({ success: true as const, data })),
       Effect.catchAll((error) =>
         Effect.succeed({
@@ -39,9 +39,9 @@ export async function fetchSectionsBySalonSlug(
         }),
       ),
     );
-  }).pipe(Effect.provide(SectionRepositoryLive));
+  }).pipe(Effect.provide(ListSectionsUseCaseLayer));
 
-  return await Effect.runPromise(fetchEffect);
+  return await Effect.runPromise(program);
 }
 
 export interface WebsiteColors {

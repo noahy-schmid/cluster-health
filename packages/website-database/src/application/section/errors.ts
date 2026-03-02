@@ -1,11 +1,11 @@
 import { Data } from "effect";
 
 /**
- * Raised when a section operation targets a section that does not exist.
+ * Raised when section settings fail business validation.
  */
-export class SectionNotFoundError extends Data.TaggedError(
-  "SectionNotFoundError",
-)<{ sectionId?: string; websiteId?: string }> {}
+export class SectionValidationError extends Data.TaggedError(
+  "SectionValidationError",
+)<{ message: string }> {}
 
 /**
  * Raised when an invalid section type is provided.
@@ -13,6 +13,13 @@ export class SectionNotFoundError extends Data.TaggedError(
 export class InvalidSectionTypeError extends Data.TaggedError(
   "InvalidSectionTypeError",
 )<{ sectionType: string }> {}
+
+/**
+ * Raised when a section is not found.
+ */
+export class SectionNotFoundError extends Data.TaggedError(
+  "SectionNotFoundError",
+)<{ sectionId?: string; websiteId?: string }> {}
 
 /**
  * Raised when a section operation fails.
