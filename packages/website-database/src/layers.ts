@@ -21,7 +21,10 @@ export const WebsiteLayer = WebsiteServiceLive.pipe(
   Layer.provide(InfrastructureLayer),
 );
 
-export const CreateSectionUseCaseLayer = CreateSectionUseCase.Default;
+export const CreateSectionUseCaseLayer = CreateSectionUseCase.Default.pipe(
+  Layer.provide(PostgresWebsiteAdapter),
+  Layer.provide(InfrastructureLayer),
+);
 export const UpdateSectionUseCaseLayer = UpdateSectionUseCase.Default.pipe(
   Layer.provide(DomainMediaAdapter),
 );

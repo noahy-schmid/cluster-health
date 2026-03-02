@@ -1,4 +1,4 @@
-import { Effect, Layer, Option } from "effect";
+import { Effect, Option } from "effect";
 import type {
   SectionType,
   AllSections,
@@ -10,9 +10,6 @@ import {
   InvalidSectionTypeError,
 } from "../application/section/errors";
 import { WebsitePort } from "../ports/website.port";
-import { PostgresWebsiteAdapter } from "../adapters/postgres-website.adapter";
-import { DatabaseLayer } from "../infrastructure/database.service";
-import { ConfigurationLayer } from "../infrastructure/config.service";
 
 // --- Command DTO ---
 
@@ -72,12 +69,6 @@ export class CreateSectionUseCase extends Effect.Service<CreateSectionUseCase>()
   {
     effect: make,
     accessors: true,
-    dependencies: [
-      SectionAggregate.Default,
-      PostgresWebsiteAdapter.pipe(
-        Layer.provide(DatabaseLayer),
-        Layer.provide(ConfigurationLayer),
-      ),
-    ],
+    dependencies: [SectionAggregate.Default],
   },
 ) {}
