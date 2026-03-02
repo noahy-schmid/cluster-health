@@ -31,7 +31,7 @@ export const CreateSectionUseCaseLayer = CreateSectionUseCaseLive.pipe(
 
 export const UpdateSectionUseCaseLayer = UpdateSectionUseCaseLive.pipe(
   Layer.provide(SectionAggregate.Default),
-  Layer.provide(DomainMediaAdapter.pipe(Layer.provide(InfrastructureLayer))),
+  Layer.provide(DomainMediaAdapter),
   Layer.orDie,
 );
 
