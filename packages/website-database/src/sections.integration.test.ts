@@ -17,21 +17,16 @@ import {
   CreateSectionUseCase,
   type CreateSectionCommand,
 } from "./use-cases/create-section.use-case";
-import { CreateSectionUseCaseLive } from "./use-cases/create-section.use-case";
 import {
   UpdateSectionUseCase,
   type UpdateSectionCommand,
 } from "./use-cases/update-section.use-case";
-import { UpdateSectionUseCaseLive } from "./use-cases/update-section.use-case";
 import { DeleteSectionUseCase } from "./use-cases/delete-section.use-case";
-import { DeleteSectionUseCaseLive } from "./use-cases/delete-section.use-case";
 import { ListSectionsUseCase } from "./use-cases/list-sections.use-case";
-import { ListSectionsUseCaseLive } from "./use-cases/list-sections.use-case";
 import {
   ReorderSectionsUseCase,
   type ReorderSectionsCommand,
 } from "./use-cases/reorder-sections.use-case";
-import { ReorderSectionsUseCaseLive } from "./use-cases/reorder-sections.use-case";
 import {
   SectionAggregate,
   type AllSections,
@@ -109,11 +104,11 @@ describe("Section Use Cases Integration Tests", () => {
     const depsLayer = Layer.mergeAll(aggregateLayer, portsLayer);
 
     useCaseLayer = Layer.mergeAll(
-      CreateSectionUseCaseLive,
-      UpdateSectionUseCaseLive,
-      DeleteSectionUseCaseLive,
-      ListSectionsUseCaseLive,
-      ReorderSectionsUseCaseLive,
+      CreateSectionUseCase.DefaultWithoutDependencies,
+      UpdateSectionUseCase.DefaultWithoutDependencies,
+      DeleteSectionUseCase.DefaultWithoutDependencies,
+      ListSectionsUseCase.DefaultWithoutDependencies,
+      ReorderSectionsUseCase.DefaultWithoutDependencies,
     ).pipe(Layer.provide(depsLayer), Layer.orDie);
 
     const websitePortLayer = Layer.mergeAll(

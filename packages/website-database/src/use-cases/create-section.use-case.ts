@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option } from "effect";
 import type {
   SectionType,
   AllSections,
@@ -10,6 +10,9 @@ import {
   InvalidSectionTypeError,
 } from "../application/section/errors";
 import { WebsitePort } from "../ports/website.port";
+import { PostgresWebsiteAdapter } from "../adapters/postgres-website.adapter";
+import { DatabaseLayer } from "../infrastructure/database.service";
+import { ConfigurationLayer } from "../infrastructure/config.service";
 
 // --- Command DTO ---
 
@@ -25,52 +28,56 @@ export type CreateSectionResult = AllSections;
 
 // --- Use Case ---
 
-export interface CreateSectionUseCase {
-  execute(
-    command: CreateSectionCommand,
-  ): Effect.Effect<
-    CreateSectionResult,
-    InvalidSectionTypeError | SectionError | SectionNotFoundError
-  >;
-}
+const make = Effect.gen(function* () {
+  const aggregate = yield* SectionAggregate;
+  const websitePort = yield* WebsitePort;
 
-export const CreateSectionUseCase = Context.GenericTag<CreateSectionUseCase>(
-  "@repo/website-database/CreateSectionUseCase",
-);
-
-export const CreateSectionUseCaseLive = Layer.effect(
-  CreateSectionUseCase,
-  Effect.gen(function* () {
-    const aggregate = yield* SectionAggregate;
-    const websitePort = yield* WebsitePort;
-
-    return {
-      execute: (command: CreateSectionCommand) =>
-        Effect.gen(function* () {
-          const websiteOption = yield* websitePort
-            .getWebsiteById(command.websiteId)
-            .pipe(
-              Effect.mapError(
-                (error) =>
-                  new SectionError({
-                    websiteId: command.websiteId,
-                    message: `Failed to verify website existence: ${error.message}`,
-                  }),
-              ),
-            );
-
-          if (Option.isNone(websiteOption)) {
-            return yield* Effect.fail(
-              new SectionNotFoundError({ websiteId: command.websiteId }),
-            );
-          }
-
-          return yield* aggregate.createSection(
-            command.websiteId,
-            command.type,
-            command.position,
+  return {
+    execute: (
+      command: CreateSectionCommand,
+    ): Effect.Effect<
+      CreateSectionResult,
+      InvalidSectionTypeError | SectionError | SectionNotFoundError
+    > =>
+      Effect.gen(function* () {
+        const websiteOption = yield* websitePort
+          .getWebsiteById(command.websiteId)
+          .pipe(
+            Effect.mapError(
+              (error) =>
+                new SectionError({
+                  websiteId: command.websiteId,
+                  message: `Failed to verify website existence: ${error.message}`,
+                }),
+            ),
           );
-        }),
-    } satisfies CreateSectionUseCase;
-  }),
-);
+
+        if (Option.isNone(websiteOption)) {
+          return yield* Effect.fail(
+            new SectionNotFoundError({ websiteId: command.websiteId }),
+          );
+        }
+
+        return yield* aggregate.createSection(
+          command.websiteId,
+          command.type,
+          command.position,
+        );
+      }),
+  };
+});
+
+export class CreateSectionUseCase extends Effect.Service<CreateSectionUseCase>()(
+  "@repo/website-database/CreateSectionUseCase",
+  {
+    effect: make,
+    accessors: true,
+    dependencies: [
+      SectionAggregate.Default,
+      PostgresWebsiteAdapter.pipe(
+        Layer.provide(DatabaseLayer),
+        Layer.provide(ConfigurationLayer),
+      ),
+    ],
+  },
+) {}

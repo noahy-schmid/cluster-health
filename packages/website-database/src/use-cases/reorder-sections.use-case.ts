@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { SectionAggregate } from "../application/section/section.aggregate";
 import { SectionError } from "../application/section/errors";
 
@@ -11,23 +11,22 @@ export interface ReorderSectionsCommand {
 
 // --- Use Case ---
 
-export interface ReorderSectionsUseCase {
-  execute(command: ReorderSectionsCommand): Effect.Effect<void, SectionError>;
-}
+const make = Effect.gen(function* () {
+  const aggregate = yield* SectionAggregate;
 
-export const ReorderSectionsUseCase =
-  Context.GenericTag<ReorderSectionsUseCase>(
-    "@repo/website-database/ReorderSectionsUseCase",
-  );
+  return {
+    execute: (
+      command: ReorderSectionsCommand,
+    ): Effect.Effect<void, SectionError> =>
+      aggregate.reorderSections(command.websiteId, command.sectionIds),
+  };
+});
 
-export const ReorderSectionsUseCaseLive = Layer.effect(
-  ReorderSectionsUseCase,
-  Effect.gen(function* () {
-    const aggregate = yield* SectionAggregate;
-
-    return {
-      execute: (command: ReorderSectionsCommand) =>
-        aggregate.reorderSections(command.websiteId, command.sectionIds),
-    } satisfies ReorderSectionsUseCase;
-  }),
-);
+export class ReorderSectionsUseCase extends Effect.Service<ReorderSectionsUseCase>()(
+  "@repo/website-database/ReorderSectionsUseCase",
+  {
+    effect: make,
+    accessors: true,
+    dependencies: [SectionAggregate.Default],
+  },
+) {}

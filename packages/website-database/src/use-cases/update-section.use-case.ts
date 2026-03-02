@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Effect } from "effect";
 import type { AllSections } from "../application/section/section.aggregate";
 import {
   SectionAggregate,
@@ -18,62 +18,60 @@ export type UpdateSectionCommand = AllSections;
 
 // --- Use Case ---
 
-export interface UpdateSectionUseCase {
-  execute(
-    command: UpdateSectionCommand,
-  ): Effect.Effect<
-    void,
-    | InvalidSectionTypeError
-    | SectionError
-    | SectionNotFoundError
-    | SectionValidationError
-  >;
-}
+const make = Effect.gen(function* () {
+  const aggregate = yield* SectionAggregate;
+  const mediaPort = yield* MediaPort;
 
-export const UpdateSectionUseCase = Context.GenericTag<UpdateSectionUseCase>(
-  "@repo/website-database/UpdateSectionUseCase",
-);
-
-export const UpdateSectionUseCaseLive = Layer.effect(
-  UpdateSectionUseCase,
-  Effect.gen(function* () {
-    const aggregate = yield* SectionAggregate;
-    const mediaPort = yield* MediaPort;
-
-    const validateMediaReferences = (
-      mediaIds: string[],
-    ): Effect.Effect<void, SectionValidationError> =>
-      Effect.gen(function* () {
-        const allMediaExist = yield* mediaPort.mediaIdsExist(mediaIds).pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionValidationError({
-                message: `Failed to validate media references: ${error.message}`,
-              }),
-          ),
-        );
-
-        if (!allMediaExist) {
-          return yield* Effect.fail(
+  const validateMediaReferences = (
+    mediaIds: string[],
+  ): Effect.Effect<void, SectionValidationError> =>
+    Effect.gen(function* () {
+      const allMediaExist = yield* mediaPort.mediaIdsExist(mediaIds).pipe(
+        Effect.mapError(
+          (error) =>
             new SectionValidationError({
-              message: `One or more media files not found for IDs: ${mediaIds.join(
-                ", ",
-              )}`,
+              message: `Failed to validate media references: ${error.message}`,
             }),
-          );
+        ),
+      );
+
+      if (!allMediaExist) {
+        return yield* Effect.fail(
+          new SectionValidationError({
+            message: `One or more media files not found for IDs: ${mediaIds.join(
+              ", ",
+            )}`,
+          }),
+        );
+      }
+    });
+
+  return {
+    execute: (
+      command: UpdateSectionCommand,
+    ): Effect.Effect<
+      void,
+      | InvalidSectionTypeError
+      | SectionError
+      | SectionNotFoundError
+      | SectionValidationError
+    > =>
+      Effect.gen(function* () {
+        const mediaIds = extractMediaIds(command);
+        if (mediaIds.length > 0) {
+          yield* validateMediaReferences(mediaIds);
         }
-      });
 
-    return {
-      execute: (command: UpdateSectionCommand) =>
-        Effect.gen(function* () {
-          const mediaIds = extractMediaIds(command);
-          if (mediaIds.length > 0) {
-            yield* validateMediaReferences(mediaIds);
-          }
+        yield* aggregate.updateSection(command);
+      }),
+  };
+});
 
-          yield* aggregate.updateSection(command);
-        }),
-    } satisfies UpdateSectionUseCase;
-  }),
-);
+export class UpdateSectionUseCase extends Effect.Service<UpdateSectionUseCase>()(
+  "@repo/website-database/UpdateSectionUseCase",
+  {
+    effect: make,
+    accessors: true,
+    dependencies: [SectionAggregate.Default],
+  },
+) {}

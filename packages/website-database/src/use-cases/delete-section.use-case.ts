@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { SectionAggregate } from "../application/section/section.aggregate";
 import { SectionError } from "../application/section/errors";
 
@@ -11,22 +11,22 @@ export interface DeleteSectionCommand {
 
 // --- Use Case ---
 
-export interface DeleteSectionUseCase {
-  execute(command: DeleteSectionCommand): Effect.Effect<void, SectionError>;
-}
+const make = Effect.gen(function* () {
+  const aggregate = yield* SectionAggregate;
 
-export const DeleteSectionUseCase = Context.GenericTag<DeleteSectionUseCase>(
+  return {
+    execute: (
+      command: DeleteSectionCommand,
+    ): Effect.Effect<void, SectionError> =>
+      aggregate.deleteSection(command.websiteId, command.sectionId),
+  };
+});
+
+export class DeleteSectionUseCase extends Effect.Service<DeleteSectionUseCase>()(
   "@repo/website-database/DeleteSectionUseCase",
-);
-
-export const DeleteSectionUseCaseLive = Layer.effect(
-  DeleteSectionUseCase,
-  Effect.gen(function* () {
-    const aggregate = yield* SectionAggregate;
-
-    return {
-      execute: (command: DeleteSectionCommand) =>
-        aggregate.deleteSection(command.websiteId, command.sectionId),
-    } satisfies DeleteSectionUseCase;
-  }),
-);
+  {
+    effect: make,
+    accessors: true,
+    dependencies: [SectionAggregate.Default],
+  },
+) {}

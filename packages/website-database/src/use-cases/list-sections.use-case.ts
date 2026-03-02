@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Effect } from "effect";
 import type { AllSections } from "../application/section/section.aggregate";
 import { SectionAggregate } from "../application/section/section.aggregate";
 import { SectionError } from "../application/section/errors";
@@ -15,24 +15,22 @@ export type ListSectionsResult = AllSections[];
 
 // --- Use Case ---
 
-export interface ListSectionsUseCase {
-  execute(
-    query: ListSectionsQuery,
-  ): Effect.Effect<ListSectionsResult, SectionError>;
-}
+const make = Effect.gen(function* () {
+  const aggregate = yield* SectionAggregate;
 
-export const ListSectionsUseCase = Context.GenericTag<ListSectionsUseCase>(
+  return {
+    execute: (
+      query: ListSectionsQuery,
+    ): Effect.Effect<ListSectionsResult, SectionError> =>
+      aggregate.fetchSections(query.websiteId),
+  };
+});
+
+export class ListSectionsUseCase extends Effect.Service<ListSectionsUseCase>()(
   "@repo/website-database/ListSectionsUseCase",
-);
-
-export const ListSectionsUseCaseLive = Layer.effect(
-  ListSectionsUseCase,
-  Effect.gen(function* () {
-    const aggregate = yield* SectionAggregate;
-
-    return {
-      execute: (query: ListSectionsQuery) =>
-        aggregate.fetchSections(query.websiteId),
-    } satisfies ListSectionsUseCase;
-  }),
-);
+  {
+    effect: make,
+    accessors: true,
+    dependencies: [SectionAggregate.Default],
+  },
+) {}
