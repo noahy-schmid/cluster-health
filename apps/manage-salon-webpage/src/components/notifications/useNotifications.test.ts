@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { act } from "@testing-library/react";
 import {
   useNotificationStore,
   getSortedNotifications,
@@ -124,9 +123,7 @@ describe("useNotificationStore", () => {
 
     expect(useNotificationStore.getState().notifications).toHaveLength(1);
 
-    act(() => {
-      vi.advanceTimersByTime(3000);
-    });
+    vi.advanceTimersByTime(3000);
 
     expect(useNotificationStore.getState().notifications).toHaveLength(0);
   });
@@ -143,14 +140,10 @@ describe("useNotificationStore", () => {
 
     expect(useNotificationStore.getState().notifications).toHaveLength(1);
 
-    act(() => {
-      vi.advanceTimersByTime(7999);
-    });
+    vi.advanceTimersByTime(7999);
     expect(useNotificationStore.getState().notifications).toHaveLength(1);
 
-    act(() => {
-      vi.advanceTimersByTime(1);
-    });
+    vi.advanceTimersByTime(1);
     expect(useNotificationStore.getState().notifications).toHaveLength(0);
   });
 
@@ -164,9 +157,7 @@ describe("useNotificationStore", () => {
       duration: "permanent",
     });
 
-    act(() => {
-      vi.advanceTimersByTime(60000);
-    });
+    vi.advanceTimersByTime(60000);
 
     expect(useNotificationStore.getState().notifications).toHaveLength(1);
   });
@@ -181,9 +172,7 @@ describe("useNotificationStore", () => {
       duration: "short",
     });
 
-    act(() => {
-      vi.advanceTimersByTime(3000);
-    });
+    vi.advanceTimersByTime(3000);
 
     expect(useNotificationStore.getState().notifications).toHaveLength(0);
 
