@@ -1,6 +1,11 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { ImageIcon } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import { GallerySettings } from "@repo/website-database";
+import { getMediaUrl } from "@/api/media-actions";
 
 interface GalleryCardProps {
   settings: GallerySettings;
@@ -13,8 +18,30 @@ export default function GalleryCard({
   order,
   menuTitle,
 }: GalleryCardProps) {
-  const imageCount = settings.imageUrls.length;
-  const previewImages = settings.imageUrls.slice(0, 4);
+  const imageCount = settings.imageIds.length;
+  const previewImageIds = settings.imageIds.slice(0, 4);
+
+  const { data: imageUrls } = useQuery({
+    queryKey: ["mediaUrls", settings.imageIds],
+    queryFn: async () => {
+      const urls: (string | null)[] = [];
+      for (const imageId of settings.imageIds) {
+        if (!imageId || imageId.trim() === "") {
+          urls.push(null);
+          continue;
+        }
+        const result = await getMediaUrl(imageId);
+        urls.push(result.success ? result.data : null);
+      }
+      return urls;
+    },
+    enabled: settings.imageIds.length > 0,
+  });
+
+  const previewImages = previewImageIds.map((id, index) => ({
+    id,
+    url: imageUrls?.[index] || id,
+  }));
 
   return (
     <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg hover:shadow-md transition-shadow">
@@ -33,15 +60,14 @@ export default function GalleryCard({
         {imageCount > 0 ? (
           <div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-sm mb-sm">
-              {previewImages.map((url, index) => (
+              {previewImages.map((image, index) => (
                 <div
                   key={index}
                   className="aspect-square bg-gray-100 rounded-md overflow-hidden"
                 >
-                  {url && url.trim() !== "" ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+                  {image.url && image.url.trim() !== "" ? (
                     <img
-                      src={url}
+                      src={image.url}
                       alt={`Gallery image ${index + 1}`}
                       className="w-full h-full object-cover"
                     />

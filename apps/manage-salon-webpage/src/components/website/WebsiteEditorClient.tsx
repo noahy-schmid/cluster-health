@@ -28,6 +28,7 @@ import {
 } from "@/api/sections-actions";
 import { openWebsite } from "@/api/website-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
+import FlatIconButton from "@/components/buttons/FlatIconButton";
 
 interface WebsiteEditorClientProps {
   initialSections: AllSections[];
@@ -162,13 +163,12 @@ export default function WebsiteEditorClient({
 
         {/* Action Buttons */}
         <div className="flex flex-col items-center gap-2 mt-md">
-          <button
+          <FlatIconButton
+            icon={Settings}
             onClick={handleHeroSettings}
-            className="p-2 hover:bg-bg-1 rounded group"
-            aria-label="Edit section"
-          >
-            <Settings className="w-5 h-5 text-fg-muted group-hover:text-fg-normal" />
-          </button>
+            elevation={0}
+            ariaLabel="Edit hero section"
+          />
         </div>
       </div>
 

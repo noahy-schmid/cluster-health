@@ -7,17 +7,19 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=3",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix"
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "docker:build": "docker build -t salon-webpage:latest -f Dockerfile ../../"
   },
   "dependencies": {
     "@repo/salon-domain": "workspace:*",
     "@repo/ui": "workspace:*",
     "@repo/website-database": "workspace:*",
+    "@tanstack/react-query": "^5.90.21",
     "culori": "^4",
     "drizzle-orm": "^0.45.1",
     "effect": "^3.19.16",
     "framer-motion": "^12.23.24",
-    "lucide-react": "^0.544.0",
+    "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "pg": "^8.18.0",
     "react": "19.1.0",

@@ -13,6 +13,7 @@ import { PlusIcon, TrashIcon } from "lucide-react";
 import FormInput from "@/components/website/forms/FormInput";
 import FormActions from "@/components/website/forms/FormActions";
 import FormTextarea from "@/components/website/forms/FormTextarea";
+import MediaSelector from "@/components/media/media-selector";
 
 interface ReasonFormProps {
   section: Extract<AllSections, { type: "reason" }>;
@@ -34,7 +35,7 @@ export default function ReasonForm({ section }: ReasonFormProps) {
     }
 
     const itemsWithImages = items.filter(
-      (item) => item.imageUrl && item.imageUrl.trim() !== "",
+      (item) => item.imageId && item.imageId.trim() !== "",
     );
     if (itemsWithImages.length > 0 && itemsWithImages.length !== items.length) {
       return "Entweder alle Grunde mussen Bilder haben oder keiner";
@@ -67,7 +68,7 @@ export default function ReasonForm({ section }: ReasonFormProps) {
       ...settings,
       items: [
         ...settings.items,
-        { title: "", description: "", imageUrl: undefined },
+        { title: "", description: "", imageId: undefined },
       ],
     });
     setValidationError("");
@@ -158,11 +159,16 @@ export default function ReasonForm({ section }: ReasonFormProps) {
               required
             />
 
-            <FormInput
-              label="Bild URL (optional)"
-              value={item.imageUrl || ""}
-              onChange={(value) => updateItem(index, "imageUrl", value)}
-              placeholder="https://example.com/image.jpg"
+            <MediaSelector
+              label="Bild (optional)"
+              salonId={salonId!}
+              value={item.imageId}
+              onChange={(value) => {
+                const newItems = [...settings.items];
+                newItems[index] = { ...newItems[index], imageId: value };
+                setSettings({ ...settings, items: newItems });
+                setValidationError(validateItems(newItems));
+              }}
             />
           </div>
         ))}

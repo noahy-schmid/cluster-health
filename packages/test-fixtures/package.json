@@ -1,0 +1,38 @@
+{
+  "name": "@repo/test-fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "check-types": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.19.8",
+    "@types/pg": "^8.16.0",
+    "eslint": "^9.39.2",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.995.0",
+    "@aws-sdk/lib-storage": "^3.995.0",
+    "@testcontainers/minio": "^11.12.0",
+    "@testcontainers/postgresql": "^11.12.0",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.1",
+    "pg": "^8.18.0",
+    "testcontainers": "^11.12.0"
+  }
+}

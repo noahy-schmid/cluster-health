@@ -1,4 +1,11 @@
 import { config } from "@repo/eslint-config/react-internal";
 
-/** @type {import("eslint").Linter.Config} */
-export default config;
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  ...config,
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    ignores: ["dist/**"],
+  },
+]);

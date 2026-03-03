@@ -11,7 +11,7 @@ export type InsertDatabaseWebsite = typeof websitesTable.$inferInsert;
 /**
  * Port for operations regarding the websites Table.
  */
-export interface WebsiteRepository {
+export interface WebsitePort {
   /**
    * Creates a new website record.
    * @param input Website details including salonId and all configuration.
@@ -90,8 +90,8 @@ export interface WebsiteRepository {
 }
 
 /**
- * Context tag for the WebsiteRepository service.
+ * Context tag for the WebsitePort service.
  */
-export const WebsiteRepository = Context.GenericTag<WebsiteRepository>(
-  "@repo/website-database/WebsiteRepository",
+export const WebsitePort = Context.GenericTag<WebsitePort>(
+  "@repo/website-database/WebsitePort",
 );

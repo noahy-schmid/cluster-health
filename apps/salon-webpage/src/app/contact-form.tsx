@@ -12,7 +12,7 @@ export default function ContactForm() {
           label="Name"
           type="text"
           value=""
-          onChange={() => {}}
+          onChange={() => undefined}
           placeholder="Name"
           required
         />
@@ -20,7 +20,7 @@ export default function ContactForm() {
           label="E-Mail"
           type="email"
           value=""
-          onChange={() => {}}
+          onChange={() => undefined}
           placeholder="E-Mail"
           required
         />
@@ -28,7 +28,7 @@ export default function ContactForm() {
           label="Telefon"
           type="tel"
           value=""
-          onChange={() => {}}
+          onChange={() => undefined}
           placeholder="Telefon"
         />
       </div>

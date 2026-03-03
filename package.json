@@ -3,16 +3,19 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "docker:build": "turbo run docker:build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "format": "prettier --check \"**/*.{ts,tsx,md}\"",
     "format:fix": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
+    "test": "turbo run test:run",
     "prepare": "husky install",
     "drizzle:generate": "turbo run drizzle:generate"
   },
   "devDependencies": {
+    "@effect/language-service": "^0.77.0",
     "eslint-plugin-turbo": "^2.5.0",
     "husky": "^9.1.7",
     "prettier": "^3.8.1",

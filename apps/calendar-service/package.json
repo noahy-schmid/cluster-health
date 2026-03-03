@@ -1,0 +1,8 @@
+{
+  "name": "calendar-service",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "docker:build": "docker build -t calendar-service:latest -f Dockerfile ."
+  }
+}

@@ -1,20 +1,21 @@
 import { Effect, Layer, Option } from "effect";
 import { eq } from "drizzle-orm";
-import { db } from "../database";
 import { websitesTable } from "../schema";
 import {
   WebsiteAlreadyExistsError,
   WebsiteDatabaseError,
 } from "../types/website-errors";
-import { WebsiteRepository } from "../ports/website.port";
+import { WebsitePort } from "../ports/website.port";
+import { Database } from "../infrastructure/database.interface";
 
 /**
  * PostgreSQL implementation of the WebsiteRepository using Drizzle ORM.
  */
 const make = Effect.gen(function* () {
-  yield* Effect.log("Initializing PostgresWebsiteAdapter");
+  yield* Effect.succeed(undefined);
+  const { db } = yield* Database;
 
-  const createWebsite: WebsiteRepository["createWebsite"] = (input) =>
+  const createWebsite: WebsitePort["createWebsite"] = (input) =>
     Effect.gen(function* () {
       const rows = yield* Effect.tryPromise(() =>
         db.insert(websitesTable).values(input).returning(),
@@ -51,7 +52,7 @@ const make = Effect.gen(function* () {
       return created;
     });
 
-  const getWebsiteById: WebsiteRepository["getWebsiteById"] = (id) =>
+  const getWebsiteById: WebsitePort["getWebsiteById"] = (id) =>
     Effect.gen(function* () {
       const [website] = yield* Effect.tryPromise(async () => {
         return await db
@@ -73,9 +74,7 @@ const make = Effect.gen(function* () {
       return Option.fromNullable(website);
     });
 
-  const getWebsiteBySalonId: WebsiteRepository["getWebsiteBySalonId"] = (
-    salonId,
-  ) =>
+  const getWebsiteBySalonId: WebsitePort["getWebsiteBySalonId"] = (salonId) =>
     Effect.gen(function* () {
       const [website] = yield* Effect.tryPromise(async () => {
         return await db
@@ -97,7 +96,7 @@ const make = Effect.gen(function* () {
       return Option.fromNullable(website);
     });
 
-  const getWebsiteBySlug: WebsiteRepository["getWebsiteBySlug"] = (slug) =>
+  const getWebsiteBySlug: WebsitePort["getWebsiteBySlug"] = (slug) =>
     Effect.gen(function* () {
       const [website] = yield* Effect.tryPromise(async () => {
         return await db
@@ -119,9 +118,7 @@ const make = Effect.gen(function* () {
       return Option.fromNullable(website);
     });
 
-  const hasWebsiteForSalonId: WebsiteRepository["hasWebsiteForSalonId"] = (
-    salonId,
-  ) =>
+  const hasWebsiteForSalonId: WebsitePort["hasWebsiteForSalonId"] = (salonId) =>
     Effect.gen(function* () {
       const [result] = yield* Effect.tryPromise(async () => {
         return await db
@@ -143,7 +140,7 @@ const make = Effect.gen(function* () {
       return !!result;
     });
 
-  const updateWebsite: WebsiteRepository["updateWebsite"] = (id, updates) =>
+  const updateWebsite: WebsitePort["updateWebsite"] = (id, updates) =>
     Effect.gen(function* () {
       const rows = yield* Effect.tryPromise(() =>
         db
@@ -179,10 +176,10 @@ const make = Effect.gen(function* () {
     getWebsiteBySlug,
     hasWebsiteForSalonId,
     updateWebsite,
-  } satisfies WebsiteRepository;
+  } satisfies WebsitePort;
 });
 
 /**
  * Layer that provides the PostgreSQL WebsiteRepository implementation.
  */
-export const PostgresWebsiteAdapter = Layer.effect(WebsiteRepository, make);
+export const PostgresWebsiteAdapter = Layer.effect(WebsitePort, make);

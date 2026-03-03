@@ -1,19 +1,38 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import ChevronButton from "../chevron-button";
+import { getMediaUrl } from "@/api/media.actions";
 
 type Props = {
-  images?: string[];
+  imageIds?: string[];
   title?: string;
   subtitle?: string;
 };
 
 export default function ImageCarouselSection({
-  images: imageUrls,
+  imageIds,
   title,
   subtitle,
 }: Props) {
+  const { data: imageUrls } = useQuery({
+    queryKey: ["mediaUrls", imageIds],
+    queryFn: async () => {
+      if (!imageIds || imageIds.length === 0) return [];
+      const urls: (string | null)[] = [];
+      for (const imageId of imageIds) {
+        if (!imageId || imageId.trim() === "") {
+          urls.push(null);
+          continue;
+        }
+        const result = await getMediaUrl(imageId);
+        urls.push(result.success ? result.data : null);
+      }
+      return urls;
+    },
+    enabled: !!imageIds && imageIds.length > 0,
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -30,10 +49,12 @@ export default function ImageCarouselSection({
   ];
 
   const images = imageUrls
-    ? imageUrls.map((url, index) => ({
-        src: url,
-        alt: `Gallery image ${index + 1}`,
-      }))
+    ? imageUrls
+        .filter((url): url is string => url !== null)
+        .map((url, index) => ({
+          src: url,
+          alt: `Gallery image ${index + 1}`,
+        }))
     : defaultImages;
 
   // Create infinite loop by tripling the images

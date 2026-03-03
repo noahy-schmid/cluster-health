@@ -33,6 +33,10 @@
       "name": "infrastructure | eslint-config",
       "path": "packages/eslint-config",
     },
+    {
+      "name": "infrastructure | test-fixtures",
+      "path": "packages/test-fixtures",
+    },
   ],
   "settings": {
     "chat.tools.terminal.autoApprove": {

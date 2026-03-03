@@ -1,6 +1,11 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { ImageIcon } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import { HeroSettings } from "@repo/website-database";
+import { getMediaUrl } from "@/api/media-actions";
 
 interface HeroCardProps {
   settings: HeroSettings;
@@ -10,6 +15,32 @@ export default function HeroCard({ settings }: HeroCardProps) {
   const hasBackground = settings.heroImage && settings.heroImage.trim() !== "";
   const hasLogo = settings.logo && settings.logo.trim() !== "";
 
+  const { data: heroImageUrl } = useQuery({
+    queryKey: ["mediaUrl", settings.heroImage],
+    queryFn: async () => {
+      if (!settings.heroImage) return null;
+      const result = await getMediaUrl(settings.heroImage);
+      if (result.success) {
+        return result.data;
+      }
+      return null;
+    },
+    enabled: !!settings.heroImage,
+  });
+
+  const { data: logoUrl } = useQuery({
+    queryKey: ["mediaUrl", settings.logo],
+    queryFn: async () => {
+      if (!settings.logo) return null;
+      const result = await getMediaUrl(settings.logo);
+      if (result.success) {
+        return result.data;
+      }
+      return null;
+    },
+    enabled: !!settings.logo,
+  });
+
   return (
     <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg hover:shadow-md transition-shadow">
       <SectionHeader title="Startseite" />
@@ -18,9 +49,8 @@ export default function HeroCard({ settings }: HeroCardProps) {
       <div className="relative aspect-video bg-bg-0 rounded-md overflow-hidden md:mx-2xl">
         {/* Background Image */}
         {hasBackground ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={settings.heroImage}
+            src={heroImageUrl || settings.heroImage}
             alt="Hero Background"
             className="w-full h-full object-cover"
           />
@@ -39,9 +69,9 @@ export default function HeroCard({ settings }: HeroCardProps) {
         {/* Logo - Bottom Left */}
         {hasLogo ? (
           <div className="absolute bottom-4 left-4 z-10">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {}
             <img
-              src={settings.logo}
+              src={logoUrl || settings.logo}
               alt="Logo"
               className="w-20 h-20 object-contain"
             />

@@ -6,10 +6,8 @@ import {
 } from "@repo/auth-domain";
 import { cookies } from "next/headers";
 
-export class AuthGuard {
-  public static async getAuthToken(): Promise<
-    ManagementAuthTokenPayload | undefined
-  > {
+export const AuthGuard = {
+  async getAuthToken(): Promise<ManagementAuthTokenPayload | undefined> {
     const session = (await cookies()).get("session");
     if (!session?.value) {
       return undefined;
@@ -20,5 +18,5 @@ export class AuthGuard {
       return undefined;
     }
     return authResult.data;
-  }
-}
+  },
+};

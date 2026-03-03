@@ -1,5 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import SectionHeader from "./SectionHeader";
 import { ReasonSettings } from "@repo/website-database";
+import { getMediaUrl } from "@/api/media-actions";
 
 interface ReasonCardProps {
   settings: ReasonSettings;
@@ -14,8 +19,25 @@ export default function ReasonCard({
 }: ReasonCardProps) {
   const itemCount = settings.items.length;
   const hasImages = settings.items.some(
-    (item) => item.imageUrl && item.imageUrl.trim() !== "",
+    (item) => item.imageId && item.imageId.trim() !== "",
   );
+
+  const { data: imageUrls } = useQuery({
+    queryKey: ["mediaUrls", settings.items.map((item) => item.imageId)],
+    queryFn: async () => {
+      const urls: (string | null)[] = [];
+      for (const item of settings.items) {
+        if (!item.imageId || item.imageId.trim() === "") {
+          urls.push(null);
+          continue;
+        }
+        const result = await getMediaUrl(item.imageId);
+        urls.push(result.success ? result.data : null);
+      }
+      return urls;
+    },
+    enabled: hasImages,
+  });
 
   return (
     <div className="bg-bg-1 rounded-lg shadow-sm border border-border p-lg hover:shadow-md transition-shadow">
@@ -38,29 +60,32 @@ export default function ReasonCard({
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
-            {settings.items.slice(0, 4).map((item, index) => (
-              <div
-                key={index}
-                className="p-sm rounded-md border border-border text-center"
-              >
-                {item.imageUrl && item.imageUrl.trim() !== "" && (
-                  <div className="w-32 h-32 rounded-full overflow-hidden mb-sm mx-auto">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <h5 className="font-medium text-fg-normal text-sm">
-                  {item.title || `Grund ${index + 1}`}
-                </h5>
-                <p className="text-xs text-fg-muted line-clamp-2">
-                  {item.description || "Keine Beschreibung"}
-                </p>
-              </div>
-            ))}
+            {settings.items.slice(0, 4).map((item, index) => {
+              const imageUrl = imageUrls?.[index] || item.imageId;
+              return (
+                <div
+                  key={index}
+                  className="p-sm rounded-md border border-border text-center"
+                >
+                  {item.imageId && item.imageId.trim() !== "" && (
+                    <div className="w-32 h-32 rounded-full overflow-hidden mb-sm mx-auto">
+                      {}
+                      <img
+                        src={imageUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <h5 className="font-medium text-fg-normal text-sm">
+                    {item.title || `Grund ${index + 1}`}
+                  </h5>
+                  <p className="text-xs text-fg-muted line-clamp-2">
+                    {item.description || "Keine Beschreibung"}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

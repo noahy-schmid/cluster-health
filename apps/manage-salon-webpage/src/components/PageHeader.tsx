@@ -3,6 +3,7 @@
 import { LucideIcon, MoreVertical } from "lucide-react";
 import { useState } from "react";
 import Dropdown, { DropdownItem } from "./Dropdown";
+import FlatIconButton from "./buttons/FlatIconButton";
 
 interface PageHeaderAction {
   icon: LucideIcon;
@@ -39,13 +40,13 @@ export default function PageHeader({
           {/* Show dropdown menu on both mobile and desktop when there are multiple actions */}
           {actions && actions.length > 0 && hasMultipleActions && (
             <div className="relative">
-              <button
+              <FlatIconButton
+                icon={MoreVertical}
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="p-sm flex items-center rounded-md hover:bg-bg-1 text-fg-muted hover:text-fg-normal font-normal text-base cursor-pointer"
-                aria-label="Actions menu"
-              >
-                <MoreVertical className="w-8 h-8" />
-              </button>
+                elevation={0}
+                ariaLabel="Actions menu"
+                size="lg"
+              />
 
               <Dropdown
                 isOpen={isDropdownOpen}
@@ -61,13 +62,13 @@ export default function PageHeader({
           <>
             {/* Mobile: dropdown */}
             <div className="relative md:hidden">
-              <button
+              <FlatIconButton
+                icon={MoreVertical}
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="p-sm flex items-center rounded-md hover:bg-bg-1 text-fg-muted hover:text-fg-normal font-normal text-base cursor-pointer"
-                aria-label="Actions menu"
-              >
-                <MoreVertical className="w-8 h-8" />
-              </button>
+                elevation={0}
+                ariaLabel="Actions menu"
+                size="lg"
+              />
               <Dropdown
                 isOpen={isDropdownOpen}
                 onClose={() => setIsDropdownOpen(false)}

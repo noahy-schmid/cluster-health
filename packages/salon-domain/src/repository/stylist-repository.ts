@@ -70,8 +70,6 @@ export const StylistRepository = Context.GenericTag<StylistRepository>(
 
 const genStylistRepositoryLive: Effect.Effect<StylistRepository> = Effect.gen(
   function* () {
-    yield* Effect.log("Initializing StylistRepositoryLive");
-
     const createStylist: StylistRepository["createStylist"] = (input) =>
       Effect.gen(function* () {
         const [created] = yield* Effect.tryPromise({
