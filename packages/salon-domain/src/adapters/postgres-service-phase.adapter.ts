@@ -107,7 +107,9 @@ const make = Effect.gen(function* () {
           ),
         );
 
-        const result: ((typeof phases)[number] & { requiredResourceIds: string[] })[] = [];
+        const result: ((typeof phases)[number] & {
+          requiredResourceIds: string[];
+        })[] = [];
 
         for (const phase of phases) {
           const requirements = yield* Effect.tryPromise(() =>
