@@ -66,8 +66,8 @@ cd my-services-chart
 helm upgrade --install "$RELEASE_NAME" . \
     --create-namespace \
     --namespace "$NAMESPACE" \
-    --set "my-stylist-frontend.image.tag=$DOCKER_TAG" \
-    --set "my-stylist-frontend.ingress.path=$BASE_PATH"
+    --set "marketing-webpage.image.tag=$DOCKER_TAG" \
+    --set "marketing-webpage.ingress.path=$BASE_PATH"
 
 echo "✅ Deployment completed successfully!"
 echo ""

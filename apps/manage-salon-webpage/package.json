@@ -16,7 +16,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@repo/auth-domain": "workspace:*",
     "@repo/salon-domain": "workspace:*",
-    "@repo/website-database": "workspace:*",
+    "@repo/website-domain": "workspace:*",
     "@tanstack/react-query": "^5.90.21",
     "culori": "^4.0.2",
     "dotenv": "^17.2.3",

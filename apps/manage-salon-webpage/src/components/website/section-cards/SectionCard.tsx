@@ -8,7 +8,7 @@ import GalleryCard from "./GalleryCard";
 import ReasonCard from "./ReasonCard";
 import CenterTextCard from "./CenterTextCard";
 import StylistsCard from "./StylistsCard";
-import { AllSections } from "@repo/website-database";
+import { AllSections } from "@repo/website-domain";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
 
 interface SectionCardProps {

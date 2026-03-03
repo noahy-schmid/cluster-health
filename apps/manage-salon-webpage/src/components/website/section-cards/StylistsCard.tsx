@@ -3,7 +3,7 @@
 import { Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import SectionHeader from "./SectionHeader";
-import { StylistsSettings } from "@repo/website-database";
+import { StylistsSettings } from "@repo/website-domain";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 

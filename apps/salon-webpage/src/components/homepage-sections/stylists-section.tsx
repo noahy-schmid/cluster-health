@@ -1,4 +1,4 @@
-import { StylistsSettings } from "@repo/website-database";
+import { StylistsSettings } from "@repo/website-domain";
 import { fetchStylistsBySalonSlug } from "@/api/stylists-actions";
 import StylistsSlider from "./stylists-slider";
 

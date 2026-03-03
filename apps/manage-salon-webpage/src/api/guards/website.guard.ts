@@ -1,7 +1,7 @@
 import "server-only";
 
 import { Effect, Option } from "effect";
-import { WebsiteService, WebsiteLayer } from "@repo/website-database";
+import { WebsiteService, WebsiteLayer } from "@repo/website-domain";
 import { AuthGuard } from "./auth.guard";
 
 export const WebsiteAccessGuard = {

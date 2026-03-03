@@ -1,6 +1,6 @@
 "use server";
 
-import { WebsiteService, WebsiteLayer } from "@repo/website-database";
+import { WebsiteService, WebsiteLayer } from "@repo/website-domain";
 import { Effect, Option } from "effect";
 import { unstable_cache } from "next/cache";
 

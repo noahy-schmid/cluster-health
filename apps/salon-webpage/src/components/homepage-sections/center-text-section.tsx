@@ -1,4 +1,4 @@
-import { CenterTextSettings } from "@repo/website-database";
+import { CenterTextSettings } from "@repo/website-domain";
 
 interface CenterTextSectionProps {
   settings: CenterTextSettings;

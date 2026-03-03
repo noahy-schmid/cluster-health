@@ -27,6 +27,8 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
+  apps/calendar-service: {}
+
   apps/manage-salon-webpage:
     dependencies:
       '@dnd-kit/core':
@@ -44,9 +46,9 @@ importers:
       '@repo/salon-domain':
         specifier: workspace:*
         version: link:../../packages/salon-domain
-      '@repo/website-database':
+      '@repo/website-domain':
         specifier: workspace:*
-        version: link:../../packages/website-database
+        version: link:../../packages/website-domain
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.90.21(react@19.2.3)
@@ -127,7 +129,7 @@ importers:
         specifier: ^5
         version: 5.9.2
 
-  apps/my-stylist-frontend:
+  apps/marketing-webpage:
     dependencies:
       '@flaticon/flaticon-uicons':
         specifier: ^3.3.1
@@ -187,9 +189,9 @@ importers:
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@repo/website-database':
+      '@repo/website-domain':
         specifier: workspace:*
-        version: link:../../packages/website-database
+        version: link:../../packages/website-domain
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.90.21(react@19.1.0)
@@ -498,7 +500,7 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
-  packages/website-database:
+  packages/website-domain:
     dependencies:
       '@repo/salon-domain':
         specifier: workspace:*

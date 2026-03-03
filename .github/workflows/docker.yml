@@ -25,9 +25,9 @@ jobs:
           - name: salon-webpage
             context: .
             dockerfile: apps/salon-webpage/Dockerfile
-          - name: my-stylist-frontend
+          - name: marketing-webpage
             context: .
-            dockerfile: apps/my-stylist-frontend/Dockerfile
+            dockerfile: apps/marketing-webpage/Dockerfile
           - name: calendar-service
             context: apps/calendar-service
             dockerfile: apps/calendar-service/Dockerfile

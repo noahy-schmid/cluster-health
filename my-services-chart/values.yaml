@@ -1,8 +1,8 @@
 # Global values for all subcharts
 global: {}
 
-# Configuration for my-stylist-frontend subchart
-my-stylist-frontend:
+# Configuration for marketing-webpage subchart
+marketing-webpage:
   enabled: true  
   image:
     repository: ghcr.io/noahy-schmid

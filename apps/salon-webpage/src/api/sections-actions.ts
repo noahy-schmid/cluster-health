@@ -7,7 +7,7 @@ import {
   type Result,
   ListSectionsUseCase,
   ListSectionsUseCaseLayer,
-} from "@repo/website-database";
+} from "@repo/website-domain";
 import { eq } from "drizzle-orm";
 import { oklch } from "culori";
 import { Effect } from "effect";

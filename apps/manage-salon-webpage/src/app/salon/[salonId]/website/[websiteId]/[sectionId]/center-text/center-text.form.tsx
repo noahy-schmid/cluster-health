@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateSection } from "@/api/sections-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import { AllSections, CenterTextSettings } from "@repo/website-database";
+import { AllSections, CenterTextSettings } from "@repo/website-domain";
 import FormInput from "@/components/website/forms/FormInput";
 import FormActions from "@/components/website/forms/FormActions";
 import FormTextarea from "@/components/website/forms/FormTextarea";

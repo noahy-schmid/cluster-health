@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateSection } from "@/api/sections-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
-import { AllSections, GallerySettings } from "@repo/website-database";
+import { AllSections, GallerySettings } from "@repo/website-domain";
 import FormInput from "@/components/website/forms/FormInput";
 import MediaSelectorList from "@/components/media/media-selector-list";
 import FormActions from "@/components/website/forms/FormActions";

@@ -14,7 +14,7 @@ import {
   ReorderSectionsUseCaseLayer,
   ListSectionsUseCase,
   ListSectionsUseCaseLayer,
-} from "@repo/website-database";
+} from "@repo/website-domain";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
 import { Effect, Layer } from "effect";
 import { MediaLayer } from "@repo/salon-domain";

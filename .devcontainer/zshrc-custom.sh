@@ -76,7 +76,7 @@ alias dlogs='docker logs'
 # Navigation to common directories
 alias workspace='cd /workspaces/cluster-health'
 alias apps='cd /workspaces/cluster-health/apps'
-alias frontend='cd /workspaces/cluster-health/apps/apps/my-stylist-frontend'
+alias frontend='cd /workspaces/cluster-health/apps/apps/marketing-webpage'
 alias salon='cd /workspaces/cluster-health/apps/apps/salon-webpage'
 
 # Environment variables
