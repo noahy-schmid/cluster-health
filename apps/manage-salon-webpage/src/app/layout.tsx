@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Libre_Baskerville } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers";
+import NotificationContainer from "@/components/notifications/NotificationContainer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,7 +32,10 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${libreBaskerville.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <NotificationContainer />
+          {children}
+        </Providers>
       </body>
     </html>
   );
