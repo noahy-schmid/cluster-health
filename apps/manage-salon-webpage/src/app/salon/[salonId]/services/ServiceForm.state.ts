@@ -48,7 +48,7 @@ type ServiceFormAction =
 
 function createEmptyPhase(order: number): ServicePhase {
   return {
-    id: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    id: crypto.randomUUID(),
     name: "",
     durationMinutes: 15,
     requiresEmployee: true,

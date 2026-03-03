@@ -69,7 +69,7 @@ export default function PhaseEditor({
             value={phase.durationMinutes}
             onChange={(e) => {
               const val = parseInt(e.target.value, 10);
-              if (!isNaN(val) && val > 0) onUpdateDuration(val);
+              onUpdateDuration(isNaN(val) || val < 1 ? 1 : val);
             }}
             className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal w-32"
           />
