@@ -1,6 +1,6 @@
 "use client";
 
-import { SectionType } from "@repo/website-database";
+import { SectionType } from "@repo/website-domain";
 import SectionTypeSelectionButton from "./TypeSelectionButton";
 import { Suspense } from "react";
 import {

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { SectionTypeInfo } from "./SectionTypeSelection";
-import { SectionType } from "@repo/website-database";
+import { SectionType } from "@repo/website-domain";
 import { createSection } from "@/api/sections-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import { HeroSettings } from "@repo/website-database";
+import { HeroSettings } from "@repo/website-domain";
 import { updateHeroSettings } from "@/api/website-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import HeroCard from "@/components/website/section-cards/HeroCard";

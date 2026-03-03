@@ -1,5 +1,5 @@
 import SectionHeader from "./SectionHeader";
-import { CenterTextSettings } from "@repo/website-database";
+import { CenterTextSettings } from "@repo/website-domain";
 
 interface CenterTextCardProps {
   settings: CenterTextSettings;

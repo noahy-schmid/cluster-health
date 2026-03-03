@@ -3,7 +3,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import SectionHeader from "./SectionHeader";
-import { ReasonSettings } from "@repo/website-database";
+import { ReasonSettings } from "@repo/website-domain";
 import { getMediaUrl } from "@/api/media-actions";
 
 interface ReasonCardProps {

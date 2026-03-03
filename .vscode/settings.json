@@ -10,7 +10,7 @@
   },
   "tailwindCSS.experimental.configFile": {
     "packages/ui/**/*": "packages/ui/tailwind.config.mjs",
-    "apps/my-stylist-frontend/**/*": "apps/my-stylist-frontend/tailwind.config.mjs",
+    "apps/marketing-webpage/**/*": "apps/marketing-webpage/tailwind.config.mjs",
     "apps/salon-webpage/**/*": "apps/salon-webpage/tailwind.config.mjs"
   },
   "css.validate": true,

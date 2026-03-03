@@ -2,7 +2,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ReasonSettings } from "@repo/website-database";
+import { ReasonSettings } from "@repo/website-domain";
 import { getMediaUrl } from "@/api/media.actions";
 
 interface ReasonSectionProps {

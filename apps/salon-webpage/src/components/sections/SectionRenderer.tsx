@@ -3,7 +3,7 @@ import ImageCarouselSection from "../homepage-sections/image-carousel-section";
 import CenterTextSection from "../homepage-sections/center-text-section";
 import ReasonSection from "../homepage-sections/reason-section";
 import StylistsSection from "../homepage-sections/stylists-section";
-import { AllSections } from "@repo/website-database";
+import { AllSections } from "@repo/website-domain";
 
 interface SectionRendererProps {
   section: AllSections;

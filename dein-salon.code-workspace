@@ -6,7 +6,7 @@
     },
     {
       "name": "webpage | marketing",
-      "path": "apps/my-stylist-frontend",
+      "path": "apps/marketing-webpage",
     },
     {
       "name": "webpage | salon",
@@ -22,7 +22,7 @@
     },
     {
       "name": "backend | website-domain",
-      "path": "packages/website-database",
+      "path": "packages/website-domain",
     },
     {
       "name": "backend | salon-domain",

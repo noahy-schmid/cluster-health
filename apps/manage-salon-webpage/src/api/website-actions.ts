@@ -11,7 +11,7 @@ import {
   WebsiteHeroRepositoryLive,
   HeroSettings,
   websitesTable,
-} from "@repo/website-database";
+} from "@repo/website-domain";
 
 export async function getWebsiteSlug(websiteId: string): Promise<
   | {

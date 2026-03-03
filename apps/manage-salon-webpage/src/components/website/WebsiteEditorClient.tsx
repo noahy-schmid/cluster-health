@@ -21,7 +21,7 @@ import { AddSectionButton } from "@/components/website/AddSectionButton";
 import PageHeader from "@/components/PageHeader";
 import { ExternalLink, Palette, Settings } from "lucide-react";
 import HeroCard from "@/components/website/section-cards/HeroCard";
-import { AllSections, HeroSettings } from "@repo/website-database";
+import { AllSections, HeroSettings } from "@repo/website-domain";
 import {
   deleteSection as deleteSectionAction,
   reorderSections as reorderSectionsAction,

@@ -1,4 +1,4 @@
-import { SectionType } from "@repo/website-database";
+import { SectionType } from "@repo/website-domain";
 
 // Settings for Hero section (Start)
 export interface HeroSettings {

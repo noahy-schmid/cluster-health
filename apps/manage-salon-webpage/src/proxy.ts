@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ManagementUserRepository } from "@repo/auth-domain";
-import { db, websitesTable } from "@repo/website-database";
+import { db, websitesTable } from "@repo/website-domain";
 import { eq } from "drizzle-orm";
 
 /**

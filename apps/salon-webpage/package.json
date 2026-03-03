@@ -13,7 +13,7 @@
   "dependencies": {
     "@repo/salon-domain": "workspace:*",
     "@repo/ui": "workspace:*",
-    "@repo/website-database": "workspace:*",
+    "@repo/website-domain": "workspace:*",
     "@tanstack/react-query": "^5.90.21",
     "culori": "^4",
     "drizzle-orm": "^0.45.1",

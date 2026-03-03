@@ -1,6 +1,6 @@
 "use server";
 
-import { db, websitesTable } from "@repo/website-database";
+import { db, websitesTable } from "@repo/website-domain";
 import {
   StylistService,
   StylistServiceLive,

@@ -4,8 +4,8 @@ import { AuthGuard } from "@/api/guards/auth.guard";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
 import { SalonRepository } from "@repo/salon-domain";
 import { Effect, Option } from "effect";
-import { WebsiteService, type WebsiteId } from "@repo/website-database";
-import { WebsiteLayer } from "@repo/website-database/src/layers";
+import { WebsiteService, type WebsiteId } from "@repo/website-domain";
+import { WebsiteLayer } from "@repo/website-domain/src/layers";
 
 /**
  * Helper function to convert a string to a URL-friendly slug

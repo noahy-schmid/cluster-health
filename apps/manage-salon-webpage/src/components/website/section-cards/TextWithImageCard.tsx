@@ -4,7 +4,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ImageIcon } from "lucide-react";
 import SectionHeader from "./SectionHeader";
-import { TextWithImageSettings } from "@repo/website-database";
+import { TextWithImageSettings } from "@repo/website-domain";
 import { getMediaUrl } from "@/api/media-actions";
 
 interface TextWithImageCardProps {

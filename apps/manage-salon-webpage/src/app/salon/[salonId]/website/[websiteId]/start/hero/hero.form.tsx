@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { HeroSettings } from "@repo/website-database";
+import { HeroSettings } from "@repo/website-domain";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import FormInput from "@/components/website/forms/FormInput";
