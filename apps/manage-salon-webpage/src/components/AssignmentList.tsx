@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, XIcon, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import type { StylistServiceAssignment } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
+import FlatChip from "@/components/buttons/FlatChip";
+import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 
 interface AssignmentItem {
   id: string;
@@ -39,7 +41,6 @@ export default function AssignmentList({
   const { showNotification } = useNotifications();
   const [localAssignments, setLocalAssignments] =
     useState<StylistServiceAssignment[]>(assignments);
-  const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
     setLocalAssignments(assignments);
@@ -51,13 +52,10 @@ export default function AssignmentList({
   );
 
   const handleAssign = async (itemId: string) => {
-    setIsAssigning(true);
     try {
       await onAssign(itemId);
     } catch {
       showNotification(`Fehler beim Zuweisen: ${entityLabel}`, "error", "long");
-    } finally {
-      setIsAssigning(false);
     }
   };
 
@@ -91,19 +89,11 @@ export default function AssignmentList({
           {localAssignments.map((assignment) => {
             const key = getAssignmentKey(assignment);
             return (
-              <span
+              <FlatChip
                 key={key}
-                className="flex items-center gap-sm bg-primary-100 text-primary-800 px-md py-sm rounded-md text-sm"
-              >
-                {getAssignmentName(assignment)}
-                <button
-                  onClick={() => handleUnassign(key)}
-                  className="cursor-pointer hover:text-fg-error"
-                  aria-label={`${getAssignmentName(assignment)} entfernen`}
-                >
-                  <XIcon className="w-4 h-4" />
-                </button>
-              </span>
+                label={getAssignmentName(assignment)}
+                onDelete={() => handleUnassign(key)}
+              />
             );
           })}
         </div>
@@ -114,15 +104,13 @@ export default function AssignmentList({
           <p className="text-sm text-fg-muted mb-sm">{entityLabel} zuweisen:</p>
           <div className="flex flex-wrap gap-sm">
             {unassignedItems.map((item) => (
-              <button
+              <FlatIconTextButton
                 key={item.id}
+                icon={Plus}
+                text={item.name}
                 onClick={() => handleAssign(item.id)}
-                disabled={isAssigning}
-                className="flex items-center gap-1 px-sm py-1 rounded-md border border-border text-sm text-fg-muted hover:bg-bg-2 hover:text-fg-normal cursor-pointer disabled:opacity-50"
-              >
-                <Plus className="w-3 h-3" />
-                {item.name}
-              </button>
+                elevation={0}
+              />
             ))}
           </div>
         </div>

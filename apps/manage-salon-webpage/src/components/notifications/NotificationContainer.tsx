@@ -1,47 +1,23 @@
 "use client";
 
-import { XIcon, AlertCircle, AlertTriangle, Info } from "lucide-react";
-import { useNotifications } from "./useNotifications";
-import { NotificationType } from "./notification.types";
+import { Toaster } from "sonner";
 
-const iconMap: Record<NotificationType, typeof Info> = {
-  info: Info,
-  warning: AlertTriangle,
-  error: AlertCircle,
-};
-
-const styleMap: Record<NotificationType, string> = {
-  info: "bg-bg-2 border-primary-300 text-fg-normal",
-  warning: "bg-yellow-50 border-yellow-400 text-yellow-800",
-  error: "bg-bg-error-1 border-red-400 text-fg-error",
-};
-
+/**
+ * Custom-styled Sonner Toaster using the app's Tailwind theme tokens.
+ */
 export default function NotificationContainer() {
-  const { notifications, hideNotification } = useNotifications();
-
-  if (notifications.length === 0) return null;
-
   return (
-    <div className="fixed top-md right-md z-50 flex flex-col gap-sm max-w-sm">
-      {notifications.map((notification) => {
-        const Icon = iconMap[notification.type];
-        return (
-          <div
-            key={notification.id}
-            className={`flex items-start gap-sm p-md border rounded-lg shadow-md ${styleMap[notification.type]}`}
-          >
-            <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <p className="text-sm flex-1">{notification.message}</p>
-            <button
-              onClick={() => hideNotification(notification.id)}
-              className="flex-shrink-0 cursor-pointer"
-              aria-label="Benachrichtigung schließen"
-            >
-              <XIcon className="w-4 h-4" />
-            </button>
-          </div>
-        );
-      })}
-    </div>
+    <Toaster
+      position="top-right"
+      toastOptions={{
+        className:
+          "!bg-bg-1 !border !border-border !text-fg-normal !rounded-lg !shadow-md !font-normal !text-sm",
+        classNames: {
+          error: "!bg-bg-error-1 !border-red-400 !text-fg-error",
+          warning: "!bg-yellow-50 !border-yellow-400 !text-yellow-800",
+          success: "!bg-bg-2 !border-primary-300 !text-fg-normal",
+        },
+      }}
+    />
   );
 }

@@ -22,14 +22,9 @@ type ServiceFormAction =
   | { type: "SET_DESCRIPTION"; payload: string }
   | { type: "ADD_PHASE" }
   | { type: "REMOVE_PHASE"; payload: string }
-  | { type: "UPDATE_PHASE_NAME"; payload: { phaseId: string; name: string } }
   | {
-      type: "UPDATE_PHASE_DURATION";
-      payload: { phaseId: string; durationMinutes: number };
-    }
-  | {
-      type: "UPDATE_PHASE_REQUIRES_EMPLOYEE";
-      payload: { phaseId: string; requiresEmployee: boolean };
+      type: "UPDATE_PHASE";
+      payload: { phaseId: string; updates: Partial<ServicePhase> };
     }
   | {
       type: "ADD_PHASE_RESOURCE";
@@ -57,7 +52,7 @@ function createEmptyPhase(order: number): ServicePhase {
   };
 }
 
-function updatePhase(
+function mapPhase(
   phases: ServicePhase[],
   phaseId: string,
   updater: (phase: ServicePhase) => ServicePhase,
@@ -91,37 +86,19 @@ export function serviceFormReducer(
       return { ...state, phases: filtered };
     }
 
-    case "UPDATE_PHASE_NAME":
+    case "UPDATE_PHASE":
       return {
         ...state,
-        phases: updatePhase(state.phases, action.payload.phaseId, (p) => ({
+        phases: mapPhase(state.phases, action.payload.phaseId, (p) => ({
           ...p,
-          name: action.payload.name,
-        })),
-      };
-
-    case "UPDATE_PHASE_DURATION":
-      return {
-        ...state,
-        phases: updatePhase(state.phases, action.payload.phaseId, (p) => ({
-          ...p,
-          durationMinutes: action.payload.durationMinutes,
-        })),
-      };
-
-    case "UPDATE_PHASE_REQUIRES_EMPLOYEE":
-      return {
-        ...state,
-        phases: updatePhase(state.phases, action.payload.phaseId, (p) => ({
-          ...p,
-          requiresEmployee: action.payload.requiresEmployee,
+          ...action.payload.updates,
         })),
       };
 
     case "ADD_PHASE_RESOURCE":
       return {
         ...state,
-        phases: updatePhase(state.phases, action.payload.phaseId, (p) => {
+        phases: mapPhase(state.phases, action.payload.phaseId, (p) => {
           if (
             p.requiredResources.some(
               (r) => r.resourceId === action.payload.resource.id,
@@ -143,7 +120,7 @@ export function serviceFormReducer(
     case "REMOVE_PHASE_RESOURCE":
       return {
         ...state,
-        phases: updatePhase(state.phases, action.payload.phaseId, (p) => ({
+        phases: mapPhase(state.phases, action.payload.phaseId, (p) => ({
           ...p,
           requiredResources: p.requiredResources.filter(
             (r) => r.resourceId !== action.payload.resourceId,
@@ -204,27 +181,9 @@ export function useServiceFormState(initial?: {
     [],
   );
 
-  const updatePhaseName = useCallback(
-    (phaseId: string, name: string) =>
-      dispatch({ type: "UPDATE_PHASE_NAME", payload: { phaseId, name } }),
-    [],
-  );
-
-  const updatePhaseDuration = useCallback(
-    (phaseId: string, durationMinutes: number) =>
-      dispatch({
-        type: "UPDATE_PHASE_DURATION",
-        payload: { phaseId, durationMinutes },
-      }),
-    [],
-  );
-
-  const updatePhaseRequiresEmployee = useCallback(
-    (phaseId: string, requiresEmployee: boolean) =>
-      dispatch({
-        type: "UPDATE_PHASE_REQUIRES_EMPLOYEE",
-        payload: { phaseId, requiresEmployee },
-      }),
+  const updatePhase = useCallback(
+    (phaseId: string, updates: Partial<ServicePhase>) =>
+      dispatch({ type: "UPDATE_PHASE", payload: { phaseId, updates } }),
     [],
   );
 
@@ -271,9 +230,7 @@ export function useServiceFormState(initial?: {
     setDescription,
     addPhase,
     removePhase,
-    updatePhaseName,
-    updatePhaseDuration,
-    updatePhaseRequiresEmployee,
+    updatePhase,
     addPhaseResource,
     removePhaseResource,
     reorderPhases,

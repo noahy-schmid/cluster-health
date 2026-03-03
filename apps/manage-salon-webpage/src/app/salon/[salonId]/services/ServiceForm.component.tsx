@@ -1,15 +1,31 @@
 "use client";
 
+import { useMemo, useRef } from "react";
 import { Plus } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import type {
   ServiceDefinition,
   SalonResource,
 } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
 import FormTextarea from "@/components/website/forms/FormTextarea";
-import FormActions from "@/components/website/forms/FormActions";
+import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import PhaseEditor from "./PhaseEditor.component";
 import { useServiceFormState } from "./ServiceForm.state";
+import { useNotifications } from "@/components/notifications/useNotifications";
 
 interface ServiceFormProps {
   service?: ServiceDefinition;
@@ -19,7 +35,7 @@ interface ServiceFormProps {
     description: string;
     phases: ServiceDefinition["phases"];
   }) => Promise<void>;
-  onCancel: () => void;
+  onCancel?: () => void;
   saveLabel?: string;
 }
 
@@ -30,15 +46,14 @@ export default function ServiceForm({
   onCancel,
   saveLabel,
 }: ServiceFormProps) {
+  const { showNotification } = useNotifications();
   const {
     state,
     setName,
     setDescription,
     addPhase,
     removePhase,
-    updatePhaseName,
-    updatePhaseDuration,
-    updatePhaseRequiresEmployee,
+    updatePhase,
     addPhaseResource,
     removePhaseResource,
     reorderPhases,
@@ -50,6 +65,41 @@ export default function ServiceForm({
     description: service?.description,
     phases: service?.phases,
   });
+
+  // Track the initial snapshot to detect changes
+  const initialRef = useRef({
+    name: service?.name ?? "",
+    description: service?.description ?? "",
+    phases: JSON.stringify(service?.phases ?? []),
+  });
+
+  const isDirty =
+    state.name !== initialRef.current.name ||
+    state.description !== initialRef.current.description ||
+    JSON.stringify(state.phases) !== initialRef.current.phases;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const phaseIds = useMemo(() => state.phases.map((p) => p.id), [state.phases]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = state.phases.findIndex((p) => p.id === active.id);
+    const newIndex = state.phases.findIndex((p) => p.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const next = [...state.phases];
+    const [moved] = next.splice(oldIndex, 1);
+    next.splice(newIndex, 0, moved);
+    reorderPhases(next);
+  };
 
   const handleSave = async () => {
     clearError();
@@ -81,21 +131,20 @@ export default function ServiceForm({
         description: trimmedDescription,
         phases: state.phases,
       });
+
+      // After successful save, update the initial snapshot so isDirty becomes false
+      initialRef.current = {
+        name: trimmedName,
+        description: trimmedDescription,
+        phases: JSON.stringify(state.phases),
+      };
+
+      showNotification("Erfolgreich gespeichert", "info", "short");
     } catch {
       setError("Ein unerwarteter Fehler ist aufgetreten");
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleMovePhase = (fromIndex: number, direction: "up" | "down") => {
-    const toIndex = direction === "up" ? fromIndex - 1 : fromIndex + 1;
-    if (toIndex < 0 || toIndex >= state.phases.length) return;
-
-    const newPhases = [...state.phases];
-    const [moved] = newPhases.splice(fromIndex, 1);
-    newPhases.splice(toIndex, 0, moved);
-    reorderPhases(newPhases);
   };
 
   const totalDuration = state.phases.reduce(
@@ -133,13 +182,12 @@ export default function ServiceForm({
                 </p>
               )}
             </div>
-            <button
+            <FlatIconTextButton
+              icon={Plus}
+              text="Phase hinzufügen"
               onClick={addPhase}
-              className="flex items-center gap-1 px-sm py-1 rounded-md text-sm text-primary-700 hover:bg-primary-50 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Phase hinzufügen
-            </button>
+              elevation={0}
+            />
           </div>
 
           {state.phases.length === 0 && (
@@ -151,42 +199,33 @@ export default function ServiceForm({
             </div>
           )}
 
-          <div className="space-y-md">
-            {state.phases.map((phase, index) => (
-              <div key={phase.id}>
-                {/* Reorder buttons */}
-                <div className="flex gap-1 mb-1 ml-md">
-                  <button
-                    onClick={() => handleMovePhase(index, "up")}
-                    disabled={index === 0}
-                    className="text-xs text-fg-muted hover:text-fg-normal disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                  >
-                    ↑ Hoch
-                  </button>
-                  <button
-                    onClick={() => handleMovePhase(index, "down")}
-                    disabled={index === state.phases.length - 1}
-                    className="text-xs text-fg-muted hover:text-fg-normal disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                  >
-                    ↓ Runter
-                  </button>
-                </div>
-                <PhaseEditor
-                  phase={phase}
-                  index={index}
-                  availableResources={availableResources}
-                  onUpdateName={(name) => updatePhaseName(phase.id, name)}
-                  onUpdateDuration={(d) => updatePhaseDuration(phase.id, d)}
-                  onUpdateRequiresEmployee={(v) =>
-                    updatePhaseRequiresEmployee(phase.id, v)
-                  }
-                  onAddResource={(r) => addPhaseResource(phase.id, r)}
-                  onRemoveResource={(rId) => removePhaseResource(phase.id, rId)}
-                  onRemove={() => removePhase(phase.id)}
-                />
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={phaseIds}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-md">
+                {state.phases.map((phase, index) => (
+                  <PhaseEditor
+                    key={phase.id}
+                    phase={phase}
+                    index={index}
+                    availableResources={availableResources}
+                    onUpdate={(updates) => updatePhase(phase.id, updates)}
+                    onAddResource={(r) => addPhaseResource(phase.id, r)}
+                    onRemoveResource={(rId) =>
+                      removePhaseResource(phase.id, rId)
+                    }
+                    onRemove={() => removePhase(phase.id)}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
 
         {state.error && (
@@ -195,13 +234,26 @@ export default function ServiceForm({
           </div>
         )}
 
-        <FormActions
-          onCancel={onCancel}
-          onSave={handleSave}
-          saveLabel={state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
-          cancelLabel="Abbrechen"
-          isSaving={state.isSaving}
-        />
+        <div className="flex gap-md justify-end pt-lg">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
+              disabled={state.isSaving}
+            >
+              Abbrechen
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={state.isSaving || !isDirty}
+            className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
+          </button>
+        </div>
       </div>
     </div>
   );

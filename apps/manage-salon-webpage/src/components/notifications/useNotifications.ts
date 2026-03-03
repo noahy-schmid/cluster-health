@@ -1,54 +1,30 @@
-import { create } from "zustand";
-import {
-  Notification,
-  NotificationDuration,
-  NotificationType,
-} from "./notification.types";
+import { toast } from "sonner";
 
-interface NotificationState {
-  notifications: Notification[];
-  showNotification: (
-    message: string,
-    type?: NotificationType,
-    duration?: NotificationDuration,
-  ) => void;
-  hideNotification: (id: string) => void;
+/**
+ * Wrapper around Sonner's toast API for consistent notification usage.
+ * Provides showNotification with the same ergonomic API as before.
+ */
+export function useNotifications() {
+  return {
+    showNotification: (
+      message: string,
+      type: "info" | "warning" | "error" = "info",
+      duration: "short" | "long" | "permanent" = "short",
+    ) => {
+      const durationMs =
+        duration === "short" ? 3000 : duration === "long" ? 6000 : Infinity;
+
+      switch (type) {
+        case "error":
+          toast.error(message, { duration: durationMs });
+          break;
+        case "warning":
+          toast.warning(message, { duration: durationMs });
+          break;
+        default:
+          toast.success(message, { duration: durationMs });
+          break;
+      }
+    },
+  };
 }
-
-const DURATION_MS: Record<NotificationDuration, number | null> = {
-  short: 3000,
-  long: 6000,
-  permanent: null,
-};
-
-export const useNotifications = create<NotificationState>((set) => ({
-  notifications: [],
-
-  showNotification: (
-    message: string,
-    type: NotificationType = "info",
-    duration: NotificationDuration = "short",
-  ) => {
-    const id = crypto.randomUUID();
-    const notification: Notification = { id, type, message, duration };
-
-    set((state) => ({
-      notifications: [...state.notifications, notification],
-    }));
-
-    const ms = DURATION_MS[duration];
-    if (ms !== null) {
-      setTimeout(() => {
-        set((state) => ({
-          notifications: state.notifications.filter((n) => n.id !== id),
-        }));
-      }, ms);
-    }
-  },
-
-  hideNotification: (id: string) => {
-    set((state) => ({
-      notifications: state.notifications.filter((n) => n.id !== id),
-    }));
-  },
-}));

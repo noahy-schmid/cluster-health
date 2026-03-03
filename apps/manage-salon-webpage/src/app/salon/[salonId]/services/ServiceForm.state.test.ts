@@ -105,14 +105,14 @@ describe("serviceFormReducer", () => {
     });
   });
 
-  describe("UPDATE_PHASE_NAME", () => {
+  describe("UPDATE_PHASE", () => {
     it("should update phase name", () => {
       const state = createInitialState({
         phases: [createPhase({ id: "p1" })],
       });
       const result = serviceFormReducer(state, {
-        type: "UPDATE_PHASE_NAME",
-        payload: { phaseId: "p1", name: "Waschen" },
+        type: "UPDATE_PHASE",
+        payload: { phaseId: "p1", updates: { name: "Waschen" } },
       });
       expect(result.phases[0].name).toBe("Waschen");
     });
@@ -125,36 +125,47 @@ describe("serviceFormReducer", () => {
         ],
       });
       const result = serviceFormReducer(state, {
-        type: "UPDATE_PHASE_NAME",
-        payload: { phaseId: "p1", name: "Updated" },
+        type: "UPDATE_PHASE",
+        payload: { phaseId: "p1", updates: { name: "Updated" } },
       });
       expect(result.phases[1].name).toBe("Phase 2");
     });
-  });
 
-  describe("UPDATE_PHASE_DURATION", () => {
     it("should update phase duration", () => {
       const state = createInitialState({
         phases: [createPhase({ id: "p1", durationMinutes: 15 })],
       });
       const result = serviceFormReducer(state, {
-        type: "UPDATE_PHASE_DURATION",
-        payload: { phaseId: "p1", durationMinutes: 30 },
+        type: "UPDATE_PHASE",
+        payload: { phaseId: "p1", updates: { durationMinutes: 30 } },
       });
       expect(result.phases[0].durationMinutes).toBe(30);
     });
-  });
 
-  describe("UPDATE_PHASE_REQUIRES_EMPLOYEE", () => {
     it("should toggle requiresEmployee", () => {
       const state = createInitialState({
         phases: [createPhase({ id: "p1", requiresEmployee: true })],
       });
       const result = serviceFormReducer(state, {
-        type: "UPDATE_PHASE_REQUIRES_EMPLOYEE",
-        payload: { phaseId: "p1", requiresEmployee: false },
+        type: "UPDATE_PHASE",
+        payload: { phaseId: "p1", updates: { requiresEmployee: false } },
       });
       expect(result.phases[0].requiresEmployee).toBe(false);
+    });
+
+    it("should update multiple properties at once", () => {
+      const state = createInitialState({
+        phases: [createPhase({ id: "p1" })],
+      });
+      const result = serviceFormReducer(state, {
+        type: "UPDATE_PHASE",
+        payload: {
+          phaseId: "p1",
+          updates: { name: "New Name", durationMinutes: 45 },
+        },
+      });
+      expect(result.phases[0].name).toBe("New Name");
+      expect(result.phases[0].durationMinutes).toBe(45);
     });
   });
 
@@ -295,22 +306,28 @@ describe("serviceFormReducer", () => {
 
       // Configure first phase
       state = serviceFormReducer(state, {
-        type: "UPDATE_PHASE_NAME",
-        payload: { phaseId: phase1Id, name: "Waschen" },
+        type: "UPDATE_PHASE",
+        payload: { phaseId: phase1Id, updates: { name: "Waschen" } },
       });
       state = serviceFormReducer(state, {
-        type: "UPDATE_PHASE_DURATION",
-        payload: { phaseId: phase1Id, durationMinutes: 10 },
+        type: "UPDATE_PHASE",
+        payload: {
+          phaseId: phase1Id,
+          updates: { durationMinutes: 10 },
+        },
       });
 
       // Configure second phase
       state = serviceFormReducer(state, {
-        type: "UPDATE_PHASE_NAME",
-        payload: { phaseId: phase2Id, name: "Schneiden" },
+        type: "UPDATE_PHASE",
+        payload: { phaseId: phase2Id, updates: { name: "Schneiden" } },
       });
       state = serviceFormReducer(state, {
-        type: "UPDATE_PHASE_DURATION",
-        payload: { phaseId: phase2Id, durationMinutes: 30 },
+        type: "UPDATE_PHASE",
+        payload: {
+          phaseId: phase2Id,
+          updates: { durationMinutes: 30 },
+        },
       });
 
       // Add resource to first phase

@@ -1,18 +1,23 @@
 "use client";
 
-import { XIcon, Plus, GripVertical } from "lucide-react";
+import { GripVertical, XIcon, Plus } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { ServicePhase, SalonResource } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
-import FormToggle from "@/components/website/forms/FormToggle";
+import FormNumber from "@/components/website/forms/FormNumber";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
+import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
+import FlatChip from "@/components/buttons/FlatChip";
+
+/** Hard-coded employee resource ID used in mock data and service logic. */
+const EMPLOYEE_RESOURCE_ID = "resource-employee";
 
 interface PhaseEditorProps {
   phase: ServicePhase;
   index: number;
   availableResources: SalonResource[];
-  onUpdateName: (name: string) => void;
-  onUpdateDuration: (durationMinutes: number) => void;
-  onUpdateRequiresEmployee: (requiresEmployee: boolean) => void;
+  onUpdate: (updates: Partial<ServicePhase>) => void;
   onAddResource: (resource: SalonResource) => void;
   onRemoveResource: (resourceId: string) => void;
   onRemove: () => void;
@@ -22,103 +27,140 @@ export default function PhaseEditor({
   phase,
   index,
   availableResources,
-  onUpdateName,
-  onUpdateDuration,
-  onUpdateRequiresEmployee,
+  onUpdate,
   onAddResource,
   onRemoveResource,
   onRemove,
 }: PhaseEditorProps) {
-  const unassignedResources = availableResources.filter(
-    (r) => !phase.requiredResources.some((pr) => pr.resourceId === r.id),
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: phase.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  // Build combined resource list: employee + other assigned resources
+  const isEmployeeAssigned = phase.requiresEmployee;
+  const employeeResource = availableResources.find(
+    (r) => r.id === EMPLOYEE_RESOURCE_ID,
   );
 
+  const assignedNonEmployee = phase.requiredResources.filter(
+    (r) => r.resourceId !== EMPLOYEE_RESOURCE_ID,
+  );
+
+  const unassignedResources = availableResources.filter(
+    (r) =>
+      r.id !== EMPLOYEE_RESOURCE_ID &&
+      !phase.requiredResources.some((pr) => pr.resourceId === r.id),
+  );
+
+  const handleToggleEmployee = () => {
+    onUpdate({ requiresEmployee: !phase.requiresEmployee });
+  };
+
   return (
-    <div className="bg-bg-0 border border-border rounded-lg p-md">
-      <div className="flex items-center gap-sm mb-md">
-        <GripVertical className="w-5 h-5 text-fg-muted cursor-grab flex-shrink-0" />
-        <span className="text-sm font-focus text-fg-muted flex-shrink-0">
-          Phase {index + 1}
-        </span>
-        <div className="flex-1" />
-        <FlatIconButton
-          icon={XIcon}
-          onClick={onRemove}
-          elevation={0}
-          ariaLabel="Phase entfernen"
-          isError
-        />
-      </div>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative ${isDragging ? "opacity-50" : ""}`}
+    >
+      <div className="flex items-start gap-sm">
+        {/* Drag Handle */}
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-2 hover:bg-bg-1 rounded transition-colors touch-none mt-md lg:bg-transparent bg-bg-1"
+          aria-label="Phase verschieben"
+        >
+          <GripVertical className="w-icon-base h-icon-base lg:text-fg-muted text-fg-normal" />
+        </button>
 
-      <div className="space-y-md">
-        <FormInput
-          label="Name"
-          value={phase.name}
-          onChange={onUpdateName}
-          placeholder="z.B. Haare waschen"
-        />
-
-        <div className="flex flex-col gap-sm">
-          <label className="text-sm font-normal text-fg-strong">
-            Dauer (Minuten)
-          </label>
-          <input
-            type="number"
-            min={1}
-            max={480}
-            value={phase.durationMinutes}
-            onChange={(e) => {
-              const val = parseInt(e.target.value, 10);
-              onUpdateDuration(isNaN(val) || val < 1 ? 1 : val);
-            }}
-            className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal w-32"
-          />
-        </div>
-
-        <FormToggle
-          label="Mitarbeiter benötigt"
-          value={phase.requiresEmployee}
-          onChange={onUpdateRequiresEmployee}
-          onLabel="Ja"
-          offLabel="Nein"
-          helperText="Ist der Stylist während dieser Phase beschäftigt?"
-        />
-
-        <div className="flex flex-col gap-sm">
-          <label className="text-sm font-normal text-fg-strong">
-            Benötigte Ressourcen
-          </label>
-          <div className="flex flex-wrap gap-sm">
-            {phase.requiredResources.map((r) => (
-              <span
-                key={r.resourceId}
-                className="flex items-center gap-sm bg-primary-100 text-primary-800 px-sm py-1 rounded-md text-sm"
-              >
-                {r.resourceName}
-                <button
-                  onClick={() => onRemoveResource(r.resourceId)}
-                  className="cursor-pointer hover:text-fg-error"
-                  aria-label={`${r.resourceName} entfernen`}
-                >
-                  <XIcon className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
+        {/* Phase Content */}
+        <div className="flex-1 min-w-0 bg-bg-0 border border-border rounded-lg p-md">
+          <div className="flex items-center gap-sm mb-md">
+            <span className="text-sm font-focus text-fg-muted flex-shrink-0">
+              Phase {index + 1}
+            </span>
+            <div className="flex-1" />
+            <FlatIconButton
+              icon={XIcon}
+              onClick={onRemove}
+              elevation={0}
+              ariaLabel="Phase entfernen"
+              isError
+            />
           </div>
-          {unassignedResources.length > 0 && (
-            <div className="flex flex-wrap gap-sm mt-sm">
-              {unassignedResources.map((resource) => (
-                <button
-                  key={resource.id}
-                  onClick={() => onAddResource(resource)}
-                  className="flex items-center gap-1 px-sm py-1 rounded-md border border-border text-sm text-fg-muted hover:bg-bg-1 hover:text-fg-normal cursor-pointer"
-                >
-                  <Plus className="w-3 h-3" />
-                  {resource.name}
-                </button>
-              ))}
+
+          <div className="space-y-md">
+            <FormInput
+              label="Name"
+              value={phase.name}
+              onChange={(name) => onUpdate({ name })}
+              placeholder="z.B. Haare waschen"
+            />
+
+            <FormNumber
+              label="Dauer (Minuten)"
+              value={phase.durationMinutes}
+              onChange={(durationMinutes) => onUpdate({ durationMinutes })}
+              min={1}
+              max={480}
+            />
+
+            <div className="flex flex-col gap-sm">
+              <label className="text-sm font-normal text-fg-strong">
+                Benötigte Ressourcen
+              </label>
+              <div className="flex flex-wrap gap-sm">
+                {/* Employee resource as chip */}
+                {isEmployeeAssigned && employeeResource && (
+                  <FlatChip
+                    label={employeeResource.name}
+                    onDelete={handleToggleEmployee}
+                  />
+                )}
+                {/* Other assigned resources */}
+                {assignedNonEmployee.map((r) => (
+                  <FlatChip
+                    key={r.resourceId}
+                    label={r.resourceName}
+                    onDelete={() => onRemoveResource(r.resourceId)}
+                  />
+                ))}
+              </div>
+
+              {/* Unassigned resources (+ employee if not assigned) */}
+              {(unassignedResources.length > 0 || !isEmployeeAssigned) && (
+                <div className="flex flex-wrap gap-sm mt-sm">
+                  {!isEmployeeAssigned && employeeResource && (
+                    <FlatIconTextButton
+                      icon={Plus}
+                      text={employeeResource.name}
+                      onClick={handleToggleEmployee}
+                      elevation={0}
+                    />
+                  )}
+                  {unassignedResources.map((resource) => (
+                    <FlatIconTextButton
+                      key={resource.id}
+                      icon={Plus}
+                      text={resource.name}
+                      onClick={() => onAddResource(resource)}
+                      elevation={0}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
