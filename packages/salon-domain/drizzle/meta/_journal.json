@@ -36,6 +36,13 @@
       "when": 1772231051745,
       "tag": "0004_wealthy_genesis",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772535085794,
+      "tag": "0005_futuristic_ben_grimm",
+      "breakpoints": true
     }
   ]
 }
