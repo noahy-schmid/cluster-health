@@ -7,10 +7,9 @@ import type {
   SalonResource,
   StylistServiceAssignment,
 } from "@/lib/types/service-types";
+import { EMPLOYEE_RESOURCE_ID } from "@/lib/types/service-types";
 
 // ─── Mock Data ───────────────────────────────────────────────
-
-const EMPLOYEE_RESOURCE_ID = "resource-employee";
 
 const mockResources: SalonResource[] = [
   { id: EMPLOYEE_RESOURCE_ID, salonId: "mock", name: "Mitarbeiter" },

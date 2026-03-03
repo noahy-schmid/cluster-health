@@ -4,14 +4,12 @@ import { GripVertical, XIcon, Plus } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { ServicePhase, SalonResource } from "@/lib/types/service-types";
+import { EMPLOYEE_RESOURCE_ID } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
 import FormNumber from "@/components/website/forms/FormNumber";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import FlatChip from "@/components/buttons/FlatChip";
-
-/** Hard-coded employee resource ID used in mock data and service logic. */
-const EMPLOYEE_RESOURCE_ID = "resource-employee";
 
 interface PhaseEditorProps {
   phase: ServicePhase;

@@ -1,4 +1,10 @@
 /**
+ * Hard-coded resource ID for the employee/stylist resource.
+ * This resource represents whether the stylist is occupied during a phase.
+ */
+export const EMPLOYEE_RESOURCE_ID = "resource-employee";
+
+/**
  * Represents a resource available in the salon (e.g., heating lamp, wash sink, seat).
  * The "employee" resource is hard-coded and always available.
  */

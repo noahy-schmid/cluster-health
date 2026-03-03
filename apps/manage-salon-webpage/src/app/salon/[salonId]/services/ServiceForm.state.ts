@@ -52,7 +52,7 @@ function createEmptyPhase(order: number): ServicePhase {
   };
 }
 
-function mapPhase(
+function updatePhaseById(
   phases: ServicePhase[],
   phaseId: string,
   updater: (phase: ServicePhase) => ServicePhase,
@@ -89,7 +89,7 @@ export function serviceFormReducer(
     case "UPDATE_PHASE":
       return {
         ...state,
-        phases: mapPhase(state.phases, action.payload.phaseId, (p) => ({
+        phases: updatePhaseById(state.phases, action.payload.phaseId, (p) => ({
           ...p,
           ...action.payload.updates,
         })),
@@ -98,7 +98,7 @@ export function serviceFormReducer(
     case "ADD_PHASE_RESOURCE":
       return {
         ...state,
-        phases: mapPhase(state.phases, action.payload.phaseId, (p) => {
+        phases: updatePhaseById(state.phases, action.payload.phaseId, (p) => {
           if (
             p.requiredResources.some(
               (r) => r.resourceId === action.payload.resource.id,
@@ -120,7 +120,7 @@ export function serviceFormReducer(
     case "REMOVE_PHASE_RESOURCE":
       return {
         ...state,
-        phases: mapPhase(state.phases, action.payload.phaseId, (p) => ({
+        phases: updatePhaseById(state.phases, action.payload.phaseId, (p) => ({
           ...p,
           requiredResources: p.requiredResources.filter(
             (r) => r.resourceId !== action.payload.resourceId,
