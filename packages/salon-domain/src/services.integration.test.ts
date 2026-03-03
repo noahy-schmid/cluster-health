@@ -18,9 +18,7 @@ import {
   UpdateResourceUseCase,
   type UpdateResourceCommand,
 } from "./use-cases/update-resource.use-case";
-import {
-  DeleteResourceUseCase,
-} from "./use-cases/delete-resource.use-case";
+import { DeleteResourceUseCase } from "./use-cases/delete-resource.use-case";
 import {
   ListResourcesUseCase,
   type ListResourcesQuery,
@@ -217,9 +215,7 @@ describe("Service Domain Integration Tests", () => {
             .returning({ id: stylistsTable.id }),
         );
         if (!stylist) {
-          return yield* Effect.fail(
-            new Error("Failed to create test stylist"),
-          );
+          return yield* Effect.fail(new Error("Failed to create test stylist"));
         }
         theStylistId = stylist.id;
       }).pipe(Effect.provide(infrastructureLayer)),
@@ -260,7 +256,9 @@ describe("Service Domain Integration Tests", () => {
         return resource;
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(resourceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(resourceUseCaseLayer)),
+      );
     });
 
     it("should list resources for a salon", async () => {
@@ -274,7 +272,9 @@ describe("Service Domain Integration Tests", () => {
         expect(resources.some((r) => r.type === "seat")).toBe(true);
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(resourceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(resourceUseCaseLayer)),
+      );
     });
 
     it("should update a resource", async () => {
@@ -292,7 +292,9 @@ describe("Service Domain Integration Tests", () => {
         expect(updated.amount).toBe(5);
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(resourceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(resourceUseCaseLayer)),
+      );
     });
 
     it("should fail to create a resource with empty type", async () => {
@@ -313,7 +315,9 @@ describe("Service Domain Integration Tests", () => {
         }
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(resourceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(resourceUseCaseLayer)),
+      );
     });
 
     it("should fail to create a resource with amount < 1", async () => {
@@ -334,7 +338,9 @@ describe("Service Domain Integration Tests", () => {
         }
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(resourceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(resourceUseCaseLayer)),
+      );
     });
 
     it("should delete a resource that is not referenced", async () => {
@@ -364,7 +370,9 @@ describe("Service Domain Integration Tests", () => {
         expect(afterDelete.length).toBe(countBefore - 1);
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(resourceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(resourceUseCaseLayer)),
+      );
     });
   });
 
@@ -427,7 +435,9 @@ describe("Service Domain Integration Tests", () => {
         return service;
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(serviceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(serviceUseCaseLayer)),
+      );
     });
 
     it("should list service definitions for a salon", async () => {
@@ -441,7 +451,9 @@ describe("Service Domain Integration Tests", () => {
         expect(services.some((s) => s.name === "Haircut & Style")).toBe(true);
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(serviceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(serviceUseCaseLayer)),
+      );
     });
 
     it("should update a service definition with new phases", async () => {
@@ -479,7 +491,9 @@ describe("Service Domain Integration Tests", () => {
         expect(updated.phases[1]?.requiredResources.length).toBe(1);
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(serviceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(serviceUseCaseLayer)),
+      );
     });
 
     it("should fail to create a service with no phases", async () => {
@@ -501,7 +515,9 @@ describe("Service Domain Integration Tests", () => {
         }
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(serviceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(serviceUseCaseLayer)),
+      );
     });
 
     it("should fail to create a service with empty name", async () => {
@@ -510,9 +526,7 @@ describe("Service Domain Integration Tests", () => {
         name: "  ",
         description: "Description",
         price: "10.00",
-        phases: [
-          { name: "Phase", durationMinutes: 10, requiredResources: [] },
-        ],
+        phases: [{ name: "Phase", durationMinutes: 10, requiredResources: [] }],
       };
 
       const program = Effect.gen(function* () {
@@ -525,7 +539,9 @@ describe("Service Domain Integration Tests", () => {
         }
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(serviceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(serviceUseCaseLayer)),
+      );
     });
 
     it("should fail to update a non-existent service", async () => {
@@ -534,9 +550,7 @@ describe("Service Domain Integration Tests", () => {
         name: "Ghost Service",
         description: "Does not exist",
         price: "10.00",
-        phases: [
-          { name: "Phase", durationMinutes: 10, requiredResources: [] },
-        ],
+        phases: [{ name: "Phase", durationMinutes: 10, requiredResources: [] }],
       };
 
       const program = Effect.gen(function* () {
@@ -549,7 +563,9 @@ describe("Service Domain Integration Tests", () => {
         }
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(serviceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(serviceUseCaseLayer)),
+      );
     });
 
     it("should delete a service definition", async () => {
@@ -582,7 +598,9 @@ describe("Service Domain Integration Tests", () => {
         expect(afterDelete.length).toBe(countBefore - 1);
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(serviceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(serviceUseCaseLayer)),
+      );
     });
 
     it("should fail to delete a non-existent service", async () => {
@@ -600,7 +618,9 @@ describe("Service Domain Integration Tests", () => {
         }
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(serviceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(serviceUseCaseLayer)),
+      );
     });
   });
 
@@ -631,7 +651,9 @@ describe("Service Domain Integration Tests", () => {
         }
       });
 
-      await Effect.runPromise(program.pipe(Effect.provide(resourceUseCaseLayer)));
+      await Effect.runPromise(
+        program.pipe(Effect.provide(resourceUseCaseLayer)),
+      );
     });
   });
 
@@ -654,7 +676,10 @@ describe("Service Domain Integration Tests", () => {
     >;
 
     beforeAll(() => {
-      combinedLayer = Layer.mergeAll(assignmentUseCaseLayer, serviceUseCaseLayer);
+      combinedLayer = Layer.mergeAll(
+        assignmentUseCaseLayer,
+        serviceUseCaseLayer,
+      );
     });
 
     it("should create a service and assign an employee to it", async () => {
@@ -734,9 +759,9 @@ describe("Service Domain Integration Tests", () => {
         const assignments = yield* useCase.execute(query);
 
         expect(assignments.length).toBeGreaterThanOrEqual(1);
-        expect(
-          assignments.some((a) => a.stylistId === theStylistId),
-        ).toBe(true);
+        expect(assignments.some((a) => a.stylistId === theStylistId)).toBe(
+          true,
+        );
       });
 
       await Effect.runPromise(
@@ -756,9 +781,7 @@ describe("Service Domain Integration Tests", () => {
 
         expect(Either.isLeft(result)).toBe(true);
         if (Either.isLeft(result)) {
-          expect(result.left._tag).toBe(
-            "EmployeeServiceAlreadyAssignedError",
-          );
+          expect(result.left._tag).toBe("EmployeeServiceAlreadyAssignedError");
         }
       });
 
@@ -825,9 +848,9 @@ describe("Service Domain Integration Tests", () => {
           serviceId: assignmentServiceId,
         });
 
-        expect(
-          assignments.some((a) => a.stylistId === theStylistId),
-        ).toBe(false);
+        expect(assignments.some((a) => a.stylistId === theStylistId)).toBe(
+          false,
+        );
       });
 
       await Effect.runPromise(
