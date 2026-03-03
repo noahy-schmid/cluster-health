@@ -128,7 +128,8 @@ const mockAssignments: StylistServiceAssignment[] = [
 export async function fetchServiceDefinitions(
   salonId: string,
 ): Promise<
-  { success: true; data: ServiceDefinition[] } | { success: false; error: string }
+  | { success: true; data: ServiceDefinition[] }
+  | { success: false; error: string }
 > {
   void salonId;
   return { success: true, data: mockServices };

@@ -125,9 +125,7 @@ export default function EditStylistPage({ params }: EditStylistPageProps) {
         showNotification(result.error, "error", "long");
         return;
       }
-      setAssignments((prev) =>
-        prev.filter((a) => a.serviceId !== serviceId),
-      );
+      setAssignments((prev) => prev.filter((a) => a.serviceId !== serviceId));
     },
     [salonId, stylistId, showNotification],
   );

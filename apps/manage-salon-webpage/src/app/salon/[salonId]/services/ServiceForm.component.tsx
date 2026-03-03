@@ -145,8 +145,8 @@ export default function ServiceForm({
           {state.phases.length === 0 && (
             <div className="text-center py-lg border border-dashed border-border rounded-lg">
               <p className="text-fg-muted text-sm">
-                Noch keine Phasen vorhanden. Füge eine Phase hinzu um den
-                Ablauf der Dienstleistung zu definieren.
+                Noch keine Phasen vorhanden. Füge eine Phase hinzu um den Ablauf
+                der Dienstleistung zu definieren.
               </p>
             </div>
           )}
@@ -181,9 +181,7 @@ export default function ServiceForm({
                     updatePhaseRequiresEmployee(phase.id, v)
                   }
                   onAddResource={(r) => addPhaseResource(phase.id, r)}
-                  onRemoveResource={(rId) =>
-                    removePhaseResource(phase.id, rId)
-                  }
+                  onRemoveResource={(rId) => removePhaseResource(phase.id, rId)}
                   onRemove={() => removePhase(phase.id)}
                 />
               </div>
@@ -200,9 +198,7 @@ export default function ServiceForm({
         <FormActions
           onCancel={onCancel}
           onSave={handleSave}
-          saveLabel={
-            state.isSaving ? "Speichern..." : saveLabel || "Speichern"
-          }
+          saveLabel={state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
           cancelLabel="Abbrechen"
           isSaving={state.isSaving}
         />

@@ -55,11 +55,7 @@ export default function AssignmentList({
     try {
       await onAssign(itemId);
     } catch {
-      showNotification(
-        `Fehler beim Zuweisen: ${entityLabel}`,
-        "error",
-        "long",
-      );
+      showNotification(`Fehler beim Zuweisen: ${entityLabel}`, "error", "long");
     } finally {
       setIsAssigning(false);
     }
@@ -115,9 +111,7 @@ export default function AssignmentList({
 
       {unassignedItems.length > 0 && (
         <div>
-          <p className="text-sm text-fg-muted mb-sm">
-            {entityLabel} zuweisen:
-          </p>
+          <p className="text-sm text-fg-muted mb-sm">{entityLabel} zuweisen:</p>
           <div className="flex flex-wrap gap-sm">
             {unassignedItems.map((item) => (
               <button

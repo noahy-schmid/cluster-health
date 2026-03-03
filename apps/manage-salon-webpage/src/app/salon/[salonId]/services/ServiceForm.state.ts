@@ -197,14 +197,10 @@ export function useServiceFormState(initial?: {
     [],
   );
 
-  const addPhase = useCallback(
-    () => dispatch({ type: "ADD_PHASE" }),
-    [],
-  );
+  const addPhase = useCallback(() => dispatch({ type: "ADD_PHASE" }), []);
 
   const removePhase = useCallback(
-    (phaseId: string) =>
-      dispatch({ type: "REMOVE_PHASE", payload: phaseId }),
+    (phaseId: string) => dispatch({ type: "REMOVE_PHASE", payload: phaseId }),
     [],
   );
 
@@ -257,8 +253,7 @@ export function useServiceFormState(initial?: {
   );
 
   const setSaving = useCallback(
-    (saving: boolean) =>
-      dispatch({ type: "SET_SAVING", payload: saving }),
+    (saving: boolean) => dispatch({ type: "SET_SAVING", payload: saving }),
     [],
   );
 
@@ -268,10 +263,7 @@ export function useServiceFormState(initial?: {
     [],
   );
 
-  const clearError = useCallback(
-    () => dispatch({ type: "CLEAR_ERROR" }),
-    [],
-  );
+  const clearError = useCallback(() => dispatch({ type: "CLEAR_ERROR" }), []);
 
   return {
     state,

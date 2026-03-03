@@ -58,13 +58,17 @@ export default function EditServicePage({ params }: EditServicePageProps) {
     const loadData = async () => {
       setIsLoading(true);
 
-      const [serviceResult, resourcesResult, assignmentsResult, stylistsResult] =
-        await Promise.all([
-          fetchServiceDefinition(salonId, serviceId),
-          fetchSalonResources(salonId),
-          fetchStylistsForService(salonId, serviceId),
-          fetchStylists(salonId),
-        ]);
+      const [
+        serviceResult,
+        resourcesResult,
+        assignmentsResult,
+        stylistsResult,
+      ] = await Promise.all([
+        fetchServiceDefinition(salonId, serviceId),
+        fetchSalonResources(salonId),
+        fetchStylistsForService(salonId, serviceId),
+        fetchStylists(salonId),
+      ]);
 
       if (!serviceResult.success) {
         showNotification(serviceResult.error, "error", "long");
@@ -116,7 +120,11 @@ export default function EditServicePage({ params }: EditServicePageProps) {
 
   const handleAssignStylist = useCallback(
     async (stylistId: string) => {
-      const result = await assignStylistToService(salonId, stylistId, serviceId);
+      const result = await assignStylistToService(
+        salonId,
+        stylistId,
+        serviceId,
+      );
       if (!result.success) {
         showNotification(result.error, "error", "long");
         return;
@@ -137,9 +145,7 @@ export default function EditServicePage({ params }: EditServicePageProps) {
         showNotification(result.error, "error", "long");
         return;
       }
-      setAssignments((prev) =>
-        prev.filter((a) => a.stylistId !== stylistId),
-      );
+      setAssignments((prev) => prev.filter((a) => a.stylistId !== stylistId));
     },
     [salonId, serviceId, showNotification],
   );

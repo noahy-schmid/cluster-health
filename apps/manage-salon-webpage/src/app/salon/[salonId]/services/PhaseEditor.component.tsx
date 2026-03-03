@@ -1,10 +1,7 @@
 "use client";
 
 import { XIcon, Plus, GripVertical } from "lucide-react";
-import type {
-  ServicePhase,
-  SalonResource,
-} from "@/lib/types/service-types";
+import type { ServicePhase, SalonResource } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
 import FormToggle from "@/components/website/forms/FormToggle";
 import FlatIconButton from "@/components/buttons/FlatIconButton";

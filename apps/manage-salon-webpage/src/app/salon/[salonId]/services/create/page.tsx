@@ -28,9 +28,7 @@ export default function CreateServicePage({ params }: CreateServicePageProps) {
       const resolvedParams = await params;
       setSalonId(resolvedParams.salonId);
 
-      const resourcesResult = await fetchSalonResources(
-        resolvedParams.salonId,
-      );
+      const resourcesResult = await fetchSalonResources(resolvedParams.salonId);
       if (resourcesResult.success) {
         setResources(resourcesResult.data);
       }
@@ -42,7 +40,13 @@ export default function CreateServicePage({ params }: CreateServicePageProps) {
   const handleSubmit = async (data: {
     name: string;
     description: string;
-    phases: { name: string; durationMinutes: number; requiresEmployee: boolean; requiredResources: { resourceId: string; resourceName: string }[]; order: number }[];
+    phases: {
+      name: string;
+      durationMinutes: number;
+      requiresEmployee: boolean;
+      requiredResources: { resourceId: string; resourceName: string }[];
+      order: number;
+    }[];
   }) => {
     const result = await createServiceDefinition({
       salonId,
