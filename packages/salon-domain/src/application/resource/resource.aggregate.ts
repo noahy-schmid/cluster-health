@@ -1,104 +1,64 @@
 import { Effect, Layer } from "effect";
 import { ResourcePort, type PortResource } from "../../ports/resource.port";
-import {
-  ResourceError,
-  ResourceNotFoundError,
-  ResourceValidationError,
-  ResourceInUseError,
-} from "./errors";
+import { InternalError, NotFoundError, ValidationError } from "./errors";
 import { DatabaseLayer } from "../../infrastructure/database.service";
 import { ConfigurationLayer } from "../../infrastructure/config.service";
 import { PostgresResourceAdapter } from "../../adapters/postgres-resource.adapter";
 
-// --- Domain types ---
+// --- Domain types (re-export port types directly since there is no mapping needed) ---
 
-export interface Resource {
-  id: string;
-  salonId: string;
-  type: string;
-  name: string;
-  amount: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const fromPort = (portResource: PortResource): Resource => ({
-  id: portResource.id,
-  salonId: portResource.salonId,
-  type: portResource.type,
-  name: portResource.name,
-  amount: portResource.amount,
-  createdAt: portResource.createdAt,
-  updatedAt: portResource.updatedAt,
-});
+export type Resource = PortResource;
 
 // --- Aggregate service ---
 
 const make = Effect.gen(function* () {
   const resourcePort = yield* ResourcePort;
 
-  const createResource = (
-    salonId: string,
-    type: string,
-    name: string,
-    amount: number,
-  ) =>
+  const createResource = (salonId: string, name: string, amount: number) =>
     Effect.gen(function* () {
-      if (!type.trim()) {
-        return yield* Effect.fail(
-          new ResourceValidationError({
-            message: "Resource type cannot be empty",
-          }),
-        );
-      }
       if (!name.trim()) {
         return yield* Effect.fail(
-          new ResourceValidationError({
+          new ValidationError({
             message: "Resource name cannot be empty",
           }),
         );
       }
       if (amount < 1) {
         return yield* Effect.fail(
-          new ResourceValidationError({
+          new ValidationError({
             message: "Resource amount must be at least 1",
           }),
         );
       }
 
-      const portResource = yield* resourcePort
-        .createResource({
-          salonId,
-          type: type.trim(),
-          name: name.trim(),
-          amount,
-        })
+      const resource = yield* resourcePort
+        .createResource({ salonId, name: name.trim(), amount })
         .pipe(
           Effect.mapError(
             (error) =>
-              new ResourceError({
-                salonId,
+              new InternalError({
                 message: error.message,
+                cause: error,
               }),
           ),
         );
 
-      yield* Effect.log("Resource created", portResource.id);
-      return fromPort(portResource);
+      yield* Effect.log("Resource created", resource.id);
+      return resource;
     });
 
   const updateResource = (resourceId: string, name: string, amount: number) =>
     Effect.gen(function* () {
       if (!name.trim()) {
         return yield* Effect.fail(
-          new ResourceValidationError({
+          new ValidationError({
             message: "Resource name cannot be empty",
           }),
         );
       }
       if (amount < 1) {
         return yield* Effect.fail(
-          new ResourceValidationError({
+          new ValidationError({
             message: "Resource amount must be at least 1",
           }),
         );
@@ -109,93 +69,54 @@ const make = Effect.gen(function* () {
         .pipe(
           Effect.mapError(
             (error) =>
-              new ResourceError({
-                resourceId,
+              new InternalError({
                 message: error.message,
+                cause: error,
               }),
           ),
         );
 
       if (!updated) {
-        return yield* Effect.fail(new ResourceNotFoundError({ resourceId }));
+        return yield* Effect.fail(
+          new NotFoundError({ entity: "Resource", id: resourceId }),
+        );
       }
 
       yield* Effect.log("Resource updated", resourceId);
-      return fromPort(updated);
+      return updated;
     });
 
   const deleteResource = (resourceId: string) =>
     Effect.gen(function* () {
-      // First find the resource to get its type
-      const resource = yield* resourcePort.findResourceById(resourceId).pipe(
-        Effect.mapError(
-          (error) =>
-            new ResourceError({
-              resourceId,
-              message: error.message,
-            }),
-        ),
-      );
-
-      if (!resource) {
-        return yield* Effect.fail(new ResourceNotFoundError({ resourceId }));
-      }
-
-      // Check if the resource type is still referenced
-      const isReferenced = yield* resourcePort
-        .isResourceTypeReferenced(resource.type)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new ResourceError({
-                resourceId,
-                message: error.message,
-              }),
-          ),
-        );
-
-      if (isReferenced) {
-        return yield* Effect.fail(
-          new ResourceInUseError({
-            resourceType: resource.type,
-            message: `Cannot delete resource: type "${resource.type}" is still referenced by service phases`,
-          }),
-        );
-      }
-
       const deleted = yield* resourcePort.deleteResource(resourceId).pipe(
         Effect.mapError(
           (error) =>
-            new ResourceError({
-              resourceId,
+            new InternalError({
               message: error.message,
+              cause: error,
             }),
         ),
       );
 
       if (!deleted) {
-        return yield* Effect.fail(new ResourceNotFoundError({ resourceId }));
+        return yield* Effect.fail(
+          new NotFoundError({ entity: "Resource", id: resourceId }),
+        );
       }
 
       yield* Effect.log("Resource deleted", resourceId);
     });
 
   const listResources = (salonId: string) =>
-    Effect.gen(function* () {
-      const portResources = yield* resourcePort
-        .listResourcesBySalonId(salonId)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new ResourceError({
-                salonId,
-                message: error.message,
-              }),
-          ),
-        );
-
-      return portResources.map(fromPort);
-    });
+    resourcePort.listResourcesBySalonId(salonId).pipe(
+      Effect.mapError(
+        (error) =>
+          new InternalError({
+            message: error.message,
+            cause: error,
+          }),
+      ),
+    );
 
   return {
     createResource,

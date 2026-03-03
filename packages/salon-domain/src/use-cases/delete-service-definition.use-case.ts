@@ -1,9 +1,6 @@
 import { Effect } from "effect";
 import { ServiceAggregate } from "../application/service/service.aggregate";
-import {
-  ServiceError,
-  ServiceNotFoundError,
-} from "../application/service/errors";
+import { InternalError, NotFoundError } from "../application/service/errors";
 
 // --- Command DTO ---
 
@@ -14,7 +11,10 @@ export interface DeleteServiceDefinitionCommand {
 // --- Use Case ---
 
 /**
- * Deletes a service definition. Cascade deletes all phases and employee assignments.
+ * Soft-deletes a service definition. The definition is kept in the database
+ * with a deletedAt timestamp so that existing bookings can still reference it.
+ * Cascade-deleted phases and employee assignments remain as-is since the
+ * definition row is preserved.
  */
 const make = Effect.gen(function* () {
   const aggregate = yield* ServiceAggregate;
@@ -26,8 +26,8 @@ const make = Effect.gen(function* () {
      */
     execute: (
       command: DeleteServiceDefinitionCommand,
-    ): Effect.Effect<void, ServiceError | ServiceNotFoundError> =>
-      aggregate.deleteServiceDefinition(command.serviceId),
+    ): Effect.Effect<void, InternalError | NotFoundError> =>
+      aggregate.softDeleteServiceDefinition(command.serviceId),
   };
 });
 

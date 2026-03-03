@@ -17,7 +17,6 @@ export class ResourcePersistenceError extends Data.TaggedError(
 export interface PortResource {
   id: string;
   salonId: string;
-  type: string;
   name: string;
   amount: number;
   createdAt: Date;
@@ -26,7 +25,6 @@ export interface PortResource {
 
 export interface PortCreateResourceInput {
   salonId: string;
-  type: string;
   name: string;
   amount: number;
 }
@@ -88,15 +86,6 @@ export interface ResourcePort {
   listResourcesBySalonId(
     salonId: string,
   ): Effect.Effect<PortResource[], ResourcePersistenceError>;
-
-  /**
-   * Checks if a resource type is referenced by any service phase.
-   * @param resourceType The resource type string to check.
-   * @returns Effect resolving to true if referenced.
-   */
-  isResourceTypeReferenced(
-    resourceType: string,
-  ): Effect.Effect<boolean, ResourcePersistenceError>;
 }
 
 /**

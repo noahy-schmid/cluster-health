@@ -4,9 +4,9 @@ import {
   type Resource,
 } from "../application/resource/resource.aggregate";
 import {
-  ResourceError,
-  ResourceNotFoundError,
-  ResourceValidationError,
+  InternalError,
+  NotFoundError,
+  ValidationError,
 } from "../application/resource/errors";
 
 // --- Command DTO ---
@@ -38,7 +38,7 @@ const make = Effect.gen(function* () {
       command: UpdateResourceCommand,
     ): Effect.Effect<
       UpdateResourceResult,
-      ResourceError | ResourceNotFoundError | ResourceValidationError
+      InternalError | NotFoundError | ValidationError
     > =>
       aggregate.updateResource(
         command.resourceId,

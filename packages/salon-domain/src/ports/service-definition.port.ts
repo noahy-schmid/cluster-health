@@ -14,109 +14,88 @@ export class ServiceDefinitionPersistenceError extends Data.TaggedError(
 
 // --- Port-owned types ---
 
-export interface PortPhaseResourceRequirement {
-  resourceType: string;
-}
-
-export interface PortServicePhase {
-  id: string;
-  name: string;
-  durationMinutes: number;
-  order: number;
-  requiredResources: PortPhaseResourceRequirement[];
-}
-
-export interface PortServiceDefinition {
+export interface PortServiceDefinitionRow {
   id: string;
   salonId: string;
   name: string;
   description: string;
-  price: string;
-  phases: PortServicePhase[];
+  priceInCents: number;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface PortCreateServicePhaseInput {
-  name: string;
-  durationMinutes: number;
-  order: number;
-  requiredResources: PortPhaseResourceRequirement[];
+  deletedAt: Date | null;
 }
 
 export interface PortCreateServiceDefinitionInput {
   salonId: string;
   name: string;
   description: string;
-  price: string;
-  phases: PortCreateServicePhaseInput[];
+  priceInCents: number;
 }
 
 export interface PortUpdateServiceDefinitionInput {
   name: string;
   description: string;
-  price: string;
-  phases: PortCreateServicePhaseInput[];
+  priceInCents: number;
 }
 
 // --- Port interface ---
 
 /**
- * Port for service definition persistence operations.
+ * Port for service_definitions table persistence operations.
  */
 export interface ServiceDefinitionPort {
   /**
-   * Creates a new service definition with its phases.
-   * @param input Service definition data including phases.
-   * @returns Effect resolving to the created service definition.
+   * Creates a new service definition row.
+   * @param input Service definition data.
+   * @returns Effect resolving to the created row.
    */
   createServiceDefinition(
     input: PortCreateServiceDefinitionInput,
-  ): Effect.Effect<PortServiceDefinition, ServiceDefinitionPersistenceError>;
+  ): Effect.Effect<PortServiceDefinitionRow, ServiceDefinitionPersistenceError>;
 
   /**
-   * Updates a service definition and replaces all its phases.
+   * Updates a service definition row.
    * @param serviceId Service definition ID to update.
-   * @param input Updated service definition data including new phases.
-   * @returns Effect resolving to the updated service definition, or null if not found.
+   * @param input Updated fields.
+   * @returns Effect resolving to the updated row, or null if not found.
    */
   updateServiceDefinition(
     serviceId: string,
     input: PortUpdateServiceDefinitionInput,
   ): Effect.Effect<
-    PortServiceDefinition | null,
+    PortServiceDefinitionRow | null,
     ServiceDefinitionPersistenceError
   >;
 
   /**
-   * Deletes a service definition by ID (cascade deletes phases and assignments).
-   * @param serviceId Service definition ID to delete.
-   * @returns Effect resolving to true if deleted, false if not found.
+   * Soft-deletes a service definition by setting deletedAt.
+   * @param serviceId Service definition ID to soft-delete.
+   * @returns Effect resolving to true if soft-deleted, false if not found.
    */
-  deleteServiceDefinition(
+  softDeleteServiceDefinition(
     serviceId: string,
   ): Effect.Effect<boolean, ServiceDefinitionPersistenceError>;
 
   /**
-   * Fetches a service definition by ID with all its phases.
+   * Fetches a service definition row by ID (excludes soft-deleted).
    * @param serviceId Service definition ID to fetch.
-   * @returns Effect resolving to the service definition or null.
+   * @returns Effect resolving to the row or null.
    */
   findServiceDefinitionById(
     serviceId: string,
   ): Effect.Effect<
-    PortServiceDefinition | null,
+    PortServiceDefinitionRow | null,
     ServiceDefinitionPersistenceError
   >;
 
   /**
-   * Fetches all service definitions for a salon with their phases.
-   * @param salonId Salon ID to fetch service definitions for.
-   * @returns Effect resolving to array of service definitions.
+   * Checks if a service definition exists (excludes soft-deleted).
+   * @param serviceId Service definition ID to check.
+   * @returns Effect resolving to true if exists.
    */
-  listServiceDefinitionsBySalonId(
-    salonId: string,
-  ): Effect.Effect<PortServiceDefinition[], ServiceDefinitionPersistenceError>;
+  serviceDefinitionExists(
+    serviceId: string,
+  ): Effect.Effect<boolean, ServiceDefinitionPersistenceError>;
 }
 
 /**

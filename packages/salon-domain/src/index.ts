@@ -26,16 +26,16 @@ export * from "./types/media-errors";
 export * from "./services/media/media.interface";
 export * from "./layers";
 
+// Shared domain errors
+export {
+  InternalError,
+  NotFoundError,
+  ConflictError,
+  ValidationError,
+} from "./application/errors";
+
 // Resource domain types
 export type { Resource } from "./application/resource/resource.aggregate";
-
-// Resource errors
-export {
-  ResourceError,
-  ResourceNotFoundError,
-  ResourceValidationError,
-  ResourceInUseError,
-} from "./application/resource/errors";
 
 // Resource use cases
 export {
@@ -69,13 +69,6 @@ export type {
   CreateServicePhaseInput,
 } from "./application/service/service.aggregate";
 
-// Service definition errors
-export {
-  ServiceError,
-  ServiceNotFoundError,
-  ServiceValidationError,
-} from "./application/service/errors";
-
 // Service definition use cases
 export {
   CreateServiceDefinitionUseCase,
@@ -102,13 +95,6 @@ export {
 
 // Employee-service assignment domain types
 export type { EmployeeServiceAssignment } from "./application/employee-service/employee-service.aggregate";
-
-// Employee-service assignment errors
-export {
-  EmployeeServiceError,
-  EmployeeServiceAlreadyAssignedError,
-  EmployeeServiceNotFoundError,
-} from "./application/employee-service/errors";
 
 // Employee-service assignment use cases
 export {

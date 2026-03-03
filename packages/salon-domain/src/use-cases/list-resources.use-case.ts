@@ -3,7 +3,7 @@ import {
   ResourceAggregate,
   type Resource,
 } from "../application/resource/resource.aggregate";
-import { ResourceError } from "../application/resource/errors";
+import { InternalError } from "../application/resource/errors";
 
 // --- Query DTO ---
 
@@ -30,7 +30,7 @@ const make = Effect.gen(function* () {
      */
     execute: (
       query: ListResourcesQuery,
-    ): Effect.Effect<ListResourcesResult, ResourceError> =>
+    ): Effect.Effect<ListResourcesResult, InternalError> =>
       aggregate.listResources(query.salonId),
   };
 });

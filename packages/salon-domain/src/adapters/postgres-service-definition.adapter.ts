@@ -1,84 +1,21 @@
 import { Effect, Layer } from "effect";
-import { eq, asc } from "drizzle-orm";
-import { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { eq, and, isNull } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
-import {
-  serviceDefinitionsTable,
-  servicePhasesTable,
-  phaseResourceRequirementsTable,
-} from "../schema";
+import { serviceDefinitionsTable } from "../schema";
 import {
   ServiceDefinitionPort,
   ServiceDefinitionPersistenceError,
-  type PortServiceDefinition,
-  type PortCreateServiceDefinitionInput,
-  type PortUpdateServiceDefinitionInput,
-  type PortServicePhase,
 } from "../ports/service-definition.port";
 
 /**
- * Helper to fetch phases with their resource requirements for a service definition.
- */
-const fetchPhasesForService = (
-  db: NodePgDatabase,
-  serviceId: string,
-): Effect.Effect<PortServicePhase[], ServiceDefinitionPersistenceError> =>
-  Effect.gen(function* () {
-    const phases = yield* Effect.tryPromise(() =>
-      db
-        .select()
-        .from(servicePhasesTable)
-        .where(eq(servicePhasesTable.serviceDefinitionId, serviceId))
-        .orderBy(asc(servicePhasesTable.order)),
-    ).pipe(
-      Effect.mapError(
-        (error) =>
-          new ServiceDefinitionPersistenceError({
-            message: "Failed to fetch service phases",
-            cause: error,
-          }),
-      ),
-    );
-
-    const phasesWithResources: PortServicePhase[] = [];
-    for (const phase of phases) {
-      const requirements = yield* Effect.tryPromise(() =>
-        db
-          .select()
-          .from(phaseResourceRequirementsTable)
-          .where(eq(phaseResourceRequirementsTable.phaseId, phase.id)),
-      ).pipe(
-        Effect.mapError(
-          (error) =>
-            new ServiceDefinitionPersistenceError({
-              message: "Failed to fetch phase resource requirements",
-              cause: error,
-            }),
-        ),
-      );
-
-      phasesWithResources.push({
-        id: phase.id,
-        name: phase.name,
-        durationMinutes: phase.durationMinutes,
-        order: phase.order,
-        requiredResources: requirements.map((r) => ({
-          resourceType: r.resourceType,
-        })),
-      });
-    }
-
-    return phasesWithResources;
-  });
-
-/**
  * PostgreSQL implementation of the ServiceDefinitionPort using Drizzle ORM.
+ * Handles only the service_definitions table.
  */
 const make = Effect.gen(function* () {
   const { db } = yield* Database;
 
   const createServiceDefinition: ServiceDefinitionPort["createServiceDefinition"] =
-    (input: PortCreateServiceDefinitionInput) =>
+    (input) =>
       Effect.gen(function* () {
         const [created] = yield* Effect.tryPromise(() =>
           db
@@ -87,7 +24,7 @@ const make = Effect.gen(function* () {
               salonId: input.salonId,
               name: input.name,
               description: input.description,
-              price: input.price,
+              priceInCents: input.priceInCents,
             })
             .returning(),
         ).pipe(
@@ -108,74 +45,27 @@ const make = Effect.gen(function* () {
           );
         }
 
-        for (const phase of input.phases) {
-          const [createdPhase] = yield* Effect.tryPromise(() =>
-            db
-              .insert(servicePhasesTable)
-              .values({
-                serviceDefinitionId: created.id,
-                name: phase.name,
-                durationMinutes: phase.durationMinutes,
-                order: phase.order,
-              })
-              .returning(),
-          ).pipe(
-            Effect.mapError(
-              (error) =>
-                new ServiceDefinitionPersistenceError({
-                  message: "Failed to create service phase",
-                  cause: error,
-                }),
-            ),
-          );
-
-          if (createdPhase && phase.requiredResources.length > 0) {
-            yield* Effect.tryPromise(() =>
-              db.insert(phaseResourceRequirementsTable).values(
-                phase.requiredResources.map((r) => ({
-                  phaseId: createdPhase.id,
-                  resourceType: r.resourceType,
-                })),
-              ),
-            ).pipe(
-              Effect.mapError(
-                (error) =>
-                  new ServiceDefinitionPersistenceError({
-                    message: "Failed to create phase resource requirements",
-                    cause: error,
-                  }),
-              ),
-            );
-          }
-        }
-
-        const phases = yield* fetchPhasesForService(db, created.id);
-
-        return {
-          id: created.id,
-          salonId: created.salonId,
-          name: created.name,
-          description: created.description,
-          price: created.price,
-          phases,
-          createdAt: created.createdAt,
-          updatedAt: created.updatedAt,
-        } satisfies PortServiceDefinition;
+        return created;
       });
 
   const updateServiceDefinition: ServiceDefinitionPort["updateServiceDefinition"] =
-    (serviceId: string, input: PortUpdateServiceDefinitionInput) =>
+    (serviceId, input) =>
       Effect.gen(function* () {
-        const [updated] = yield* Effect.tryPromise(() =>
+        const rows = yield* Effect.tryPromise(() =>
           db
             .update(serviceDefinitionsTable)
             .set({
               name: input.name,
               description: input.description,
-              price: input.price,
+              priceInCents: input.priceInCents,
               updatedAt: new Date(),
             })
-            .where(eq(serviceDefinitionsTable.id, serviceId))
+            .where(
+              and(
+                eq(serviceDefinitionsTable.id, serviceId),
+                isNull(serviceDefinitionsTable.deletedAt),
+              ),
+            )
             .returning(),
         ).pipe(
           Effect.mapError(
@@ -187,94 +77,28 @@ const make = Effect.gen(function* () {
           ),
         );
 
-        if (!updated) {
-          return null;
-        }
-
-        // Delete old phases (cascades to requirements)
-        yield* Effect.tryPromise(() =>
-          db
-            .delete(servicePhasesTable)
-            .where(eq(servicePhasesTable.serviceDefinitionId, serviceId)),
-        ).pipe(
-          Effect.mapError(
-            (error) =>
-              new ServiceDefinitionPersistenceError({
-                message: "Failed to delete old service phases",
-                cause: error,
-              }),
-          ),
-        );
-
-        // Insert new phases
-        for (const phase of input.phases) {
-          const [createdPhase] = yield* Effect.tryPromise(() =>
-            db
-              .insert(servicePhasesTable)
-              .values({
-                serviceDefinitionId: serviceId,
-                name: phase.name,
-                durationMinutes: phase.durationMinutes,
-                order: phase.order,
-              })
-              .returning(),
-          ).pipe(
-            Effect.mapError(
-              (error) =>
-                new ServiceDefinitionPersistenceError({
-                  message: "Failed to create service phase",
-                  cause: error,
-                }),
-            ),
-          );
-
-          if (createdPhase && phase.requiredResources.length > 0) {
-            yield* Effect.tryPromise(() =>
-              db.insert(phaseResourceRequirementsTable).values(
-                phase.requiredResources.map((r) => ({
-                  phaseId: createdPhase.id,
-                  resourceType: r.resourceType,
-                })),
-              ),
-            ).pipe(
-              Effect.mapError(
-                (error) =>
-                  new ServiceDefinitionPersistenceError({
-                    message: "Failed to create phase resource requirements",
-                    cause: error,
-                  }),
-              ),
-            );
-          }
-        }
-
-        const phases = yield* fetchPhasesForService(db, serviceId);
-
-        return {
-          id: updated.id,
-          salonId: updated.salonId,
-          name: updated.name,
-          description: updated.description,
-          price: updated.price,
-          phases,
-          createdAt: updated.createdAt,
-          updatedAt: updated.updatedAt,
-        } satisfies PortServiceDefinition;
+        return rows[0] ?? null;
       });
 
-  const deleteServiceDefinition: ServiceDefinitionPort["deleteServiceDefinition"] =
-    (serviceId: string) =>
+  const softDeleteServiceDefinition: ServiceDefinitionPort["softDeleteServiceDefinition"] =
+    (serviceId) =>
       Effect.gen(function* () {
         const rows = yield* Effect.tryPromise(() =>
           db
-            .delete(serviceDefinitionsTable)
-            .where(eq(serviceDefinitionsTable.id, serviceId))
+            .update(serviceDefinitionsTable)
+            .set({ deletedAt: new Date() })
+            .where(
+              and(
+                eq(serviceDefinitionsTable.id, serviceId),
+                isNull(serviceDefinitionsTable.deletedAt),
+              ),
+            )
             .returning(),
         ).pipe(
           Effect.mapError(
             (error) =>
               new ServiceDefinitionPersistenceError({
-                message: "Failed to delete service definition",
+                message: "Failed to soft-delete service definition",
                 cause: error,
               }),
           ),
@@ -284,13 +108,18 @@ const make = Effect.gen(function* () {
       });
 
   const findServiceDefinitionById: ServiceDefinitionPort["findServiceDefinitionById"] =
-    (serviceId: string) =>
+    (serviceId) =>
       Effect.gen(function* () {
         const [service] = yield* Effect.tryPromise(() =>
           db
             .select()
             .from(serviceDefinitionsTable)
-            .where(eq(serviceDefinitionsTable.id, serviceId)),
+            .where(
+              and(
+                eq(serviceDefinitionsTable.id, serviceId),
+                isNull(serviceDefinitionsTable.deletedAt),
+              ),
+            ),
         ).pipe(
           Effect.mapError(
             (error) =>
@@ -301,66 +130,42 @@ const make = Effect.gen(function* () {
           ),
         );
 
-        if (!service) {
-          return null;
-        }
-
-        const phases = yield* fetchPhasesForService(db, service.id);
-
-        return {
-          id: service.id,
-          salonId: service.salonId,
-          name: service.name,
-          description: service.description,
-          price: service.price,
-          phases,
-          createdAt: service.createdAt,
-          updatedAt: service.updatedAt,
-        } satisfies PortServiceDefinition;
+        return service ?? null;
       });
 
-  const listServiceDefinitionsBySalonId: ServiceDefinitionPort["listServiceDefinitionsBySalonId"] =
-    (salonId: string) =>
+  const serviceDefinitionExists: ServiceDefinitionPort["serviceDefinitionExists"] =
+    (serviceId) =>
       Effect.gen(function* () {
-        const services = yield* Effect.tryPromise(() =>
+        const [row] = yield* Effect.tryPromise(() =>
           db
-            .select()
+            .select({ id: serviceDefinitionsTable.id })
             .from(serviceDefinitionsTable)
-            .where(eq(serviceDefinitionsTable.salonId, salonId)),
+            .where(
+              and(
+                eq(serviceDefinitionsTable.id, serviceId),
+                isNull(serviceDefinitionsTable.deletedAt),
+              ),
+            )
+            .limit(1),
         ).pipe(
           Effect.mapError(
             (error) =>
               new ServiceDefinitionPersistenceError({
-                message: "Failed to list service definitions",
+                message: "Failed to check service definition existence",
                 cause: error,
               }),
           ),
         );
 
-        const results: PortServiceDefinition[] = [];
-        for (const service of services) {
-          const phases = yield* fetchPhasesForService(db, service.id);
-          results.push({
-            id: service.id,
-            salonId: service.salonId,
-            name: service.name,
-            description: service.description,
-            price: service.price,
-            phases,
-            createdAt: service.createdAt,
-            updatedAt: service.updatedAt,
-          });
-        }
-
-        return results;
+        return !!row;
       });
 
   return {
     createServiceDefinition,
     updateServiceDefinition,
-    deleteServiceDefinition,
+    softDeleteServiceDefinition,
     findServiceDefinitionById,
-    listServiceDefinitionsBySalonId,
+    serviceDefinitionExists,
   } satisfies ServiceDefinitionPort;
 });
 

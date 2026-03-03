@@ -3,7 +3,7 @@ import {
   ServiceAggregate,
   type ServiceDefinition,
 } from "../application/service/service.aggregate";
-import { ServiceError } from "../application/service/errors";
+import { InternalError } from "../application/service/errors";
 
 // --- Query DTO ---
 
@@ -18,7 +18,7 @@ export type ListServiceDefinitionsResult = ServiceDefinition[];
 // --- Use Case ---
 
 /**
- * Lists all service definitions for a salon, including computed duration.
+ * Lists all active (non-deleted) service definitions for a salon, including computed duration.
  */
 const make = Effect.gen(function* () {
   const aggregate = yield* ServiceAggregate;
@@ -30,7 +30,7 @@ const make = Effect.gen(function* () {
      */
     execute: (
       query: ListServiceDefinitionsQuery,
-    ): Effect.Effect<ListServiceDefinitionsResult, ServiceError> =>
+    ): Effect.Effect<ListServiceDefinitionsResult, InternalError> =>
       aggregate.listServiceDefinitions(query.salonId),
   };
 });

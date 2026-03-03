@@ -1,17 +1,9 @@
 import { Effect, Layer } from "effect";
 import { EmployeeServicePort } from "../../ports/employee-service.port";
-import { ServiceDefinitionPort } from "../../ports/service-definition.port";
-import { StylistPort } from "../../ports/stylist.port";
-import {
-  EmployeeServiceError,
-  EmployeeServiceAlreadyAssignedError,
-  EmployeeServiceNotFoundError,
-} from "./errors";
+import { InternalError, NotFoundError, ConflictError } from "./errors";
 import { DatabaseLayer } from "../../infrastructure/database.service";
 import { ConfigurationLayer } from "../../infrastructure/config.service";
 import { PostgresEmployeeServiceAdapter } from "../../adapters/postgres-employee-service.adapter";
-import { PostgresServiceDefinitionAdapter } from "../../adapters/postgres-service-definition.adapter";
-import { PostgresStylistPortAdapter } from "../../adapters/postgres-stylist-port.adapter";
 
 // --- Domain types ---
 
@@ -25,74 +17,24 @@ export interface EmployeeServiceAssignment {
 
 const make = Effect.gen(function* () {
   const employeeServicePort = yield* EmployeeServicePort;
-  const servicePort = yield* ServiceDefinitionPort;
-  const stylistPort = yield* StylistPort;
 
   const assignEmployee = (stylistId: string, serviceId: string) =>
     Effect.gen(function* () {
-      // Verify stylist exists
-      const stylistExists = yield* stylistPort.stylistExists(stylistId).pipe(
-        Effect.mapError(
-          (error) =>
-            new EmployeeServiceError({
-              stylistId,
-              serviceId,
-              message: `Failed to verify stylist: ${error.message}`,
-            }),
-        ),
-      );
-
-      if (!stylistExists) {
-        return yield* Effect.fail(
-          new EmployeeServiceError({
-            stylistId,
-            serviceId,
-            message: `Stylist not found: ${stylistId}`,
-          }),
-        );
-      }
-
-      // Verify service exists
-      const service = yield* servicePort
-        .findServiceDefinitionById(serviceId)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new EmployeeServiceError({
-                stylistId,
-                serviceId,
-                message: `Failed to verify service: ${error.message}`,
-              }),
-          ),
-        );
-
-      if (!service) {
-        return yield* Effect.fail(
-          new EmployeeServiceError({
-            stylistId,
-            serviceId,
-            message: `Service not found: ${serviceId}`,
-          }),
-        );
-      }
-
-      // Check if already assigned
+      // Check if already assigned (within-aggregate check)
       const alreadyAssigned = yield* employeeServicePort
         .assignmentExists(stylistId, serviceId)
         .pipe(
           Effect.mapError(
             (error) =>
-              new EmployeeServiceError({
-                stylistId,
-                serviceId,
-                message: error.message,
-              }),
+              new InternalError({ message: error.message, cause: error }),
           ),
         );
 
       if (alreadyAssigned) {
         return yield* Effect.fail(
-          new EmployeeServiceAlreadyAssignedError({ stylistId, serviceId }),
+          new ConflictError({
+            message: `Employee ${stylistId} is already assigned to service ${serviceId}`,
+          }),
         );
       }
 
@@ -101,21 +43,12 @@ const make = Effect.gen(function* () {
         .pipe(
           Effect.mapError(
             (error) =>
-              new EmployeeServiceError({
-                stylistId,
-                serviceId,
-                message: error.message,
-              }),
+              new InternalError({ message: error.message, cause: error }),
           ),
         );
 
       yield* Effect.log("Employee assigned to service", stylistId, serviceId);
-
-      return {
-        stylistId: assignment.stylistId,
-        serviceDefinitionId: assignment.serviceDefinitionId,
-        createdAt: assignment.createdAt,
-      } satisfies EmployeeServiceAssignment;
+      return assignment satisfies EmployeeServiceAssignment;
     });
 
   const unassignEmployee = (stylistId: string, serviceId: string) =>
@@ -125,17 +58,16 @@ const make = Effect.gen(function* () {
         .pipe(
           Effect.mapError(
             (error) =>
-              new EmployeeServiceError({
-                stylistId,
-                serviceId,
-                message: error.message,
-              }),
+              new InternalError({ message: error.message, cause: error }),
           ),
         );
 
       if (!removed) {
         return yield* Effect.fail(
-          new EmployeeServiceNotFoundError({ stylistId, serviceId }),
+          new NotFoundError({
+            entity: "EmployeeServiceAssignment",
+            id: `${stylistId}:${serviceId}`,
+          }),
         );
       }
 
@@ -147,52 +79,24 @@ const make = Effect.gen(function* () {
     });
 
   const listEmployeeServices = (stylistId: string) =>
-    Effect.gen(function* () {
-      const assignments = yield* employeeServicePort
-        .listByEmployee(stylistId)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new EmployeeServiceError({
-                stylistId,
-                message: error.message,
-              }),
-          ),
-        );
-
-      return assignments.map(
-        (a) =>
-          ({
-            stylistId: a.stylistId,
-            serviceDefinitionId: a.serviceDefinitionId,
-            createdAt: a.createdAt,
-          }) satisfies EmployeeServiceAssignment,
+    employeeServicePort
+      .listByEmployee(stylistId)
+      .pipe(
+        Effect.mapError(
+          (error) =>
+            new InternalError({ message: error.message, cause: error }),
+        ),
       );
-    });
 
   const listServiceEmployees = (serviceId: string) =>
-    Effect.gen(function* () {
-      const assignments = yield* employeeServicePort
-        .listByService(serviceId)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new EmployeeServiceError({
-                serviceId,
-                message: error.message,
-              }),
-          ),
-        );
-
-      return assignments.map(
-        (a) =>
-          ({
-            stylistId: a.stylistId,
-            serviceDefinitionId: a.serviceDefinitionId,
-            createdAt: a.createdAt,
-          }) satisfies EmployeeServiceAssignment,
+    employeeServicePort
+      .listByService(serviceId)
+      .pipe(
+        Effect.mapError(
+          (error) =>
+            new InternalError({ message: error.message, cause: error }),
+        ),
       );
-    });
 
   return {
     assignEmployee,
@@ -209,16 +113,6 @@ export class EmployeeServiceAggregate extends Effect.Service<EmployeeServiceAggr
     accessors: true,
     dependencies: [
       PostgresEmployeeServiceAdapter.pipe(
-        Layer.provide(DatabaseLayer),
-        Layer.provide(ConfigurationLayer),
-        Layer.orDie,
-      ),
-      PostgresServiceDefinitionAdapter.pipe(
-        Layer.provide(DatabaseLayer),
-        Layer.provide(ConfigurationLayer),
-        Layer.orDie,
-      ),
-      PostgresStylistPortAdapter.pipe(
         Layer.provide(DatabaseLayer),
         Layer.provide(ConfigurationLayer),
         Layer.orDie,

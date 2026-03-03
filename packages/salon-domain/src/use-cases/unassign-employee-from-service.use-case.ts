@@ -1,8 +1,8 @@
 import { Effect } from "effect";
 import { EmployeeServiceAggregate } from "../application/employee-service/employee-service.aggregate";
 import {
-  EmployeeServiceError,
-  EmployeeServiceNotFoundError,
+  InternalError,
+  NotFoundError,
 } from "../application/employee-service/errors";
 
 // --- Command DTO ---
@@ -27,10 +27,8 @@ const make = Effect.gen(function* () {
      */
     execute: (
       command: UnassignEmployeeFromServiceCommand,
-    ): Effect.Effect<
-      void,
-      EmployeeServiceError | EmployeeServiceNotFoundError
-    > => aggregate.unassignEmployee(command.stylistId, command.serviceId),
+    ): Effect.Effect<void, InternalError | NotFoundError> =>
+      aggregate.unassignEmployee(command.stylistId, command.serviceId),
   };
 });
 

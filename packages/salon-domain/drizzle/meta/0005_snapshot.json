@@ -1,5 +1,5 @@
 {
-  "id": "dde2a3bd-3b98-440d-a0d3-c31e65b2ccc1",
+  "id": "34cf893e-5a2a-4fa2-9bf8-013328b0fe5e",
   "prevId": "1951cbc9-2cae-4708-af1e-44033084f1a7",
   "version": "7",
   "dialect": "postgresql",
@@ -169,9 +169,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "resourceType": {
-          "name": "resourceType",
-          "type": "varchar(255)",
+        "resourceId": {
+          "name": "resourceId",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         }
@@ -190,6 +190,20 @@
             "id"
           ],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "phase_resource_requirements_resourceId_salon_resources_id_fk": {
+          "name": "phase_resource_requirements_resourceId_salon_resources_id_fk",
+          "tableFrom": "phase_resource_requirements",
+          "tableTo": "salon_resources",
+          "schemaTo": "salon",
+          "columnsFrom": [
+            "resourceId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
           "onUpdate": "no action"
         }
       },
@@ -213,12 +227,6 @@
         "salonId": {
           "name": "salonId",
           "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
@@ -250,29 +258,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "salon_resources_type_salon_unique": {
-          "name": "salon_resources_type_salon_unique",
-          "columns": [
-            {
-              "expression": "salonId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "lower(\"type\")",
-              "asc": true,
-              "isExpression": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "salon_resources_salonId_salons_id_fk": {
           "name": "salon_resources_salonId_salons_id_fk",
@@ -405,9 +391,9 @@
           "notNull": true,
           "default": "''"
         },
-        "price": {
-          "name": "price",
-          "type": "numeric(10, 2)",
+        "priceInCents": {
+          "name": "priceInCents",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -424,6 +410,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},

@@ -9,7 +9,6 @@ import {
   uuid,
   varchar,
   text,
-  numeric,
 } from "drizzle-orm/pg-core";
 export const salonSchema = pgSchema("salon");
 
@@ -58,26 +57,16 @@ export const mediaFilesTable = salonSchema.table("media_files", {
   createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
 });
 
-export const salonResourcesTable = salonSchema.table(
-  "salon_resources",
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    salonId: uuid()
-      .notNull()
-      .references(() => salonsTable.id, { onDelete: "cascade" }),
-    type: varchar({ length: 255 }).notNull(),
-    name: varchar({ length: 255 }).notNull(),
-    amount: integer().notNull().default(1),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    typeUnique: uniqueIndex("salon_resources_type_salon_unique").on(
-      table.salonId,
-      sql`lower(${table.type})`,
-    ),
-  }),
-);
+export const salonResourcesTable = salonSchema.table("salon_resources", {
+  id: uuid().primaryKey().defaultRandom(),
+  salonId: uuid()
+    .notNull()
+    .references(() => salonsTable.id, { onDelete: "cascade" }),
+  name: varchar({ length: 255 }).notNull(),
+  amount: integer().notNull().default(1),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
 
 export const serviceDefinitionsTable = salonSchema.table(
   "service_definitions",
@@ -88,9 +77,10 @@ export const serviceDefinitionsTable = salonSchema.table(
       .references(() => salonsTable.id, { onDelete: "cascade" }),
     name: varchar({ length: 255 }).notNull(),
     description: text().notNull().default(""),
-    price: numeric({ precision: 10, scale: 2 }).notNull(),
+    priceInCents: integer().notNull(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp({ withTimezone: true }),
   },
 );
 
@@ -111,7 +101,9 @@ export const phaseResourceRequirementsTable = salonSchema.table(
     phaseId: uuid()
       .notNull()
       .references(() => servicePhasesTable.id, { onDelete: "cascade" }),
-    resourceType: varchar({ length: 255 }).notNull(),
+    resourceId: uuid()
+      .notNull()
+      .references(() => salonResourcesTable.id, { onDelete: "restrict" }),
   },
 );
 

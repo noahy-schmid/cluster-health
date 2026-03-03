@@ -1,7 +1,7 @@
 import { Effect, Layer } from "effect";
 import { eq } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
-import { salonResourcesTable, phaseResourceRequirementsTable } from "../schema";
+import { salonResourcesTable } from "../schema";
 import { ResourcePort, ResourcePersistenceError } from "../ports/resource.port";
 
 /**
@@ -122,36 +122,12 @@ const make = Effect.gen(function* () {
       return resources;
     });
 
-  const isResourceTypeReferenced: ResourcePort["isResourceTypeReferenced"] = (
-    resourceType,
-  ) =>
-    Effect.gen(function* () {
-      const [row] = yield* Effect.tryPromise(() =>
-        db
-          .select()
-          .from(phaseResourceRequirementsTable)
-          .where(eq(phaseResourceRequirementsTable.resourceType, resourceType))
-          .limit(1),
-      ).pipe(
-        Effect.mapError(
-          (error) =>
-            new ResourcePersistenceError({
-              message: "Failed to check resource references",
-              cause: error,
-            }),
-        ),
-      );
-
-      return !!row;
-    });
-
   return {
     createResource,
     updateResource,
     deleteResource,
     findResourceById,
     listResourcesBySalonId,
-    isResourceTypeReferenced,
   } satisfies ResourcePort;
 });
 

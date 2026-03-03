@@ -5,9 +5,9 @@ import {
   type CreateServicePhaseInput,
 } from "../application/service/service.aggregate";
 import {
-  ServiceError,
-  ServiceNotFoundError,
-  ServiceValidationError,
+  InternalError,
+  NotFoundError,
+  ValidationError,
 } from "../application/service/errors";
 
 // --- Command DTO ---
@@ -16,7 +16,7 @@ export interface UpdateServiceDefinitionCommand {
   serviceId: string;
   name: string;
   description: string;
-  price: string;
+  priceInCents: number;
   phases: CreateServicePhaseInput[];
 }
 
@@ -41,12 +41,12 @@ const make = Effect.gen(function* () {
       command: UpdateServiceDefinitionCommand,
     ): Effect.Effect<
       UpdateServiceDefinitionResult,
-      ServiceError | ServiceNotFoundError | ServiceValidationError
+      InternalError | NotFoundError | ValidationError
     > =>
       aggregate.updateServiceDefinition(command.serviceId, {
         name: command.name,
         description: command.description,
-        price: command.price,
+        priceInCents: command.priceInCents,
         phases: command.phases,
       }),
   };

@@ -1,22 +1,21 @@
 import { Effect, Layer } from "effect";
+import { ServiceDefinitionPort } from "../../ports/service-definition.port";
+import { ServicePhasePort } from "../../ports/service-phase.port";
 import {
-  ServiceDefinitionPort,
-  type PortServiceDefinition,
-  type PortServicePhase,
-} from "../../ports/service-definition.port";
-import {
-  ServiceError,
-  ServiceNotFoundError,
-  ServiceValidationError,
-} from "./errors";
+  ReadServicePort,
+  type PortFullServiceDefinition,
+} from "../../ports/read-service.port";
+import { InternalError, NotFoundError, ValidationError } from "./errors";
 import { DatabaseLayer } from "../../infrastructure/database.service";
 import { ConfigurationLayer } from "../../infrastructure/config.service";
 import { PostgresServiceDefinitionAdapter } from "../../adapters/postgres-service-definition.adapter";
+import { PostgresServicePhaseAdapter } from "../../adapters/postgres-service-phase.adapter";
+import { PostgresReadServiceAdapter } from "../../adapters/postgres-read-service.adapter";
 
 // --- Domain types ---
 
 export interface PhaseResourceRequirement {
-  resourceType: string;
+  resourceId: string;
 }
 
 export interface ServicePhase {
@@ -24,7 +23,7 @@ export interface ServicePhase {
   name: string;
   durationMinutes: number;
   order: number;
-  requiredResources: PhaseResourceRequirement[];
+  requiredResourceIds: string[];
 }
 
 export interface ServiceDefinition {
@@ -32,7 +31,7 @@ export interface ServiceDefinition {
   salonId: string;
   name: string;
   description: string;
-  price: string;
+  priceInCents: number;
   durationMinutes: number;
   phases: ServicePhase[];
   createdAt: Date;
@@ -42,112 +41,152 @@ export interface ServiceDefinition {
 export interface CreateServicePhaseInput {
   name: string;
   durationMinutes: number;
-  requiredResources: PhaseResourceRequirement[];
+  requiredResourceIds: string[];
 }
 
 export interface CreateServiceInput {
   salonId: string;
   name: string;
   description: string;
-  price: string;
+  priceInCents: number;
   phases: CreateServicePhaseInput[];
 }
 
 export interface UpdateServiceInput {
   name: string;
   description: string;
-  price: string;
+  priceInCents: number;
   phases: CreateServicePhaseInput[];
 }
 
-// --- Mapping helpers ---
+// --- Mapping helper ---
 
-const fromPortPhase = (portPhase: PortServicePhase): ServicePhase => ({
-  id: portPhase.id,
-  name: portPhase.name,
-  durationMinutes: portPhase.durationMinutes,
-  order: portPhase.order,
-  requiredResources: portPhase.requiredResources,
-});
-
-const fromPort = (portService: PortServiceDefinition): ServiceDefinition => ({
+const fromPort = (
+  portService: PortFullServiceDefinition,
+): ServiceDefinition => ({
   id: portService.id,
   salonId: portService.salonId,
   name: portService.name,
   description: portService.description,
-  price: portService.price,
+  priceInCents: portService.priceInCents,
   durationMinutes: portService.phases.reduce(
     (total, phase) => total + phase.durationMinutes,
     0,
   ),
-  phases: portService.phases.map(fromPortPhase),
+  phases: portService.phases.map((p) => ({
+    id: p.id,
+    name: p.name,
+    durationMinutes: p.durationMinutes,
+    order: p.order,
+    requiredResourceIds: p.requiredResourceIds,
+  })),
   createdAt: portService.createdAt,
   updatedAt: portService.updatedAt,
 });
 
+// --- Phase validation helper ---
+
+const validatePhases = (
+  phases: CreateServicePhaseInput[],
+): Effect.Effect<void, ValidationError> =>
+  Effect.gen(function* () {
+    if (phases.length === 0) {
+      return yield* Effect.fail(
+        new ValidationError({
+          message: "Service must have at least one phase",
+        }),
+      );
+    }
+    for (const phase of phases) {
+      if (!phase.name.trim()) {
+        return yield* Effect.fail(
+          new ValidationError({
+            message: "Phase name cannot be empty",
+          }),
+        );
+      }
+      if (phase.durationMinutes < 1) {
+        return yield* Effect.fail(
+          new ValidationError({
+            message: "Phase duration must be at least 1 minute",
+          }),
+        );
+      }
+    }
+  });
+
 // --- Aggregate service ---
 
 const make = Effect.gen(function* () {
-  const servicePort = yield* ServiceDefinitionPort;
+  const serviceDefPort = yield* ServiceDefinitionPort;
+  const servicePhasePort = yield* ServicePhasePort;
+  const readServicePort = yield* ReadServicePort;
 
   const createServiceDefinition = (input: CreateServiceInput) =>
     Effect.gen(function* () {
       if (!input.name.trim()) {
         return yield* Effect.fail(
-          new ServiceValidationError({
+          new ValidationError({
             message: "Service name cannot be empty",
           }),
         );
       }
-      if (input.phases.length === 0) {
-        return yield* Effect.fail(
-          new ServiceValidationError({
-            message: "Service must have at least one phase",
-          }),
-        );
-      }
-      for (const phase of input.phases) {
-        if (!phase.name.trim()) {
-          return yield* Effect.fail(
-            new ServiceValidationError({
-              message: "Phase name cannot be empty",
-            }),
-          );
-        }
-        if (phase.durationMinutes < 1) {
-          return yield* Effect.fail(
-            new ServiceValidationError({
-              message: "Phase duration must be at least 1 minute",
-            }),
-          );
-        }
-      }
+      yield* validatePhases(input.phases);
 
-      const portResult = yield* servicePort
+      // Create the definition row
+      const created = yield* serviceDefPort
         .createServiceDefinition({
           salonId: input.salonId,
           name: input.name.trim(),
           description: input.description.trim(),
-          price: input.price,
-          phases: input.phases.map((phase, index) => ({
-            name: phase.name.trim(),
-            durationMinutes: phase.durationMinutes,
-            order: index,
-            requiredResources: phase.requiredResources,
-          })),
+          priceInCents: input.priceInCents,
         })
         .pipe(
           Effect.mapError(
             (error) =>
-              new ServiceError({
-                salonId: input.salonId,
-                message: error.message,
-              }),
+              new InternalError({ message: error.message, cause: error }),
           ),
         );
 
-      yield* Effect.log("Service definition created", portResult.id);
-      return fromPort(portResult);
+      // Create phases
+      for (let i = 0; i < input.phases.length; i++) {
+        const phase = input.phases[i]!;
+        yield* servicePhasePort
+          .createPhase({
+            serviceDefinitionId: created.id,
+            name: phase.name.trim(),
+            durationMinutes: phase.durationMinutes,
+            order: i,
+            requiredResourceIds: phase.requiredResourceIds,
+          })
+          .pipe(
+            Effect.mapError(
+              (error) =>
+                new InternalError({ message: error.message, cause: error }),
+            ),
+          );
+      }
+
+      // Read back the full service definition
+      const full = yield* readServicePort
+        .findFullServiceDefinitionById(created.id)
+        .pipe(
+          Effect.mapError(
+            (error) =>
+              new InternalError({ message: error.message, cause: error }),
+          ),
+        );
+
+      if (!full) {
+        return yield* Effect.fail(
+          new InternalError({
+            message: "Service definition not found after creation",
+          }),
+        );
+      }
+
+      yield* Effect.log("Service definition created", created.id);
+      return fromPort(full);
     });
 
   const updateServiceDefinition = (
@@ -157,144 +196,161 @@ const make = Effect.gen(function* () {
     Effect.gen(function* () {
       if (!input.name.trim()) {
         return yield* Effect.fail(
-          new ServiceValidationError({
+          new ValidationError({
             message: "Service name cannot be empty",
           }),
         );
       }
-      if (input.phases.length === 0) {
-        return yield* Effect.fail(
-          new ServiceValidationError({
-            message: "Service must have at least one phase",
-          }),
-        );
-      }
-      for (const phase of input.phases) {
-        if (!phase.name.trim()) {
-          return yield* Effect.fail(
-            new ServiceValidationError({
-              message: "Phase name cannot be empty",
-            }),
-          );
-        }
-        if (phase.durationMinutes < 1) {
-          return yield* Effect.fail(
-            new ServiceValidationError({
-              message: "Phase duration must be at least 1 minute",
-            }),
-          );
-        }
-      }
+      yield* validatePhases(input.phases);
 
-      const portResult = yield* servicePort
+      // Update the definition row
+      const updated = yield* serviceDefPort
         .updateServiceDefinition(serviceId, {
           name: input.name.trim(),
           description: input.description.trim(),
-          price: input.price,
-          phases: input.phases.map((phase, index) => ({
-            name: phase.name.trim(),
-            durationMinutes: phase.durationMinutes,
-            order: index,
-            requiredResources: phase.requiredResources,
-          })),
+          priceInCents: input.priceInCents,
         })
         .pipe(
           Effect.mapError(
             (error) =>
-              new ServiceError({
-                serviceId,
-                message: error.message,
-              }),
+              new InternalError({ message: error.message, cause: error }),
           ),
         );
 
-      if (!portResult) {
-        return yield* Effect.fail(new ServiceNotFoundError({ serviceId }));
+      if (!updated) {
+        return yield* Effect.fail(
+          new NotFoundError({ entity: "ServiceDefinition", id: serviceId }),
+        );
       }
 
-      yield* Effect.log("Service definition updated", serviceId);
-      return fromPort(portResult);
-    });
-
-  const deleteServiceDefinition = (serviceId: string) =>
-    Effect.gen(function* () {
-      const deleted = yield* servicePort
-        .deleteServiceDefinition(serviceId)
+      // Replace phases
+      yield* servicePhasePort
+        .deletePhasesByServiceDefinitionId(serviceId)
         .pipe(
           Effect.mapError(
             (error) =>
-              new ServiceError({
-                serviceId,
-                message: error.message,
-              }),
+              new InternalError({ message: error.message, cause: error }),
+          ),
+        );
+
+      for (let i = 0; i < input.phases.length; i++) {
+        const phase = input.phases[i]!;
+        yield* servicePhasePort
+          .createPhase({
+            serviceDefinitionId: serviceId,
+            name: phase.name.trim(),
+            durationMinutes: phase.durationMinutes,
+            order: i,
+            requiredResourceIds: phase.requiredResourceIds,
+          })
+          .pipe(
+            Effect.mapError(
+              (error) =>
+                new InternalError({ message: error.message, cause: error }),
+            ),
+          );
+      }
+
+      // Read back the full service definition
+      const full = yield* readServicePort
+        .findFullServiceDefinitionById(serviceId)
+        .pipe(
+          Effect.mapError(
+            (error) =>
+              new InternalError({ message: error.message, cause: error }),
+          ),
+        );
+
+      if (!full) {
+        return yield* Effect.fail(
+          new InternalError({
+            message: "Service definition not found after update",
+          }),
+        );
+      }
+
+      yield* Effect.log("Service definition updated", serviceId);
+      return fromPort(full);
+    });
+
+  const softDeleteServiceDefinition = (serviceId: string) =>
+    Effect.gen(function* () {
+      const deleted = yield* serviceDefPort
+        .softDeleteServiceDefinition(serviceId)
+        .pipe(
+          Effect.mapError(
+            (error) =>
+              new InternalError({ message: error.message, cause: error }),
           ),
         );
 
       if (!deleted) {
-        return yield* Effect.fail(new ServiceNotFoundError({ serviceId }));
+        return yield* Effect.fail(
+          new NotFoundError({ entity: "ServiceDefinition", id: serviceId }),
+        );
       }
 
-      yield* Effect.log("Service definition deleted", serviceId);
+      yield* Effect.log("Service definition soft-deleted", serviceId);
     });
 
   const findServiceDefinition = (serviceId: string) =>
     Effect.gen(function* () {
-      const portResult = yield* servicePort
-        .findServiceDefinitionById(serviceId)
+      const full = yield* readServicePort
+        .findFullServiceDefinitionById(serviceId)
         .pipe(
           Effect.mapError(
             (error) =>
-              new ServiceError({
-                serviceId,
-                message: error.message,
-              }),
+              new InternalError({ message: error.message, cause: error }),
           ),
         );
 
-      if (!portResult) {
-        return yield* Effect.fail(new ServiceNotFoundError({ serviceId }));
+      if (!full) {
+        return yield* Effect.fail(
+          new NotFoundError({ entity: "ServiceDefinition", id: serviceId }),
+        );
       }
 
-      return fromPort(portResult);
+      return fromPort(full);
     });
 
   const listServiceDefinitions = (salonId: string) =>
     Effect.gen(function* () {
-      const portResults = yield* servicePort
-        .listServiceDefinitionsBySalonId(salonId)
+      const results = yield* readServicePort
+        .listFullServiceDefinitionsBySalonId(salonId)
         .pipe(
           Effect.mapError(
             (error) =>
-              new ServiceError({
-                salonId,
-                message: error.message,
-              }),
+              new InternalError({ message: error.message, cause: error }),
           ),
         );
 
-      return portResults.map(fromPort);
+      return results.map(fromPort);
     });
 
   return {
     createServiceDefinition,
     updateServiceDefinition,
-    deleteServiceDefinition,
+    softDeleteServiceDefinition,
     findServiceDefinition,
     listServiceDefinitions,
   };
 });
+
+const infraLayer = Layer.mergeAll(
+  PostgresServiceDefinitionAdapter,
+  PostgresServicePhaseAdapter,
+  PostgresReadServiceAdapter,
+).pipe(
+  Layer.provide(DatabaseLayer),
+  Layer.provide(ConfigurationLayer),
+  Layer.orDie,
+);
 
 export class ServiceAggregate extends Effect.Service<ServiceAggregate>()(
   "@repo/salon-domain/ServiceAggregate",
   {
     effect: make,
     accessors: true,
-    dependencies: [
-      PostgresServiceDefinitionAdapter.pipe(
-        Layer.provide(DatabaseLayer),
-        Layer.provide(ConfigurationLayer),
-        Layer.orDie,
-      ),
-    ],
+    dependencies: [infraLayer],
   },
 ) {}

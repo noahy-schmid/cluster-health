@@ -4,10 +4,7 @@ import {
   type ServiceDefinition,
   type CreateServicePhaseInput,
 } from "../application/service/service.aggregate";
-import {
-  ServiceError,
-  ServiceValidationError,
-} from "../application/service/errors";
+import { InternalError, ValidationError } from "../application/service/errors";
 
 // --- Command DTO ---
 
@@ -15,7 +12,7 @@ export interface CreateServiceDefinitionCommand {
   salonId: string;
   name: string;
   description: string;
-  price: string;
+  priceInCents: number;
   phases: CreateServicePhaseInput[];
 }
 
@@ -40,13 +37,13 @@ const make = Effect.gen(function* () {
       command: CreateServiceDefinitionCommand,
     ): Effect.Effect<
       CreateServiceDefinitionResult,
-      ServiceError | ServiceValidationError
+      InternalError | ValidationError
     > =>
       aggregate.createServiceDefinition({
         salonId: command.salonId,
         name: command.name,
         description: command.description,
-        price: command.price,
+        priceInCents: command.priceInCents,
         phases: command.phases,
       }),
   };

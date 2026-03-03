@@ -3,7 +3,7 @@ import {
   EmployeeServiceAggregate,
   type EmployeeServiceAssignment,
 } from "../application/employee-service/employee-service.aggregate";
-import { EmployeeServiceError } from "../application/employee-service/errors";
+import { InternalError } from "../application/employee-service/errors";
 
 // --- Query DTO ---
 
@@ -30,7 +30,7 @@ const make = Effect.gen(function* () {
      */
     execute: (
       query: ListServiceEmployeesQuery,
-    ): Effect.Effect<ListServiceEmployeesResult, EmployeeServiceError> =>
+    ): Effect.Effect<ListServiceEmployeesResult, InternalError> =>
       aggregate.listServiceEmployees(query.serviceId),
   };
 });
