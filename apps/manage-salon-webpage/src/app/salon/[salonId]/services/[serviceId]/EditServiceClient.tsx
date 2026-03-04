@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import PageHeader from "@/components/PageHeader";
 import BackButton from "@/components/BackButton";
 import ServiceForm from "../ServiceForm.component";
+import SimpleServiceForm from "../SimpleServiceForm.component";
+import ColorationServiceForm from "../ColorationServiceForm.component";
 import AssignmentList from "@/components/AssignmentList";
 import {
   updateServiceDefinition,
@@ -41,11 +43,13 @@ export default function EditServiceClient({
   const handleSubmit = async (data: {
     name: string;
     description: string;
+    priceInCents: number;
     phases: ServiceDefinition["phases"];
   }) => {
     const result = await updateServiceDefinition(salonId, serviceId, {
       name: data.name,
       description: data.description,
+      priceInCents: data.priceInCents,
       phases: data.phases,
     });
 
@@ -87,6 +91,37 @@ export default function EditServiceClient({
     [salonId, serviceId, showNotification],
   );
 
+  const renderForm = () => {
+    switch (initialService.serviceType) {
+      case "simple":
+        return (
+          <SimpleServiceForm
+            service={initialService}
+            onSubmit={handleSubmit}
+            saveLabel="Änderungen speichern"
+          />
+        );
+      case "coloration":
+        return (
+          <ColorationServiceForm
+            service={initialService}
+            onSubmit={handleSubmit}
+            saveLabel="Änderungen speichern"
+          />
+        );
+      case "custom":
+      default:
+        return (
+          <ServiceForm
+            service={initialService}
+            availableResources={initialResources}
+            onSubmit={handleSubmit}
+            saveLabel="Änderungen speichern"
+          />
+        );
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <BackButton text="Zurück" />
@@ -96,12 +131,7 @@ export default function EditServiceClient({
       />
 
       <div className="space-y-lg">
-        <ServiceForm
-          service={initialService}
-          availableResources={initialResources}
-          onSubmit={handleSubmit}
-          saveLabel="Änderungen speichern"
-        />
+        {renderForm()}
 
         <AssignmentList
           assignments={assignments}

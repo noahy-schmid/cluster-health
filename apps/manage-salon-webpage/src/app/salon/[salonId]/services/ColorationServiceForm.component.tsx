@@ -1,36 +1,22 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { Plus } from "lucide-react";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { useRef } from "react";
 import type {
   ServiceDefinition,
-  SalonResource,
+  ServicePhase,
+} from "@/lib/types/service-types";
+import {
+  SEAT_RESOURCE_ID,
+  HEATING_LAMP_RESOURCE_ID,
 } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
 import FormTextarea from "@/components/website/forms/FormTextarea";
 import FormNumber from "@/components/website/forms/FormNumber";
-import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
-import PhaseEditor from "./PhaseEditor.component";
 import { useServiceFormState } from "./ServiceForm.state";
 import { useNotifications } from "@/components/notifications/useNotifications";
 
-interface ServiceFormProps {
+interface ColorationServiceFormProps {
   service?: ServiceDefinition;
-  availableResources: SalonResource[];
   onSubmit: (data: {
     name: string;
     description: string;
@@ -41,25 +27,57 @@ interface ServiceFormProps {
   saveLabel?: string;
 }
 
-export default function ServiceForm({
+function createColorationPhases(): ServicePhase[] {
+  return [
+    {
+      id: crypto.randomUUID(),
+      name: "Färben",
+      durationMinutes: 20,
+      requiresEmployee: true,
+      requiredResources: [
+        { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
+      ],
+      order: 0,
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "Einwirkzeit",
+      durationMinutes: 30,
+      requiresEmployee: false,
+      requiredResources: [
+        { resourceId: HEATING_LAMP_RESOURCE_ID, resourceName: "Wärmehaube" },
+      ],
+      order: 1,
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "Abschluss",
+      durationMinutes: 15,
+      requiresEmployee: true,
+      requiredResources: [
+        { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
+      ],
+      order: 2,
+    },
+  ];
+}
+
+const PHASE_LABELS = ["Färben", "Einwirkzeit", "Abschluss"] as const;
+
+export default function ColorationServiceForm({
   service,
-  availableResources,
   onSubmit,
   onCancel,
   saveLabel,
-}: ServiceFormProps) {
+}: ColorationServiceFormProps) {
   const { showNotification } = useNotifications();
+
   const {
     state,
     setName,
     setDescription,
     setPrice,
-    addPhase,
-    removePhase,
     updatePhase,
-    addPhaseResource,
-    removePhaseResource,
-    reorderPhases,
     setSaving,
     setError,
     clearError,
@@ -67,15 +85,21 @@ export default function ServiceForm({
     name: service?.name,
     description: service?.description,
     priceInCents: service?.priceInCents,
-    phases: service?.phases,
+    phases:
+      service?.phases && service.phases.length === 3
+        ? service.phases
+        : createColorationPhases(),
   });
 
-  // Track the initial snapshot to detect changes
   const initialRef = useRef({
     name: service?.name ?? "",
     description: service?.description ?? "",
     priceInCents: service?.priceInCents ?? 0,
-    phases: JSON.stringify(service?.phases ?? []),
+    phases: JSON.stringify(
+      service?.phases && service.phases.length === 3
+        ? service.phases
+        : createColorationPhases(),
+    ),
   });
 
   const isDirty =
@@ -83,29 +107,6 @@ export default function ServiceForm({
     state.description !== initialRef.current.description ||
     state.priceInCents !== initialRef.current.priceInCents ||
     JSON.stringify(state.phases) !== initialRef.current.phases;
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
-  const phaseIds = useMemo(() => state.phases.map((p) => p.id), [state.phases]);
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = state.phases.findIndex((p) => p.id === active.id);
-    const newIndex = state.phases.findIndex((p) => p.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const next = [...state.phases];
-    const [moved] = next.splice(oldIndex, 1);
-    next.splice(newIndex, 0, moved);
-    reorderPhases(next);
-  };
 
   const handleSave = async () => {
     clearError();
@@ -115,11 +116,6 @@ export default function ServiceForm({
 
     if (!trimmedName) {
       setError("Bitte gib einen Namen für die Dienstleistung ein");
-      return;
-    }
-
-    if (state.phases.length === 0) {
-      setError("Bitte füge mindestens eine Phase hinzu");
       return;
     }
 
@@ -139,7 +135,6 @@ export default function ServiceForm({
         phases: state.phases,
       });
 
-      // After successful save, update the initial snapshot so isDirty becomes false
       initialRef.current = {
         name: trimmedName,
         description: trimmedDescription,
@@ -167,7 +162,7 @@ export default function ServiceForm({
           label="Name"
           value={state.name}
           onChange={setName}
-          placeholder="z.B. Haarschnitt Damen"
+          placeholder="z.B. Coloration"
           required
         />
 
@@ -187,61 +182,35 @@ export default function ServiceForm({
           max={100000}
         />
 
-        {/* Phases section */}
         <div className="flex flex-col gap-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-focus text-fg-strong">Phasen</h3>
-              {state.phases.length > 0 && (
-                <p className="text-sm text-fg-muted">
-                  Gesamtdauer: {totalDuration} Minuten
-                </p>
-              )}
-            </div>
-            <FlatIconTextButton
-              icon={Plus}
-              text="Phase hinzufügen"
-              onClick={addPhase}
-              elevation={0}
-            />
+          <div>
+            <h3 className="text-base font-focus text-fg-strong">Phasen</h3>
+            <p className="text-sm text-fg-muted">
+              Gesamtdauer: {totalDuration} Minuten
+            </p>
           </div>
 
-          {state.phases.length === 0 && (
-            <div className="text-center py-lg border border-dashed border-border rounded-lg">
-              <p className="text-fg-muted text-sm">
-                Noch keine Phasen vorhanden. Füge eine Phase hinzu um den Ablauf
-                der Dienstleistung zu definieren.
-              </p>
-            </div>
-          )}
-
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={phaseIds}
-              strategy={verticalListSortingStrategy}
+          {state.phases.map((phase, index) => (
+            <div
+              key={phase.id}
+              className="bg-bg-0 border border-border rounded-lg p-md"
             >
-              <div className="space-y-md">
-                {state.phases.map((phase, index) => (
-                  <PhaseEditor
-                    key={phase.id}
-                    phase={phase}
-                    index={index}
-                    availableResources={availableResources}
-                    onUpdate={(updates) => updatePhase(phase.id, updates)}
-                    onAddResource={(r) => addPhaseResource(phase.id, r)}
-                    onRemoveResource={(rId) =>
-                      removePhaseResource(phase.id, rId)
-                    }
-                    onRemove={() => removePhase(phase.id)}
-                  />
-                ))}
+              <div className="flex items-center gap-sm mb-md">
+                <span className="text-sm font-focus text-fg-muted">
+                  Phase {index + 1}: {PHASE_LABELS[index]}
+                </span>
               </div>
-            </SortableContext>
-          </DndContext>
+              <FormNumber
+                label="Dauer (Minuten)"
+                value={phase.durationMinutes}
+                onChange={(durationMinutes) =>
+                  updatePhase(phase.id, { durationMinutes })
+                }
+                min={1}
+                max={480}
+              />
+            </div>
+          ))}
         </div>
 
         {state.error && (

@@ -3,21 +3,10 @@
 import { SectionType } from "@repo/website-domain";
 import SectionTypeSelectionButton from "./TypeSelectionButton";
 import { Suspense } from "react";
-import {
-  ImageIcon,
-  Images,
-  AlignCenter,
-  List,
-  Users,
-  LucideIcon,
-} from "lucide-react";
+import { ImageIcon, Images, AlignCenter, List, Users } from "lucide-react";
+import type { TypeSelectionOption } from "@/components/TypeSelectionPanel";
 
-export type SectionTypeInfo = {
-  type: SectionType;
-  label: string;
-  description: string;
-  icon: LucideIcon;
-};
+export type SectionTypeInfo = TypeSelectionOption<SectionType>;
 
 const sectionTypes: SectionTypeInfo[] = [
   {

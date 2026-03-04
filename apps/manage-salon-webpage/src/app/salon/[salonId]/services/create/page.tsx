@@ -18,7 +18,7 @@ export default async function CreateServicePage({
       <BackButton text="Zurück" />
       <PageHeader
         title="Neue Dienstleistung"
-        subtitle="Erstelle eine neue Dienstleistung für deinen Salon"
+        subtitle="Wähle den Typ der Dienstleistung und konfiguriere sie"
       />
       <CreateServiceClient
         salonId={salonId}

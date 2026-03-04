@@ -8,6 +8,7 @@ function createInitialState(
   return {
     name: "",
     description: "",
+    priceInCents: 0,
     phases: [],
     isSaving: false,
     error: undefined,
@@ -47,6 +48,17 @@ describe("serviceFormReducer", () => {
         payload: "Ein toller Haarschnitt",
       });
       expect(result.description).toBe("Ein toller Haarschnitt");
+    });
+  });
+
+  describe("SET_PRICE", () => {
+    it("should update the price", () => {
+      const state = createInitialState();
+      const result = serviceFormReducer(state, {
+        type: "SET_PRICE",
+        payload: 4500,
+      });
+      expect(result.priceInCents).toBe(4500);
     });
   });
 

@@ -10,6 +10,7 @@ import type {
 export interface ServiceFormState {
   name: string;
   description: string;
+  priceInCents: number;
   phases: ServicePhase[];
   isSaving: boolean;
   error: string | undefined;
@@ -20,6 +21,7 @@ export interface ServiceFormState {
 type ServiceFormAction =
   | { type: "SET_NAME"; payload: string }
   | { type: "SET_DESCRIPTION"; payload: string }
+  | { type: "SET_PRICE"; payload: number }
   | { type: "ADD_PHASE" }
   | { type: "REMOVE_PHASE"; payload: string }
   | {
@@ -72,6 +74,9 @@ export function serviceFormReducer(
 
     case "SET_DESCRIPTION":
       return { ...state, description: action.payload };
+
+    case "SET_PRICE":
+      return { ...state, priceInCents: action.payload };
 
     case "ADD_PHASE":
       return {
@@ -153,11 +158,13 @@ export function serviceFormReducer(
 export function useServiceFormState(initial?: {
   name?: string;
   description?: string;
+  priceInCents?: number;
   phases?: ServicePhase[];
 }) {
   const [state, dispatch] = useReducer(serviceFormReducer, {
     name: initial?.name ?? "",
     description: initial?.description ?? "",
+    priceInCents: initial?.priceInCents ?? 0,
     phases: initial?.phases ?? [],
     isSaving: false,
     error: undefined,
@@ -171,6 +178,12 @@ export function useServiceFormState(initial?: {
   const setDescription = useCallback(
     (description: string) =>
       dispatch({ type: "SET_DESCRIPTION", payload: description }),
+    [],
+  );
+
+  const setPrice = useCallback(
+    (priceInCents: number) =>
+      dispatch({ type: "SET_PRICE", payload: priceInCents }),
     [],
   );
 
@@ -228,6 +241,7 @@ export function useServiceFormState(initial?: {
     state,
     setName,
     setDescription,
+    setPrice,
     addPhase,
     removePhase,
     updatePhase,
