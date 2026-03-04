@@ -2,10 +2,8 @@ import { Effect, Layer } from "effect";
 import { eq, asc } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
 import { servicePhasesTable, phaseResourceRequirementsTable } from "../schema";
-import {
-  ServicePhasePort,
-  ServicePhasePersistenceError,
-} from "../ports/service-phase.port";
+import { ServicePhasePort } from "../ports/service-phase.port";
+import { InfrastructureError } from "../application/errors";
 
 /**
  * PostgreSQL implementation of the ServicePhasePort using Drizzle ORM.
@@ -29,7 +27,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new ServicePhasePersistenceError({
+            new InfrastructureError({
               message: "Failed to create service phase",
               cause: error,
             }),
@@ -38,7 +36,7 @@ const make = Effect.gen(function* () {
 
       if (!created) {
         return yield* Effect.fail(
-          new ServicePhasePersistenceError({
+          new InfrastructureError({
             message: "Failed to create service phase: no row returned",
           }),
         );
@@ -55,7 +53,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ServicePhasePersistenceError({
+              new InfrastructureError({
                 message: "Failed to create phase resource requirements",
                 cause: error,
               }),
@@ -78,7 +76,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ServicePhasePersistenceError({
+              new InfrastructureError({
                 message: "Failed to delete service phases",
                 cause: error,
               }),
@@ -100,7 +98,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ServicePhasePersistenceError({
+              new InfrastructureError({
                 message: "Failed to list service phases",
                 cause: error,
               }),
@@ -120,7 +118,7 @@ const make = Effect.gen(function* () {
           ).pipe(
             Effect.mapError(
               (error) =>
-                new ServicePhasePersistenceError({
+                new InfrastructureError({
                   message: "Failed to fetch phase resource requirements",
                   cause: error,
                 }),
@@ -149,7 +147,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new ServicePhasePersistenceError({
+            new InfrastructureError({
               message: "Failed to check resource references",
               cause: error,
             }),

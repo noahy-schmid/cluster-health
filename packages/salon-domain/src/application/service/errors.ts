@@ -1,1 +1,6 @@
-export { InternalError, NotFoundError, ValidationError } from "../errors";
+export {
+  InternalError,
+  NotFoundError,
+  ValidationError,
+  InfrastructureError,
+} from "../errors";

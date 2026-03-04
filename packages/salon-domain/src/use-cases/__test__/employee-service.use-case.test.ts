@@ -61,14 +61,19 @@ describe("Employee-Service Assignment Use Cases", () => {
   it("should list services for an employee", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* ListEmployeeServicesUseCase;
-      const assignments = yield* useCase.execute({
+      const services = yield* useCase.execute({
         stylistId: ctx.stylistId,
       });
 
-      expect(assignments.length).toBeGreaterThanOrEqual(1);
-      expect(assignments.some((a) => a.serviceDefinitionId === serviceId)).toBe(
-        true,
+      expect(services.length).toBeGreaterThanOrEqual(1);
+      expect(
+        services.some((s) => s.serviceDefinitionId === serviceId),
+      ).toBe(true);
+      // Verify enriched data includes service name
+      const matched = services.find(
+        (s) => s.serviceDefinitionId === serviceId,
       );
+      expect(matched?.serviceName).toBe("Assignment Test Service");
     });
 
     await Effect.runPromise(
@@ -79,10 +84,13 @@ describe("Employee-Service Assignment Use Cases", () => {
   it("should list employees for a service", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* ListServiceEmployeesUseCase;
-      const assignments = yield* useCase.execute({ serviceId });
+      const employees = yield* useCase.execute({ serviceId });
 
-      expect(assignments.length).toBeGreaterThanOrEqual(1);
-      expect(assignments.some((a) => a.stylistId === ctx.stylistId)).toBe(true);
+      expect(employees.length).toBeGreaterThanOrEqual(1);
+      expect(employees.some((e) => e.stylistId === ctx.stylistId)).toBe(true);
+      // Verify enriched data includes stylist name
+      const matched = employees.find((e) => e.stylistId === ctx.stylistId);
+      expect(matched?.stylistName).toBe("Test Stylist");
     });
 
     await Effect.runPromise(
@@ -156,8 +164,8 @@ describe("Employee-Service Assignment Use Cases", () => {
       });
 
       const listUC = yield* ListServiceEmployeesUseCase;
-      const assignments = yield* listUC.execute({ serviceId });
-      expect(assignments.some((a) => a.stylistId === ctx.stylistId)).toBe(
+      const employees = yield* listUC.execute({ serviceId });
+      expect(employees.some((e) => e.stylistId === ctx.stylistId)).toBe(
         false,
       );
     });

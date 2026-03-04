@@ -1,16 +1,5 @@
-import { Context, Data, Effect } from "effect";
-
-// --- Port-level error ---
-
-/**
- * Raised when a service definition persistence operation fails at the database level.
- */
-export class ServiceDefinitionPersistenceError extends Data.TaggedError(
-  "ServiceDefinitionPersistenceError",
-)<{
-  message: string;
-  cause?: unknown;
-}> {}
+import { Context, Effect } from "effect";
+import { InfrastructureError } from "../application/errors";
 
 // --- Port-owned types ---
 
@@ -51,7 +40,7 @@ export interface ServiceDefinitionPort {
    */
   createServiceDefinition(
     input: PortCreateServiceDefinitionInput,
-  ): Effect.Effect<PortServiceDefinitionRow, ServiceDefinitionPersistenceError>;
+  ): Effect.Effect<PortServiceDefinitionRow, InfrastructureError>;
 
   /**
    * Updates a service definition row.
@@ -62,10 +51,7 @@ export interface ServiceDefinitionPort {
   updateServiceDefinition(
     serviceId: string,
     input: PortUpdateServiceDefinitionInput,
-  ): Effect.Effect<
-    PortServiceDefinitionRow | null,
-    ServiceDefinitionPersistenceError
-  >;
+  ): Effect.Effect<PortServiceDefinitionRow | null, InfrastructureError>;
 
   /**
    * Soft-deletes a service definition by setting deletedAt.
@@ -74,7 +60,7 @@ export interface ServiceDefinitionPort {
    */
   softDeleteServiceDefinition(
     serviceId: string,
-  ): Effect.Effect<boolean, ServiceDefinitionPersistenceError>;
+  ): Effect.Effect<boolean, InfrastructureError>;
 
   /**
    * Fetches a service definition row by ID (excludes soft-deleted).
@@ -83,10 +69,16 @@ export interface ServiceDefinitionPort {
    */
   findServiceDefinitionById(
     serviceId: string,
-  ): Effect.Effect<
-    PortServiceDefinitionRow | null,
-    ServiceDefinitionPersistenceError
-  >;
+  ): Effect.Effect<PortServiceDefinitionRow | null, InfrastructureError>;
+
+  /**
+   * Fetches multiple service definition rows by IDs (excludes soft-deleted).
+   * @param serviceIds Array of service definition IDs to fetch.
+   * @returns Effect resolving to found rows.
+   */
+  findServiceDefinitionsByIds(
+    serviceIds: string[],
+  ): Effect.Effect<PortServiceDefinitionRow[], InfrastructureError>;
 
   /**
    * Checks if a service definition exists (excludes soft-deleted).
@@ -95,7 +87,7 @@ export interface ServiceDefinitionPort {
    */
   serviceDefinitionExists(
     serviceId: string,
-  ): Effect.Effect<boolean, ServiceDefinitionPersistenceError>;
+  ): Effect.Effect<boolean, InfrastructureError>;
 }
 
 /**

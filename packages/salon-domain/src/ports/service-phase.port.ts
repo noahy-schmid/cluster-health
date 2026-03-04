@@ -1,16 +1,5 @@
-import { Context, Data, Effect } from "effect";
-
-// --- Port-level error ---
-
-/**
- * Raised when a service phase persistence operation fails at the database level.
- */
-export class ServicePhasePersistenceError extends Data.TaggedError(
-  "ServicePhasePersistenceError",
-)<{
-  message: string;
-  cause?: unknown;
-}> {}
+import { Context, Effect } from "effect";
+import { InfrastructureError } from "../application/errors";
 
 // --- Port-owned types ---
 
@@ -49,7 +38,7 @@ export interface ServicePhasePort {
    */
   createPhase(
     input: PortCreateServicePhaseInput,
-  ): Effect.Effect<PortServicePhaseRow, ServicePhasePersistenceError>;
+  ): Effect.Effect<PortServicePhaseRow, InfrastructureError>;
 
   /**
    * Deletes all phases for a service definition (cascades to requirements).
@@ -58,7 +47,7 @@ export interface ServicePhasePort {
    */
   deletePhasesByServiceDefinitionId(
     serviceDefinitionId: string,
-  ): Effect.Effect<void, ServicePhasePersistenceError>;
+  ): Effect.Effect<void, InfrastructureError>;
 
   /**
    * Fetches all phases for a service definition with their resource requirements.
@@ -69,7 +58,7 @@ export interface ServicePhasePort {
     serviceDefinitionId: string,
   ): Effect.Effect<
     (PortServicePhaseRow & { requiredResourceIds: string[] })[],
-    ServicePhasePersistenceError
+    InfrastructureError
   >;
 
   /**
@@ -79,7 +68,7 @@ export interface ServicePhasePort {
    */
   isResourceReferenced(
     resourceId: string,
-  ): Effect.Effect<boolean, ServicePhasePersistenceError>;
+  ): Effect.Effect<boolean, InfrastructureError>;
 }
 
 /**

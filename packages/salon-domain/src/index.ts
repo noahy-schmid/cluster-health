@@ -32,6 +32,7 @@ export {
   NotFoundError,
   ConflictError,
   ValidationError,
+  InfrastructureError,
 } from "./application/errors";
 
 // Resource domain types
@@ -112,10 +113,12 @@ export {
   ListEmployeeServicesUseCase,
   type ListEmployeeServicesQuery,
   type ListEmployeeServicesResult,
+  type EmployeeServiceItem,
 } from "./use-cases/list-employee-services.use-case";
 
 export {
   ListServiceEmployeesUseCase,
   type ListServiceEmployeesQuery,
   type ListServiceEmployeesResult,
+  type ServiceEmployeeItem,
 } from "./use-cases/list-service-employees.use-case";

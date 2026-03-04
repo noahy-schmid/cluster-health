@@ -3,4 +3,5 @@ export {
   NotFoundError,
   ConflictError,
   ValidationError,
+  InfrastructureError,
 } from "../errors";

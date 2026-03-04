@@ -9,6 +9,8 @@ import { InternalError } from "../application/service/errors";
 
 export interface ListServiceDefinitionsQuery {
   salonId: string;
+  /** When true (default), excludes soft-deleted services. Set to false to include them. */
+  excludeDeleted?: boolean;
 }
 
 // --- Result DTO ---
@@ -18,20 +20,24 @@ export type ListServiceDefinitionsResult = ServiceDefinition[];
 // --- Use Case ---
 
 /**
- * Lists all active (non-deleted) service definitions for a salon, including computed duration.
+ * Lists service definitions for a salon. By default excludes soft-deleted services.
  */
 const make = Effect.gen(function* () {
   const aggregate = yield* ServiceAggregate;
 
   return {
     /**
-     * @param query - The query containing the salonId.
+     * @param query - The query containing the salonId and optional excludeDeleted flag.
      * @returns Effect resolving to an array of service definitions.
      */
     execute: (
       query: ListServiceDefinitionsQuery,
-    ): Effect.Effect<ListServiceDefinitionsResult, InternalError> =>
-      aggregate.listServiceDefinitions(query.salonId),
+    ): Effect.Effect<ListServiceDefinitionsResult, InternalError> => {
+      const excludeDeleted = query.excludeDeleted ?? true;
+      return aggregate.listServiceDefinitions(query.salonId, {
+        includeDeleted: !excludeDeleted,
+      });
+    },
   };
 });
 

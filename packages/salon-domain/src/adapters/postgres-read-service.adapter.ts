@@ -8,10 +8,10 @@ import {
 } from "../schema";
 import {
   ReadServicePort,
-  ReadServicePersistenceError,
   type PortFullServiceDefinition,
   type PortServicePhaseWithResources,
 } from "../ports/read-service.port";
+import { InfrastructureError } from "../application/errors";
 
 /**
  * PostgreSQL implementation of the ReadServicePort using Drizzle ORM.
@@ -22,10 +22,7 @@ const make = Effect.gen(function* () {
 
   const fetchPhasesWithResources = (
     serviceId: string,
-  ): Effect.Effect<
-    PortServicePhaseWithResources[],
-    ReadServicePersistenceError
-  > =>
+  ): Effect.Effect<PortServicePhaseWithResources[], InfrastructureError> =>
     Effect.gen(function* () {
       const phases = yield* Effect.tryPromise(() =>
         db
@@ -36,7 +33,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new ReadServicePersistenceError({
+            new InfrastructureError({
               message: "Failed to fetch service phases",
               cause: error,
             }),
@@ -53,7 +50,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ReadServicePersistenceError({
+              new InfrastructureError({
                 message: "Failed to fetch phase resource requirements",
                 cause: error,
               }),
@@ -88,7 +85,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ReadServicePersistenceError({
+              new InfrastructureError({
                 message: "Failed to find service definition",
                 cause: error,
               }),
@@ -115,22 +112,26 @@ const make = Effect.gen(function* () {
       });
 
   const listFullServiceDefinitionsBySalonId: ReadServicePort["listFullServiceDefinitionsBySalonId"] =
-    (salonId) =>
+    (salonId, options) =>
       Effect.gen(function* () {
+        const includeDeleted = options?.includeDeleted ?? false;
+
+        const whereConditions = includeDeleted
+          ? eq(serviceDefinitionsTable.salonId, salonId)
+          : and(
+              eq(serviceDefinitionsTable.salonId, salonId),
+              isNull(serviceDefinitionsTable.deletedAt),
+            );
+
         const services = yield* Effect.tryPromise(() =>
           db
             .select()
             .from(serviceDefinitionsTable)
-            .where(
-              and(
-                eq(serviceDefinitionsTable.salonId, salonId),
-                isNull(serviceDefinitionsTable.deletedAt),
-              ),
-            ),
+            .where(whereConditions),
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ReadServicePersistenceError({
+              new InfrastructureError({
                 message: "Failed to list service definitions",
                 cause: error,
               }),

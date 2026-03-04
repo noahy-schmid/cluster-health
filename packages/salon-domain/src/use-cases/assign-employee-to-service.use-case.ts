@@ -10,6 +10,7 @@ import {
 } from "../application/employee-service/errors";
 import { ServiceDefinitionPort } from "../ports/service-definition.port";
 import { StylistPort } from "../ports/stylist.port";
+import { ValidationError } from "../application/errors";
 
 // --- Command DTO ---
 
@@ -26,7 +27,8 @@ export type AssignEmployeeToServiceResult = EmployeeServiceAssignment;
 
 /**
  * Assigns an employee (stylist) to a service definition.
- * Performs cross-aggregate validation to verify both the stylist and service exist.
+ * Performs cross-aggregate validation to verify both the stylist and service exist
+ * and belong to the same salon.
  */
 const make = Effect.gen(function* () {
   const aggregate = yield* EmployeeServiceAggregate;
@@ -42,12 +44,12 @@ const make = Effect.gen(function* () {
       command: AssignEmployeeToServiceCommand,
     ): Effect.Effect<
       AssignEmployeeToServiceResult,
-      InternalError | NotFoundError | ConflictError
+      InternalError | NotFoundError | ConflictError | ValidationError
     > =>
       Effect.gen(function* () {
-        // Cross-aggregate: verify stylist exists
-        const stylistExists = yield* stylistPort
-          .stylistExists(command.stylistId)
+        // Cross-aggregate: verify stylist exists and get salonId
+        const stylist = yield* stylistPort
+          .getStylistById(command.stylistId)
           .pipe(
             Effect.mapError(
               (error) =>
@@ -58,7 +60,7 @@ const make = Effect.gen(function* () {
             ),
           );
 
-        if (!stylistExists) {
+        if (!stylist) {
           return yield* Effect.fail(
             new NotFoundError({
               entity: "Stylist",
@@ -67,9 +69,9 @@ const make = Effect.gen(function* () {
           );
         }
 
-        // Cross-aggregate: verify service exists
-        const serviceExists = yield* serviceDefPort
-          .serviceDefinitionExists(command.serviceId)
+        // Cross-aggregate: verify service exists and get salonId
+        const serviceDef = yield* serviceDefPort
+          .findServiceDefinitionById(command.serviceId)
           .pipe(
             Effect.mapError(
               (error) =>
@@ -80,11 +82,20 @@ const make = Effect.gen(function* () {
             ),
           );
 
-        if (!serviceExists) {
+        if (!serviceDef) {
           return yield* Effect.fail(
             new NotFoundError({
               entity: "ServiceDefinition",
               id: command.serviceId,
+            }),
+          );
+        }
+
+        // Verify stylist and service belong to the same salon
+        if (stylist.salonId !== serviceDef.salonId) {
+          return yield* Effect.fail(
+            new ValidationError({
+              message: `Stylist and service must belong to the same salon`,
             }),
           );
         }

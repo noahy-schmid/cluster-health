@@ -2,10 +2,8 @@ import { Effect, Layer } from "effect";
 import { and, eq } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
 import { employeeServiceAssignmentsTable } from "../schema";
-import {
-  EmployeeServicePort,
-  EmployeeServicePersistenceError,
-} from "../ports/employee-service.port";
+import { EmployeeServicePort } from "../ports/employee-service.port";
+import { InfrastructureError } from "../application/errors";
 
 /**
  * PostgreSQL implementation of the EmployeeServicePort using Drizzle ORM.
@@ -29,7 +27,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new EmployeeServicePersistenceError({
+            new InfrastructureError({
               message: "Failed to assign employee to service",
               cause: error,
             }),
@@ -38,7 +36,7 @@ const make = Effect.gen(function* () {
 
       if (!created) {
         return yield* Effect.fail(
-          new EmployeeServicePersistenceError({
+          new InfrastructureError({
             message: "Failed to assign employee: no row returned",
           }),
         );
@@ -68,7 +66,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new EmployeeServicePersistenceError({
+            new InfrastructureError({
               message: "Failed to unassign employee from service",
               cause: error,
             }),
@@ -88,7 +86,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new EmployeeServicePersistenceError({
+            new InfrastructureError({
               message: "Failed to list assignments by employee",
               cause: error,
             }),
@@ -110,7 +108,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new EmployeeServicePersistenceError({
+            new InfrastructureError({
               message: "Failed to list assignments by service",
               cause: error,
             }),
@@ -142,7 +140,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new EmployeeServicePersistenceError({
+            new InfrastructureError({
               message: "Failed to check assignment existence",
               cause: error,
             }),

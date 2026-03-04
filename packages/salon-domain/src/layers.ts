@@ -7,6 +7,8 @@ import { DatabaseLayer } from "./infrastructure/database.service";
 import { PostgresServicePhaseAdapter } from "./adapters/postgres-service-phase.adapter";
 import { PostgresServiceDefinitionAdapter } from "./adapters/postgres-service-definition.adapter";
 import { PostgresStylistPortAdapter } from "./adapters/postgres-stylist-port.adapter";
+import { PostgresResourceAdapter } from "./adapters/postgres-resource.adapter";
+import { ValidateServiceResourcesDomainService } from "./application/domain-services/validate-service-resources.domain-service";
 import { CreateResourceUseCase } from "./use-cases/create-resource.use-case";
 import { UpdateResourceUseCase } from "./use-cases/update-resource.use-case";
 import { DeleteResourceUseCase } from "./use-cases/delete-resource.use-case";
@@ -46,6 +48,16 @@ const StylistPortLayer = PostgresStylistPortAdapter.pipe(
   Layer.orDie,
 );
 
+const ResourcePortLayer = PostgresResourceAdapter.pipe(
+  Layer.provide(InfrastructureLayer),
+  Layer.orDie,
+);
+
+const ValidateServiceResourcesLayer =
+  ValidateServiceResourcesDomainService.DefaultWithoutDependencies.pipe(
+    Layer.provide(ResourcePortLayer),
+  );
+
 // Resource use case layers
 export const CreateResourceUseCaseLayer = CreateResourceUseCase.Default;
 export const UpdateResourceUseCaseLayer = UpdateResourceUseCase.Default;
@@ -56,9 +68,14 @@ export const ListResourcesUseCaseLayer = ListResourcesUseCase.Default;
 
 // Service definition use case layers
 export const CreateServiceDefinitionUseCaseLayer =
-  CreateServiceDefinitionUseCase.Default;
+  CreateServiceDefinitionUseCase.Default.pipe(
+    Layer.provide(ValidateServiceResourcesLayer),
+  );
 export const UpdateServiceDefinitionUseCaseLayer =
-  UpdateServiceDefinitionUseCase.Default;
+  UpdateServiceDefinitionUseCase.Default.pipe(
+    Layer.provide(ServiceDefinitionPortLayer),
+    Layer.provide(ValidateServiceResourcesLayer),
+  );
 export const DeleteServiceDefinitionUseCaseLayer =
   DeleteServiceDefinitionUseCase.Default;
 export const ListServiceDefinitionsUseCaseLayer =
@@ -73,6 +90,8 @@ export const AssignEmployeeToServiceUseCaseLayer =
 export const UnassignEmployeeFromServiceUseCaseLayer =
   UnassignEmployeeFromServiceUseCase.Default;
 export const ListEmployeeServicesUseCaseLayer =
-  ListEmployeeServicesUseCase.Default;
+  ListEmployeeServicesUseCase.Default.pipe(
+    Layer.provide(ServiceDefinitionPortLayer),
+  );
 export const ListServiceEmployeesUseCaseLayer =
-  ListServiceEmployeesUseCase.Default;
+  ListServiceEmployeesUseCase.Default.pipe(Layer.provide(StylistPortLayer));

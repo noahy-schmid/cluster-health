@@ -1,16 +1,5 @@
-import { Context, Data, Effect } from "effect";
-
-// --- Port-level error ---
-
-/**
- * Raised when a read-service persistence operation fails at the database level.
- */
-export class ReadServicePersistenceError extends Data.TaggedError(
-  "ReadServicePersistenceError",
-)<{
-  message: string;
-  cause?: unknown;
-}> {}
+import { Context, Effect } from "effect";
+import { InfrastructureError } from "../application/errors";
 
 // --- Port-owned types ---
 
@@ -49,20 +38,18 @@ export interface ReadServicePort {
    */
   findFullServiceDefinitionById(
     serviceId: string,
-  ): Effect.Effect<
-    PortFullServiceDefinition | null,
-    ReadServicePersistenceError
-  >;
+  ): Effect.Effect<PortFullServiceDefinition | null, InfrastructureError>;
 
   /**
    * Fetches all service definitions for a salon with phases and resource requirements.
-   * Excludes soft-deleted services.
    * @param salonId Salon ID.
+   * @param options Optional settings. `includeDeleted` defaults to false.
    * @returns Effect resolving to array of full service definitions.
    */
   listFullServiceDefinitionsBySalonId(
     salonId: string,
-  ): Effect.Effect<PortFullServiceDefinition[], ReadServicePersistenceError>;
+    options?: { includeDeleted?: boolean },
+  ): Effect.Effect<PortFullServiceDefinition[], InfrastructureError>;
 }
 
 /**

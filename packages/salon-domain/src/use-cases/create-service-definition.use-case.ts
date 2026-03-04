@@ -5,6 +5,7 @@ import {
   type CreateServicePhaseInput,
 } from "../application/service/service.aggregate";
 import { InternalError, ValidationError } from "../application/service/errors";
+import { ValidateServiceResourcesDomainService } from "../application/domain-services/validate-service-resources.domain-service";
 
 // --- Command DTO ---
 
@@ -24,9 +25,11 @@ export type CreateServiceDefinitionResult = ServiceDefinition;
 
 /**
  * Creates a new service definition with its phases. All phases must be provided upfront.
+ * Validates that all referenced resources exist and belong to the same salon.
  */
 const make = Effect.gen(function* () {
   const aggregate = yield* ServiceAggregate;
+  const validateResources = yield* ValidateServiceResourcesDomainService;
 
   return {
     /**
@@ -39,12 +42,20 @@ const make = Effect.gen(function* () {
       CreateServiceDefinitionResult,
       InternalError | ValidationError
     > =>
-      aggregate.createServiceDefinition({
-        salonId: command.salonId,
-        name: command.name,
-        description: command.description,
-        priceInCents: command.priceInCents,
-        phases: command.phases,
+      Effect.gen(function* () {
+        // Validate resources exist and belong to the same salon
+        const allResourceIds = command.phases.flatMap(
+          (p) => p.requiredResourceIds,
+        );
+        yield* validateResources.validate(command.salonId, allResourceIds);
+
+        return yield* aggregate.createServiceDefinition({
+          salonId: command.salonId,
+          name: command.name,
+          description: command.description,
+          priceInCents: command.priceInCents,
+          phases: command.phases,
+        });
       }),
   };
 });

@@ -1,11 +1,9 @@
 import { Effect, Layer } from "effect";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, inArray } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
 import { serviceDefinitionsTable } from "../schema";
-import {
-  ServiceDefinitionPort,
-  ServiceDefinitionPersistenceError,
-} from "../ports/service-definition.port";
+import { ServiceDefinitionPort } from "../ports/service-definition.port";
+import { InfrastructureError } from "../application/errors";
 
 /**
  * PostgreSQL implementation of the ServiceDefinitionPort using Drizzle ORM.
@@ -30,7 +28,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ServiceDefinitionPersistenceError({
+              new InfrastructureError({
                 message: "Failed to create service definition",
                 cause: error,
               }),
@@ -39,7 +37,7 @@ const make = Effect.gen(function* () {
 
         if (!created) {
           return yield* Effect.fail(
-            new ServiceDefinitionPersistenceError({
+            new InfrastructureError({
               message: "Failed to create service definition: no row returned",
             }),
           );
@@ -70,7 +68,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ServiceDefinitionPersistenceError({
+              new InfrastructureError({
                 message: "Failed to update service definition",
                 cause: error,
               }),
@@ -97,7 +95,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ServiceDefinitionPersistenceError({
+              new InfrastructureError({
                 message: "Failed to soft-delete service definition",
                 cause: error,
               }),
@@ -123,7 +121,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ServiceDefinitionPersistenceError({
+              new InfrastructureError({
                 message: "Failed to find service definition",
                 cause: error,
               }),
@@ -131,6 +129,36 @@ const make = Effect.gen(function* () {
         );
 
         return service ?? null;
+      });
+
+  const findServiceDefinitionsByIds: ServiceDefinitionPort["findServiceDefinitionsByIds"] =
+    (serviceIds) =>
+      Effect.gen(function* () {
+        if (serviceIds.length === 0) {
+          return [];
+        }
+
+        const services = yield* Effect.tryPromise(() =>
+          db
+            .select()
+            .from(serviceDefinitionsTable)
+            .where(
+              and(
+                inArray(serviceDefinitionsTable.id, serviceIds),
+                isNull(serviceDefinitionsTable.deletedAt),
+              ),
+            ),
+        ).pipe(
+          Effect.mapError(
+            (error) =>
+              new InfrastructureError({
+                message: "Failed to find service definitions by IDs",
+                cause: error,
+              }),
+          ),
+        );
+
+        return services;
       });
 
   const serviceDefinitionExists: ServiceDefinitionPort["serviceDefinitionExists"] =
@@ -150,7 +178,7 @@ const make = Effect.gen(function* () {
         ).pipe(
           Effect.mapError(
             (error) =>
-              new ServiceDefinitionPersistenceError({
+              new InfrastructureError({
                 message: "Failed to check service definition existence",
                 cause: error,
               }),
@@ -165,6 +193,7 @@ const make = Effect.gen(function* () {
     updateServiceDefinition,
     softDeleteServiceDefinition,
     findServiceDefinitionById,
+    findServiceDefinitionsByIds,
     serviceDefinitionExists,
   } satisfies ServiceDefinitionPort;
 });

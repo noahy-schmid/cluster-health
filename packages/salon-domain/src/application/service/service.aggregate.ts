@@ -313,10 +313,13 @@ const make = Effect.gen(function* () {
       return fromPort(full);
     });
 
-  const listServiceDefinitions = (salonId: string) =>
+  const listServiceDefinitions = (
+    salonId: string,
+    options?: { includeDeleted?: boolean },
+  ) =>
     Effect.gen(function* () {
       const results = yield* readServicePort
-        .listFullServiceDefinitionsBySalonId(salonId)
+        .listFullServiceDefinitionsBySalonId(salonId, options)
         .pipe(
           Effect.mapError(
             (error) =>

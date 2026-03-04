@@ -29,3 +29,14 @@ export class ConflictError extends Data.TaggedError("ConflictError")<{
 export class ValidationError extends Data.TaggedError("ValidationError")<{
   message: string;
 }> {}
+
+/**
+ * Base error for infrastructure/database operation failures.
+ * Used across all ports and adapters instead of per-port error classes.
+ */
+export class InfrastructureError extends Data.TaggedError(
+  "InfrastructureError",
+)<{
+  message: string;
+  cause?: unknown;
+}> {}

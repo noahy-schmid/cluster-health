@@ -1,8 +1,9 @@
 import { Effect, Layer } from "effect";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
 import { salonResourcesTable } from "../schema";
-import { ResourcePort, ResourcePersistenceError } from "../ports/resource.port";
+import { ResourcePort } from "../ports/resource.port";
+import { InfrastructureError } from "../application/errors";
 
 /**
  * PostgreSQL implementation of the ResourcePort using Drizzle ORM.
@@ -17,7 +18,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new ResourcePersistenceError({
+            new InfrastructureError({
               message: "Failed to create resource",
               cause: error,
             }),
@@ -26,7 +27,7 @@ const make = Effect.gen(function* () {
 
       if (!created) {
         return yield* Effect.fail(
-          new ResourcePersistenceError({
+          new InfrastructureError({
             message: "Failed to create resource: no row returned",
           }),
         );
@@ -50,7 +51,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new ResourcePersistenceError({
+            new InfrastructureError({
               message: "Failed to update resource",
               cause: error,
             }),
@@ -70,7 +71,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new ResourcePersistenceError({
+            new InfrastructureError({
               message: "Failed to delete resource",
               cause: error,
             }),
@@ -90,7 +91,7 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new ResourcePersistenceError({
+            new InfrastructureError({
               message: "Failed to find resource",
               cause: error,
             }),
@@ -112,8 +113,34 @@ const make = Effect.gen(function* () {
       ).pipe(
         Effect.mapError(
           (error) =>
-            new ResourcePersistenceError({
+            new InfrastructureError({
               message: "Failed to list resources",
+              cause: error,
+            }),
+        ),
+      );
+
+      return resources;
+    });
+
+  const findResourcesByIds: ResourcePort["findResourcesByIds"] = (
+    resourceIds,
+  ) =>
+    Effect.gen(function* () {
+      if (resourceIds.length === 0) {
+        return [];
+      }
+
+      const resources = yield* Effect.tryPromise(() =>
+        db
+          .select()
+          .from(salonResourcesTable)
+          .where(inArray(salonResourcesTable.id, resourceIds)),
+      ).pipe(
+        Effect.mapError(
+          (error) =>
+            new InfrastructureError({
+              message: "Failed to find resources by IDs",
               cause: error,
             }),
         ),
@@ -128,6 +155,7 @@ const make = Effect.gen(function* () {
     deleteResource,
     findResourceById,
     listResourcesBySalonId,
+    findResourcesByIds,
   } satisfies ResourcePort;
 });
 

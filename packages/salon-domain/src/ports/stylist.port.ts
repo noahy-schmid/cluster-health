@@ -1,20 +1,19 @@
-import { Context, Data, Effect } from "effect";
+import { Context, Effect } from "effect";
+import { InfrastructureError } from "../application/errors";
 
-// --- Port-level error ---
+// --- Port-owned types ---
 
-/**
- * Raised when a stylist lookup operation fails.
- */
-export class StylistPortError extends Data.TaggedError("StylistPortError")<{
-  message: string;
-  cause?: unknown;
-}> {}
+export interface PortStylist {
+  id: string;
+  salonId: string;
+  name: string;
+}
 
 // --- Port interface ---
 
 /**
- * Port for checking stylist existence.
- * Used by the employee-service aggregate to verify stylist references.
+ * Port for stylist lookup operations.
+ * Used by use cases for cross-aggregate validation and data enrichment.
  */
 export interface StylistPort {
   /**
@@ -22,7 +21,16 @@ export interface StylistPort {
    * @param stylistId Stylist ID to check.
    * @returns Effect resolving to true if the stylist exists.
    */
-  stylistExists(stylistId: string): Effect.Effect<boolean, StylistPortError>;
+  stylistExists(stylistId: string): Effect.Effect<boolean, InfrastructureError>;
+
+  /**
+   * Fetches a stylist by ID.
+   * @param stylistId Stylist ID to fetch.
+   * @returns Effect resolving to the stylist or null if not found.
+   */
+  getStylistById(
+    stylistId: string,
+  ): Effect.Effect<PortStylist | null, InfrastructureError>;
 }
 
 /**

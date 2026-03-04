@@ -1,16 +1,5 @@
-import { Context, Data, Effect } from "effect";
-
-// --- Port-level error ---
-
-/**
- * Raised when an employee-service assignment persistence operation fails.
- */
-export class EmployeeServicePersistenceError extends Data.TaggedError(
-  "EmployeeServicePersistenceError",
-)<{
-  message: string;
-  cause?: unknown;
-}> {}
+import { Context, Effect } from "effect";
+import { InfrastructureError } from "../application/errors";
 
 // --- Port-owned types ---
 
@@ -35,10 +24,7 @@ export interface EmployeeServicePort {
   assignEmployee(
     stylistId: string,
     serviceId: string,
-  ): Effect.Effect<
-    PortEmployeeServiceAssignment,
-    EmployeeServicePersistenceError
-  >;
+  ): Effect.Effect<PortEmployeeServiceAssignment, InfrastructureError>;
 
   /**
    * Removes an employee from a service.
@@ -49,7 +35,7 @@ export interface EmployeeServicePort {
   unassignEmployee(
     stylistId: string,
     serviceId: string,
-  ): Effect.Effect<boolean, EmployeeServicePersistenceError>;
+  ): Effect.Effect<boolean, InfrastructureError>;
 
   /**
    * Lists all service IDs assigned to a stylist.
@@ -58,10 +44,7 @@ export interface EmployeeServicePort {
    */
   listByEmployee(
     stylistId: string,
-  ): Effect.Effect<
-    PortEmployeeServiceAssignment[],
-    EmployeeServicePersistenceError
-  >;
+  ): Effect.Effect<PortEmployeeServiceAssignment[], InfrastructureError>;
 
   /**
    * Lists all stylist IDs assigned to a service.
@@ -70,10 +53,7 @@ export interface EmployeeServicePort {
    */
   listByService(
     serviceId: string,
-  ): Effect.Effect<
-    PortEmployeeServiceAssignment[],
-    EmployeeServicePersistenceError
-  >;
+  ): Effect.Effect<PortEmployeeServiceAssignment[], InfrastructureError>;
 
   /**
    * Checks if a specific assignment exists.
@@ -84,7 +64,7 @@ export interface EmployeeServicePort {
   assignmentExists(
     stylistId: string,
     serviceId: string,
-  ): Effect.Effect<boolean, EmployeeServicePersistenceError>;
+  ): Effect.Effect<boolean, InfrastructureError>;
 }
 
 /**

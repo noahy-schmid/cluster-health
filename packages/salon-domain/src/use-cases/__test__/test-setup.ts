@@ -14,6 +14,7 @@ import { PostgresStylistPortAdapter } from "../../adapters/postgres-stylist-port
 import { ResourceAggregate } from "../../application/resource/resource.aggregate";
 import { ServiceAggregate } from "../../application/service/service.aggregate";
 import { EmployeeServiceAggregate } from "../../application/employee-service/employee-service.aggregate";
+import { ValidateServiceResourcesDomainService } from "../../application/domain-services/validate-service-resources.domain-service";
 import { CreateResourceUseCase } from "../create-resource.use-case";
 import { UpdateResourceUseCase } from "../update-resource.use-case";
 import { DeleteResourceUseCase } from "../delete-resource.use-case";
@@ -91,6 +92,12 @@ export async function setupTestContext(): Promise<TestContext> {
     Layer.provide(infrastructureLayer),
   );
 
+  // Domain service layers
+  const validateResourcesLayer =
+    ValidateServiceResourcesDomainService.DefaultWithoutDependencies.pipe(
+      Layer.provide(resourcePortLayer),
+    );
+
   // Aggregate layers
   const resourceAggregateLayer =
     ResourceAggregate.DefaultWithoutDependencies.pipe(
@@ -124,8 +131,13 @@ export async function setupTestContext(): Promise<TestContext> {
   ).pipe(Layer.provide(resourceAggregateLayer), Layer.orDie);
 
   const serviceUseCaseLayer = Layer.mergeAll(
-    CreateServiceDefinitionUseCase.DefaultWithoutDependencies,
-    UpdateServiceDefinitionUseCase.DefaultWithoutDependencies,
+    CreateServiceDefinitionUseCase.DefaultWithoutDependencies.pipe(
+      Layer.provide(validateResourcesLayer),
+    ),
+    UpdateServiceDefinitionUseCase.DefaultWithoutDependencies.pipe(
+      Layer.provide(serviceDefPortLayer),
+      Layer.provide(validateResourcesLayer),
+    ),
     DeleteServiceDefinitionUseCase.DefaultWithoutDependencies,
     ListServiceDefinitionsUseCase.DefaultWithoutDependencies,
   ).pipe(Layer.provide(serviceAggregateLayer), Layer.orDie);
@@ -136,8 +148,12 @@ export async function setupTestContext(): Promise<TestContext> {
       Layer.provide(stylistPortLayer),
     ),
     UnassignEmployeeFromServiceUseCase.DefaultWithoutDependencies,
-    ListEmployeeServicesUseCase.DefaultWithoutDependencies,
-    ListServiceEmployeesUseCase.DefaultWithoutDependencies,
+    ListEmployeeServicesUseCase.DefaultWithoutDependencies.pipe(
+      Layer.provide(serviceDefPortLayer),
+    ),
+    ListServiceEmployeesUseCase.DefaultWithoutDependencies.pipe(
+      Layer.provide(stylistPortLayer),
+    ),
   ).pipe(Layer.provide(assignmentAggregateLayer), Layer.orDie);
 
   // Run migrations and seed data
