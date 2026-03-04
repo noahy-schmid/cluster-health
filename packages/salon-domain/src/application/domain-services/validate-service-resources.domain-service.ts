@@ -67,6 +67,11 @@ const make = Effect.gen(function* () {
   };
 });
 
+/**
+ * Domain service for validating resource references in service definitions.
+ * Ensures all referenced resources exist and belong to the same salon as the service.
+ * Used by CreateServiceDefinitionUseCase and UpdateServiceDefinitionUseCase.
+ */
 export class ValidateServiceResourcesDomainService extends Effect.Service<ValidateServiceResourcesDomainService>()(
   "@repo/salon-domain/ValidateServiceResourcesDomainService",
   {

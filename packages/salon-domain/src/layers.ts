@@ -54,7 +54,7 @@ const ResourcePortLayer = PostgresResourceAdapter.pipe(
 );
 
 const ValidateServiceResourcesLayer =
-  ValidateServiceResourcesDomainService.DefaultWithoutDependencies.pipe(
+  ValidateServiceResourcesDomainService.Default.pipe(
     Layer.provide(ResourcePortLayer),
   );
 

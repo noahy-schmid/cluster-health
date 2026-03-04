@@ -68,7 +68,7 @@ const make = Effect.gen(function* () {
           .filter((a) => serviceMap.has(a.serviceDefinitionId))
           .map((a) => ({
             serviceDefinitionId: a.serviceDefinitionId,
-            serviceName: serviceMap.get(a.serviceDefinitionId)!,
+            serviceName: serviceMap.get(a.serviceDefinitionId) ?? "",
             createdAt: a.createdAt,
           }));
       }),

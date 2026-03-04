@@ -124,10 +124,7 @@ const make = Effect.gen(function* () {
             );
 
         const services = yield* Effect.tryPromise(() =>
-          db
-            .select()
-            .from(serviceDefinitionsTable)
-            .where(whereConditions),
+          db.select().from(serviceDefinitionsTable).where(whereConditions),
         ).pipe(
           Effect.mapError(
             (error) =>

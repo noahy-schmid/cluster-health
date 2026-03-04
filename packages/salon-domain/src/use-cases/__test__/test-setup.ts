@@ -94,7 +94,7 @@ export async function setupTestContext(): Promise<TestContext> {
 
   // Domain service layers
   const validateResourcesLayer =
-    ValidateServiceResourcesDomainService.DefaultWithoutDependencies.pipe(
+    ValidateServiceResourcesDomainService.Default.pipe(
       Layer.provide(resourcePortLayer),
     );
 

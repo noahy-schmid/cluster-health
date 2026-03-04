@@ -66,13 +66,11 @@ describe("Employee-Service Assignment Use Cases", () => {
       });
 
       expect(services.length).toBeGreaterThanOrEqual(1);
-      expect(
-        services.some((s) => s.serviceDefinitionId === serviceId),
-      ).toBe(true);
-      // Verify enriched data includes service name
-      const matched = services.find(
-        (s) => s.serviceDefinitionId === serviceId,
+      expect(services.some((s) => s.serviceDefinitionId === serviceId)).toBe(
+        true,
       );
+      // Verify enriched data includes service name
+      const matched = services.find((s) => s.serviceDefinitionId === serviceId);
       expect(matched?.serviceName).toBe("Assignment Test Service");
     });
 
@@ -165,9 +163,7 @@ describe("Employee-Service Assignment Use Cases", () => {
 
       const listUC = yield* ListServiceEmployeesUseCase;
       const employees = yield* listUC.execute({ serviceId });
-      expect(employees.some((e) => e.stylistId === ctx.stylistId)).toBe(
-        false,
-      );
+      expect(employees.some((e) => e.stylistId === ctx.stylistId)).toBe(false);
     });
 
     await Effect.runPromise(

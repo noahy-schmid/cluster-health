@@ -3,6 +3,10 @@ import { InfrastructureError } from "../application/errors";
 
 // --- Port-owned types ---
 
+/**
+ * Minimal stylist information returned by the port.
+ * Used for cross-aggregate validation and data enrichment in use cases.
+ */
 export interface PortStylist {
   id: string;
   salonId: string;
