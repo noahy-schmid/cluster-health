@@ -84,6 +84,7 @@ export default function ServiceCard({ service, salonId }: ServiceCardProps) {
               text="Bearbeiten"
               onClick={handleEdit}
               elevation={1}
+              className="w-full"
             />
           </div>
           <FlatIconButton

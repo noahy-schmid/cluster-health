@@ -73,9 +73,7 @@ export default function FormMoney({
           placeholder="0,00"
           className="px-md py-sm pr-xl border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal w-40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
-        <span className="p-md text-fg-muted font-normal">
-          €
-        </span>
+        <span className="p-md text-fg-muted font-normal">€</span>
       </div>
       {helperText && <p className="text-sm text-fg-muted">{helperText}</p>}
     </div>

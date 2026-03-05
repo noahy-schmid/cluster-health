@@ -22,7 +22,7 @@ import type {
 } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
 import FormTextarea from "@/components/website/forms/FormTextarea";
-import FormNumber from "@/components/website/forms/FormNumber";
+import FormMoney from "@/components/website/forms/FormMoney";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import PhaseEditor from "./PhaseEditor.component";
 import { useServiceFormState } from "./ServiceForm.state";
@@ -179,8 +179,8 @@ export default function ServiceForm({
           rows={3}
         />
 
-        <FormNumber
-          label="Preis (in Cent)"
+        <FormMoney
+          label="Preis"
           value={state.priceInCents}
           onChange={setPrice}
           min={0}

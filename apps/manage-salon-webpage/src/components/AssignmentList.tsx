@@ -109,7 +109,7 @@ export default function AssignmentList({
                 icon={Plus}
                 text={item.name}
                 onClick={() => handleAssign(item.id)}
-                elevation={0}
+                elevation={1}
               />
             ))}
           </div>

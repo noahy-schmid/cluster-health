@@ -12,6 +12,7 @@ import {
 import FormInput from "@/components/website/forms/FormInput";
 import FormTextarea from "@/components/website/forms/FormTextarea";
 import FormNumber from "@/components/website/forms/FormNumber";
+import FormMoney from "@/components/website/forms/FormMoney";
 import { useServiceFormState } from "./ServiceForm.state";
 import { useNotifications } from "@/components/notifications/useNotifications";
 
@@ -174,8 +175,8 @@ export default function ColorationServiceForm({
           rows={3}
         />
 
-        <FormNumber
-          label="Preis (in Cent)"
+        <FormMoney
+          label="Preis"
           value={state.priceInCents}
           onChange={setPrice}
           min={0}
