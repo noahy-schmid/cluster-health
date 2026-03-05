@@ -19,7 +19,7 @@ export default function FlatChip({
   ariaLabel,
 }: FlatChipProps) {
   return (
-    <span className="flex items-center gap-sm bg-primary-100 text-primary-800 px-md py-sm rounded-md text-sm">
+    <span className="flex items-center gap-sm bg-primary-100 text-primary-800 py-sm px-md rounded-md ">
       {label}
       {onDelete && (
         <button
@@ -27,7 +27,7 @@ export default function FlatChip({
           className="cursor-pointer hover:text-fg-error"
           aria-label={ariaLabel ?? `${label} entfernen`}
         >
-          <XIcon className="w-4 h-4" />
+          <XIcon className="w-icon-base h-icon-base" />
         </button>
       )}
     </span>

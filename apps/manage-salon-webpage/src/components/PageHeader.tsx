@@ -28,7 +28,7 @@ export default function PageHeader({
 
   return (
     <div className="my-xl">
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-md">
+      <div className="flex flex-nowrap md:flex-row md:items-start md:justify-between gap-md">
         <div className="flex items-start justify-between gap-md flex-1">
           <div>
             <h1 className="text-3xl font-focus font-brand text-fg-brand">
