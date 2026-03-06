@@ -1,25 +1,15 @@
 import "server-only";
 
-import { AuthGuard } from "./auth.guard";
+import { SalonAccessGuard } from "./salon.guard";
 
 export const ServiceGuard = {
   async canEditService(
     salonId: string,
   ): Promise<{ success: true } | { success: false; error: string }> {
-    const authToken = await AuthGuard.getAuthToken();
-
-    if (!authToken) {
-      return { success: false, error: "Ungültige Sitzung" };
+    const access = await SalonAccessGuard.canAccessSalon(salonId);
+    if (!access.success) {
+      return { success: false, error: access.error };
     }
-
-    if (!authToken.salonId) {
-      return { success: false, error: "Kein Salon zugeordnet" };
-    }
-
-    if (authToken.salonId !== salonId) {
-      return { success: false, error: "Nicht autorisiert" };
-    }
-
     return { success: true };
   },
 };

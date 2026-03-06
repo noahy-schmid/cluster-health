@@ -440,12 +440,8 @@ export async function assignStylistToService(
 
     if (!assigned) {
       return {
-        success: true as const,
-        data: {
-          stylistId,
-          stylistName: "",
-          createdAt: new Date(),
-        } satisfies ServiceEmployeeItem,
+        success: false as const,
+        error: "Zuweisung konnte nicht bestätigt werden",
       };
     }
 
