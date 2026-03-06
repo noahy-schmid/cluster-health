@@ -3,11 +3,10 @@
 import { useRef, useCallback } from "react";
 import type { ServiceDefinition } from "@/lib/types/service-types";
 import { SEAT_RESOURCE_ID } from "@/lib/types/service-types";
-import FormInput from "@/components/website/forms/FormInput";
-import FormTextarea from "@/components/website/forms/FormTextarea";
 import FormNumber from "@/components/website/forms/FormNumber";
-import FormMoney from "@/components/website/forms/FormMoney";
+import FormActions from "@/components/website/forms/FormActions";
 import { useServiceFormState } from "./ServiceForm.state";
+import ServiceDetailsCard from "./ServiceDetailsCard.component";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import { useAutoSave } from "@/hooks/useAutoSave";
 
@@ -140,36 +139,22 @@ export default function SimpleServiceForm({
   };
 
   return (
-    <div className="bg-bg-1 rounded-lg p-lg">
-      <div className="space-y-lg">
-        <FormInput
-          label="Name"
-          value={state.name}
-          onChange={setName}
-          onBlur={handleBlur}
-          placeholder="z.B. Haarschnitt Damen"
-          required
-        />
+    <div className="space-y-lg">
+      <ServiceDetailsCard
+        name={state.name}
+        description={state.description}
+        priceInCents={state.priceInCents}
+        onNameChange={setName}
+        onDescriptionChange={setDescription}
+        onPriceChange={setPrice}
+        onBlur={handleBlur}
+      />
 
-        <FormTextarea
-          label="Beschreibung"
-          value={state.description}
-          onChange={setDescription}
-          onBlur={handleBlur}
-          placeholder="Beschreibe die Dienstleistung..."
-          rows={3}
-        />
-
-        <FormMoney
-          label="Preis"
-          value={state.priceInCents}
-          onChange={setPrice}
-          onBlur={handleBlur}
-          min={0}
-          max={100000}
-        />
-
-        {phase && (
+      {phase && (
+        <div className="bg-bg-1 border border-border rounded-lg p-md">
+          <div className="font-focus text-fg-normal text-base">
+            Durchführung
+          </div>
           <FormNumber
             label="Dauer (Minuten)"
             value={phase.durationMinutes}
@@ -180,37 +165,24 @@ export default function SimpleServiceForm({
             min={1}
             max={480}
           />
-        )}
+        </div>
+      )}
 
-        {state.error && (
-          <div className="p-md bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-700">{state.error}</p>
-          </div>
-        )}
+      {state.error && (
+        <div className="p-md bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-700">{state.error}</p>
+        </div>
+      )}
 
-        {!isEditMode && (
-          <div className="flex gap-md justify-end pt-lg">
-            {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
-                disabled={state.isSaving}
-              >
-                Abbrechen
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={state.isSaving || !isDirty}
-              className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
-            </button>
-          </div>
-        )}
-      </div>
+      {!isEditMode && (
+        <FormActions
+          onCancel={onCancel}
+          onSave={handleSave}
+          saveLabel={state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
+          isSaving={state.isSaving}
+          isSaveDisabled={!isDirty}
+        />
+      )}
     </div>
   );
 }

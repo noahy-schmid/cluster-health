@@ -9,11 +9,10 @@ import {
   SEAT_RESOURCE_ID,
   HEATING_LAMP_RESOURCE_ID,
 } from "@/lib/types/service-types";
-import FormInput from "@/components/website/forms/FormInput";
-import FormTextarea from "@/components/website/forms/FormTextarea";
 import FormNumber from "@/components/website/forms/FormNumber";
-import FormMoney from "@/components/website/forms/FormMoney";
+import FormActions from "@/components/website/forms/FormActions";
 import { useServiceFormState } from "./ServiceForm.state";
+import ServiceDetailsCard from "./ServiceDetailsCard.component";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import { useAutoSave } from "@/hooks/useAutoSave";
 
@@ -190,37 +189,17 @@ export default function ColorationServiceForm({
   );
 
   return (
-    <>
-      <div className="bg-bg-1 rounded-lg p-lg border border-border">
-        <div className="space-y-lg">
-          <FormInput
-            label="Name"
-            value={state.name}
-            onChange={setName}
-            onBlur={handleBlur}
-            placeholder="z.B. Coloration"
-            required
-          />
-
-          <FormTextarea
-            label="Beschreibung"
-            value={state.description}
-            onChange={setDescription}
-            onBlur={handleBlur}
-            placeholder="Beschreibe die Dienstleistung..."
-            rows={3}
-          />
-
-          <FormMoney
-            label="Preis"
-            value={state.priceInCents}
-            onChange={setPrice}
-            onBlur={handleBlur}
-            min={0}
-            max={100000}
-          />
-        </div>
-      </div>
+    <div className="space-y-lg">
+      <ServiceDetailsCard
+        name={state.name}
+        description={state.description}
+        priceInCents={state.priceInCents}
+        namePlaceholder="z.B. Coloration"
+        onNameChange={setName}
+        onDescriptionChange={setDescription}
+        onPriceChange={setPrice}
+        onBlur={handleBlur}
+      />
 
       <div>
         <h3 className="text-lg font-focus text-fg-strong">Phasen und Dauer</h3>
@@ -259,27 +238,14 @@ export default function ColorationServiceForm({
       )}
 
       {!isEditMode && (
-        <div className="flex gap-md justify-end pt-lg">
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
-              disabled={state.isSaving}
-            >
-              Abbrechen
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={state.isSaving || !isDirty}
-            className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
-          </button>
-        </div>
+        <FormActions
+          onCancel={onCancel}
+          onSave={handleSave}
+          saveLabel={state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
+          isSaving={state.isSaving}
+          isSaveDisabled={!isDirty}
+        />
       )}
-    </>
+    </div>
   );
 }
