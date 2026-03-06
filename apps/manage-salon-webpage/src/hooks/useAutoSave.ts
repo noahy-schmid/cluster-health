@@ -5,10 +5,7 @@ import { useNotifications } from "@/components/notifications/useNotifications";
  * A hook that provides a debounced auto-save function.
  * Calls onSave after a debounce delay and shows notifications on success/failure.
  */
-export function useAutoSave(
-  onSave: () => Promise<void>,
-  debounceMs = 800,
-) {
+export function useAutoSave(onSave: () => Promise<void>, debounceMs = 800) {
   const { showNotification } = useNotifications();
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isSavingRef = useRef(false);
