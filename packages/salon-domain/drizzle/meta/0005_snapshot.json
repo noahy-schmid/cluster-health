@@ -1,5 +1,5 @@
 {
-  "id": "c32e2d52-468d-4415-a169-e66fdfd6e2ce",
+  "id": "2717a250-03ee-4333-8582-3f8d2f0ae9a0",
   "prevId": "1951cbc9-2cae-4708-af1e-44033084f1a7",
   "version": "7",
   "dialect": "postgresql",
@@ -476,6 +476,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "employeeRequired": {
+          "name": "employeeRequired",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         }
       },
       "indexes": {},

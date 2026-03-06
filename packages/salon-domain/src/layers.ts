@@ -8,13 +8,13 @@ import { PostgresServicePhaseAdapter } from "./adapters/postgres-service-phase.a
 import { PostgresServiceDefinitionAdapter } from "./adapters/postgres-service-definition.adapter";
 import { PostgresStylistPortAdapter } from "./adapters/postgres-stylist-port.adapter";
 import { PostgresResourceAdapter } from "./adapters/postgres-resource.adapter";
-import { ValidateServiceResourcesDomainService } from "./application/domain-services/validate-service-resources.domain-service";
+import { PostgresSalonPortAdapter } from "./adapters/postgres-salon-port.adapter";
 import { CreateResourceUseCase } from "./use-cases/create-resource.use-case";
 import { UpdateResourceUseCase } from "./use-cases/update-resource.use-case";
 import { DeleteResourceUseCase } from "./use-cases/delete-resource.use-case";
 import { ListResourcesUseCase } from "./use-cases/list-resources.use-case";
-import { CreateServiceDefinitionUseCase } from "./use-cases/create-service-definition.use-case";
-import { UpdateServiceDefinitionUseCase } from "./use-cases/update-service-definition.use-case";
+import { CreateCustomServiceUseCase } from "./use-cases/create-custom-service.use-case";
+import { UpdateCustomServiceUseCase } from "./use-cases/update-custom-service.use-case";
 import { DeleteServiceDefinitionUseCase } from "./use-cases/delete-service-definition.use-case";
 import { ListServiceDefinitionsUseCase } from "./use-cases/list-service-definitions.use-case";
 import { CreateSimpleServiceUseCase } from "./use-cases/create-simple-service.use-case";
@@ -55,13 +55,15 @@ const ResourcePortLayer = PostgresResourceAdapter.pipe(
   Layer.orDie,
 );
 
-const ValidateServiceResourcesLayer =
-  ValidateServiceResourcesDomainService.Default.pipe(
-    Layer.provide(ResourcePortLayer),
-  );
+const SalonPortLayer = PostgresSalonPortAdapter.pipe(
+  Layer.provide(InfrastructureLayer),
+  Layer.orDie,
+);
 
 // Resource use case layers
-export const CreateResourceUseCaseLayer = CreateResourceUseCase.Default;
+export const CreateResourceUseCaseLayer = CreateResourceUseCase.Default.pipe(
+  Layer.provide(SalonPortLayer),
+);
 export const UpdateResourceUseCaseLayer = UpdateResourceUseCase.Default;
 export const DeleteResourceUseCaseLayer = DeleteResourceUseCase.Default.pipe(
   Layer.provide(ServicePhasePortLayer),
@@ -69,14 +71,15 @@ export const DeleteResourceUseCaseLayer = DeleteResourceUseCase.Default.pipe(
 export const ListResourcesUseCaseLayer = ListResourcesUseCase.Default;
 
 // Service definition use case layers
-export const CreateServiceDefinitionUseCaseLayer =
-  CreateServiceDefinitionUseCase.Default.pipe(
-    Layer.provide(ValidateServiceResourcesLayer),
+export const CreateCustomServiceUseCaseLayer =
+  CreateCustomServiceUseCase.Default.pipe(
+    Layer.provide(SalonPortLayer),
+    Layer.provide(ResourcePortLayer),
   );
-export const UpdateServiceDefinitionUseCaseLayer =
-  UpdateServiceDefinitionUseCase.Default.pipe(
+export const UpdateCustomServiceUseCaseLayer =
+  UpdateCustomServiceUseCase.Default.pipe(
     Layer.provide(ServiceDefinitionPortLayer),
-    Layer.provide(ValidateServiceResourcesLayer),
+    Layer.provide(ResourcePortLayer),
   );
 export const DeleteServiceDefinitionUseCaseLayer =
   DeleteServiceDefinitionUseCase.Default;
@@ -85,9 +88,15 @@ export const ListServiceDefinitionsUseCaseLayer =
 
 // Simplified service use case layers
 export const CreateSimpleServiceUseCaseLayer =
-  CreateSimpleServiceUseCase.Default.pipe(Layer.provide(ResourcePortLayer));
+  CreateSimpleServiceUseCase.Default.pipe(
+    Layer.provide(ResourcePortLayer),
+    Layer.provide(SalonPortLayer),
+  );
 export const CreateColorationServiceUseCaseLayer =
-  CreateColorationServiceUseCase.Default.pipe(Layer.provide(ResourcePortLayer));
+  CreateColorationServiceUseCase.Default.pipe(
+    Layer.provide(ResourcePortLayer),
+    Layer.provide(SalonPortLayer),
+  );
 
 // Employee-service assignment use case layers
 export const AssignEmployeeToServiceUseCaseLayer =

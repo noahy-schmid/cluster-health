@@ -11,16 +11,16 @@ import { PostgresServicePhaseAdapter } from "../../adapters/postgres-service-pha
 import { PostgresReadServiceAdapter } from "../../adapters/postgres-read-service.adapter";
 import { PostgresEmployeeServiceAdapter } from "../../adapters/postgres-employee-service.adapter";
 import { PostgresStylistPortAdapter } from "../../adapters/postgres-stylist-port.adapter";
+import { PostgresSalonPortAdapter } from "../../adapters/postgres-salon-port.adapter";
 import { ResourceAggregate } from "../../application/resource/resource.aggregate";
 import { ServiceAggregate } from "../../application/service/service.aggregate";
 import { EmployeeServiceAggregate } from "../../application/employee-service/employee-service.aggregate";
-import { ValidateServiceResourcesDomainService } from "../../application/domain-services/validate-service-resources.domain-service";
 import { CreateResourceUseCase } from "../create-resource.use-case";
 import { UpdateResourceUseCase } from "../update-resource.use-case";
 import { DeleteResourceUseCase } from "../delete-resource.use-case";
 import { ListResourcesUseCase } from "../list-resources.use-case";
-import { CreateServiceDefinitionUseCase } from "../create-service-definition.use-case";
-import { UpdateServiceDefinitionUseCase } from "../update-service-definition.use-case";
+import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
+import { UpdateCustomServiceUseCase } from "../update-custom-service.use-case";
 import { DeleteServiceDefinitionUseCase } from "../delete-service-definition.use-case";
 import { ListServiceDefinitionsUseCase } from "../list-service-definitions.use-case";
 import { AssignEmployeeToServiceUseCase } from "../assign-employee-to-service.use-case";
@@ -40,8 +40,8 @@ export interface TestContext {
     | ListResourcesUseCase
   >;
   serviceUseCaseLayer: Layer.Layer<
-    | CreateServiceDefinitionUseCase
-    | UpdateServiceDefinitionUseCase
+    | CreateCustomServiceUseCase
+    | UpdateCustomServiceUseCase
     | DeleteServiceDefinitionUseCase
     | ListServiceDefinitionsUseCase
   >;
@@ -96,12 +96,9 @@ export async function setupTestContext(): Promise<TestContext> {
   const stylistPortLayer = PostgresStylistPortAdapter.pipe(
     Layer.provide(infrastructureLayer),
   );
-
-  // Domain service layers
-  const validateResourcesLayer =
-    ValidateServiceResourcesDomainService.Default.pipe(
-      Layer.provide(resourcePortLayer),
-    );
+  const salonPortLayer = PostgresSalonPortAdapter.pipe(
+    Layer.provide(infrastructureLayer),
+  );
 
   // Aggregate layers
   const resourceAggregateLayer =
@@ -127,7 +124,9 @@ export async function setupTestContext(): Promise<TestContext> {
 
   // Use case layers
   const resourceUseCaseLayer = Layer.mergeAll(
-    CreateResourceUseCase.DefaultWithoutDependencies,
+    CreateResourceUseCase.DefaultWithoutDependencies.pipe(
+      Layer.provide(salonPortLayer),
+    ),
     UpdateResourceUseCase.DefaultWithoutDependencies,
     DeleteResourceUseCase.DefaultWithoutDependencies.pipe(
       Layer.provide(servicePhasePortLayer),
@@ -136,12 +135,13 @@ export async function setupTestContext(): Promise<TestContext> {
   ).pipe(Layer.provide(resourceAggregateLayer), Layer.orDie);
 
   const serviceUseCaseLayer = Layer.mergeAll(
-    CreateServiceDefinitionUseCase.DefaultWithoutDependencies.pipe(
-      Layer.provide(validateResourcesLayer),
+    CreateCustomServiceUseCase.DefaultWithoutDependencies.pipe(
+      Layer.provide(salonPortLayer),
+      Layer.provide(resourcePortLayer),
     ),
-    UpdateServiceDefinitionUseCase.DefaultWithoutDependencies.pipe(
+    UpdateCustomServiceUseCase.DefaultWithoutDependencies.pipe(
       Layer.provide(serviceDefPortLayer),
-      Layer.provide(validateResourcesLayer),
+      Layer.provide(resourcePortLayer),
     ),
     DeleteServiceDefinitionUseCase.DefaultWithoutDependencies,
     ListServiceDefinitionsUseCase.DefaultWithoutDependencies,
@@ -164,9 +164,11 @@ export async function setupTestContext(): Promise<TestContext> {
   const simpleColorationUseCaseLayer = Layer.mergeAll(
     CreateSimpleServiceUseCase.DefaultWithoutDependencies.pipe(
       Layer.provide(resourcePortLayer),
+      Layer.provide(salonPortLayer),
     ),
     CreateColorationServiceUseCase.DefaultWithoutDependencies.pipe(
       Layer.provide(resourcePortLayer),
+      Layer.provide(salonPortLayer),
     ),
   ).pipe(Layer.provide(serviceAggregateLayer), Layer.orDie);
 
@@ -215,7 +217,7 @@ export async function setupTestContext(): Promise<TestContext> {
       }
       theStylistId = stylist.id;
 
-      // Create resources for service phase tests
+      // Create resources for service phase tests (no "employee" resource - that's modeled via employeeRequired)
       yield* Effect.tryPromise(() =>
         db.insert(salonResourcesTable).values([
           {
@@ -224,7 +226,6 @@ export async function setupTestContext(): Promise<TestContext> {
             name: "Styling Chair",
             amount: 3,
           },
-          { salonId: theSalonId, slug: "employee", name: "Stylist", amount: 5 },
           {
             salonId: theSalonId,
             slug: "climazon",

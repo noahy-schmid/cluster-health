@@ -34,10 +34,15 @@ export {
   ValidationError,
   InfrastructureError,
   ResourceMissingError,
+  collapseErrorsToInternalError,
 } from "./application/errors";
 
 // Resource domain types
 export type { Resource } from "./application/resource/resource.aggregate";
+export {
+  SEAT_SLUG,
+  CLIMAZON_SLUG,
+} from "./application/resource/resource.aggregate";
 
 // Resource use cases
 export {
@@ -72,16 +77,16 @@ export type {
 
 // Service definition use cases
 export {
-  CreateServiceDefinitionUseCase,
-  type CreateServiceDefinitionCommand,
-  type CreateServiceDefinitionResult,
-} from "./use-cases/create-service-definition.use-case";
+  CreateCustomServiceUseCase,
+  type CreateCustomServiceCommand,
+  type CreateCustomServiceResult,
+} from "./use-cases/create-custom-service.use-case";
 
 export {
-  UpdateServiceDefinitionUseCase,
-  type UpdateServiceDefinitionCommand,
-  type UpdateServiceDefinitionResult,
-} from "./use-cases/update-service-definition.use-case";
+  UpdateCustomServiceUseCase,
+  type UpdateCustomServiceCommand,
+  type UpdateCustomServiceResult,
+} from "./use-cases/update-custom-service.use-case";
 
 export {
   DeleteServiceDefinitionUseCase,

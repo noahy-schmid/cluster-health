@@ -3,15 +3,21 @@ import {
   ServiceAggregate,
   type ServiceDefinition,
 } from "../application/service/service.aggregate";
-import { InternalError, ValidationError } from "../application/service/errors";
+import {
+  InternalError,
+  NotFoundError,
+  ValidationError,
+} from "../application/service/errors";
 import { ResourcePort } from "../ports/resource.port";
-import { ResourceMissingError } from "../application/errors";
-
-// --- Constants ---
-
-const EMPLOYEE_SLUG = "employee";
-const SEAT_SLUG = "seat";
-const CLIMAZON_SLUG = "climazon";
+import { SalonPort } from "../ports/salon.port";
+import {
+  SEAT_SLUG,
+  CLIMAZON_SLUG,
+} from "../application/resource/resource.aggregate";
+import {
+  ResourceMissingError,
+  collapseErrorsToInternalError,
+} from "../application/errors";
 
 // --- Command DTO ---
 
@@ -40,11 +46,12 @@ export type CreateColorationServiceResult = ServiceDefinition;
  *  2. Processing — requires seat + climazon (employee is free)
  *  3. Finishing — requires employee + seat
  *
- * Verifies that all required resources (employee, seat, climazon) exist in the salon.
+ * Verifies that the salon exists and all required resources (seat, climazon) exist.
  */
 const make = Effect.gen(function* () {
   const aggregate = yield* ServiceAggregate;
   const resourcePort = yield* ResourcePort;
+  const salonPort = yield* SalonPort;
 
   return {
     /**
@@ -55,20 +62,33 @@ const make = Effect.gen(function* () {
       command: CreateColorationServiceCommand,
     ): Effect.Effect<
       CreateColorationServiceResult,
-      InternalError | ValidationError | ResourceMissingError
+      InternalError | NotFoundError | ValidationError | ResourceMissingError
     > =>
       Effect.gen(function* () {
+        // Validate salon exists
+        const salonExists = yield* salonPort
+          .salonExists(command.salonId)
+          .pipe(
+            Effect.mapError(
+              collapseErrorsToInternalError("Failed to check salon existence"),
+            ),
+          );
+
+        if (!salonExists) {
+          return yield* Effect.fail(
+            new NotFoundError({ entity: "Salon", id: command.salonId }),
+          );
+        }
+
         // Verify required resources exist in the salon
-        for (const slug of [EMPLOYEE_SLUG, SEAT_SLUG, CLIMAZON_SLUG]) {
+        for (const slug of [SEAT_SLUG, CLIMAZON_SLUG]) {
           const resource = yield* resourcePort
             .findResourceBySlug(command.salonId, slug)
             .pipe(
               Effect.mapError(
-                (error) =>
-                  new InternalError({
-                    message: `Failed to check resource: ${error.message}`,
-                    cause: error,
-                  }),
+                collapseErrorsToInternalError(
+                  `Failed to check resource: ${slug}`,
+                ),
               ),
             );
 
@@ -92,17 +112,20 @@ const make = Effect.gen(function* () {
             {
               name: "Application",
               durationMinutes: command.applicationDurationMinutes,
-              requiredResourceSlugs: [EMPLOYEE_SLUG, SEAT_SLUG],
+              employeeRequired: true,
+              requiredResourceSlugs: [SEAT_SLUG],
             },
             {
               name: "Processing",
               durationMinutes: command.processingDurationMinutes,
+              employeeRequired: false,
               requiredResourceSlugs: [SEAT_SLUG, CLIMAZON_SLUG],
             },
             {
               name: "Finishing",
               durationMinutes: command.finishingDurationMinutes,
-              requiredResourceSlugs: [EMPLOYEE_SLUG, SEAT_SLUG],
+              employeeRequired: true,
+              requiredResourceSlugs: [SEAT_SLUG],
             },
           ],
         });

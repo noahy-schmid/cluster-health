@@ -9,6 +9,7 @@ export interface PortServicePhaseRow {
   name: string;
   durationMinutes: number;
   order: number;
+  employeeRequired: boolean;
 }
 
 export interface PortPhaseResourceRequirementRow {
@@ -22,6 +23,7 @@ export interface PortCreateServicePhaseInput {
   name: string;
   durationMinutes: number;
   order: number;
+  employeeRequired: boolean;
   requiredResourceSlugs: string[];
 }
 

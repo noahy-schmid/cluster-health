@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
 import { setupTestContext, type TestContext } from "./test-setup";
-import { CreateServiceDefinitionUseCase } from "../create-service-definition.use-case";
+import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 import { DeleteServiceDefinitionUseCase } from "../delete-service-definition.use-case";
 import { ListServiceDefinitionsUseCase } from "../list-service-definitions.use-case";
 
@@ -18,13 +18,12 @@ describe("DeleteServiceDefinitionUseCase", () => {
 
   it("should soft-delete a service definition", async () => {
     const program = Effect.gen(function* () {
-      const createUseCase = yield* CreateServiceDefinitionUseCase;
+      const createUseCase = yield* CreateCustomServiceUseCase;
       const deleteUseCase = yield* DeleteServiceDefinitionUseCase;
       const listUseCase = yield* ListServiceDefinitionsUseCase;
 
       const service = yield* createUseCase.execute({
         salonId: ctx.salonId,
-        serviceType: "custom",
         name: "Temporary Service",
         description: "Will be deleted",
         priceInCents: 2000,
@@ -32,6 +31,7 @@ describe("DeleteServiceDefinitionUseCase", () => {
           {
             name: "Quick Phase",
             durationMinutes: 15,
+            employeeRequired: true,
             requiredResourceSlugs: [],
           },
         ],

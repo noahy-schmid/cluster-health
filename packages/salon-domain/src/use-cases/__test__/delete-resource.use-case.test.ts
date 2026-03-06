@@ -4,7 +4,7 @@ import { setupTestContext, type TestContext } from "./test-setup";
 import { CreateResourceUseCase } from "../create-resource.use-case";
 import { DeleteResourceUseCase } from "../delete-resource.use-case";
 import { ListResourcesUseCase } from "../list-resources.use-case";
-import { CreateServiceDefinitionUseCase } from "../create-service-definition.use-case";
+import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 
 describe("DeleteResourceUseCase", () => {
   let ctx: TestContext;
@@ -55,7 +55,7 @@ describe("DeleteResourceUseCase", () => {
     const program = Effect.gen(function* () {
       const createResourceUC = yield* CreateResourceUseCase;
       const deleteResourceUC = yield* DeleteResourceUseCase;
-      const createServiceUC = yield* CreateServiceDefinitionUseCase;
+      const createServiceUC = yield* CreateCustomServiceUseCase;
 
       // Create a resource to reference
       const resource = yield* createResourceUC.execute({
@@ -68,7 +68,6 @@ describe("DeleteResourceUseCase", () => {
       // Create a service that references this resource
       yield* createServiceUC.execute({
         salonId: ctx.salonId,
-        serviceType: "custom",
         name: "Service with Resource",
         description: "Test",
         priceInCents: 5000,
@@ -76,6 +75,7 @@ describe("DeleteResourceUseCase", () => {
           {
             name: "Phase 1",
             durationMinutes: 30,
+            employeeRequired: true,
             requiredResourceSlugs: [resource.slug],
           },
         ],

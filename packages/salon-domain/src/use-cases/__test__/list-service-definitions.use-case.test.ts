@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect } from "effect";
 import { setupTestContext, type TestContext } from "./test-setup";
-import { CreateServiceDefinitionUseCase } from "../create-service-definition.use-case";
+import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 import { ListServiceDefinitionsUseCase } from "../list-service-definitions.use-case";
 
 describe("ListServiceDefinitionsUseCase", () => {
@@ -17,17 +17,21 @@ describe("ListServiceDefinitionsUseCase", () => {
 
   it("should list service definitions for a salon", async () => {
     const program = Effect.gen(function* () {
-      const createUseCase = yield* CreateServiceDefinitionUseCase;
+      const createUseCase = yield* CreateCustomServiceUseCase;
       const listUseCase = yield* ListServiceDefinitionsUseCase;
 
       yield* createUseCase.execute({
         salonId: ctx.salonId,
-        serviceType: "custom",
         name: "List Test Service",
         description: "For listing",
         priceInCents: 3000,
         phases: [
-          { name: "Phase 1", durationMinutes: 20, requiredResourceSlugs: [] },
+          {
+            name: "Phase 1",
+            durationMinutes: 20,
+            employeeRequired: true,
+            requiredResourceSlugs: [],
+          },
         ],
       });
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
 import { setupTestContext, type TestContext } from "./test-setup";
-import { CreateServiceDefinitionUseCase } from "../create-service-definition.use-case";
+import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 import { AssignEmployeeToServiceUseCase } from "../assign-employee-to-service.use-case";
 import { UnassignEmployeeFromServiceUseCase } from "../unassign-employee-from-service.use-case";
 import { ListServiceEmployeesUseCase } from "../list-service-employees.use-case";
@@ -17,10 +17,9 @@ describe("Employee-Service Assignment Use Cases", () => {
     // Create a service for these tests
     await Effect.runPromise(
       Effect.gen(function* () {
-        const createService = yield* CreateServiceDefinitionUseCase;
+        const createService = yield* CreateCustomServiceUseCase;
         const service = yield* createService.execute({
           salonId: ctx.salonId,
-          serviceType: "custom",
           name: "Assignment Test Service",
           description: "For assignment tests",
           priceInCents: 8000,
@@ -28,6 +27,7 @@ describe("Employee-Service Assignment Use Cases", () => {
             {
               name: "Apply Color",
               durationMinutes: 30,
+              employeeRequired: true,
               requiredResourceSlugs: [],
             },
           ],

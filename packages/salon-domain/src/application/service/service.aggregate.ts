@@ -19,6 +19,7 @@ export interface ServicePhase {
   name: string;
   durationMinutes: number;
   order: number;
+  employeeRequired: boolean;
   requiredResourceSlugs: string[];
 }
 
@@ -38,6 +39,7 @@ export interface ServiceDefinition {
 export interface CreateServicePhaseInput {
   name: string;
   durationMinutes: number;
+  employeeRequired: boolean;
   requiredResourceSlugs: string[];
 }
 
@@ -77,6 +79,7 @@ const fromPort = (
     name: p.name,
     durationMinutes: p.durationMinutes,
     order: p.order,
+    employeeRequired: p.employeeRequired,
     requiredResourceSlugs: p.requiredResourceSlugs,
   })),
   createdAt: portService.createdAt,
@@ -157,6 +160,7 @@ const make = Effect.gen(function* () {
             name: phase.name.trim(),
             durationMinutes: phase.durationMinutes,
             order: i,
+            employeeRequired: phase.employeeRequired,
             requiredResourceSlugs: phase.requiredResourceSlugs,
           })
           .pipe(
@@ -241,6 +245,7 @@ const make = Effect.gen(function* () {
             name: phase.name.trim(),
             durationMinutes: phase.durationMinutes,
             order: i,
+            employeeRequired: phase.employeeRequired,
             requiredResourceSlugs: phase.requiredResourceSlugs,
           })
           .pipe(

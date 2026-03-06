@@ -38,7 +38,8 @@ CREATE TABLE "salon"."service_phases" (
 	"serviceDefinitionId" uuid NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"durationMinutes" integer NOT NULL,
-	"order" integer DEFAULT 0 NOT NULL
+	"order" integer DEFAULT 0 NOT NULL,
+	"employeeRequired" boolean DEFAULT true NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "salon"."employee_service_assignments" ADD CONSTRAINT "employee_service_assignments_stylistId_stylists_id_fk" FOREIGN KEY ("stylistId") REFERENCES "salon"."stylists"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

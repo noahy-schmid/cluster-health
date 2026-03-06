@@ -37,10 +37,13 @@ describe("CreateColorationServiceUseCase", () => {
 
       expect(service.phases[0]?.name).toBe("Application");
       expect(service.phases[0]?.durationMinutes).toBe(20);
+      expect(service.phases[0]?.employeeRequired).toBe(true);
       expect(service.phases[1]?.name).toBe("Processing");
       expect(service.phases[1]?.durationMinutes).toBe(30);
+      expect(service.phases[1]?.employeeRequired).toBe(false);
       expect(service.phases[2]?.name).toBe("Finishing");
       expect(service.phases[2]?.durationMinutes).toBe(15);
+      expect(service.phases[2]?.employeeRequired).toBe(true);
     });
 
     await Effect.runPromise(
@@ -48,14 +51,14 @@ describe("CreateColorationServiceUseCase", () => {
     );
   });
 
-  it("should fail with ResourceMissingError when climazon resource is missing", async () => {
+  it("should fail with NotFoundError when salon does not exist", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateColorationServiceUseCase;
       const result = yield* useCase
         .execute({
           salonId: crypto.randomUUID(),
-          name: "No Climazon Service",
-          description: "Missing climazon",
+          name: "No Salon Service",
+          description: "Missing salon",
           priceInCents: 10000,
           applicationDurationMinutes: 20,
           processingDurationMinutes: 30,
@@ -65,7 +68,7 @@ describe("CreateColorationServiceUseCase", () => {
 
       expect(Either.isLeft(result)).toBe(true);
       if (Either.isLeft(result)) {
-        expect(result.left._tag).toBe("ResourceMissingError");
+        expect(result.left._tag).toBe("NotFoundError");
       }
     });
 

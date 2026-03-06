@@ -35,6 +35,15 @@ export interface StylistPort {
   getStylistById(
     stylistId: string,
   ): Effect.Effect<PortStylist | null, InfrastructureError>;
+
+  /**
+   * Fetches multiple stylists by their IDs in a single query.
+   * @param ids Array of stylist IDs to fetch.
+   * @returns Effect resolving to an array of found stylists.
+   */
+  getStylistsByIds(
+    ids: string[],
+  ): Effect.Effect<PortStylist[], InfrastructureError>;
 }
 
 /**

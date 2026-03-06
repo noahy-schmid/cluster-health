@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
 import { setupTestContext, type TestContext } from "./test-setup";
-import { CreateServiceDefinitionUseCase } from "../create-service-definition.use-case";
-import { UpdateServiceDefinitionUseCase } from "../update-service-definition.use-case";
+import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
+import { UpdateCustomServiceUseCase } from "../update-custom-service.use-case";
 
-describe("UpdateServiceDefinitionUseCase", () => {
+describe("UpdateCustomServiceUseCase", () => {
   let ctx: TestContext;
 
   beforeAll(async () => {
@@ -15,19 +15,23 @@ describe("UpdateServiceDefinitionUseCase", () => {
     await ctx.stop();
   });
 
-  it("should update a service definition with new phases", async () => {
+  it("should update a custom service definition with new phases", async () => {
     const program = Effect.gen(function* () {
-      const createUseCase = yield* CreateServiceDefinitionUseCase;
-      const updateUseCase = yield* UpdateServiceDefinitionUseCase;
+      const createUseCase = yield* CreateCustomServiceUseCase;
+      const updateUseCase = yield* UpdateCustomServiceUseCase;
 
       const service = yield* createUseCase.execute({
         salonId: ctx.salonId,
-        serviceType: "custom",
         name: "Original Service",
         description: "Original description",
         priceInCents: 4500,
         phases: [
-          { name: "Phase A", durationMinutes: 20, requiredResourceSlugs: [] },
+          {
+            name: "Phase A",
+            durationMinutes: 20,
+            employeeRequired: true,
+            requiredResourceSlugs: [],
+          },
         ],
       });
 
@@ -40,9 +44,15 @@ describe("UpdateServiceDefinitionUseCase", () => {
           {
             name: "Consultation",
             durationMinutes: 5,
+            employeeRequired: true,
             requiredResourceSlugs: [],
           },
-          { name: "Work", durationMinutes: 40, requiredResourceSlugs: [] },
+          {
+            name: "Work",
+            durationMinutes: 40,
+            employeeRequired: true,
+            requiredResourceSlugs: [],
+          },
         ],
       });
 
@@ -59,7 +69,7 @@ describe("UpdateServiceDefinitionUseCase", () => {
 
   it("should fail to update a non-existent service", async () => {
     const program = Effect.gen(function* () {
-      const useCase = yield* UpdateServiceDefinitionUseCase;
+      const useCase = yield* UpdateCustomServiceUseCase;
       const result = yield* useCase
         .execute({
           serviceId: crypto.randomUUID(),
@@ -67,7 +77,12 @@ describe("UpdateServiceDefinitionUseCase", () => {
           description: "",
           priceInCents: 1000,
           phases: [
-            { name: "P", durationMinutes: 10, requiredResourceSlugs: [] },
+            {
+              name: "P",
+              durationMinutes: 10,
+              employeeRequired: true,
+              requiredResourceSlugs: [],
+            },
           ],
         })
         .pipe(Effect.either);

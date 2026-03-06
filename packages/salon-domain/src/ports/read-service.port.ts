@@ -8,6 +8,7 @@ export interface PortServicePhaseWithResources {
   name: string;
   durationMinutes: number;
   order: number;
+  employeeRequired: boolean;
   requiredResourceSlugs: string[];
 }
 

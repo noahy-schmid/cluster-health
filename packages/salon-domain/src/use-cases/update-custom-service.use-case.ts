@@ -10,11 +10,15 @@ import {
   ValidationError,
 } from "../application/service/errors";
 import { ServiceDefinitionPort } from "../ports/service-definition.port";
-import { ValidateServiceResourcesDomainService } from "../application/domain-services/validate-service-resources.domain-service";
+import { ResourcePort } from "../ports/resource.port";
+import {
+  ResourceMissingError,
+  collapseErrorsToInternalError,
+} from "../application/errors";
 
 // --- Command DTO ---
 
-export interface UpdateServiceDefinitionCommand {
+export interface UpdateCustomServiceCommand {
   serviceId: string;
   name: string;
   description: string;
@@ -24,18 +28,18 @@ export interface UpdateServiceDefinitionCommand {
 
 // --- Result DTO ---
 
-export type UpdateServiceDefinitionResult = ServiceDefinition;
+export type UpdateCustomServiceResult = ServiceDefinition;
 
 // --- Use Case ---
 
 /**
- * Updates a service definition and replaces all its phases.
- * Validates that all referenced resources exist and belong to the same salon.
+ * Updates a custom service definition and replaces all its phases.
+ * Validates that all referenced resource slugs exist in the same salon.
  */
 const make = Effect.gen(function* () {
   const aggregate = yield* ServiceAggregate;
   const serviceDefPort = yield* ServiceDefinitionPort;
-  const validateResources = yield* ValidateServiceResourcesDomainService;
+  const resourcePort = yield* ResourcePort;
 
   return {
     /**
@@ -43,10 +47,10 @@ const make = Effect.gen(function* () {
      * @returns Effect resolving to the updated service definition with computed duration.
      */
     execute: (
-      command: UpdateServiceDefinitionCommand,
+      command: UpdateCustomServiceCommand,
     ): Effect.Effect<
-      UpdateServiceDefinitionResult,
-      InternalError | NotFoundError | ValidationError
+      UpdateCustomServiceResult,
+      InternalError | NotFoundError | ValidationError | ResourceMissingError
     > =>
       Effect.gen(function* () {
         // Look up the service to get its salonId
@@ -54,11 +58,7 @@ const make = Effect.gen(function* () {
           .findServiceDefinitionById(command.serviceId)
           .pipe(
             Effect.mapError(
-              (error) =>
-                new InternalError({
-                  message: `Failed to fetch service: ${error.message}`,
-                  cause: error,
-                }),
+              collapseErrorsToInternalError("Failed to fetch service"),
             ),
           );
 
@@ -71,11 +71,31 @@ const make = Effect.gen(function* () {
           );
         }
 
-        // Validate resources exist and belong to the same salon
-        const allResourceSlugs = command.phases.flatMap(
-          (p) => p.requiredResourceSlugs,
-        );
-        yield* validateResources.validate(serviceDef.salonId, allResourceSlugs);
+        // Validate all referenced resource slugs exist in the salon
+        const allResourceSlugs = [
+          ...new Set(command.phases.flatMap((p) => p.requiredResourceSlugs)),
+        ];
+
+        for (const slug of allResourceSlugs) {
+          const resource = yield* resourcePort
+            .findResourceBySlug(serviceDef.salonId, slug)
+            .pipe(
+              Effect.mapError(
+                collapseErrorsToInternalError(
+                  `Failed to check resource: ${slug}`,
+                ),
+              ),
+            );
+
+          if (!resource) {
+            return yield* Effect.fail(
+              new ResourceMissingError({
+                salonId: serviceDef.salonId,
+                resourceSlug: slug,
+              }),
+            );
+          }
+        }
 
         return yield* aggregate.updateServiceDefinition(command.serviceId, {
           name: command.name,
@@ -87,8 +107,8 @@ const make = Effect.gen(function* () {
   };
 });
 
-export class UpdateServiceDefinitionUseCase extends Effect.Service<UpdateServiceDefinitionUseCase>()(
-  "@repo/salon-domain/UpdateServiceDefinitionUseCase",
+export class UpdateCustomServiceUseCase extends Effect.Service<UpdateCustomServiceUseCase>()(
+  "@repo/salon-domain/UpdateCustomServiceUseCase",
   {
     effect: make,
     accessors: true,

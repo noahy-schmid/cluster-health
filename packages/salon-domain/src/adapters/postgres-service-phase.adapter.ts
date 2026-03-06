@@ -22,6 +22,7 @@ const make = Effect.gen(function* () {
             name: input.name,
             durationMinutes: input.durationMinutes,
             order: input.order,
+            employeeRequired: input.employeeRequired,
           })
           .returning(),
       ).pipe(

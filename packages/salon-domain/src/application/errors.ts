@@ -51,3 +51,15 @@ export class ResourceMissingError extends Data.TaggedError(
   salonId: string;
   resourceSlug: string;
 }> {}
+
+/**
+ * Helper to collapse any error into an InternalError with a descriptive message.
+ * Useful in use cases that delegate to ports/aggregates and want a single error mapping.
+ */
+export const collapseErrorsToInternalError =
+  (message: string) =>
+  (error: unknown): InternalError =>
+    new InternalError({
+      message,
+      cause: error,
+    });

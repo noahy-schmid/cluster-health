@@ -42,31 +42,32 @@ const make = Effect.gen(function* () {
           query.serviceId,
         );
 
-        const results: ServiceEmployeeItem[] = [];
-
-        for (const assignment of assignments) {
-          const stylist = yield* stylistPort
-            .getStylistById(assignment.stylistId)
-            .pipe(
-              Effect.mapError(
-                (error) =>
-                  new InternalError({
-                    message: `Failed to fetch stylist: ${error.message}`,
-                    cause: error,
-                  }),
-              ),
-            );
-
-          if (stylist) {
-            results.push({
-              stylistId: assignment.stylistId,
-              stylistName: stylist.name,
-              createdAt: assignment.createdAt,
-            });
-          }
+        if (assignments.length === 0) {
+          return [];
         }
 
-        return results;
+        const stylistIds = assignments.map((a) => a.stylistId);
+
+        // Batch fetch all stylists in a single query
+        const stylists = yield* stylistPort.getStylistsByIds(stylistIds).pipe(
+          Effect.mapError(
+            (error) =>
+              new InternalError({
+                message: `Failed to fetch stylists: ${error.message}`,
+                cause: error,
+              }),
+          ),
+        );
+
+        const stylistMap = new Map(stylists.map((s) => [s.id, s.name]));
+
+        return assignments
+          .filter((a) => stylistMap.has(a.stylistId))
+          .map((a) => ({
+            stylistId: a.stylistId,
+            stylistName: stylistMap.get(a.stylistId) ?? "",
+            createdAt: a.createdAt,
+          }));
       }),
   };
 });

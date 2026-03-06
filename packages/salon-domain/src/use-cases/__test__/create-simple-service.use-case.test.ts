@@ -36,7 +36,7 @@ describe("CreateSimpleServiceUseCase", () => {
       const phase = service.phases[0]!;
       expect(phase.name).toBe("Service");
       expect(phase.durationMinutes).toBe(30);
-      expect(phase.requiredResourceSlugs).toContain("employee");
+      expect(phase.employeeRequired).toBe(true);
       expect(phase.requiredResourceSlugs).toContain("seat");
     });
 
@@ -45,14 +45,14 @@ describe("CreateSimpleServiceUseCase", () => {
     );
   });
 
-  it("should fail with ResourceMissingError when seat resource is missing", async () => {
+  it("should fail with NotFoundError when salon does not exist", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSimpleServiceUseCase;
       const result = yield* useCase
         .execute({
           salonId: crypto.randomUUID(),
-          name: "No Seat Service",
-          description: "Missing seat",
+          name: "No Salon Service",
+          description: "Missing salon",
           priceInCents: 2000,
           durationMinutes: 20,
         })
@@ -60,7 +60,7 @@ describe("CreateSimpleServiceUseCase", () => {
 
       expect(Either.isLeft(result)).toBe(true);
       if (Either.isLeft(result)) {
-        expect(result.left._tag).toBe("ResourceMissingError");
+        expect(result.left._tag).toBe("NotFoundError");
       }
     });
 

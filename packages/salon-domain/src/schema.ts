@@ -99,6 +99,7 @@ export const servicePhasesTable = salonSchema.table("service_phases", {
   name: varchar({ length: 255 }).notNull(),
   durationMinutes: integer().notNull(),
   order: integer().notNull().default(0),
+  employeeRequired: boolean().notNull().default(true),
 });
 
 export const phaseResourceRequirementsTable = salonSchema.table(

@@ -62,6 +62,7 @@ const make = Effect.gen(function* () {
           name: phase.name,
           durationMinutes: phase.durationMinutes,
           order: phase.order,
+          employeeRequired: phase.employeeRequired,
           requiredResourceSlugs: requirements.map((r) => r.resourceSlug),
         });
       }
