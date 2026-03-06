@@ -28,9 +28,9 @@ export const fetchWebsiteMetadataSettingsBySalonSlug = unstable_cache(
             const faviconMediaId = Option.getOrNull(settings.favicon);
 
             const favicon = faviconMediaId
-              ? yield* mediaService.getMediaUrl(faviconMediaId).pipe(
-                  Effect.catchAll(() => Effect.succeed(null)),
-                )
+              ? yield* mediaService
+                  .getMediaUrl(faviconMediaId)
+                  .pipe(Effect.catchAll(() => Effect.succeed(null)))
               : null;
 
             return {
