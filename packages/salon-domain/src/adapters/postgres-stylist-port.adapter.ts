@@ -63,6 +63,8 @@ const make = Effect.gen(function* () {
         return [];
       }
 
+      const uniqueIds = [...new Set(ids)];
+
       const rows = yield* Effect.tryPromise(() =>
         db
           .select({
@@ -71,7 +73,7 @@ const make = Effect.gen(function* () {
             name: stylistsTable.name,
           })
           .from(stylistsTable)
-          .where(inArray(stylistsTable.id, ids)),
+          .where(inArray(stylistsTable.id, uniqueIds)),
       ).pipe(
         Effect.mapError(
           (error) =>
