@@ -36,14 +36,8 @@ export default function StylistForm({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const nameRef = useRef(name);
-  nameRef.current = name;
-  const subtitleRef = useRef(subtitle);
-  subtitleRef.current = subtitle;
-  const descriptionRef = useRef(description);
-  descriptionRef.current = description;
-  const profileImageRef = useRef(profileImage);
-  profileImageRef.current = profileImage;
+  const fieldsRef = useRef({ name, subtitle, description, profileImage });
+  fieldsRef.current = { name, subtitle, description, profileImage };
 
   const initialRef = useRef({
     name: stylist?.name || "",
@@ -59,10 +53,11 @@ export default function StylistForm({
     profileImage !== initialRef.current.profileImage;
 
   const doSave = useCallback(async () => {
-    const trimmedName = nameRef.current.trim();
-    const trimmedSubtitle = subtitleRef.current.trim();
-    const trimmedDescription = descriptionRef.current.trim();
-    const trimmedProfileImage = profileImageRef.current.trim();
+    const { name, subtitle, description, profileImage } = fieldsRef.current;
+    const trimmedName = name.trim();
+    const trimmedSubtitle = subtitle.trim();
+    const trimmedDescription = description.trim();
+    const trimmedProfileImage = profileImage.trim();
 
     if (
       !trimmedName ||

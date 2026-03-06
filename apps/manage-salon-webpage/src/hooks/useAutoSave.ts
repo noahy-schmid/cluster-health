@@ -14,8 +14,8 @@ export function useAutoSave(onSave: () => Promise<void>, debounceMs = 800) {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
+    if (isSavingRef.current) return;
     timerRef.current = setTimeout(async () => {
-      if (isSavingRef.current) return;
       isSavingRef.current = true;
       try {
         await onSave();
