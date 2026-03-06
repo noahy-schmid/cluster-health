@@ -157,90 +157,90 @@ export default function ColorationServiceForm({
   );
 
   return (
-    <div className="bg-bg-1 rounded-lg p-lg">
-      <div className="space-y-lg">
-        <FormInput
-          label="Name"
-          value={state.name}
-          onChange={setName}
-          placeholder="z.B. Coloration"
-          required
-        />
+    <>
+      <div className="bg-bg-1 rounded-lg p-lg border border-border">
+        <div className="space-y-lg">
+          <FormInput
+            label="Name"
+            value={state.name}
+            onChange={setName}
+            placeholder="z.B. Coloration"
+            required
+          />
 
-        <FormTextarea
-          label="Beschreibung"
-          value={state.description}
-          onChange={setDescription}
-          placeholder="Beschreibe die Dienstleistung..."
-          rows={3}
-        />
+          <FormTextarea
+            label="Beschreibung"
+            value={state.description}
+            onChange={setDescription}
+            placeholder="Beschreibe die Dienstleistung..."
+            rows={3}
+          />
 
-        <FormMoney
-          label="Preis"
-          value={state.priceInCents}
-          onChange={setPrice}
-          min={0}
-          max={100000}
-        />
-
-        <div className="flex flex-col gap-md">
-          <div>
-            <h3 className="text-base font-focus text-fg-strong">Phasen</h3>
-            <p className="text-sm text-fg-muted">
-              Gesamtdauer: {totalDuration} Minuten
-            </p>
-          </div>
-
-          {state.phases.map((phase, index) => (
-            <div
-              key={phase.id}
-              className="bg-bg-0 border border-border rounded-lg p-md"
-            >
-              <div className="flex items-center gap-sm mb-md">
-                <span className="text-sm font-focus text-fg-muted">
-                  Phase {index + 1}: {PHASE_LABELS[index]}
-                </span>
-              </div>
-              <FormNumber
-                label="Dauer (Minuten)"
-                value={phase.durationMinutes}
-                onChange={(durationMinutes) =>
-                  updatePhase(phase.id, { durationMinutes })
-                }
-                min={1}
-                max={480}
-              />
-            </div>
-          ))}
-        </div>
-
-        {state.error && (
-          <div className="p-md bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-700">{state.error}</p>
-          </div>
-        )}
-
-        <div className="flex gap-md justify-end pt-lg">
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
-              disabled={state.isSaving}
-            >
-              Abbrechen
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={state.isSaving || !isDirty}
-            className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
-          </button>
+          <FormMoney
+            label="Preis"
+            value={state.priceInCents}
+            onChange={setPrice}
+            min={0}
+            max={100000}
+          />
         </div>
       </div>
-    </div>
+
+      <div>
+        <h3 className="text-lg font-focus text-fg-strong">Phasen und Dauer</h3>
+        <p className="text-sm text-fg-muted">
+          Gesamtdauer: {totalDuration} Minuten
+        </p>
+      </div>
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-md">
+        {state.phases.map((phase, index) => (
+          <div
+            key={phase.id}
+            className="bg-bg-1 border border-border rounded-lg p-md"
+          >
+            <div className="font-focus text-fg-normal text-base">
+              {PHASE_LABELS[index]}
+            </div>
+            <FormNumber
+              label="Dauer (Minuten)"
+              value={phase.durationMinutes}
+              onChange={(durationMinutes) =>
+                updatePhase(phase.id, { durationMinutes })
+              }
+              min={1}
+              max={480}
+            />
+          </div>
+        ))}
+      </div>
+
+      {state.error && (
+        <div className="p-md bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-700">{state.error}</p>
+        </div>
+      )}
+
+      <div className="flex gap-md justify-end pt-lg">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
+            disabled={state.isSaving}
+          >
+            Abbrechen
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={state.isSaving || !isDirty}
+          className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
+        </button>
+      </div>
+    </>
   );
 }
