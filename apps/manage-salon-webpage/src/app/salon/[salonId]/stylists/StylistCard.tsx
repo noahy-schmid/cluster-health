@@ -69,6 +69,7 @@ export default function StylistCard({ stylist, salonId }: StylistCardProps) {
               text="Bearbeiten"
               onClick={handleEdit}
               elevation={1}
+              className="w-full"
             />
           </div>
           <FlatIconButton

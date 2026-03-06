@@ -9,6 +9,7 @@ interface FlatIconTextButtonProps {
   elevation: Elevation;
   isError?: boolean;
   ariaLabel?: string;
+  className?: string;
 }
 
 /**
@@ -28,6 +29,7 @@ export default function FlatIconTextButton({
   elevation,
   isError = false,
   ariaLabel,
+  className = "",
 }: FlatIconTextButtonProps) {
   const getBgClass = () => {
     if (isError) {
@@ -51,7 +53,7 @@ export default function FlatIconTextButton({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center gap-sm p-sm rounded-md cursor-pointer ${getBgClass()} ${getTextColorClass()} w-full`}
+      className={`flex items-center justify-center gap-sm py-sm px-md rounded-md cursor-pointer ${getBgClass()} ${getTextColorClass()} ${className}`}
       aria-label={ariaLabel || text}
     >
       <Icon className="w-icon-base h-icon-base" />

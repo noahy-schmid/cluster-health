@@ -4,6 +4,7 @@ interface FormTextareaProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: (value: string) => void;
   placeholder?: string;
   rows?: number;
   required?: boolean;
@@ -13,6 +14,7 @@ export default function FormTextarea({
   label,
   value,
   onChange,
+  onBlur,
   placeholder,
   rows = 4,
   required = false,
@@ -26,6 +28,7 @@ export default function FormTextarea({
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={(e) => onBlur?.(e.target.value)}
         placeholder={placeholder}
         rows={rows}
         required={required}

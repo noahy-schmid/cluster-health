@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint --max-warnings=3",
     "lint:fix": "eslint --fix",
+    "test": "vitest run",
     "docker:build": "docker build -t manage-salon-webpage:latest -f Dockerfile ../../"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "pg": "^8.18.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "sonner": "^2.0.7",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
   },
@@ -44,6 +46,7 @@
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

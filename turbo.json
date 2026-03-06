@@ -37,6 +37,10 @@
       "inputs": ["$TURBO_DEFAULT$", "**/schema.ts"],
       "outputs": ["drizzle/**"]
     },
+    "drizzle:push": {
+      "inputs": ["$TURBO_DEFAULT$", "drizzle/**", "**/schema.ts"],
+      "outputs": []
+    },
     "test": {
       "cache": false,
       "dependsOn": ["^build"]

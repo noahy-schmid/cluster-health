@@ -1,91 +1,52 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import StylistForm, {
-  StylistFormData,
-} from "@/components/stylists/StylistForm";
 import BackButton from "@/components/BackButton";
+import { fetchStylist } from "@/app/salon/[salonId]/stylists/stylist.actions";
 import {
-  fetchStylist,
-  updateStylist,
-} from "@/app/salon/[salonId]/stylists/stylist.actions";
-import { Stylist } from "@repo/salon-domain";
+  fetchServicesForStylist,
+  fetchServiceDefinitions,
+} from "@/app/salon/[salonId]/services/service.actions";
+import EditStylistClient from "./EditStylistClient";
 
 interface EditStylistPageProps {
   params: Promise<{ salonId: string; stylistId: string }>;
 }
 
-export default function EditStylistPage({ params }: EditStylistPageProps) {
-  const router = useRouter();
-  const [salonId, setSalonId] = useState<string>("");
-  const [stylistId, setStylistId] = useState<string>("");
-  const [stylist, setStylist] = useState<Stylist | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
+export default async function EditStylistPage({
+  params,
+}: EditStylistPageProps) {
+  const { salonId, stylistId } = await params;
 
-  useEffect(() => {
-    const loadParams = async () => {
-      const resolvedParams = await params;
-      setSalonId(resolvedParams.salonId);
-      setStylistId(resolvedParams.stylistId);
-    };
-    loadParams();
-  }, [params]);
+  const [stylistResult, assignmentsResult, servicesResult] = await Promise.all([
+    fetchStylist(salonId, stylistId),
+    fetchServicesForStylist(salonId, stylistId),
+    fetchServiceDefinitions(salonId),
+  ]);
 
-  useEffect(() => {
-    if (!salonId || !stylistId) return;
-
-    const loadStylist = async () => {
-      setIsLoading(true);
-      const result = await fetchStylist(salonId, stylistId);
-
-      if (!result.success) {
-        console.error("Failed to load stylist:", result.error);
-        router.push(`/salon/${salonId}/stylists`);
-        return;
-      }
-
-      setStylist(result.data);
-      setIsLoading(false);
-    };
-
-    loadStylist();
-  }, [salonId, stylistId, router]);
-
-  const handleSubmit = async (data: StylistFormData) => {
-    if (!stylist) return;
-
-    const result = await updateStylist(salonId, stylist.id, data);
-
-    if (!result.success) {
-      throw new Error(result.error || "Fehler beim Speichern");
-    }
-
-    router.push(`/salon/${salonId}/stylists`);
-  };
-
-  if (isLoading || !stylist) {
+  if (!stylistResult.success) {
     return (
       <div className="max-w-4xl mx-auto">
-        <PageHeader title="Stylist bearbeiten" subtitle="Lade Daten..." />
+        <BackButton text="Zurück" />
+        <PageHeader
+          title="Stylist bearbeiten"
+          subtitle="Stylist nicht gefunden"
+        />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <BackButton text="Zurück" />
-      <PageHeader
-        title="Stylist bearbeiten"
-        subtitle={`Bearbeite die Details von ${stylist.name}`}
-      />
-      <StylistForm
-        stylist={stylist}
-        onSubmit={handleSubmit}
-        onCancel={() => router.push(`/salon/${salonId}/stylists`)}
-        saveLabel="Änderungen speichern"
-      />
-    </div>
+    <EditStylistClient
+      salonId={salonId}
+      stylistId={stylistId}
+      initialStylist={stylistResult.data}
+      initialAssignments={
+        assignmentsResult.success ? assignmentsResult.data : []
+      }
+      allServices={
+        servicesResult.success
+          ? servicesResult.data.map((s) => ({ id: s.id, name: s.name }))
+          : []
+      }
+    />
   );
 }
