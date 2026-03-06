@@ -99,6 +99,12 @@ export {
   type ListServiceDefinitionsResult,
 } from "./use-cases/list-service-definitions.use-case";
 
+export {
+  GetServiceDefinitionUseCase,
+  type GetServiceDefinitionQuery,
+  type GetServiceDefinitionResult,
+} from "./use-cases/get-service-definition.use-case";
+
 // Simplified service use cases
 export {
   CreateSimpleServiceUseCase,

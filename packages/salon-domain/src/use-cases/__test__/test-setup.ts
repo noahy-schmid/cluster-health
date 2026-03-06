@@ -23,6 +23,7 @@ import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 import { UpdateCustomServiceUseCase } from "../update-custom-service.use-case";
 import { DeleteServiceDefinitionUseCase } from "../delete-service-definition.use-case";
 import { ListServiceDefinitionsUseCase } from "../list-service-definitions.use-case";
+import { GetServiceDefinitionUseCase } from "../get-service-definition.use-case";
 import { AssignEmployeeToServiceUseCase } from "../assign-employee-to-service.use-case";
 import { UnassignEmployeeFromServiceUseCase } from "../unassign-employee-from-service.use-case";
 import { ListEmployeeServicesUseCase } from "../list-employee-services.use-case";
@@ -44,6 +45,7 @@ export interface TestContext {
     | UpdateCustomServiceUseCase
     | DeleteServiceDefinitionUseCase
     | ListServiceDefinitionsUseCase
+    | GetServiceDefinitionUseCase
   >;
   assignmentUseCaseLayer: Layer.Layer<
     | AssignEmployeeToServiceUseCase
@@ -145,6 +147,7 @@ export async function setupTestContext(): Promise<TestContext> {
     ),
     DeleteServiceDefinitionUseCase.DefaultWithoutDependencies,
     ListServiceDefinitionsUseCase.DefaultWithoutDependencies,
+    GetServiceDefinitionUseCase.DefaultWithoutDependencies,
   ).pipe(Layer.provide(serviceAggregateLayer), Layer.orDie);
 
   const assignmentUseCaseLayer = Layer.mergeAll(
