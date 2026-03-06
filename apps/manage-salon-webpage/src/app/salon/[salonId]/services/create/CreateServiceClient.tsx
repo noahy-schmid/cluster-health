@@ -7,7 +7,7 @@ import ServiceForm from "../ServiceForm.component";
 import SimpleServiceForm from "../SimpleServiceForm.component";
 import ColorationServiceForm from "../ColorationServiceForm.component";
 import { createServiceDefinition } from "../service.actions";
-import type { SalonResource, ServiceType } from "@/lib/types/service-types";
+import type { Resource, ServiceType } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import TypeSelectionPanel, {
   type TypeSelectionOption,
@@ -39,7 +39,7 @@ const serviceTypeOptions: TypeSelectionOption<ServiceType>[] = [
 
 interface CreateServiceClientProps {
   salonId: string;
-  availableResources: SalonResource[];
+  availableResources: Resource[];
 }
 
 export default function CreateServiceClient({
@@ -59,8 +59,8 @@ export default function CreateServiceClient({
     phases: {
       name: string;
       durationMinutes: number;
-      requiresEmployee: boolean;
-      requiredResources: { resourceId: string; resourceName: string }[];
+      employeeRequired: boolean;
+      requiredResourceSlugs: string[];
       order: number;
     }[];
   }) => {

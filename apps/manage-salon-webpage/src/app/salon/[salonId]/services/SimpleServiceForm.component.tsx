@@ -2,7 +2,7 @@
 
 import { useRef, useCallback } from "react";
 import type { ServiceDefinition } from "@/lib/types/service-types";
-import { SEAT_RESOURCE_ID } from "@/lib/types/service-types";
+import { SEAT_SLUG } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
 import FormTextarea from "@/components/website/forms/FormTextarea";
 import FormNumber from "@/components/website/forms/FormNumber";
@@ -28,10 +28,8 @@ function createSimplePhase(durationMinutes: number) {
     id: crypto.randomUUID(),
     name: "Durchführung",
     durationMinutes,
-    requiresEmployee: true,
-    requiredResources: [
-      { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
-    ],
+    employeeRequired: true,
+    requiredResourceSlugs: [SEAT_SLUG],
     order: 0,
   };
 }

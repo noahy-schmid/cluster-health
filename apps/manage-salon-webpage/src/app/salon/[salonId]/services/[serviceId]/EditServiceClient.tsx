@@ -14,8 +14,8 @@ import {
 } from "../service.actions";
 import type {
   ServiceDefinition,
-  SalonResource,
-  StylistServiceAssignment,
+  Resource,
+  ServiceEmployeeItem,
 } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
 
@@ -23,8 +23,8 @@ interface EditServiceClientProps {
   salonId: string;
   serviceId: string;
   initialService: ServiceDefinition;
-  initialResources: SalonResource[];
-  initialAssignments: StylistServiceAssignment[];
+  initialResources: Resource[];
+  initialAssignments: ServiceEmployeeItem[];
   allStylists: { id: string; name: string }[];
 }
 
@@ -38,7 +38,7 @@ export default function EditServiceClient({
 }: EditServiceClientProps) {
   const { showNotification } = useNotifications();
   const [assignments, setAssignments] =
-    useState<StylistServiceAssignment[]>(initialAssignments);
+    useState<ServiceEmployeeItem[]>(initialAssignments);
 
   const handleSubmit = async (data: {
     name: string;

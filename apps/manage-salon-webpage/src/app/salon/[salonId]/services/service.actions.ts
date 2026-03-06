@@ -1,131 +1,43 @@
 "use server";
 
+import {
+  ListServiceDefinitionsUseCase,
+  ListServiceDefinitionsUseCaseLayer,
+  GetServiceDefinitionUseCase,
+  GetServiceDefinitionUseCaseLayer,
+  CreateCustomServiceUseCase,
+  CreateCustomServiceUseCaseLayer,
+  CreateSimpleServiceUseCase,
+  CreateSimpleServiceUseCaseLayer,
+  CreateColorationServiceUseCase,
+  CreateColorationServiceUseCaseLayer,
+  UpdateCustomServiceUseCase,
+  UpdateCustomServiceUseCaseLayer,
+  DeleteServiceDefinitionUseCase,
+  DeleteServiceDefinitionUseCaseLayer,
+  ListResourcesUseCase,
+  ListResourcesUseCaseLayer,
+  ListServiceEmployeesUseCase,
+  ListServiceEmployeesUseCaseLayer,
+  ListEmployeeServicesUseCase,
+  ListEmployeeServicesUseCaseLayer,
+  AssignEmployeeToServiceUseCase,
+  AssignEmployeeToServiceUseCaseLayer,
+  UnassignEmployeeFromServiceUseCase,
+  UnassignEmployeeFromServiceUseCaseLayer,
+} from "@repo/salon-domain";
 import type {
   ServiceDefinition,
-  CreateServiceDefinitionInput,
-  UpdateServiceDefinitionInput,
-  SalonResource,
-  StylistServiceAssignment,
-} from "@/lib/types/service-types";
-import {
-  EMPLOYEE_RESOURCE_ID,
-  SEAT_RESOURCE_ID,
-  HEATING_LAMP_RESOURCE_ID,
-} from "@/lib/types/service-types";
-
-// ─── Mock Data ───────────────────────────────────────────────
-
-const mockResources: SalonResource[] = [
-  { id: EMPLOYEE_RESOURCE_ID, salonId: "mock", name: "Mitarbeiter" },
-  { id: SEAT_RESOURCE_ID, salonId: "mock", name: "Stuhl" },
-  { id: "resource-wash-sink", salonId: "mock", name: "Waschbecken" },
-  { id: HEATING_LAMP_RESOURCE_ID, salonId: "mock", name: "Wärmehaube" },
-];
-
-const mockServices: ServiceDefinition[] = [
-  {
-    id: "service-1",
-    salonId: "mock",
-    name: "Haarschnitt Damen",
-    description: "Klassischer Damen-Haarschnitt mit Waschen und Föhnen",
-    priceInCents: 4500,
-    serviceType: "custom",
-    phases: [
-      {
-        id: "phase-1-1",
-        name: "Haare waschen",
-        durationMinutes: 10,
-        requiresEmployee: true,
-        requiredResources: [
-          { resourceId: "resource-wash-sink", resourceName: "Waschbecken" },
-        ],
-        order: 0,
-      },
-      {
-        id: "phase-1-2",
-        name: "Schneiden",
-        durationMinutes: 30,
-        requiresEmployee: true,
-        requiredResources: [
-          { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
-        ],
-        order: 1,
-      },
-      {
-        id: "phase-1-3",
-        name: "Föhnen & Styling",
-        durationMinutes: 15,
-        requiresEmployee: true,
-        requiredResources: [
-          { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
-        ],
-        order: 2,
-      },
-    ],
-    createdAt: new Date("2025-01-15"),
-    updatedAt: new Date("2025-01-15"),
-  },
-  {
-    id: "service-2",
-    salonId: "mock",
-    name: "Coloration",
-    description: "Professionelle Haarfärbung mit Pflege",
-    priceInCents: 8500,
-    serviceType: "coloration",
-    phases: [
-      {
-        id: "phase-2-1",
-        name: "Färben",
-        durationMinutes: 20,
-        requiresEmployee: true,
-        requiredResources: [
-          { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
-        ],
-        order: 0,
-      },
-      {
-        id: "phase-2-2",
-        name: "Einwirkzeit",
-        durationMinutes: 30,
-        requiresEmployee: false,
-        requiredResources: [
-          {
-            resourceId: HEATING_LAMP_RESOURCE_ID,
-            resourceName: "Wärmehaube",
-          },
-        ],
-        order: 1,
-      },
-      {
-        id: "phase-2-3",
-        name: "Abschluss",
-        durationMinutes: 10,
-        requiresEmployee: true,
-        requiredResources: [
-          { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
-        ],
-        order: 2,
-      },
-    ],
-    createdAt: new Date("2025-02-10"),
-    updatedAt: new Date("2025-02-10"),
-  },
-];
-
-const mockAssignments: StylistServiceAssignment[] = [
-  {
-    stylistId: "stylist-1",
-    stylistName: "Anna Müller",
-    serviceId: "service-1",
-    serviceName: "Haarschnitt Damen",
-  },
-  {
-    stylistId: "stylist-1",
-    stylistName: "Anna Müller",
-    serviceId: "service-2",
-    serviceName: "Coloration",
-  },
-];
+  Resource,
+  ServiceEmployeeItem,
+  EmployeeServiceItem,
+  CreateServicePhaseInput,
+} from "@repo/salon-domain";
+import type { ServiceType } from "@/lib/types/service-types";
+import { ServiceGuard } from "@/api/guards/service.guard";
+import { EmployeeGuard } from "@/api/guards/employee.guard";
+import { SalonAccessGuard } from "@/api/guards/salon.guard";
+import { Effect, Layer } from "effect";
 
 // ─── Server Actions ──────────────────────────────────────────
 
@@ -138,8 +50,23 @@ export async function fetchServiceDefinitions(
   | { success: true; data: ServiceDefinition[] }
   | { success: false; error: string }
 > {
-  void salonId;
-  return { success: true, data: mockServices };
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  const program = Effect.gen(function* () {
+    const useCase = yield* ListServiceDefinitionsUseCase;
+    const services = yield* useCase.execute({ salonId });
+    return { success: true as const, data: services };
+  }).pipe(
+    Effect.catchTag("InternalError", (error) =>
+      Effect.succeed({ success: false as const, error: error.message }),
+    ),
+    Effect.provide(ListServiceDefinitionsUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
 }
 
 /**
@@ -151,37 +78,197 @@ export async function fetchServiceDefinition(
 ): Promise<
   { success: true; data: ServiceDefinition } | { success: false; error: string }
 > {
-  void salonId;
-  const service = mockServices.find((s) => s.id === serviceId);
-  if (!service) {
-    return { success: false, error: "Dienstleistung nicht gefunden" };
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
   }
-  return { success: true, data: service };
+
+  const program = Effect.gen(function* () {
+    const useCase = yield* GetServiceDefinitionUseCase;
+    const service = yield* useCase.execute({ serviceId });
+    if (service.salonId !== salonId) {
+      return {
+        success: false as const,
+        error: "Dienstleistung gehört nicht zu diesem Salon",
+      };
+    }
+    return { success: true as const, data: service };
+  }).pipe(
+    Effect.catchTags({
+      NotFoundError: () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Dienstleistung nicht gefunden",
+        }),
+      InternalError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+    }),
+    Effect.provide(GetServiceDefinitionUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
 }
 
 /**
  * Creates a new service definition.
+ * Routes to the appropriate backend use case based on serviceType.
  */
-export async function createServiceDefinition(
-  input: CreateServiceDefinitionInput,
-): Promise<
+export async function createServiceDefinition(input: {
+  salonId: string;
+  name: string;
+  description: string;
+  priceInCents: number;
+  serviceType: ServiceType;
+  phases: CreateServicePhaseInput[];
+}): Promise<
   { success: true; data: ServiceDefinition } | { success: false; error: string }
 > {
-  const newService: ServiceDefinition = {
-    id: `service-${Date.now()}`,
-    salonId: input.salonId,
-    name: input.name,
-    description: input.description,
-    priceInCents: input.priceInCents,
-    serviceType: input.serviceType,
-    phases: input.phases.map((p, idx) => ({
-      ...p,
-      id: `phase-${Date.now()}-${idx}`,
-    })),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-  return { success: true, data: newService };
+  const guard = await ServiceGuard.canEditService(input.salonId);
+  if (!guard.success) {
+    return { success: false, error: guard.error };
+  }
+
+  if (input.serviceType === "simple") {
+    return createSimpleService(input);
+  }
+  if (input.serviceType === "coloration") {
+    return createColorationService(input);
+  }
+  return createCustomService(input);
+}
+
+async function createSimpleService(input: {
+  salonId: string;
+  name: string;
+  description: string;
+  priceInCents: number;
+  phases: CreateServicePhaseInput[];
+}): Promise<
+  { success: true; data: ServiceDefinition } | { success: false; error: string }
+> {
+  const durationMinutes = input.phases[0]?.durationMinutes ?? 30;
+
+  const program = Effect.gen(function* () {
+    const useCase = yield* CreateSimpleServiceUseCase;
+    const service = yield* useCase.execute({
+      salonId: input.salonId,
+      name: input.name,
+      description: input.description,
+      priceInCents: input.priceInCents,
+      durationMinutes,
+    });
+    return { success: true as const, data: service };
+  }).pipe(
+    Effect.catchTags({
+      ValidationError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+      NotFoundError: () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Salon nicht gefunden",
+        }),
+      InternalError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+      ResourceMissingError: (error) =>
+        Effect.succeed({
+          success: false as const,
+          error: `Ressource "${error.resourceSlug}" fehlt im Salon`,
+        }),
+    }),
+    Effect.provide(CreateSimpleServiceUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
+}
+
+async function createColorationService(input: {
+  salonId: string;
+  name: string;
+  description: string;
+  priceInCents: number;
+  phases: CreateServicePhaseInput[];
+}): Promise<
+  { success: true; data: ServiceDefinition } | { success: false; error: string }
+> {
+  const applicationDuration = input.phases[0]?.durationMinutes ?? 20;
+  const processingDuration = input.phases[1]?.durationMinutes ?? 30;
+  const finishingDuration = input.phases[2]?.durationMinutes ?? 15;
+
+  const program = Effect.gen(function* () {
+    const useCase = yield* CreateColorationServiceUseCase;
+    const service = yield* useCase.execute({
+      salonId: input.salonId,
+      name: input.name,
+      description: input.description,
+      priceInCents: input.priceInCents,
+      applicationDurationMinutes: applicationDuration,
+      processingDurationMinutes: processingDuration,
+      finishingDurationMinutes: finishingDuration,
+    });
+    return { success: true as const, data: service };
+  }).pipe(
+    Effect.catchTags({
+      ValidationError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+      NotFoundError: () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Salon nicht gefunden",
+        }),
+      InternalError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+      ResourceMissingError: (error) =>
+        Effect.succeed({
+          success: false as const,
+          error: `Ressource "${error.resourceSlug}" fehlt im Salon`,
+        }),
+    }),
+    Effect.provide(CreateColorationServiceUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
+}
+
+async function createCustomService(input: {
+  salonId: string;
+  name: string;
+  description: string;
+  priceInCents: number;
+  phases: CreateServicePhaseInput[];
+}): Promise<
+  { success: true; data: ServiceDefinition } | { success: false; error: string }
+> {
+  const program = Effect.gen(function* () {
+    const useCase = yield* CreateCustomServiceUseCase;
+    const service = yield* useCase.execute({
+      salonId: input.salonId,
+      name: input.name,
+      description: input.description,
+      priceInCents: input.priceInCents,
+      phases: input.phases,
+    });
+    return { success: true as const, data: service };
+  }).pipe(
+    Effect.catchTags({
+      ValidationError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+      NotFoundError: () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Salon nicht gefunden",
+        }),
+      InternalError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+      ResourceMissingError: (error) =>
+        Effect.succeed({
+          success: false as const,
+          error: `Ressource "${error.resourceSlug}" fehlt im Salon`,
+        }),
+    }),
+    Effect.provide(CreateCustomServiceUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
 }
 
 /**
@@ -190,42 +277,83 @@ export async function createServiceDefinition(
 export async function updateServiceDefinition(
   salonId: string,
   serviceId: string,
-  input: UpdateServiceDefinitionInput,
+  input: {
+    name: string;
+    description: string;
+    priceInCents: number;
+    phases: CreateServicePhaseInput[];
+  },
 ): Promise<
   { success: true; data: ServiceDefinition } | { success: false; error: string }
 > {
-  void salonId;
-  const existing = mockServices.find((s) => s.id === serviceId);
-  if (!existing) {
-    return { success: false, error: "Dienstleistung nicht gefunden" };
+  const guard = await ServiceGuard.canEditService(salonId);
+  if (!guard.success) {
+    return { success: false, error: guard.error };
   }
-  const updated: ServiceDefinition = {
-    ...existing,
-    name: input.name,
-    description: input.description,
-    priceInCents: input.priceInCents,
-    phases: input.phases.map((p, idx) => ({
-      ...p,
-      id: `phase-${Date.now()}-${idx}`,
-    })),
-    updatedAt: new Date(),
-  };
-  return { success: true, data: updated };
+
+  const program = Effect.gen(function* () {
+    const useCase = yield* UpdateCustomServiceUseCase;
+    const service = yield* useCase.execute({
+      serviceId,
+      name: input.name,
+      description: input.description,
+      priceInCents: input.priceInCents,
+      phases: input.phases,
+    });
+    return { success: true as const, data: service };
+  }).pipe(
+    Effect.catchTags({
+      ValidationError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+      NotFoundError: () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Dienstleistung nicht gefunden",
+        }),
+      InternalError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+      ResourceMissingError: (error) =>
+        Effect.succeed({
+          success: false as const,
+          error: `Ressource "${error.resourceSlug}" fehlt im Salon`,
+        }),
+    }),
+    Effect.provide(UpdateCustomServiceUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
 }
 
 /**
- * Deletes a service definition.
+ * Deletes a service definition (soft delete).
  */
 export async function deleteServiceDefinition(
   salonId: string,
   serviceId: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
-  void salonId;
-  const exists = mockServices.find((s) => s.id === serviceId);
-  if (!exists) {
-    return { success: false, error: "Dienstleistung nicht gefunden" };
+  const guard = await ServiceGuard.canEditService(salonId);
+  if (!guard.success) {
+    return { success: false, error: guard.error };
   }
-  return { success: true };
+
+  const program = Effect.gen(function* () {
+    const useCase = yield* DeleteServiceDefinitionUseCase;
+    yield* useCase.execute({ serviceId });
+    return { success: true as const };
+  }).pipe(
+    Effect.catchTags({
+      NotFoundError: () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Dienstleistung nicht gefunden",
+        }),
+      InternalError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+    }),
+    Effect.provide(DeleteServiceDefinitionUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
 }
 
 /**
@@ -234,10 +362,25 @@ export async function deleteServiceDefinition(
 export async function fetchSalonResources(
   salonId: string,
 ): Promise<
-  { success: true; data: SalonResource[] } | { success: false; error: string }
+  { success: true; data: Resource[] } | { success: false; error: string }
 > {
-  void salonId;
-  return { success: true, data: mockResources };
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  const program = Effect.gen(function* () {
+    const useCase = yield* ListResourcesUseCase;
+    const resources = yield* useCase.execute({ salonId });
+    return { success: true as const, data: resources };
+  }).pipe(
+    Effect.catchTag("InternalError", (error) =>
+      Effect.succeed({ success: false as const, error: error.message }),
+    ),
+    Effect.provide(ListResourcesUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
 }
 
 /**
@@ -247,12 +390,126 @@ export async function fetchStylistsForService(
   salonId: string,
   serviceId: string,
 ): Promise<
-  | { success: true; data: StylistServiceAssignment[] }
+  | { success: true; data: ServiceEmployeeItem[] }
   | { success: false; error: string }
 > {
-  void salonId;
-  const assignments = mockAssignments.filter((a) => a.serviceId === serviceId);
-  return { success: true, data: assignments };
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  const program = Effect.gen(function* () {
+    const useCase = yield* ListServiceEmployeesUseCase;
+    const employees = yield* useCase.execute({ serviceId });
+    return { success: true as const, data: employees };
+  }).pipe(
+    Effect.catchTag("InternalError", (error) =>
+      Effect.succeed({ success: false as const, error: error.message }),
+    ),
+    Effect.provide(ListServiceEmployeesUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
+}
+
+/**
+ * Assigns a stylist to a service.
+ * Requires canEditEmployee guard since we're modifying stylist assignments.
+ */
+export async function assignStylistToService(
+  salonId: string,
+  stylistId: string,
+  serviceId: string,
+): Promise<
+  | { success: true; data: ServiceEmployeeItem }
+  | { success: false; error: string }
+> {
+  const guard = await EmployeeGuard.canEditEmployee(salonId);
+  if (!guard.success) {
+    return { success: false, error: guard.error };
+  }
+
+  const program = Effect.gen(function* () {
+    const assignUseCase = yield* AssignEmployeeToServiceUseCase;
+    yield* assignUseCase.execute({ stylistId, serviceId });
+
+    // Fetch the full employee list for this service to get the stylist name
+    const listUseCase = yield* ListServiceEmployeesUseCase;
+    const employees = yield* listUseCase.execute({ serviceId });
+    const assigned = employees.find((e) => e.stylistId === stylistId);
+
+    if (!assigned) {
+      return {
+        success: true as const,
+        data: {
+          stylistId,
+          stylistName: "",
+          createdAt: new Date(),
+        } satisfies ServiceEmployeeItem,
+      };
+    }
+
+    return { success: true as const, data: assigned };
+  }).pipe(
+    Effect.catchTags({
+      NotFoundError: () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Stylist oder Dienstleistung nicht gefunden",
+        }),
+      ConflictError: () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Stylist ist bereits dieser Dienstleistung zugewiesen",
+        }),
+      ValidationError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+      InternalError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+    }),
+    Effect.provide(
+      Layer.mergeAll(
+        AssignEmployeeToServiceUseCaseLayer,
+        ListServiceEmployeesUseCaseLayer,
+      ),
+    ),
+  );
+
+  return Effect.runPromise(program);
+}
+
+/**
+ * Unassigns a stylist from a service.
+ * Requires canEditEmployee guard.
+ */
+export async function unassignStylistFromService(
+  salonId: string,
+  stylistId: string,
+  serviceId: string,
+): Promise<{ success: true } | { success: false; error: string }> {
+  const guard = await EmployeeGuard.canEditEmployee(salonId);
+  if (!guard.success) {
+    return { success: false, error: guard.error };
+  }
+
+  const program = Effect.gen(function* () {
+    const useCase = yield* UnassignEmployeeFromServiceUseCase;
+    yield* useCase.execute({ stylistId, serviceId });
+    return { success: true as const };
+  }).pipe(
+    Effect.catchTags({
+      NotFoundError: () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Zuweisung nicht gefunden",
+        }),
+      InternalError: (error) =>
+        Effect.succeed({ success: false as const, error: error.message }),
+    }),
+    Effect.provide(UnassignEmployeeFromServiceUseCaseLayer),
+  );
+
+  return Effect.runPromise(program);
 }
 
 /**
@@ -262,48 +519,24 @@ export async function fetchServicesForStylist(
   salonId: string,
   stylistId: string,
 ): Promise<
-  | { success: true; data: StylistServiceAssignment[] }
+  | { success: true; data: EmployeeServiceItem[] }
   | { success: false; error: string }
 > {
-  void salonId;
-  const assignments = mockAssignments.filter((a) => a.stylistId === stylistId);
-  return { success: true, data: assignments };
-}
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
 
-/**
- * Assigns a stylist to a service.
- */
-export async function assignStylistToService(
-  salonId: string,
-  stylistId: string,
-  serviceId: string,
-): Promise<
-  | { success: true; data: StylistServiceAssignment }
-  | { success: false; error: string }
-> {
-  void salonId;
-  const service = mockServices.find((s) => s.id === serviceId);
-  return {
-    success: true,
-    data: {
-      stylistId,
-      stylistName: "Neuer Stylist",
-      serviceId,
-      serviceName: service?.name ?? "Unbekannt",
-    },
-  };
-}
+  const program = Effect.gen(function* () {
+    const useCase = yield* ListEmployeeServicesUseCase;
+    const services = yield* useCase.execute({ stylistId });
+    return { success: true as const, data: services };
+  }).pipe(
+    Effect.catchTag("InternalError", (error) =>
+      Effect.succeed({ success: false as const, error: error.message }),
+    ),
+    Effect.provide(ListEmployeeServicesUseCaseLayer),
+  );
 
-/**
- * Unassigns a stylist from a service.
- */
-export async function unassignStylistFromService(
-  salonId: string,
-  stylistId: string,
-  serviceId: string,
-): Promise<{ success: true } | { success: false; error: string }> {
-  void salonId;
-  void stylistId;
-  void serviceId;
-  return { success: true };
+  return Effect.runPromise(program);
 }

@@ -3,8 +3,7 @@
 import { GripVertical, XIcon, Plus } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { ServicePhase, SalonResource } from "@/lib/types/service-types";
-import { EMPLOYEE_RESOURCE_ID } from "@/lib/types/service-types";
+import type { ServicePhase, Resource } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
 import FormNumber from "@/components/website/forms/FormNumber";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
@@ -14,7 +13,7 @@ import FlatChip from "@/components/buttons/FlatChip";
 interface PhaseEditorProps {
   phase: ServicePhase;
   index: number;
-  availableResources: SalonResource[];
+  availableResources: Resource[];
   onUpdate: (phase: ServicePhase) => void;
   onRemove: () => void;
   onBlur?: (phase: ServicePhase) => void;
@@ -42,20 +41,17 @@ export default function PhaseEditor({
     transition,
   };
 
-  // Build combined resource list: employee + other assigned resources
-  const isEmployeeAssigned = phase.requiresEmployee;
-  const employeeResource = availableResources.find(
-    (r) => r.id === EMPLOYEE_RESOURCE_ID,
-  );
+  // Build combined resource list: employee toggle + other assigned resources
+  const isEmployeeAssigned = phase.employeeRequired;
 
-  const assignedNonEmployee = phase.requiredResources.filter(
-    (r) => r.resourceId !== EMPLOYEE_RESOURCE_ID,
-  );
+  const assignedResourceSlugs = phase.requiredResourceSlugs;
+
+  const assignedResources = assignedResourceSlugs
+    .map((slug) => availableResources.find((r) => r.slug === slug))
+    .filter(Boolean) as Resource[];
 
   const unassignedResources = availableResources.filter(
-    (r) =>
-      r.id !== EMPLOYEE_RESOURCE_ID &&
-      !phase.requiredResources.some((pr) => pr.resourceId === r.id),
+    (r) => !assignedResourceSlugs.includes(r.slug),
   );
 
   const emitUpdate = (updates: Partial<ServicePhase>) => {
@@ -69,29 +65,23 @@ export default function PhaseEditor({
   };
 
   const handleToggleEmployee = () => {
-    emitCompletedUpdate({ requiresEmployee: !phase.requiresEmployee });
+    emitCompletedUpdate({ employeeRequired: !phase.employeeRequired });
   };
 
-  const handleAddResource = (resource: SalonResource) => {
-    if (phase.requiredResources.some((r) => r.resourceId === resource.id)) {
+  const handleAddResource = (resource: Resource) => {
+    if (phase.requiredResourceSlugs.includes(resource.slug)) {
       return;
     }
 
     emitCompletedUpdate({
-      requiredResources: [
-        ...phase.requiredResources,
-        {
-          resourceId: resource.id,
-          resourceName: resource.name,
-        },
-      ],
+      requiredResourceSlugs: [...phase.requiredResourceSlugs, resource.slug],
     });
   };
 
-  const handleRemoveResource = (resourceId: string) => {
+  const handleRemoveResource = (slug: string) => {
     emitCompletedUpdate({
-      requiredResources: phase.requiredResources.filter(
-        (resource) => resource.resourceId !== resourceId,
+      requiredResourceSlugs: phase.requiredResourceSlugs.filter(
+        (s) => s !== slug,
       ),
     });
   };
@@ -153,18 +143,18 @@ export default function PhaseEditor({
               </label>
               <div className="flex flex-wrap gap-sm">
                 {/* Employee resource as chip */}
-                {isEmployeeAssigned && employeeResource && (
+                {isEmployeeAssigned && (
                   <FlatChip
-                    label={employeeResource.name}
+                    label="Mitarbeiter"
                     onDelete={handleToggleEmployee}
                   />
                 )}
                 {/* Other assigned resources */}
-                {assignedNonEmployee.map((r) => (
+                {assignedResources.map((r) => (
                   <FlatChip
-                    key={r.resourceId}
-                    label={r.resourceName}
-                    onDelete={() => handleRemoveResource(r.resourceId)}
+                    key={r.slug}
+                    label={r.name}
+                    onDelete={() => handleRemoveResource(r.slug)}
                   />
                 ))}
               </div>
@@ -172,17 +162,17 @@ export default function PhaseEditor({
               {/* Unassigned resources (+ employee if not assigned) */}
               {(unassignedResources.length > 0 || !isEmployeeAssigned) && (
                 <div className="flex flex-wrap gap-sm mt-sm">
-                  {!isEmployeeAssigned && employeeResource && (
+                  {!isEmployeeAssigned && (
                     <FlatIconTextButton
                       icon={Plus}
-                      text={employeeResource.name}
+                      text="Mitarbeiter"
                       onClick={handleToggleEmployee}
                       elevation={0}
                     />
                   )}
                   {unassignedResources.map((resource) => (
                     <FlatIconTextButton
-                      key={resource.id}
+                      key={resource.slug}
                       icon={Plus}
                       text={resource.name}
                       onClick={() => handleAddResource(resource)}

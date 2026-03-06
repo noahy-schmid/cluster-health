@@ -5,10 +5,7 @@ import type {
   ServiceDefinition,
   ServicePhase,
 } from "@/lib/types/service-types";
-import {
-  SEAT_RESOURCE_ID,
-  HEATING_LAMP_RESOURCE_ID,
-} from "@/lib/types/service-types";
+import { SEAT_SLUG, CLIMAZON_SLUG } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
 import FormTextarea from "@/components/website/forms/FormTextarea";
 import FormNumber from "@/components/website/forms/FormNumber";
@@ -35,30 +32,24 @@ function createColorationPhases(): ServicePhase[] {
       id: crypto.randomUUID(),
       name: "Färben",
       durationMinutes: 20,
-      requiresEmployee: true,
-      requiredResources: [
-        { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
-      ],
+      employeeRequired: true,
+      requiredResourceSlugs: [SEAT_SLUG],
       order: 0,
     },
     {
       id: crypto.randomUUID(),
       name: "Einwirkzeit",
       durationMinutes: 30,
-      requiresEmployee: false,
-      requiredResources: [
-        { resourceId: HEATING_LAMP_RESOURCE_ID, resourceName: "Wärmehaube" },
-      ],
+      employeeRequired: false,
+      requiredResourceSlugs: [CLIMAZON_SLUG],
       order: 1,
     },
     {
       id: crypto.randomUUID(),
       name: "Abschluss",
       durationMinutes: 15,
-      requiresEmployee: true,
-      requiredResources: [
-        { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
-      ],
+      employeeRequired: true,
+      requiredResourceSlugs: [SEAT_SLUG],
       order: 2,
     },
   ];

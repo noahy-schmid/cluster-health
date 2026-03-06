@@ -13,14 +13,14 @@ import {
   unassignStylistFromService,
 } from "@/app/salon/[salonId]/services/service.actions";
 import { Stylist } from "@repo/salon-domain";
-import type { StylistServiceAssignment } from "@/lib/types/service-types";
+import type { EmployeeServiceItem } from "@repo/salon-domain";
 import { useNotifications } from "@/components/notifications/useNotifications";
 
 interface EditStylistClientProps {
   salonId: string;
   stylistId: string;
   initialStylist: Stylist;
-  initialAssignments: StylistServiceAssignment[];
+  initialAssignments: EmployeeServiceItem[];
   allServices: { id: string; name: string }[];
 }
 
@@ -33,7 +33,7 @@ export default function EditStylistClient({
 }: EditStylistClientProps) {
   const { showNotification } = useNotifications();
   const [assignments, setAssignments] =
-    useState<StylistServiceAssignment[]>(initialAssignments);
+    useState<EmployeeServiceItem[]>(initialAssignments);
 
   const handleSubmit = async (data: StylistFormData) => {
     const result = await updateStylist(salonId, initialStylist.id, data);
@@ -59,9 +59,18 @@ export default function EditStylistClient({
         showNotification(result.error, "error", "long");
         return;
       }
-      setAssignments((prev) => [...prev, result.data]);
+      // Construct the EmployeeServiceItem from known data
+      const service = allServices.find((s) => s.id === serviceId);
+      setAssignments((prev) => [
+        ...prev,
+        {
+          serviceDefinitionId: serviceId,
+          serviceName: service?.name ?? "",
+          createdAt: new Date(),
+        },
+      ]);
     },
-    [salonId, stylistId, showNotification],
+    [salonId, stylistId, showNotification, allServices],
   );
 
   const handleUnassignService = useCallback(
@@ -75,7 +84,9 @@ export default function EditStylistClient({
         showNotification(result.error, "error", "long");
         return;
       }
-      setAssignments((prev) => prev.filter((a) => a.serviceId !== serviceId));
+      setAssignments((prev) =>
+        prev.filter((a) => a.serviceDefinitionId !== serviceId),
+      );
     },
     [salonId, stylistId, showNotification],
   );
@@ -99,7 +110,7 @@ export default function EditStylistClient({
           availableItems={allServices}
           entityLabel="Dienstleistungen"
           getAssignmentName={(a) => a.serviceName}
-          getAssignmentKey={(a) => a.serviceId}
+          getAssignmentKey={(a) => a.serviceDefinitionId}
           onAssign={handleAssignService}
           onUnassign={handleUnassignService}
         />
