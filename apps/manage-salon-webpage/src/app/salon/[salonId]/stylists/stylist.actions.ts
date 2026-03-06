@@ -59,14 +59,12 @@ export async function createStylist(input: CreateStylistInputDto) {
 
   const program = Effect.gen(function* () {
     const stylistService = yield* StylistService;
-    return yield* stylistService
-      .createStylist(createStylistInput)
-      .pipe(
-        Effect.map((stylist) => ({
-          success: true as const,
-          data: serializeStylist(stylist),
-        })),
-      );
+    return yield* stylistService.createStylist(createStylistInput).pipe(
+      Effect.map((stylist) => ({
+        success: true as const,
+        data: serializeStylist(stylist),
+      })),
+    );
   }).pipe(
     Effect.catchTags({
       StylistValidationError: (error) =>
@@ -96,14 +94,12 @@ export async function fetchStylists(
 
   const program = Effect.gen(function* () {
     const stylistService = yield* StylistService;
-    return yield* stylistService
-      .getStylistsBySalonId(salonId)
-      .pipe(
-        Effect.map((stylists) => ({
-          success: true as const,
-          data: stylists.map(serializeStylist),
-        })),
-      );
+    return yield* stylistService.getStylistsBySalonId(salonId).pipe(
+      Effect.map((stylists) => ({
+        success: true as const,
+        data: stylists.map(serializeStylist),
+      })),
+    );
   }).pipe(
     Effect.catchTags({
       StylistDatabaseError: (error) =>
