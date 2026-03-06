@@ -27,8 +27,9 @@ export interface PortFullServiceDefinition {
 // --- Port interface ---
 
 /**
- * Port for reading service definitions with their phases joined.
- * Optimised for read performance using database joins.
+ * Port for reading service definitions with their phases and resource requirements.
+ * Implementations are responsible for handling performance characteristics
+ * (for example, avoiding N+1 query patterns).
  */
 export interface ReadServicePort {
   /**
