@@ -7,15 +7,19 @@ import type {
   SalonResource,
   StylistServiceAssignment,
 } from "@/lib/types/service-types";
-import { EMPLOYEE_RESOURCE_ID } from "@/lib/types/service-types";
+import {
+  EMPLOYEE_RESOURCE_ID,
+  SEAT_RESOURCE_ID,
+  HEATING_LAMP_RESOURCE_ID,
+} from "@/lib/types/service-types";
 
 // ─── Mock Data ───────────────────────────────────────────────
 
 const mockResources: SalonResource[] = [
   { id: EMPLOYEE_RESOURCE_ID, salonId: "mock", name: "Mitarbeiter" },
-  { id: "resource-seat", salonId: "mock", name: "Stuhl" },
+  { id: SEAT_RESOURCE_ID, salonId: "mock", name: "Stuhl" },
   { id: "resource-wash-sink", salonId: "mock", name: "Waschbecken" },
-  { id: "resource-heating-lamp", salonId: "mock", name: "Wärmehaube" },
+  { id: HEATING_LAMP_RESOURCE_ID, salonId: "mock", name: "Wärmehaube" },
 ];
 
 const mockServices: ServiceDefinition[] = [
@@ -24,6 +28,8 @@ const mockServices: ServiceDefinition[] = [
     salonId: "mock",
     name: "Haarschnitt Damen",
     description: "Klassischer Damen-Haarschnitt mit Waschen und Föhnen",
+    priceInCents: 4500,
+    serviceType: "custom",
     phases: [
       {
         id: "phase-1-1",
@@ -41,7 +47,7 @@ const mockServices: ServiceDefinition[] = [
         durationMinutes: 30,
         requiresEmployee: true,
         requiredResources: [
-          { resourceId: "resource-seat", resourceName: "Stuhl" },
+          { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
         ],
         order: 1,
       },
@@ -51,7 +57,7 @@ const mockServices: ServiceDefinition[] = [
         durationMinutes: 15,
         requiresEmployee: true,
         requiredResources: [
-          { resourceId: "resource-seat", resourceName: "Stuhl" },
+          { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
         ],
         order: 2,
       },
@@ -64,14 +70,16 @@ const mockServices: ServiceDefinition[] = [
     salonId: "mock",
     name: "Coloration",
     description: "Professionelle Haarfärbung mit Pflege",
+    priceInCents: 8500,
+    serviceType: "coloration",
     phases: [
       {
         id: "phase-2-1",
-        name: "Farbe auftragen",
+        name: "Färben",
         durationMinutes: 20,
         requiresEmployee: true,
         requiredResources: [
-          { resourceId: "resource-seat", resourceName: "Stuhl" },
+          { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
         ],
         order: 0,
       },
@@ -82,7 +90,7 @@ const mockServices: ServiceDefinition[] = [
         requiresEmployee: false,
         requiredResources: [
           {
-            resourceId: "resource-heating-lamp",
+            resourceId: HEATING_LAMP_RESOURCE_ID,
             resourceName: "Wärmehaube",
           },
         ],
@@ -90,11 +98,11 @@ const mockServices: ServiceDefinition[] = [
       },
       {
         id: "phase-2-3",
-        name: "Auswaschen",
+        name: "Abschluss",
         durationMinutes: 10,
         requiresEmployee: true,
         requiredResources: [
-          { resourceId: "resource-wash-sink", resourceName: "Waschbecken" },
+          { resourceId: SEAT_RESOURCE_ID, resourceName: "Stuhl" },
         ],
         order: 2,
       },
@@ -164,6 +172,8 @@ export async function createServiceDefinition(
     salonId: input.salonId,
     name: input.name,
     description: input.description,
+    priceInCents: input.priceInCents,
+    serviceType: input.serviceType,
     phases: input.phases.map((p, idx) => ({
       ...p,
       id: `phase-${Date.now()}-${idx}`,
@@ -193,6 +203,7 @@ export async function updateServiceDefinition(
     ...existing,
     name: input.name,
     description: input.description,
+    priceInCents: input.priceInCents,
     phases: input.phases.map((p, idx) => ({
       ...p,
       id: `phase-${Date.now()}-${idx}`,

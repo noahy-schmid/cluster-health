@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useCallback } from "react";
 import { Plus } from "lucide-react";
 import {
   DndContext,
@@ -22,10 +22,12 @@ import type {
 } from "@/lib/types/service-types";
 import FormInput from "@/components/website/forms/FormInput";
 import FormTextarea from "@/components/website/forms/FormTextarea";
+import FormMoney from "@/components/website/forms/FormMoney";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import PhaseEditor from "./PhaseEditor.component";
 import { useServiceFormState } from "./ServiceForm.state";
 import { useNotifications } from "@/components/notifications/useNotifications";
+import { useAutoSave } from "@/hooks/useAutoSave";
 
 interface ServiceFormProps {
   service?: ServiceDefinition;
@@ -33,6 +35,7 @@ interface ServiceFormProps {
   onSubmit: (data: {
     name: string;
     description: string;
+    priceInCents: number;
     phases: ServiceDefinition["phases"];
   }) => Promise<void>;
   onCancel?: () => void;
@@ -47,15 +50,15 @@ export default function ServiceForm({
   saveLabel,
 }: ServiceFormProps) {
   const { showNotification } = useNotifications();
+  const isEditMode = !!service;
   const {
     state,
     setName,
     setDescription,
+    setPrice,
     addPhase,
     removePhase,
     updatePhase,
-    addPhaseResource,
-    removePhaseResource,
     reorderPhases,
     setSaving,
     setError,
@@ -63,20 +66,81 @@ export default function ServiceForm({
   } = useServiceFormState({
     name: service?.name,
     description: service?.description,
+    priceInCents: service?.priceInCents,
     phases: service?.phases,
   });
+
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Track the initial snapshot to detect changes
   const initialRef = useRef({
     name: service?.name ?? "",
     description: service?.description ?? "",
+    priceInCents: service?.priceInCents ?? 0,
     phases: JSON.stringify(service?.phases ?? []),
   });
 
   const isDirty =
     state.name !== initialRef.current.name ||
     state.description !== initialRef.current.description ||
+    state.priceInCents !== initialRef.current.priceInCents ||
     JSON.stringify(state.phases) !== initialRef.current.phases;
+
+  const doSave = useCallback(async () => {
+    const s = stateRef.current;
+    const trimmedName = s.name.trim();
+    if (!trimmedName) return;
+    if (s.phases.length === 0) return;
+    for (const phase of s.phases) {
+      if (phase.durationMinutes <= 0) return;
+    }
+
+    await onSubmit({
+      name: trimmedName,
+      description: s.description.trim(),
+      priceInCents: s.priceInCents,
+      phases: s.phases,
+    });
+
+    initialRef.current = {
+      name: trimmedName,
+      description: s.description.trim(),
+      priceInCents: s.priceInCents,
+      phases: JSON.stringify(s.phases),
+    };
+  }, [onSubmit]);
+
+  const triggerAutoSave = useAutoSave(doSave);
+
+  const handleFormBlur = isEditMode ? () => triggerAutoSave() : undefined;
+
+  const handlePhaseBlur = useCallback(
+    (_phase: ServiceDefinition["phases"][number]) => {
+      if (isEditMode) {
+        triggerAutoSave();
+      }
+    },
+    [isEditMode, triggerAutoSave],
+  );
+
+  const handleRemovePhase = useCallback(
+    (phaseId: string) => {
+      removePhase(phaseId);
+
+      if (isEditMode) {
+        triggerAutoSave();
+      }
+    },
+    [isEditMode, removePhase, triggerAutoSave],
+  );
+
+  const handlePhaseUpdate = useCallback(
+    (phase: ServiceDefinition["phases"][number]) => {
+      updatePhase(phase.id, phase);
+    },
+    [updatePhase],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -129,6 +193,7 @@ export default function ServiceForm({
       await onSubmit({
         name: trimmedName,
         description: trimmedDescription,
+        priceInCents: state.priceInCents,
         phases: state.phases,
       });
 
@@ -136,6 +201,7 @@ export default function ServiceForm({
       initialRef.current = {
         name: trimmedName,
         description: trimmedDescription,
+        priceInCents: state.priceInCents,
         phases: JSON.stringify(state.phases),
       };
 
@@ -159,6 +225,7 @@ export default function ServiceForm({
           label="Name"
           value={state.name}
           onChange={setName}
+          onBlur={handleFormBlur}
           placeholder="z.B. Haarschnitt Damen"
           required
         />
@@ -167,8 +234,18 @@ export default function ServiceForm({
           label="Beschreibung"
           value={state.description}
           onChange={setDescription}
+          onBlur={handleFormBlur}
           placeholder="Beschreibe die Dienstleistung..."
           rows={3}
+        />
+
+        <FormMoney
+          label="Preis"
+          value={state.priceInCents}
+          onChange={setPrice}
+          onBlur={handleFormBlur}
+          min={0}
+          max={100000}
         />
 
         {/* Phases section */}
@@ -215,12 +292,9 @@ export default function ServiceForm({
                     phase={phase}
                     index={index}
                     availableResources={availableResources}
-                    onUpdate={(updates) => updatePhase(phase.id, updates)}
-                    onAddResource={(r) => addPhaseResource(phase.id, r)}
-                    onRemoveResource={(rId) =>
-                      removePhaseResource(phase.id, rId)
-                    }
-                    onRemove={() => removePhase(phase.id)}
+                    onUpdate={handlePhaseUpdate}
+                    onRemove={() => handleRemovePhase(phase.id)}
+                    onBlur={handlePhaseBlur}
                   />
                 ))}
               </div>
@@ -234,26 +308,28 @@ export default function ServiceForm({
           </div>
         )}
 
-        <div className="flex gap-md justify-end pt-lg">
-          {onCancel && (
+        {!isEditMode && (
+          <div className="flex gap-md justify-end pt-lg">
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
+                disabled={state.isSaving}
+              >
+                Abbrechen
+              </button>
+            )}
             <button
               type="button"
-              onClick={onCancel}
-              className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
-              disabled={state.isSaving}
+              onClick={handleSave}
+              disabled={state.isSaving || !isDirty}
+              className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Abbrechen
+              {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
             </button>
-          )}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={state.isSaving || !isDirty}
-            className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

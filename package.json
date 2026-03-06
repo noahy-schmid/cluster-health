@@ -12,7 +12,8 @@
     "check-types": "turbo run check-types",
     "test": "turbo run test:run",
     "prepare": "husky install",
-    "drizzle:generate": "turbo run drizzle:generate"
+    "drizzle:generate": "turbo run drizzle:generate",
+    "drizzle:push": "turbo run drizzle:push"
   },
   "devDependencies": {
     "@effect/language-service": "^0.77.0",

@@ -15,10 +15,9 @@ interface PhaseEditorProps {
   phase: ServicePhase;
   index: number;
   availableResources: SalonResource[];
-  onUpdate: (updates: Partial<ServicePhase>) => void;
-  onAddResource: (resource: SalonResource) => void;
-  onRemoveResource: (resourceId: string) => void;
+  onUpdate: (phase: ServicePhase) => void;
   onRemove: () => void;
+  onBlur?: (phase: ServicePhase) => void;
 }
 
 export default function PhaseEditor({
@@ -26,9 +25,8 @@ export default function PhaseEditor({
   index,
   availableResources,
   onUpdate,
-  onAddResource,
-  onRemoveResource,
   onRemove,
+  onBlur,
 }: PhaseEditorProps) {
   const {
     attributes,
@@ -60,8 +58,42 @@ export default function PhaseEditor({
       !phase.requiredResources.some((pr) => pr.resourceId === r.id),
   );
 
+  const emitUpdate = (updates: Partial<ServicePhase>) => {
+    onUpdate({ ...phase, ...updates });
+  };
+
+  const emitCompletedUpdate = (updates: Partial<ServicePhase>) => {
+    const nextPhase = { ...phase, ...updates };
+    onUpdate(nextPhase);
+    onBlur?.(nextPhase);
+  };
+
   const handleToggleEmployee = () => {
-    onUpdate({ requiresEmployee: !phase.requiresEmployee });
+    emitCompletedUpdate({ requiresEmployee: !phase.requiresEmployee });
+  };
+
+  const handleAddResource = (resource: SalonResource) => {
+    if (phase.requiredResources.some((r) => r.resourceId === resource.id)) {
+      return;
+    }
+
+    emitCompletedUpdate({
+      requiredResources: [
+        ...phase.requiredResources,
+        {
+          resourceId: resource.id,
+          resourceName: resource.name,
+        },
+      ],
+    });
+  };
+
+  const handleRemoveResource = (resourceId: string) => {
+    emitCompletedUpdate({
+      requiredResources: phase.requiredResources.filter(
+        (resource) => resource.resourceId !== resourceId,
+      ),
+    });
   };
 
   return (
@@ -101,14 +133,16 @@ export default function PhaseEditor({
             <FormInput
               label="Name"
               value={phase.name}
-              onChange={(name) => onUpdate({ name })}
+              onChange={(name) => emitUpdate({ name })}
+              onBlur={onBlur ? () => onBlur(phase) : undefined}
               placeholder="z.B. Haare waschen"
             />
 
             <FormNumber
               label="Dauer (Minuten)"
               value={phase.durationMinutes}
-              onChange={(durationMinutes) => onUpdate({ durationMinutes })}
+              onChange={(durationMinutes) => emitUpdate({ durationMinutes })}
+              onBlur={onBlur ? () => onBlur(phase) : undefined}
               min={1}
               max={480}
             />
@@ -130,7 +164,7 @@ export default function PhaseEditor({
                   <FlatChip
                     key={r.resourceId}
                     label={r.resourceName}
-                    onDelete={() => onRemoveResource(r.resourceId)}
+                    onDelete={() => handleRemoveResource(r.resourceId)}
                   />
                 ))}
               </div>
@@ -151,7 +185,7 @@ export default function PhaseEditor({
                       key={resource.id}
                       icon={Plus}
                       text={resource.name}
-                      onClick={() => onAddResource(resource)}
+                      onClick={() => handleAddResource(resource)}
                       elevation={0}
                     />
                   ))}

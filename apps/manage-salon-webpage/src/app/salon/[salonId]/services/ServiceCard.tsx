@@ -3,11 +3,17 @@
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Clock } from "lucide-react";
 import { useState } from "react";
-import type { ServiceDefinition } from "@/lib/types/service-types";
+import type { ServiceDefinition, ServiceType } from "@/lib/types/service-types";
 import { deleteServiceDefinition } from "./service.actions";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import { useNotifications } from "@/components/notifications/useNotifications";
+
+const serviceTypeLabels: Record<ServiceType, string> = {
+  simple: "Einfach",
+  coloration: "Coloration",
+  custom: "Individuell",
+};
 
 interface ServiceCardProps {
   service: ServiceDefinition;
@@ -65,6 +71,10 @@ export default function ServiceCard({ service, salonId }: ServiceCardProps) {
               {service.phases.length}{" "}
               {service.phases.length === 1 ? "Phase" : "Phasen"}
             </span>
+            <span className="text-sm">·</span>
+            <span className="text-sm">
+              {serviceTypeLabels[service.serviceType]}
+            </span>
           </div>
         </div>
         <div className="flex gap-sm mt-md">
@@ -74,6 +84,7 @@ export default function ServiceCard({ service, salonId }: ServiceCardProps) {
               text="Bearbeiten"
               onClick={handleEdit}
               elevation={1}
+              className="w-full"
             />
           </div>
           <FlatIconButton

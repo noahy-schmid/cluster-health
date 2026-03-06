@@ -8,7 +8,7 @@ import { Toaster } from "sonner";
 export default function NotificationContainer() {
   return (
     <Toaster
-      position="top-right"
+      position="bottom-right"
       toastOptions={{
         className:
           "!bg-bg-1 !border !border-border !text-fg-normal !rounded-lg !shadow-md !font-normal !text-sm",

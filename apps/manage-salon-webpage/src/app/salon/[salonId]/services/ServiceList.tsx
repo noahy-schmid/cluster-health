@@ -19,7 +19,7 @@ export default function ServiceList({ services, salonId }: ServiceListProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-lg">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-lg">
       {services.map((service) => (
         <ServiceCard key={service.id} service={service} salonId={salonId} />
       ))}

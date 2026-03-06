@@ -1,15 +1,12 @@
 import { useReducer, useCallback } from "react";
-import type {
-  ServicePhase,
-  ResourceRequirement,
-  SalonResource,
-} from "@/lib/types/service-types";
+import type { ServicePhase } from "@/lib/types/service-types";
 
 // ─── State ───────────────────────────────────────────────────
 
 export interface ServiceFormState {
   name: string;
   description: string;
+  priceInCents: number;
   phases: ServicePhase[];
   isSaving: boolean;
   error: string | undefined;
@@ -20,19 +17,12 @@ export interface ServiceFormState {
 type ServiceFormAction =
   | { type: "SET_NAME"; payload: string }
   | { type: "SET_DESCRIPTION"; payload: string }
+  | { type: "SET_PRICE"; payload: number }
   | { type: "ADD_PHASE" }
   | { type: "REMOVE_PHASE"; payload: string }
   | {
       type: "UPDATE_PHASE";
       payload: { phaseId: string; updates: Partial<ServicePhase> };
-    }
-  | {
-      type: "ADD_PHASE_RESOURCE";
-      payload: { phaseId: string; resource: SalonResource };
-    }
-  | {
-      type: "REMOVE_PHASE_RESOURCE";
-      payload: { phaseId: string; resourceId: string };
     }
   | { type: "REORDER_PHASES"; payload: ServicePhase[] }
   | { type: "SET_SAVING"; payload: boolean }
@@ -73,6 +63,9 @@ export function serviceFormReducer(
     case "SET_DESCRIPTION":
       return { ...state, description: action.payload };
 
+    case "SET_PRICE":
+      return { ...state, priceInCents: action.payload };
+
     case "ADD_PHASE":
       return {
         ...state,
@@ -92,39 +85,6 @@ export function serviceFormReducer(
         phases: updatePhaseById(state.phases, action.payload.phaseId, (p) => ({
           ...p,
           ...action.payload.updates,
-        })),
-      };
-
-    case "ADD_PHASE_RESOURCE":
-      return {
-        ...state,
-        phases: updatePhaseById(state.phases, action.payload.phaseId, (p) => {
-          if (
-            p.requiredResources.some(
-              (r) => r.resourceId === action.payload.resource.id,
-            )
-          ) {
-            return p;
-          }
-          const newResource: ResourceRequirement = {
-            resourceId: action.payload.resource.id,
-            resourceName: action.payload.resource.name,
-          };
-          return {
-            ...p,
-            requiredResources: [...p.requiredResources, newResource],
-          };
-        }),
-      };
-
-    case "REMOVE_PHASE_RESOURCE":
-      return {
-        ...state,
-        phases: updatePhaseById(state.phases, action.payload.phaseId, (p) => ({
-          ...p,
-          requiredResources: p.requiredResources.filter(
-            (r) => r.resourceId !== action.payload.resourceId,
-          ),
         })),
       };
 
@@ -153,11 +113,13 @@ export function serviceFormReducer(
 export function useServiceFormState(initial?: {
   name?: string;
   description?: string;
+  priceInCents?: number;
   phases?: ServicePhase[];
 }) {
   const [state, dispatch] = useReducer(serviceFormReducer, {
     name: initial?.name ?? "",
     description: initial?.description ?? "",
+    priceInCents: initial?.priceInCents ?? 0,
     phases: initial?.phases ?? [],
     isSaving: false,
     error: undefined,
@@ -174,6 +136,12 @@ export function useServiceFormState(initial?: {
     [],
   );
 
+  const setPrice = useCallback(
+    (priceInCents: number) =>
+      dispatch({ type: "SET_PRICE", payload: priceInCents }),
+    [],
+  );
+
   const addPhase = useCallback(() => dispatch({ type: "ADD_PHASE" }), []);
 
   const removePhase = useCallback(
@@ -184,24 +152,6 @@ export function useServiceFormState(initial?: {
   const updatePhase = useCallback(
     (phaseId: string, updates: Partial<ServicePhase>) =>
       dispatch({ type: "UPDATE_PHASE", payload: { phaseId, updates } }),
-    [],
-  );
-
-  const addPhaseResource = useCallback(
-    (phaseId: string, resource: SalonResource) =>
-      dispatch({
-        type: "ADD_PHASE_RESOURCE",
-        payload: { phaseId, resource },
-      }),
-    [],
-  );
-
-  const removePhaseResource = useCallback(
-    (phaseId: string, resourceId: string) =>
-      dispatch({
-        type: "REMOVE_PHASE_RESOURCE",
-        payload: { phaseId, resourceId },
-      }),
     [],
   );
 
@@ -228,11 +178,10 @@ export function useServiceFormState(initial?: {
     state,
     setName,
     setDescription,
+    setPrice,
     addPhase,
     removePhase,
     updatePhase,
-    addPhaseResource,
-    removePhaseResource,
     reorderPhases,
     setSaving,
     setError,

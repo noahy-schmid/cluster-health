@@ -54,6 +54,7 @@ export default function AssignmentList({
   const handleAssign = async (itemId: string) => {
     try {
       await onAssign(itemId);
+      showNotification(`${entityLabel} zugewiesen`, "info", "short");
     } catch {
       showNotification(`Fehler beim Zuweisen: ${entityLabel}`, "error", "long");
     }
@@ -62,6 +63,7 @@ export default function AssignmentList({
   const handleUnassign = async (itemId: string) => {
     try {
       await onUnassign(itemId);
+      showNotification(`${entityLabel} entfernt`, "info", "short");
     } catch {
       showNotification(
         `Fehler beim Entfernen: ${entityLabel}`,
@@ -72,49 +74,52 @@ export default function AssignmentList({
   };
 
   return (
-    <div className="bg-bg-1 rounded-lg p-lg">
+    <>
       <div className="flex items-center gap-sm mb-md">
-        <Users className="w-5 h-5 text-fg-muted" />
-        <h3 className="text-base font-focus text-fg-strong">
+        <Users className="w-icon-base h-icon-base text-fg-muted" />
+        <h3 className="text-lg font-focus text-fg-strong">
           Zugewiesene {entityLabel}
         </h3>
       </div>
-
-      {localAssignments.length === 0 ? (
-        <p className="text-sm text-fg-muted py-md">
-          Keine {entityLabel} zugewiesen.
-        </p>
-      ) : (
-        <div className="flex flex-wrap gap-sm mb-md">
-          {localAssignments.map((assignment) => {
-            const key = getAssignmentKey(assignment);
-            return (
-              <FlatChip
-                key={key}
-                label={getAssignmentName(assignment)}
-                onDelete={() => handleUnassign(key)}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      {unassignedItems.length > 0 && (
-        <div>
-          <p className="text-sm text-fg-muted mb-sm">{entityLabel} zuweisen:</p>
-          <div className="flex flex-wrap gap-sm">
-            {unassignedItems.map((item) => (
-              <FlatIconTextButton
-                key={item.id}
-                icon={Plus}
-                text={item.name}
-                onClick={() => handleAssign(item.id)}
-                elevation={0}
-              />
-            ))}
+      <div className="bg-bg-1 rounded-lg p-lg border border-border">
+        {localAssignments.length === 0 ? (
+          <p className="text-sm text-fg-muted pb-md">
+            Keine {entityLabel} zugewiesen.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-sm mb-md">
+            {localAssignments.map((assignment) => {
+              const key = getAssignmentKey(assignment);
+              return (
+                <FlatChip
+                  key={key}
+                  label={getAssignmentName(assignment)}
+                  onDelete={() => handleUnassign(key)}
+                />
+              );
+            })}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {unassignedItems.length > 0 && (
+          <div>
+            <p className="text-sm text-fg-muted mb-sm">
+              {entityLabel} zuweisen:
+            </p>
+            <div className="flex flex-wrap gap-sm">
+              {unassignedItems.map((item) => (
+                <FlatIconTextButton
+                  key={item.id}
+                  icon={Plus}
+                  text={item.name}
+                  onClick={() => handleAssign(item.id)}
+                  elevation={1}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
