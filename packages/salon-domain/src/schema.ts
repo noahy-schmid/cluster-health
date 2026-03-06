@@ -3,6 +3,7 @@ import {
   boolean,
   integer,
   pgSchema,
+  primaryKey,
   timestamp,
   uniqueIndex,
   uuid,
@@ -55,3 +56,75 @@ export const mediaFilesTable = salonSchema.table("media_files", {
   uploadConfirmed: boolean().default(false).notNull(),
   createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
 });
+
+export const salonResourcesTable = salonSchema.table(
+  "salon_resources",
+  {
+    salonId: uuid()
+      .notNull()
+      .references(() => salonsTable.id, { onDelete: "cascade" }),
+    slug: varchar({ length: 100 }).notNull(),
+    name: varchar({ length: 255 }).notNull(),
+    amount: integer().notNull().default(1),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.salonId, table.slug] }),
+  }),
+);
+
+export const serviceDefinitionsTable = salonSchema.table(
+  "service_definitions",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    salonId: uuid()
+      .notNull()
+      .references(() => salonsTable.id, { onDelete: "cascade" }),
+    serviceType: varchar({ length: 50 }).notNull().default("custom"),
+    name: varchar({ length: 255 }).notNull(),
+    description: text().notNull().default(""),
+    priceInCents: integer().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp({ withTimezone: true }),
+  },
+);
+
+export const servicePhasesTable = salonSchema.table("service_phases", {
+  id: uuid().primaryKey().defaultRandom(),
+  serviceDefinitionId: uuid()
+    .notNull()
+    .references(() => serviceDefinitionsTable.id, { onDelete: "cascade" }),
+  name: varchar({ length: 255 }).notNull(),
+  durationMinutes: integer().notNull(),
+  order: integer().notNull().default(0),
+  employeeRequired: boolean().notNull().default(true),
+});
+
+export const phaseResourceRequirementsTable = salonSchema.table(
+  "phase_resource_requirements",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    phaseId: uuid()
+      .notNull()
+      .references(() => servicePhasesTable.id, { onDelete: "cascade" }),
+    resourceSlug: varchar({ length: 100 }).notNull(),
+  },
+);
+
+export const employeeServiceAssignmentsTable = salonSchema.table(
+  "employee_service_assignments",
+  {
+    stylistId: uuid()
+      .notNull()
+      .references(() => stylistsTable.id, { onDelete: "cascade" }),
+    serviceDefinitionId: uuid()
+      .notNull()
+      .references(() => serviceDefinitionsTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.stylistId, table.serviceDefinitionId] }),
+  }),
+);
