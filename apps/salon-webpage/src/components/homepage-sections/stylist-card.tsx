@@ -3,7 +3,7 @@
 interface StylistCardProps {
   name: string;
   role: string;
-  imageSrc: string;
+  imageSrc?: string;
 }
 
 export default function StylistCard({
@@ -15,12 +15,18 @@ export default function StylistCard({
     <div className="relative w-full pt-16">
       {/* Circular profile image - positioned above the card */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-        <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden shadow-lg shadow-black/20">
-          <img
-            src={imageSrc}
-            alt={name}
-            className="object-cover w-full h-full"
-          />
+        <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden shadow-lg shadow-black/20 bg-salon-bg-2 flex items-center justify-center">
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={name}
+              className="object-cover w-full h-full"
+            />
+          ) : (
+            <span className="text-salon-fg-base/50 text-sm text-center px-2">
+              {name[0]}
+            </span>
+          )}
         </div>
       </div>
 

@@ -23,11 +23,8 @@ export const StylistSchema = Schema.Struct({
       message: () => "Stylist description cannot be empty",
     }),
   ),
-  profileImage: Schema.String.pipe(
-    Schema.compose(Schema.Trim),
-    Schema.nonEmptyString({
-      message: () => "Profile image URL cannot be empty",
-    }),
+  profileImageMediaId: Schema.OptionFromSelf(
+    Schema.String.pipe(Schema.compose(Schema.Trim)),
   ),
 });
 

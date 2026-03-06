@@ -32,7 +32,7 @@ export async function getWebsiteInitialValues(): Promise<
       success: true;
       slug: string;
       title: string;
-      faviconUrl: string;
+      faviconMediaId: string;
     }
   | {
       success: false;
@@ -62,7 +62,7 @@ export async function getWebsiteInitialValues(): Promise<
     success: true,
     slug: slugify(salon.name),
     title: `${salon.name} - Dein Salon`,
-    faviconUrl: "",
+    faviconMediaId: "",
   };
 }
 
@@ -76,7 +76,7 @@ export async function getWebsiteSettings(websiteId: string): Promise<
       success: true;
       slug: string;
       title: string;
-      faviconUrl: string;
+      faviconMediaId: string;
     }
   | {
       success: false;
@@ -100,7 +100,7 @@ export async function getWebsiteSettings(websiteId: string): Promise<
         success: true as const,
         slug: settings.slug,
         title: settings.title,
-        faviconUrl: Option.getOrElse(settings.favicon, () => ""),
+        faviconMediaId: Option.getOrElse(settings.faviconMediaId, () => ""),
       };
     }).pipe(
       Effect.catchTags({
@@ -129,13 +129,13 @@ export async function getWebsiteSettings(websiteId: string): Promise<
  * Server action to create a new website with custom settings
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
- * @param faviconUrl - Optional URL to favicon image
+ * @param faviconMediaId - Optional URL to favicon image
  * @returns Result with the created website ID or error
  */
 export async function createWebsite(
   slug: string,
   title: string,
-  faviconUrl: string,
+  faviconMediaId: string,
 ): Promise<
   | {
       success: true;
@@ -164,7 +164,9 @@ export async function createWebsite(
           salonId: authToken.salonId,
           slug,
           title,
-          favicon: faviconUrl ? Option.some(faviconUrl) : Option.none<string>(),
+          faviconMediaId: faviconMediaId
+            ? Option.some(faviconMediaId)
+            : Option.none<string>(),
         })
         .pipe(
           Effect.map((websiteId) => ({ websiteId, success: true as const })),
@@ -193,14 +195,14 @@ export async function createWebsite(
  * @param websiteId - ID of the website to update
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
- * @param faviconUrl - Optional URL to favicon image
+ * @param faviconMediaId - Optional URL to favicon image
  * @returns Result indicating success or error
  */
 export async function updateWebsiteSettings(
   websiteId: string,
   slug: string,
   title: string,
-  faviconUrl: string,
+  faviconMediaId: string,
 ): Promise<
   | {
       success: true;
@@ -222,7 +224,9 @@ export async function updateWebsiteSettings(
       yield* service.updateWebsiteSettings(websiteId as WebsiteId, {
         slug,
         title,
-        favicon: faviconUrl ? Option.some(faviconUrl) : Option.none(),
+        faviconMediaId: faviconMediaId
+          ? Option.some(faviconMediaId)
+          : Option.none(),
       });
       return { success: true as const };
     }).pipe(

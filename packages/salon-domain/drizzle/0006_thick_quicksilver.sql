@@ -1,0 +1,2 @@
+ALTER TABLE "salon"."stylists" DROP COLUMN "profileImage";--> statement-breakpoint
+ALTER TABLE "salon"."stylists" ADD COLUMN "profileImageMediaId" uuid REFERENCES "salon"."media_files"("id") ON DELETE set null;

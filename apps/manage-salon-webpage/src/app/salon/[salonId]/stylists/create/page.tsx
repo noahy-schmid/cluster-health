@@ -28,7 +28,10 @@ export default function CreateStylistPage({ params }: CreateStylistPageProps) {
   const handleSubmit = async (data: StylistFormData) => {
     const result = await createStylist({
       salonId,
-      ...data,
+      name: data.name,
+      subtitle: data.subtitle,
+      description: data.description,
+      profileImageMediaId: data.profileImageMediaId,
     });
 
     if (!result.success) {
@@ -50,6 +53,7 @@ export default function CreateStylistPage({ params }: CreateStylistPageProps) {
         subtitle="Füge einen neuen Stylisten zu deinem Team hinzu"
       />
       <StylistForm
+        salonId={salonId}
         onSubmit={handleSubmit}
         onCancel={() => router.push(`/salon/${salonId}/stylists`)}
         saveLabel="Stylist erstellen"

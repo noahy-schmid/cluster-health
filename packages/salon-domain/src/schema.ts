@@ -39,7 +39,9 @@ export const stylistsTable = salonSchema.table("stylists", {
   name: varchar({ length: 255 }).notNull(),
   subtitle: varchar({ length: 255 }).notNull(),
   description: text().notNull(),
-  profileImage: varchar({ length: 500 }).notNull(),
+  profileImageMediaId: uuid().references(() => mediaFilesTable.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

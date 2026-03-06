@@ -2,8 +2,10 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Stylist } from "@repo/salon-domain";
+import { Option } from "effect";
 import FormInput from "@/components/website/forms/FormInput";
 import FormTextarea from "@/components/website/forms/FormTextarea";
+import MediaSelector from "@/components/media/media-selector";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import { useAutoSave } from "@/hooks/useAutoSave";
 
@@ -11,10 +13,11 @@ export interface StylistFormData {
   name: string;
   subtitle: string;
   description: string;
-  profileImage: string;
+  profileImageMediaId: Option.Option<string>;
 }
 
 interface StylistFormProps {
+  salonId: string;
   stylist?: Stylist;
   onSubmit: (data: StylistFormData) => Promise<void>;
   onCancel?: () => void;
@@ -22,6 +25,7 @@ interface StylistFormProps {
 }
 
 export default function StylistForm({
+  salonId,
   stylist,
   onSubmit,
   onCancel,
@@ -32,53 +36,58 @@ export default function StylistForm({
   const [name, setName] = useState(stylist?.name || "");
   const [subtitle, setSubtitle] = useState(stylist?.subtitle || "");
   const [description, setDescription] = useState(stylist?.description || "");
-  const [profileImage, setProfileImage] = useState(stylist?.profileImage || "");
+  const [profileImageMediaId, setProfileImageMediaId] = useState<
+    string | undefined
+  >(Option.getOrUndefined(stylist?.profileImageMediaId ?? Option.none()));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const fieldsRef = useRef({ name, subtitle, description, profileImage });
-  fieldsRef.current = { name, subtitle, description, profileImage };
+  const fieldsRef = useRef({
+    name,
+    subtitle,
+    description,
+    profileImageMediaId,
+  });
+  fieldsRef.current = { name, subtitle, description, profileImageMediaId };
 
   const initialRef = useRef({
     name: stylist?.name || "",
     subtitle: stylist?.subtitle || "",
     description: stylist?.description || "",
-    profileImage: stylist?.profileImage || "",
+    profileImageMediaId: Option.getOrUndefined(
+      stylist?.profileImageMediaId ?? Option.none(),
+    ),
   });
 
   const isDirty =
     name !== initialRef.current.name ||
     subtitle !== initialRef.current.subtitle ||
     description !== initialRef.current.description ||
-    profileImage !== initialRef.current.profileImage;
+    profileImageMediaId !== initialRef.current.profileImageMediaId;
 
   const doSave = useCallback(async () => {
-    const { name, subtitle, description, profileImage } = fieldsRef.current;
+    const { name, subtitle, description, profileImageMediaId } =
+      fieldsRef.current;
     const trimmedName = name.trim();
     const trimmedSubtitle = subtitle.trim();
     const trimmedDescription = description.trim();
-    const trimmedProfileImage = profileImage.trim();
 
-    if (
-      !trimmedName ||
-      !trimmedSubtitle ||
-      !trimmedDescription ||
-      !trimmedProfileImage
-    )
-      return;
+    if (!trimmedName || !trimmedSubtitle || !trimmedDescription) return;
 
     await onSubmit({
       name: trimmedName,
       subtitle: trimmedSubtitle,
       description: trimmedDescription,
-      profileImage: trimmedProfileImage,
+      profileImageMediaId: profileImageMediaId
+        ? Option.some(profileImageMediaId)
+        : Option.none(),
     });
 
     initialRef.current = {
       name: trimmedName,
       subtitle: trimmedSubtitle,
       description: trimmedDescription,
-      profileImage: trimmedProfileImage,
+      profileImageMediaId,
     };
   }, [onSubmit]);
 
@@ -87,18 +96,11 @@ export default function StylistForm({
   const handleBlur = isEditMode ? () => triggerAutoSave() : undefined;
 
   const handleSave = async () => {
-    // Trim whitespace and validate
     const trimmedName = name.trim();
     const trimmedSubtitle = subtitle.trim();
     const trimmedDescription = description.trim();
-    const trimmedProfileImage = profileImage.trim();
 
-    if (
-      !trimmedName ||
-      !trimmedSubtitle ||
-      !trimmedDescription ||
-      !trimmedProfileImage
-    ) {
+    if (!trimmedName || !trimmedSubtitle || !trimmedDescription) {
       setError("Bitte fülle alle Pflichtfelder aus");
       return;
     }
@@ -111,15 +113,16 @@ export default function StylistForm({
         name: trimmedName,
         subtitle: trimmedSubtitle,
         description: trimmedDescription,
-        profileImage: trimmedProfileImage,
+        profileImageMediaId: profileImageMediaId
+          ? Option.some(profileImageMediaId)
+          : Option.none(),
       });
 
-      // Update snapshot after save
       initialRef.current = {
         name: trimmedName,
         subtitle: trimmedSubtitle,
         description: trimmedDescription,
-        profileImage: trimmedProfileImage,
+        profileImageMediaId,
       };
 
       showNotification("Erfolgreich gespeichert", "info", "short");
@@ -163,17 +166,15 @@ export default function StylistForm({
           required
         />
 
-        <FormInput
-          label="Profilbild URL"
-          value={profileImage}
-          onChange={(value) => {
-            setProfileImage(value);
+        <MediaSelector
+          salonId={salonId}
+          label="Profilbild"
+          value={profileImageMediaId}
+          onChange={(mediaId) => {
+            setProfileImageMediaId(mediaId);
+            if (isEditMode) triggerAutoSave();
           }}
-          onBlur={handleBlur}
-          placeholder="https://example.com/image.jpg"
-          type="url"
-          required
-          helperText="Gib die URL zum Profilbild ein"
+          helperText="Wähle ein Profilbild für den Stylisten"
         />
 
         {error && (

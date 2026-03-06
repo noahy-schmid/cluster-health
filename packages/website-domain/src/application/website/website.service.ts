@@ -31,7 +31,7 @@ const mapToWebsiteSettings = (
 ): WebsiteSettings => ({
   title: dbWebsite.title,
   slug: dbWebsite.slug,
-  favicon: Option.fromNullable(dbWebsite.favicon),
+  faviconMediaId: Option.fromNullable(dbWebsite.faviconMediaId),
 });
 
 /**
@@ -83,7 +83,7 @@ const make = Effect.gen(function* () {
         salonId: validatedInput.salonId,
         slug: validatedInput.slug,
         title: validatedInput.title,
-        favicon: Option.getOrNull(validatedInput.favicon),
+        faviconMediaId: Option.getOrNull(validatedInput.faviconMediaId),
         // Default values for required fields - these should come from business logic or defaults
         heroImage: "",
         logo: "",
@@ -186,8 +186,10 @@ const make = Effect.gen(function* () {
       if (validatedUpdates.slug !== undefined) {
         updateData.slug = validatedUpdates.slug;
       }
-      if (validatedUpdates.favicon !== undefined) {
-        updateData.favicon = Option.getOrNull(validatedUpdates.favicon);
+      if (validatedUpdates.faviconMediaId !== undefined) {
+        updateData.faviconMediaId = Option.getOrNull(
+          validatedUpdates.faviconMediaId,
+        );
       }
 
       const updatedWebsiteOption = yield* websiteRepo

@@ -1,0 +1,1 @@
+ALTER TABLE "websites" RENAME COLUMN "favicon" TO "faviconMediaId";

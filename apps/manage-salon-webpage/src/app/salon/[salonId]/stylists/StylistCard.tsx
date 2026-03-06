@@ -3,9 +3,12 @@
 
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
+import { Option } from "effect";
 import { Stylist } from "@repo/salon-domain";
 import { deleteStylist } from "@/app/salon/[salonId]/stylists/stylist.actions";
+import { getMediaUrl } from "@/api/media-actions";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 
@@ -17,6 +20,21 @@ interface StylistCardProps {
 export default function StylistCard({ stylist, salonId }: StylistCardProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const profileImageMediaId = Option.getOrUndefined(
+    stylist.profileImageMediaId,
+  );
+
+  const { data: profileImageUrl } = useQuery({
+    queryKey: ["mediaUrl", profileImageMediaId],
+    queryFn: async () => {
+      if (!profileImageMediaId) return null;
+      const result = await getMediaUrl(profileImageMediaId);
+      if (result.success) return result.data;
+      return null;
+    },
+    enabled: !!profileImageMediaId,
+  });
 
   const handleEdit = () => {
     router.push(`/salon/${salonId}/stylists/${stylist.id}`);
@@ -45,12 +63,16 @@ export default function StylistCard({ stylist, salonId }: StylistCardProps) {
 
   return (
     <div className="bg-bg-1 rounded-lg overflow-hidden shadow-sm border border-border sm:w-[280px] flex flex-col">
-      <div className="aspect-square">
-        <img
-          src={stylist.profileImage}
-          alt={stylist.name}
-          className="object-cover w-full h-full aspect-square"
-        />
+      <div className="aspect-square bg-bg-2 flex items-center justify-center">
+        {profileImageUrl ? (
+          <img
+            src={profileImageUrl}
+            alt={stylist.name}
+            className="object-cover w-full h-full aspect-square"
+          />
+        ) : (
+          <span className="text-fg-muted text-sm">Kein Bild</span>
+        )}
       </div>
       <div className="p-lg flex flex-col justify-between grow">
         <div>
