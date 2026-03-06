@@ -44,12 +44,14 @@ export default function MediaModal({
               icon={UploadIcon}
               text="Hochladen"
               onClick={() => handleTabChange("upload")}
+              className="flex-1"
             />
             <FlatIconTextButton
               icon={ImageIcon}
               text="Bibliothek"
               onClick={() => handleTabChange("library")}
               elevation={1}
+              className="flex-1"
             />
           </>
         ) : (
@@ -59,11 +61,13 @@ export default function MediaModal({
               text="Hochladen"
               onClick={() => handleTabChange("upload")}
               elevation={1}
+              className="flex-1"
             />
             <PrimaryIconTextButton
               icon={ImageIcon}
               text="Bibliothek"
               onClick={() => handleTabChange("library")}
+              className="flex-1"
             />
           </>
         )}
