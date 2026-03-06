@@ -59,8 +59,6 @@ export default function ServiceForm({
     addPhase,
     removePhase,
     updatePhase,
-    addPhaseResource,
-    removePhaseResource,
     reorderPhases,
     setSaving,
     setError,
@@ -115,7 +113,34 @@ export default function ServiceForm({
 
   const triggerAutoSave = useAutoSave(doSave);
 
-  const handleBlur = isEditMode ? () => triggerAutoSave() : undefined;
+  const handleFormBlur = isEditMode ? () => triggerAutoSave() : undefined;
+
+  const handlePhaseBlur = useCallback(
+    (_phase: ServiceDefinition["phases"][number]) => {
+      if (isEditMode) {
+        triggerAutoSave();
+      }
+    },
+    [isEditMode, triggerAutoSave],
+  );
+
+  const handleRemovePhase = useCallback(
+    (phaseId: string) => {
+      removePhase(phaseId);
+
+      if (isEditMode) {
+        triggerAutoSave();
+      }
+    },
+    [isEditMode, removePhase, triggerAutoSave],
+  );
+
+  const handlePhaseUpdate = useCallback(
+    (phase: ServiceDefinition["phases"][number]) => {
+      updatePhase(phase.id, phase);
+    },
+    [updatePhase],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -200,7 +225,7 @@ export default function ServiceForm({
           label="Name"
           value={state.name}
           onChange={setName}
-          onBlur={handleBlur}
+          onBlur={handleFormBlur}
           placeholder="z.B. Haarschnitt Damen"
           required
         />
@@ -209,7 +234,7 @@ export default function ServiceForm({
           label="Beschreibung"
           value={state.description}
           onChange={setDescription}
-          onBlur={handleBlur}
+          onBlur={handleFormBlur}
           placeholder="Beschreibe die Dienstleistung..."
           rows={3}
         />
@@ -218,7 +243,7 @@ export default function ServiceForm({
           label="Preis"
           value={state.priceInCents}
           onChange={setPrice}
-          onBlur={handleBlur}
+          onBlur={handleFormBlur}
           min={0}
           max={100000}
         />
@@ -267,13 +292,9 @@ export default function ServiceForm({
                     phase={phase}
                     index={index}
                     availableResources={availableResources}
-                    onUpdate={(updates) => updatePhase(phase.id, updates)}
-                    onAddResource={(r) => addPhaseResource(phase.id, r)}
-                    onRemoveResource={(rId) =>
-                      removePhaseResource(phase.id, rId)
-                    }
-                    onRemove={() => removePhase(phase.id)}
-                    onBlur={handleBlur}
+                    onUpdate={handlePhaseUpdate}
+                    onRemove={() => handleRemovePhase(phase.id)}
+                    onBlur={handlePhaseBlur}
                   />
                 ))}
               </div>
