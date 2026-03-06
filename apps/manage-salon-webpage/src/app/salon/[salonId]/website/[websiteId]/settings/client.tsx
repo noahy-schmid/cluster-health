@@ -29,7 +29,7 @@ export default function WebsiteSettingsPageClient({
       websiteId,
       settings.slug,
       settings.title,
-      settings.faviconUrl,
+      settings.faviconMediaId,
     );
 
     if (result.success) {
@@ -53,6 +53,7 @@ export default function WebsiteSettingsPageClient({
       <div className="bg-bg-1 rounded-lg p-lg">
         <WebsiteSettingsForm
           initialValues={initialSettings}
+          salonId={salonId}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}

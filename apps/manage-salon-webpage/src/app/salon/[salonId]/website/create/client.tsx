@@ -27,7 +27,7 @@ export default function WebsiteCreateClient({
     const result = await createWebsite(
       settings.slug,
       settings.title,
-      settings.faviconUrl,
+      settings.faviconMediaId,
     );
 
     if (result.success) {
@@ -46,6 +46,7 @@ export default function WebsiteCreateClient({
   return (
     <WebsiteSettingsForm
       initialValues={initialValues}
+      salonId={salonId}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       isSubmitting={isSubmitting}

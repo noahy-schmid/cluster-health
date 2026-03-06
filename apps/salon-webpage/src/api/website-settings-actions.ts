@@ -1,6 +1,7 @@
 "use server";
 
 import { WebsiteService, WebsiteLayer } from "@repo/website-domain";
+import { MediaService, MediaLayer } from "@repo/salon-domain";
 import { Effect, Option } from "effect";
 import { unstable_cache } from "next/cache";
 
@@ -20,14 +21,27 @@ export const fetchWebsiteMetadataSettingsBySalonSlug = unstable_cache(
   }> => {
     const fetchEffect = Effect.gen(function* () {
       const service = yield* WebsiteService;
+      const mediaService = yield* MediaService;
       return yield* service.getWebsiteSettingsBySlug(salonSlug).pipe(
-        Effect.map((settings) => ({
-          success: true,
-          settings: {
-            title: settings.title,
-            favicon: Option.getOrNull(settings.favicon),
-          },
-        })),
+        Effect.flatMap((settings) =>
+          Effect.gen(function* () {
+            const faviconMediaId = Option.getOrNull(settings.favicon);
+
+            const favicon = faviconMediaId
+              ? yield* mediaService.getMediaUrl(faviconMediaId).pipe(
+                  Effect.catchAll(() => Effect.succeed(null)),
+                )
+              : null;
+
+            return {
+              success: true,
+              settings: {
+                title: settings.title,
+                favicon,
+              },
+            };
+          }),
+        ),
         Effect.catchTag("WebsiteNotFoundError", () =>
           Effect.succeed({ success: false, error: "Website not found" }),
         ),
@@ -44,7 +58,7 @@ export const fetchWebsiteMetadataSettingsBySalonSlug = unstable_cache(
           ),
         ),
       );
-    }).pipe(Effect.provide(WebsiteLayer));
+    }).pipe(Effect.provide(WebsiteLayer), Effect.provide(MediaLayer));
 
     return await Effect.runPromise(fetchEffect);
   },
