@@ -25,6 +25,7 @@ describe("DeleteResourceUseCase", () => {
 
       const resource = yield* createUseCase.execute({
         salonId: ctx.salonId,
+        slug: "deletable",
         name: "Deletable Resource",
         amount: 1,
       });
@@ -34,7 +35,7 @@ describe("DeleteResourceUseCase", () => {
       });
       const countBefore = beforeDelete.length;
 
-      yield* deleteUseCase.execute({ resourceId: resource.id });
+      yield* deleteUseCase.execute({ salonId: ctx.salonId, slug: resource.slug });
 
       const afterDelete = yield* listUseCase.execute({
         salonId: ctx.salonId,
@@ -56,6 +57,7 @@ describe("DeleteResourceUseCase", () => {
       // Create a resource to reference
       const resource = yield* createResourceUC.execute({
         salonId: ctx.salonId,
+        slug: "ref-resource",
         name: "Referenced Resource",
         amount: 2,
       });
@@ -63,6 +65,7 @@ describe("DeleteResourceUseCase", () => {
       // Create a service that references this resource
       yield* createServiceUC.execute({
         salonId: ctx.salonId,
+        serviceType: "custom",
         name: "Service with Resource",
         description: "Test",
         priceInCents: 5000,
@@ -70,14 +73,14 @@ describe("DeleteResourceUseCase", () => {
           {
             name: "Phase 1",
             durationMinutes: 30,
-            requiredResourceIds: [resource.id],
+            requiredResourceSlugs: [resource.slug],
           },
         ],
       });
 
       // Now try to delete the resource - should fail
       const result = yield* deleteResourceUC
-        .execute({ resourceId: resource.id })
+        .execute({ salonId: ctx.salonId, slug: resource.slug })
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);

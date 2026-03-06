@@ -22,6 +22,7 @@ describe("ListResourcesUseCase", () => {
 
       yield* createUseCase.execute({
         salonId: ctx.salonId,
+        slug: "list-test",
         name: "List Test Resource",
         amount: 1,
       });

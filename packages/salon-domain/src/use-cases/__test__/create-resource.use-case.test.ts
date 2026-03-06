@@ -19,13 +19,14 @@ describe("CreateResourceUseCase", () => {
       const useCase = yield* CreateResourceUseCase;
       const resource = yield* useCase.execute({
         salonId: ctx.salonId,
-        name: "Styling Chair",
+        slug: "dryer",
+        name: "Dryer",
         amount: 3,
       });
 
-      expect(resource.id).toBeDefined();
+      expect(resource.slug).toBe("dryer");
       expect(resource.salonId).toBe(ctx.salonId);
-      expect(resource.name).toBe("Styling Chair");
+      expect(resource.name).toBe("Dryer");
       expect(resource.amount).toBe(3);
     });
 
@@ -38,7 +39,7 @@ describe("CreateResourceUseCase", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
       const result = yield* useCase
-        .execute({ salonId: ctx.salonId, name: "  ", amount: 1 })
+        .execute({ salonId: ctx.salonId, slug: "blank", name: "  ", amount: 1 })
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -56,7 +57,7 @@ describe("CreateResourceUseCase", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
       const result = yield* useCase
-        .execute({ salonId: ctx.salonId, name: "Dryer", amount: 0 })
+        .execute({ salonId: ctx.salonId, slug: "bad", name: "Dryer", amount: 0 })
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);

@@ -27,6 +27,8 @@ import { AssignEmployeeToServiceUseCase } from "../assign-employee-to-service.us
 import { UnassignEmployeeFromServiceUseCase } from "../unassign-employee-from-service.use-case";
 import { ListEmployeeServicesUseCase } from "../list-employee-services.use-case";
 import { ListServiceEmployeesUseCase } from "../list-service-employees.use-case";
+import { CreateSimpleServiceUseCase } from "../create-simple-service.use-case";
+import { CreateColorationServiceUseCase } from "../create-coloration-service.use-case";
 
 export interface TestContext {
   salonId: string;
@@ -48,6 +50,9 @@ export interface TestContext {
     | UnassignEmployeeFromServiceUseCase
     | ListEmployeeServicesUseCase
     | ListServiceEmployeesUseCase
+  >;
+  simpleColorationUseCaseLayer: Layer.Layer<
+    CreateSimpleServiceUseCase | CreateColorationServiceUseCase
   >;
   infrastructureLayer: Layer.Layer<Database | Configuration>;
   stop: () => Promise<void>;
@@ -156,6 +161,15 @@ export async function setupTestContext(): Promise<TestContext> {
     ),
   ).pipe(Layer.provide(assignmentAggregateLayer), Layer.orDie);
 
+  const simpleColorationUseCaseLayer = Layer.mergeAll(
+    CreateSimpleServiceUseCase.DefaultWithoutDependencies.pipe(
+      Layer.provide(resourcePortLayer),
+    ),
+    CreateColorationServiceUseCase.DefaultWithoutDependencies.pipe(
+      Layer.provide(resourcePortLayer),
+    ),
+  ).pipe(Layer.provide(serviceAggregateLayer), Layer.orDie);
+
   // Run migrations and seed data
   let theSalonId = "";
   let theStylistId = "";
@@ -201,16 +215,13 @@ export async function setupTestContext(): Promise<TestContext> {
       }
       theStylistId = stylist.id;
 
-      // Create a resource for service phase tests
+      // Create resources for service phase tests
       yield* Effect.tryPromise(() =>
-        db
-          .insert(salonResourcesTable)
-          .values({
-            salonId: theSalonId,
-            name: "Styling Chair",
-            amount: 3,
-          })
-          .returning({ id: salonResourcesTable.id }),
+        db.insert(salonResourcesTable).values([
+          { salonId: theSalonId, slug: "seat", name: "Styling Chair", amount: 3 },
+          { salonId: theSalonId, slug: "employee", name: "Stylist", amount: 5 },
+          { salonId: theSalonId, slug: "climazon", name: "Climazon", amount: 2 },
+        ]),
       );
     }).pipe(Effect.provide(infrastructureLayer)),
   );
@@ -221,6 +232,7 @@ export async function setupTestContext(): Promise<TestContext> {
     resourceUseCaseLayer,
     serviceUseCaseLayer,
     assignmentUseCaseLayer,
+    simpleColorationUseCaseLayer,
     infrastructureLayer,
     stop: () => pgContainer.stop(),
   };

@@ -22,12 +22,14 @@ describe("UpdateResourceUseCase", () => {
 
       const resource = yield* createUseCase.execute({
         salonId: ctx.salonId,
+        slug: "old-resource",
         name: "Old Name",
         amount: 2,
       });
 
       const updated = yield* updateUseCase.execute({
-        resourceId: resource.id,
+        salonId: ctx.salonId,
+        slug: resource.slug,
         name: "New Name",
         amount: 5,
       });

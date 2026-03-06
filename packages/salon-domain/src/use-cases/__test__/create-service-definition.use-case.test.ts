@@ -19,13 +19,14 @@ describe("CreateServiceDefinitionUseCase", () => {
       const useCase = yield* CreateServiceDefinitionUseCase;
       const service = yield* useCase.execute({
         salonId: ctx.salonId,
+        serviceType: "custom",
         name: "Haircut & Style",
         description: "A complete haircut and styling service",
         priceInCents: 4500,
         phases: [
-          { name: "Wash", durationMinutes: 10, requiredResourceIds: [] },
-          { name: "Cut", durationMinutes: 30, requiredResourceIds: [] },
-          { name: "Style", durationMinutes: 15, requiredResourceIds: [] },
+          { name: "Wash", durationMinutes: 10, requiredResourceSlugs: [] },
+          { name: "Cut", durationMinutes: 30, requiredResourceSlugs: [] },
+          { name: "Style", durationMinutes: 15, requiredResourceSlugs: [] },
         ],
       });
 
@@ -52,6 +53,7 @@ describe("CreateServiceDefinitionUseCase", () => {
       const result = yield* useCase
         .execute({
           salonId: ctx.salonId,
+          serviceType: "custom",
           name: "Empty Service",
           description: "",
           priceInCents: 1000,
@@ -76,11 +78,12 @@ describe("CreateServiceDefinitionUseCase", () => {
       const result = yield* useCase
         .execute({
           salonId: ctx.salonId,
+          serviceType: "custom",
           name: "  ",
           description: "",
           priceInCents: 1000,
           phases: [
-            { name: "Phase", durationMinutes: 10, requiredResourceIds: [] },
+            { name: "Phase", durationMinutes: 10, requiredResourceSlugs: [] },
           ],
         })
         .pipe(Effect.either);

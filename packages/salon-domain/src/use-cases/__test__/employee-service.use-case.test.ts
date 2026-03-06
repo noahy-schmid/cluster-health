@@ -20,6 +20,7 @@ describe("Employee-Service Assignment Use Cases", () => {
         const createService = yield* CreateServiceDefinitionUseCase;
         const service = yield* createService.execute({
           salonId: ctx.salonId,
+          serviceType: "custom",
           name: "Assignment Test Service",
           description: "For assignment tests",
           priceInCents: 8000,
@@ -27,7 +28,7 @@ describe("Employee-Service Assignment Use Cases", () => {
             {
               name: "Apply Color",
               durationMinutes: 30,
-              requiredResourceIds: [],
+              requiredResourceSlugs: [],
             },
           ],
         });

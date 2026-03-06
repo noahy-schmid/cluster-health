@@ -22,11 +22,12 @@ describe("UpdateServiceDefinitionUseCase", () => {
 
       const service = yield* createUseCase.execute({
         salonId: ctx.salonId,
+        serviceType: "custom",
         name: "Original Service",
         description: "Original description",
         priceInCents: 4500,
         phases: [
-          { name: "Phase A", durationMinutes: 20, requiredResourceIds: [] },
+          { name: "Phase A", durationMinutes: 20, requiredResourceSlugs: [] },
         ],
       });
 
@@ -39,9 +40,9 @@ describe("UpdateServiceDefinitionUseCase", () => {
           {
             name: "Consultation",
             durationMinutes: 5,
-            requiredResourceIds: [],
+            requiredResourceSlugs: [],
           },
-          { name: "Work", durationMinutes: 40, requiredResourceIds: [] },
+          { name: "Work", durationMinutes: 40, requiredResourceSlugs: [] },
         ],
       });
 
@@ -65,7 +66,7 @@ describe("UpdateServiceDefinitionUseCase", () => {
           name: "Ghost",
           description: "",
           priceInCents: 1000,
-          phases: [{ name: "P", durationMinutes: 10, requiredResourceIds: [] }],
+          phases: [{ name: "P", durationMinutes: 10, requiredResourceSlugs: [] }],
         })
         .pipe(Effect.either);
 

@@ -24,11 +24,12 @@ describe("DeleteServiceDefinitionUseCase", () => {
 
       const service = yield* createUseCase.execute({
         salonId: ctx.salonId,
+        serviceType: "custom",
         name: "Temporary Service",
         description: "Will be deleted",
         priceInCents: 2000,
         phases: [
-          { name: "Quick Phase", durationMinutes: 15, requiredResourceIds: [] },
+          { name: "Quick Phase", durationMinutes: 15, requiredResourceSlugs: [] },
         ],
       });
 

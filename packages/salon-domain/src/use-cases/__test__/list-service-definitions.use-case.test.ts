@@ -22,11 +22,12 @@ describe("ListServiceDefinitionsUseCase", () => {
 
       yield* createUseCase.execute({
         salonId: ctx.salonId,
+        serviceType: "custom",
         name: "List Test Service",
         description: "For listing",
         priceInCents: 3000,
         phases: [
-          { name: "Phase 1", durationMinutes: 20, requiredResourceIds: [] },
+          { name: "Phase 1", durationMinutes: 20, requiredResourceSlugs: [] },
         ],
       });
 
