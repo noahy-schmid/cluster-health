@@ -3,16 +3,16 @@ import { WebsiteLayer, WebsiteService } from "@repo/website-domain";
 import { Effect, Layer, Option } from "effect";
 import { NextResponse } from "next/server";
 
-async function getFaviconData(salonSlug: string): Promise<{
-  url: string | null;
-  contentType?: string;
-}> {
+type FaviconData = { url: null } | { url: string; contentType: string };
+
+async function getFaviconData(salonSlug: string): Promise<FaviconData> {
   return Effect.runPromise(
     Effect.gen(function* () {
       const websiteService = yield* WebsiteService;
       const mediaService = yield* MediaService;
 
-      const settings = yield* websiteService.getWebsiteSettingsBySlug(salonSlug);
+      const settings =
+        yield* websiteService.getWebsiteSettingsBySlug(salonSlug);
       const faviconMediaId = Option.getOrUndefined(settings.faviconMediaId);
 
       if (!faviconMediaId) {
