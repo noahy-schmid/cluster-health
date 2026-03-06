@@ -54,6 +54,7 @@ export default function AssignmentList({
   const handleAssign = async (itemId: string) => {
     try {
       await onAssign(itemId);
+      showNotification(`${entityLabel} zugewiesen`, "info", "short");
     } catch {
       showNotification(`Fehler beim Zuweisen: ${entityLabel}`, "error", "long");
     }
@@ -62,6 +63,7 @@ export default function AssignmentList({
   const handleUnassign = async (itemId: string) => {
     try {
       await onUnassign(itemId);
+      showNotification(`${entityLabel} entfernt`, "info", "short");
     } catch {
       showNotification(
         `Fehler beim Entfernen: ${entityLabel}`,

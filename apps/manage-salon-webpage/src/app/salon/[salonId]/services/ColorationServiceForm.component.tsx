@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import type {
   ServiceDefinition,
   ServicePhase,
@@ -15,6 +15,7 @@ import FormNumber from "@/components/website/forms/FormNumber";
 import FormMoney from "@/components/website/forms/FormMoney";
 import { useServiceFormState } from "./ServiceForm.state";
 import { useNotifications } from "@/components/notifications/useNotifications";
+import { useAutoSave } from "@/hooks/useAutoSave";
 
 interface ColorationServiceFormProps {
   service?: ServiceDefinition;
@@ -72,6 +73,7 @@ export default function ColorationServiceForm({
   saveLabel,
 }: ColorationServiceFormProps) {
   const { showNotification } = useNotifications();
+  const isEditMode = !!service;
 
   const {
     state,
@@ -92,6 +94,9 @@ export default function ColorationServiceForm({
         : createColorationPhases(),
   });
 
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   const initialRef = useRef({
     name: service?.name ?? "",
     description: service?.description ?? "",
@@ -108,6 +113,34 @@ export default function ColorationServiceForm({
     state.description !== initialRef.current.description ||
     state.priceInCents !== initialRef.current.priceInCents ||
     JSON.stringify(state.phases) !== initialRef.current.phases;
+
+  const doSave = useCallback(async () => {
+    const s = stateRef.current;
+    const trimmedName = s.name.trim();
+    if (!trimmedName) return;
+
+    for (const phase of s.phases) {
+      if (phase.durationMinutes <= 0) return;
+    }
+
+    await onSubmit({
+      name: trimmedName,
+      description: s.description.trim(),
+      priceInCents: s.priceInCents,
+      phases: s.phases,
+    });
+
+    initialRef.current = {
+      name: trimmedName,
+      description: s.description.trim(),
+      priceInCents: s.priceInCents,
+      phases: JSON.stringify(s.phases),
+    };
+  }, [onSubmit]);
+
+  const triggerAutoSave = useAutoSave(doSave);
+
+  const handleBlur = isEditMode ? () => triggerAutoSave() : undefined;
 
   const handleSave = async () => {
     clearError();
@@ -164,6 +197,7 @@ export default function ColorationServiceForm({
             label="Name"
             value={state.name}
             onChange={setName}
+            onBlur={handleBlur}
             placeholder="z.B. Coloration"
             required
           />
@@ -172,6 +206,7 @@ export default function ColorationServiceForm({
             label="Beschreibung"
             value={state.description}
             onChange={setDescription}
+            onBlur={handleBlur}
             placeholder="Beschreibe die Dienstleistung..."
             rows={3}
           />
@@ -180,6 +215,7 @@ export default function ColorationServiceForm({
             label="Preis"
             value={state.priceInCents}
             onChange={setPrice}
+            onBlur={handleBlur}
             min={0}
             max={100000}
           />
@@ -208,6 +244,7 @@ export default function ColorationServiceForm({
               onChange={(durationMinutes) =>
                 updatePhase(phase.id, { durationMinutes })
               }
+              onBlur={handleBlur}
               min={1}
               max={480}
             />
@@ -221,26 +258,28 @@ export default function ColorationServiceForm({
         </div>
       )}
 
-      <div className="flex gap-md justify-end pt-lg">
-        {onCancel && (
+      {!isEditMode && (
+        <div className="flex gap-md justify-end pt-lg">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
+              disabled={state.isSaving}
+            >
+              Abbrechen
+            </button>
+          )}
           <button
             type="button"
-            onClick={onCancel}
-            className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
-            disabled={state.isSaving}
+            onClick={handleSave}
+            disabled={state.isSaving || !isDirty}
+            className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Abbrechen
+            {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
           </button>
-        )}
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={state.isSaving || !isDirty}
-          className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
-        </button>
-      </div>
+        </div>
+      )}
     </>
   );
 }

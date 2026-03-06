@@ -19,6 +19,7 @@ interface PhaseEditorProps {
   onAddResource: (resource: SalonResource) => void;
   onRemoveResource: (resourceId: string) => void;
   onRemove: () => void;
+  onBlur?: () => void;
 }
 
 export default function PhaseEditor({
@@ -29,6 +30,7 @@ export default function PhaseEditor({
   onAddResource,
   onRemoveResource,
   onRemove,
+  onBlur,
 }: PhaseEditorProps) {
   const {
     attributes,
@@ -102,6 +104,7 @@ export default function PhaseEditor({
               label="Name"
               value={phase.name}
               onChange={(name) => onUpdate({ name })}
+              onBlur={onBlur}
               placeholder="z.B. Haare waschen"
             />
 
@@ -109,6 +112,7 @@ export default function PhaseEditor({
               label="Dauer (Minuten)"
               value={phase.durationMinutes}
               onChange={(durationMinutes) => onUpdate({ durationMinutes })}
+              onBlur={onBlur}
               min={1}
               max={480}
             />

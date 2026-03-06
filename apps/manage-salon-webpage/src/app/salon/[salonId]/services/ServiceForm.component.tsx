@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useCallback } from "react";
 import { Plus } from "lucide-react";
 import {
   DndContext,
@@ -27,6 +27,7 @@ import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import PhaseEditor from "./PhaseEditor.component";
 import { useServiceFormState } from "./ServiceForm.state";
 import { useNotifications } from "@/components/notifications/useNotifications";
+import { useAutoSave } from "@/hooks/useAutoSave";
 
 interface ServiceFormProps {
   service?: ServiceDefinition;
@@ -49,6 +50,7 @@ export default function ServiceForm({
   saveLabel,
 }: ServiceFormProps) {
   const { showNotification } = useNotifications();
+  const isEditMode = !!service;
   const {
     state,
     setName,
@@ -70,6 +72,9 @@ export default function ServiceForm({
     phases: service?.phases,
   });
 
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   // Track the initial snapshot to detect changes
   const initialRef = useRef({
     name: service?.name ?? "",
@@ -83,6 +88,34 @@ export default function ServiceForm({
     state.description !== initialRef.current.description ||
     state.priceInCents !== initialRef.current.priceInCents ||
     JSON.stringify(state.phases) !== initialRef.current.phases;
+
+  const doSave = useCallback(async () => {
+    const s = stateRef.current;
+    const trimmedName = s.name.trim();
+    if (!trimmedName) return;
+    if (s.phases.length === 0) return;
+    for (const phase of s.phases) {
+      if (phase.durationMinutes <= 0) return;
+    }
+
+    await onSubmit({
+      name: trimmedName,
+      description: s.description.trim(),
+      priceInCents: s.priceInCents,
+      phases: s.phases,
+    });
+
+    initialRef.current = {
+      name: trimmedName,
+      description: s.description.trim(),
+      priceInCents: s.priceInCents,
+      phases: JSON.stringify(s.phases),
+    };
+  }, [onSubmit]);
+
+  const triggerAutoSave = useAutoSave(doSave);
+
+  const handleBlur = isEditMode ? () => triggerAutoSave() : undefined;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -167,6 +200,7 @@ export default function ServiceForm({
           label="Name"
           value={state.name}
           onChange={setName}
+          onBlur={handleBlur}
           placeholder="z.B. Haarschnitt Damen"
           required
         />
@@ -175,6 +209,7 @@ export default function ServiceForm({
           label="Beschreibung"
           value={state.description}
           onChange={setDescription}
+          onBlur={handleBlur}
           placeholder="Beschreibe die Dienstleistung..."
           rows={3}
         />
@@ -183,6 +218,7 @@ export default function ServiceForm({
           label="Preis"
           value={state.priceInCents}
           onChange={setPrice}
+          onBlur={handleBlur}
           min={0}
           max={100000}
         />
@@ -237,6 +273,7 @@ export default function ServiceForm({
                       removePhaseResource(phase.id, rId)
                     }
                     onRemove={() => removePhase(phase.id)}
+                    onBlur={handleBlur}
                   />
                 ))}
               </div>
@@ -250,26 +287,28 @@ export default function ServiceForm({
           </div>
         )}
 
-        <div className="flex gap-md justify-end pt-lg">
-          {onCancel && (
+        {!isEditMode && (
+          <div className="flex gap-md justify-end pt-lg">
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
+                disabled={state.isSaving}
+              >
+                Abbrechen
+              </button>
+            )}
             <button
               type="button"
-              onClick={onCancel}
-              className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
-              disabled={state.isSaving}
+              onClick={handleSave}
+              disabled={state.isSaving || !isDirty}
+              className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Abbrechen
+              {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
             </button>
-          )}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={state.isSaving || !isDirty}
-            className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

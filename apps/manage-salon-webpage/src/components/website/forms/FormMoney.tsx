@@ -6,6 +6,7 @@ interface FormMoneyProps {
   label: string;
   value: number;
   onChange: (valueInCents: number) => void;
+  onBlur?: (valueInCents: number) => void;
   min?: number;
   max?: number;
   required?: boolean;
@@ -32,6 +33,7 @@ export default function FormMoney({
   label,
   value,
   onChange,
+  onBlur,
   min = 0,
   max = 10000000,
   required = false,
@@ -54,6 +56,7 @@ export default function FormMoney({
     const clampedCents = Math.max(min, Math.min(max, cents));
     onChange(clampedCents);
     setInputValue(centsToEuros(clampedCents));
+    onBlur?.(clampedCents);
   };
 
   return (

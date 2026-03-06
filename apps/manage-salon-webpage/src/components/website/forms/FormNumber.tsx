@@ -4,6 +4,7 @@ interface FormNumberProps {
   label: string;
   value: number;
   onChange: (value: number) => void;
+  onBlur?: (value: number) => void;
   min?: number;
   max?: number;
   required?: boolean;
@@ -14,6 +15,7 @@ export default function FormNumber({
   label,
   value,
   onChange,
+  onBlur,
   min = 1,
   max = 480,
   required = false,
@@ -33,6 +35,10 @@ export default function FormNumber({
         onChange={(e) => {
           const val = parseInt(e.target.value, 10);
           onChange(isNaN(val) || val < min ? min : val);
+        }}
+        onBlur={(e) => {
+          const val = parseInt(e.target.value, 10);
+          onBlur?.(isNaN(val) || val < min ? min : val);
         }}
         className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal w-32"
       />
