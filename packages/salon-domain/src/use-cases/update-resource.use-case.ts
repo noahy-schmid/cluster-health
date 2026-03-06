@@ -12,7 +12,8 @@ import {
 // --- Command DTO ---
 
 export interface UpdateResourceCommand {
-  resourceId: string;
+  salonId: string;
+  slug: string;
   name: string;
   amount: number;
 }
@@ -41,7 +42,8 @@ const make = Effect.gen(function* () {
       InternalError | NotFoundError | ValidationError
     > =>
       aggregate.updateResource(
-        command.resourceId,
+        command.salonId,
+        command.slug,
         command.name,
         command.amount,
       ),

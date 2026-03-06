@@ -33,6 +33,7 @@ export {
   ConflictError,
   ValidationError,
   InfrastructureError,
+  ResourceMissingError,
 } from "./application/errors";
 
 // Resource domain types
@@ -66,7 +67,6 @@ export {
 export type {
   ServiceDefinition,
   ServicePhase,
-  PhaseResourceRequirement,
   CreateServicePhaseInput,
 } from "./application/service/service.aggregate";
 
@@ -93,6 +93,19 @@ export {
   type ListServiceDefinitionsQuery,
   type ListServiceDefinitionsResult,
 } from "./use-cases/list-service-definitions.use-case";
+
+// Simplified service use cases
+export {
+  CreateSimpleServiceUseCase,
+  type CreateSimpleServiceCommand,
+  type CreateSimpleServiceResult,
+} from "./use-cases/create-simple-service.use-case";
+
+export {
+  CreateColorationServiceUseCase,
+  type CreateColorationServiceCommand,
+  type CreateColorationServiceResult,
+} from "./use-cases/create-coloration-service.use-case";
 
 // Employee-service assignment domain types
 export type { EmployeeServiceAssignment } from "./application/employee-service/employee-service.aggregate";

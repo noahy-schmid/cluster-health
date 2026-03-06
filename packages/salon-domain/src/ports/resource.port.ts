@@ -4,8 +4,8 @@ import { InfrastructureError } from "../application/errors";
 // --- Port-owned types ---
 
 export interface PortResource {
-  id: string;
   salonId: string;
+  slug: string;
   name: string;
   amount: number;
   createdAt: Date;
@@ -14,6 +14,7 @@ export interface PortResource {
 
 export interface PortCreateResourceInput {
   salonId: string;
+  slug: string;
   name: string;
   amount: number;
 }
@@ -27,6 +28,7 @@ export interface PortUpdateResourceInput {
 
 /**
  * Port for salon resource persistence operations.
+ * Resources are identified by the composite key (salonId, slug).
  */
 export interface ResourcePort {
   /**
@@ -40,31 +42,37 @@ export interface ResourcePort {
 
   /**
    * Updates an existing resource's name and amount.
-   * @param resourceId Resource ID to update.
+   * @param salonId Salon the resource belongs to.
+   * @param slug Resource slug to update.
    * @param input Updated name and amount.
    * @returns Effect resolving to the updated resource, or null if not found.
    */
   updateResource(
-    resourceId: string,
+    salonId: string,
+    slug: string,
     input: PortUpdateResourceInput,
   ): Effect.Effect<PortResource | null, InfrastructureError>;
 
   /**
-   * Deletes a resource by ID.
-   * @param resourceId Resource ID to delete.
+   * Deletes a resource by salon ID and slug.
+   * @param salonId Salon the resource belongs to.
+   * @param slug Resource slug to delete.
    * @returns Effect resolving to true if deleted, false if not found.
    */
   deleteResource(
-    resourceId: string,
+    salonId: string,
+    slug: string,
   ): Effect.Effect<boolean, InfrastructureError>;
 
   /**
-   * Fetches a resource by ID.
-   * @param resourceId Resource ID to fetch.
+   * Fetches a resource by salon ID and slug.
+   * @param salonId Salon the resource belongs to.
+   * @param slug Resource slug to fetch.
    * @returns Effect resolving to the resource or null.
    */
-  findResourceById(
-    resourceId: string,
+  findResourceBySlug(
+    salonId: string,
+    slug: string,
   ): Effect.Effect<PortResource | null, InfrastructureError>;
 
   /**
@@ -77,12 +85,14 @@ export interface ResourcePort {
   ): Effect.Effect<PortResource[], InfrastructureError>;
 
   /**
-   * Fetches multiple resources by their IDs.
-   * @param resourceIds Array of resource IDs to fetch.
+   * Fetches multiple resources by their slugs within a salon.
+   * @param salonId Salon the resources belong to.
+   * @param slugs Array of resource slugs to fetch.
    * @returns Effect resolving to array of found resources.
    */
-  findResourcesByIds(
-    resourceIds: string[],
+  findResourcesBySlugs(
+    salonId: string,
+    slugs: string[],
   ): Effect.Effect<PortResource[], InfrastructureError>;
 }
 

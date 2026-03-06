@@ -10,7 +10,8 @@ import { ServicePhasePort } from "../ports/service-phase.port";
 // --- Command DTO ---
 
 export interface DeleteResourceCommand {
-  resourceId: string;
+  salonId: string;
+  slug: string;
 }
 
 // --- Use Case ---
@@ -34,7 +35,7 @@ const make = Effect.gen(function* () {
       Effect.gen(function* () {
         // Cross-aggregate check: is this resource referenced by any service phase?
         const isReferenced = yield* servicePhasePort
-          .isResourceReferenced(command.resourceId)
+          .isResourceSlugReferenced(command.slug)
           .pipe(
             Effect.mapError(
               (error) =>
@@ -53,7 +54,7 @@ const make = Effect.gen(function* () {
           );
         }
 
-        yield* aggregate.deleteResource(command.resourceId);
+        yield* aggregate.deleteResource(command.salonId, command.slug);
       }),
   };
 });

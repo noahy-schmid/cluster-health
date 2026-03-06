@@ -35,7 +35,10 @@ describe("DeleteResourceUseCase", () => {
       });
       const countBefore = beforeDelete.length;
 
-      yield* deleteUseCase.execute({ salonId: ctx.salonId, slug: resource.slug });
+      yield* deleteUseCase.execute({
+        salonId: ctx.salonId,
+        slug: resource.slug,
+      });
 
       const afterDelete = yield* listUseCase.execute({
         salonId: ctx.salonId,

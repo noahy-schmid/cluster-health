@@ -42,12 +42,12 @@ const make = Effect.gen(function* () {
         );
       }
 
-      if (input.requiredResourceIds.length > 0) {
+      if (input.requiredResourceSlugs.length > 0) {
         yield* Effect.tryPromise(() =>
           db.insert(phaseResourceRequirementsTable).values(
-            input.requiredResourceIds.map((resourceId) => ({
+            input.requiredResourceSlugs.map((resourceSlug) => ({
               phaseId: created.id,
-              resourceId,
+              resourceSlug,
             })),
           ),
         ).pipe(
@@ -106,7 +106,7 @@ const make = Effect.gen(function* () {
         );
 
         const result: ((typeof phases)[number] & {
-          requiredResourceIds: string[];
+          requiredResourceSlugs: string[];
         })[] = [];
 
         for (const phase of phases) {
@@ -127,41 +127,42 @@ const make = Effect.gen(function* () {
 
           result.push({
             ...phase,
-            requiredResourceIds: requirements.map((r) => r.resourceId),
+            requiredResourceSlugs: requirements.map((r) => r.resourceSlug),
           });
         }
 
         return result;
       });
 
-  const isResourceReferenced: ServicePhasePort["isResourceReferenced"] = (
-    resourceId,
-  ) =>
-    Effect.gen(function* () {
-      const [row] = yield* Effect.tryPromise(() =>
-        db
-          .select()
-          .from(phaseResourceRequirementsTable)
-          .where(eq(phaseResourceRequirementsTable.resourceId, resourceId))
-          .limit(1),
-      ).pipe(
-        Effect.mapError(
-          (error) =>
-            new InfrastructureError({
-              message: "Failed to check resource references",
-              cause: error,
-            }),
-        ),
-      );
+  const isResourceSlugReferenced: ServicePhasePort["isResourceSlugReferenced"] =
+    (resourceSlug) =>
+      Effect.gen(function* () {
+        const [row] = yield* Effect.tryPromise(() =>
+          db
+            .select()
+            .from(phaseResourceRequirementsTable)
+            .where(
+              eq(phaseResourceRequirementsTable.resourceSlug, resourceSlug),
+            )
+            .limit(1),
+        ).pipe(
+          Effect.mapError(
+            (error) =>
+              new InfrastructureError({
+                message: "Failed to check resource references",
+                cause: error,
+              }),
+          ),
+        );
 
-      return !!row;
-    });
+        return !!row;
+      });
 
   return {
     createPhase,
     deletePhasesByServiceDefinitionId,
     listPhasesByServiceDefinitionId,
-    isResourceReferenced,
+    isResourceSlugReferenced,
   } satisfies ServicePhasePort;
 });
 

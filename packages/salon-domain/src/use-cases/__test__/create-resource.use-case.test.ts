@@ -57,7 +57,12 @@ describe("CreateResourceUseCase", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
       const result = yield* useCase
-        .execute({ salonId: ctx.salonId, slug: "bad", name: "Dryer", amount: 0 })
+        .execute({
+          salonId: ctx.salonId,
+          slug: "bad",
+          name: "Dryer",
+          amount: 0,
+        })
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);

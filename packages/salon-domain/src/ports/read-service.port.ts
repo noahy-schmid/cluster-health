@@ -8,12 +8,13 @@ export interface PortServicePhaseWithResources {
   name: string;
   durationMinutes: number;
   order: number;
-  requiredResourceIds: string[];
+  requiredResourceSlugs: string[];
 }
 
 export interface PortFullServiceDefinition {
   id: string;
   salonId: string;
+  serviceType: string;
   name: string;
   description: string;
   priceInCents: number;

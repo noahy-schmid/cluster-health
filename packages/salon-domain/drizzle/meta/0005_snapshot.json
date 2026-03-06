@@ -1,5 +1,5 @@
 {
-  "id": "34cf893e-5a2a-4fa2-9bf8-013328b0fe5e",
+  "id": "c32e2d52-468d-4415-a169-e66fdfd6e2ce",
   "prevId": "1951cbc9-2cae-4708-af1e-44033084f1a7",
   "version": "7",
   "dialect": "postgresql",
@@ -169,9 +169,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "resourceId": {
-          "name": "resourceId",
-          "type": "uuid",
+        "resourceSlug": {
+          "name": "resourceSlug",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true
         }
@@ -191,20 +191,6 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        },
-        "phase_resource_requirements_resourceId_salon_resources_id_fk": {
-          "name": "phase_resource_requirements_resourceId_salon_resources_id_fk",
-          "tableFrom": "phase_resource_requirements",
-          "tableTo": "salon_resources",
-          "schemaTo": "salon",
-          "columnsFrom": [
-            "resourceId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -217,16 +203,15 @@
       "name": "salon_resources",
       "schema": "salon",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
         "salonId": {
           "name": "salonId",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true
         },
@@ -275,7 +260,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "salon_resources_salonId_slug_pk": {
+          "name": "salon_resources_salonId_slug_pk",
+          "columns": [
+            "salonId",
+            "slug"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -377,6 +370,13 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
+        },
+        "serviceType": {
+          "name": "serviceType",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'custom'"
         },
         "name": {
           "name": "name",

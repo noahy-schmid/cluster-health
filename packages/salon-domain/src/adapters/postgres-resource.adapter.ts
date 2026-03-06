@@ -1,5 +1,5 @@
 import { Effect, Layer } from "effect";
-import { eq, inArray } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
 import { salonResourcesTable } from "../schema";
 import { ResourcePort } from "../ports/resource.port";
@@ -7,6 +7,7 @@ import { InfrastructureError } from "../application/errors";
 
 /**
  * PostgreSQL implementation of the ResourcePort using Drizzle ORM.
+ * Resources are identified by composite key (salonId, slug).
  */
 const make = Effect.gen(function* () {
   const { db } = yield* Database;
@@ -36,7 +37,11 @@ const make = Effect.gen(function* () {
       return created;
     });
 
-  const updateResource: ResourcePort["updateResource"] = (resourceId, input) =>
+  const updateResource: ResourcePort["updateResource"] = (
+    salonId,
+    slug,
+    input,
+  ) =>
     Effect.gen(function* () {
       const rows = yield* Effect.tryPromise(() =>
         db
@@ -46,7 +51,12 @@ const make = Effect.gen(function* () {
             amount: input.amount,
             updatedAt: new Date(),
           })
-          .where(eq(salonResourcesTable.id, resourceId))
+          .where(
+            and(
+              eq(salonResourcesTable.salonId, salonId),
+              eq(salonResourcesTable.slug, slug),
+            ),
+          )
           .returning(),
       ).pipe(
         Effect.mapError(
@@ -61,12 +71,17 @@ const make = Effect.gen(function* () {
       return rows[0] ?? null;
     });
 
-  const deleteResource: ResourcePort["deleteResource"] = (resourceId) =>
+  const deleteResource: ResourcePort["deleteResource"] = (salonId, slug) =>
     Effect.gen(function* () {
       const rows = yield* Effect.tryPromise(() =>
         db
           .delete(salonResourcesTable)
-          .where(eq(salonResourcesTable.id, resourceId))
+          .where(
+            and(
+              eq(salonResourcesTable.salonId, salonId),
+              eq(salonResourcesTable.slug, slug),
+            ),
+          )
           .returning(),
       ).pipe(
         Effect.mapError(
@@ -81,13 +96,21 @@ const make = Effect.gen(function* () {
       return rows.length > 0;
     });
 
-  const findResourceById: ResourcePort["findResourceById"] = (resourceId) =>
+  const findResourceBySlug: ResourcePort["findResourceBySlug"] = (
+    salonId,
+    slug,
+  ) =>
     Effect.gen(function* () {
       const [resource] = yield* Effect.tryPromise(() =>
         db
           .select()
           .from(salonResourcesTable)
-          .where(eq(salonResourcesTable.id, resourceId)),
+          .where(
+            and(
+              eq(salonResourcesTable.salonId, salonId),
+              eq(salonResourcesTable.slug, slug),
+            ),
+          ),
       ).pipe(
         Effect.mapError(
           (error) =>
@@ -123,11 +146,12 @@ const make = Effect.gen(function* () {
       return resources;
     });
 
-  const findResourcesByIds: ResourcePort["findResourcesByIds"] = (
-    resourceIds,
+  const findResourcesBySlugs: ResourcePort["findResourcesBySlugs"] = (
+    salonId,
+    slugs,
   ) =>
     Effect.gen(function* () {
-      if (resourceIds.length === 0) {
+      if (slugs.length === 0) {
         return [];
       }
 
@@ -135,12 +159,17 @@ const make = Effect.gen(function* () {
         db
           .select()
           .from(salonResourcesTable)
-          .where(inArray(salonResourcesTable.id, resourceIds)),
+          .where(
+            and(
+              eq(salonResourcesTable.salonId, salonId),
+              inArray(salonResourcesTable.slug, slugs),
+            ),
+          ),
       ).pipe(
         Effect.mapError(
           (error) =>
             new InfrastructureError({
-              message: "Failed to find resources by IDs",
+              message: "Failed to find resources by slugs",
               cause: error,
             }),
         ),
@@ -153,9 +182,9 @@ const make = Effect.gen(function* () {
     createResource,
     updateResource,
     deleteResource,
-    findResourceById,
+    findResourceBySlug,
     listResourcesBySalonId,
-    findResourcesByIds,
+    findResourcesBySlugs,
   } satisfies ResourcePort;
 });
 

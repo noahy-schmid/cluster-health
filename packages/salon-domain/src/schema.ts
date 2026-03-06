@@ -57,16 +57,22 @@ export const mediaFilesTable = salonSchema.table("media_files", {
   createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
 });
 
-export const salonResourcesTable = salonSchema.table("salon_resources", {
-  id: uuid().primaryKey().defaultRandom(),
-  salonId: uuid()
-    .notNull()
-    .references(() => salonsTable.id, { onDelete: "cascade" }),
-  name: varchar({ length: 255 }).notNull(),
-  amount: integer().notNull().default(1),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const salonResourcesTable = salonSchema.table(
+  "salon_resources",
+  {
+    salonId: uuid()
+      .notNull()
+      .references(() => salonsTable.id, { onDelete: "cascade" }),
+    slug: varchar({ length: 100 }).notNull(),
+    name: varchar({ length: 255 }).notNull(),
+    amount: integer().notNull().default(1),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.salonId, table.slug] }),
+  }),
+);
 
 export const serviceDefinitionsTable = salonSchema.table(
   "service_definitions",
@@ -75,6 +81,7 @@ export const serviceDefinitionsTable = salonSchema.table(
     salonId: uuid()
       .notNull()
       .references(() => salonsTable.id, { onDelete: "cascade" }),
+    serviceType: varchar({ length: 50 }).notNull().default("custom"),
     name: varchar({ length: 255 }).notNull(),
     description: text().notNull().default(""),
     priceInCents: integer().notNull(),
@@ -101,9 +108,7 @@ export const phaseResourceRequirementsTable = salonSchema.table(
     phaseId: uuid()
       .notNull()
       .references(() => servicePhasesTable.id, { onDelete: "cascade" }),
-    resourceId: uuid()
-      .notNull()
-      .references(() => salonResourcesTable.id, { onDelete: "restrict" }),
+    resourceSlug: varchar({ length: 100 }).notNull(),
   },
 );
 

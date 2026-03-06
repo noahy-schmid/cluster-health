@@ -13,8 +13,7 @@ export interface DeleteServiceDefinitionCommand {
 /**
  * Soft-deletes a service definition. The definition is kept in the database
  * with a deletedAt timestamp so that existing bookings can still reference it.
- * Cascade-deleted phases and employee assignments remain as-is since the
- * definition row is preserved.
+ * Phases and employee assignments remain untouched since the definition row is preserved.
  */
 const make = Effect.gen(function* () {
   const aggregate = yield* ServiceAggregate;

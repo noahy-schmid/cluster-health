@@ -40,3 +40,14 @@ export class InfrastructureError extends Data.TaggedError(
   message: string;
   cause?: unknown;
 }> {}
+
+/**
+ * Error when a required resource (identified by slug) does not exist in a salon.
+ * Used by simplified service use cases that expect specific resources to be present.
+ */
+export class ResourceMissingError extends Data.TaggedError(
+  "ResourceMissingError",
+)<{
+  salonId: string;
+  resourceSlug: string;
+}> {}

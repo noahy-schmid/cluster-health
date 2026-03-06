@@ -11,6 +11,7 @@ import { ValidateServiceResourcesDomainService } from "../application/domain-ser
 
 export interface CreateServiceDefinitionCommand {
   salonId: string;
+  serviceType: string;
   name: string;
   description: string;
   priceInCents: number;
@@ -44,13 +45,14 @@ const make = Effect.gen(function* () {
     > =>
       Effect.gen(function* () {
         // Validate resources exist and belong to the same salon
-        const allResourceIds = command.phases.flatMap(
-          (p) => p.requiredResourceIds,
+        const allResourceSlugs = command.phases.flatMap(
+          (p) => p.requiredResourceSlugs,
         );
-        yield* validateResources.validate(command.salonId, allResourceIds);
+        yield* validateResources.validate(command.salonId, allResourceSlugs);
 
         return yield* aggregate.createServiceDefinition({
           salonId: command.salonId,
+          serviceType: command.serviceType,
           name: command.name,
           description: command.description,
           priceInCents: command.priceInCents,

@@ -14,21 +14,18 @@ import { PostgresReadServiceAdapter } from "../../adapters/postgres-read-service
 
 // --- Domain types ---
 
-export interface PhaseResourceRequirement {
-  resourceId: string;
-}
-
 export interface ServicePhase {
   id: string;
   name: string;
   durationMinutes: number;
   order: number;
-  requiredResourceIds: string[];
+  requiredResourceSlugs: string[];
 }
 
 export interface ServiceDefinition {
   id: string;
   salonId: string;
+  serviceType: string;
   name: string;
   description: string;
   priceInCents: number;
@@ -41,11 +38,12 @@ export interface ServiceDefinition {
 export interface CreateServicePhaseInput {
   name: string;
   durationMinutes: number;
-  requiredResourceIds: string[];
+  requiredResourceSlugs: string[];
 }
 
 export interface CreateServiceInput {
   salonId: string;
+  serviceType: string;
   name: string;
   description: string;
   priceInCents: number;
@@ -66,6 +64,7 @@ const fromPort = (
 ): ServiceDefinition => ({
   id: portService.id,
   salonId: portService.salonId,
+  serviceType: portService.serviceType,
   name: portService.name,
   description: portService.description,
   priceInCents: portService.priceInCents,
@@ -78,7 +77,7 @@ const fromPort = (
     name: p.name,
     durationMinutes: p.durationMinutes,
     order: p.order,
-    requiredResourceIds: p.requiredResourceIds,
+    requiredResourceSlugs: p.requiredResourceSlugs,
   })),
   createdAt: portService.createdAt,
   updatedAt: portService.updatedAt,
@@ -137,6 +136,7 @@ const make = Effect.gen(function* () {
       const created = yield* serviceDefPort
         .createServiceDefinition({
           salonId: input.salonId,
+          serviceType: input.serviceType,
           name: input.name.trim(),
           description: input.description.trim(),
           priceInCents: input.priceInCents,
@@ -157,7 +157,7 @@ const make = Effect.gen(function* () {
             name: phase.name.trim(),
             durationMinutes: phase.durationMinutes,
             order: i,
-            requiredResourceIds: phase.requiredResourceIds,
+            requiredResourceSlugs: phase.requiredResourceSlugs,
           })
           .pipe(
             Effect.mapError(
@@ -241,7 +241,7 @@ const make = Effect.gen(function* () {
             name: phase.name.trim(),
             durationMinutes: phase.durationMinutes,
             order: i,
-            requiredResourceIds: phase.requiredResourceIds,
+            requiredResourceSlugs: phase.requiredResourceSlugs,
           })
           .pipe(
             Effect.mapError(

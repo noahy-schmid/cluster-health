@@ -66,7 +66,9 @@ describe("UpdateServiceDefinitionUseCase", () => {
           name: "Ghost",
           description: "",
           priceInCents: 1000,
-          phases: [{ name: "P", durationMinutes: 10, requiredResourceSlugs: [] }],
+          phases: [
+            { name: "P", durationMinutes: 10, requiredResourceSlugs: [] },
+          ],
         })
         .pipe(Effect.either);
 

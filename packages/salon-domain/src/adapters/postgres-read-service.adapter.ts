@@ -62,7 +62,7 @@ const make = Effect.gen(function* () {
           name: phase.name,
           durationMinutes: phase.durationMinutes,
           order: phase.order,
-          requiredResourceIds: requirements.map((r) => r.resourceId),
+          requiredResourceSlugs: requirements.map((r) => r.resourceSlug),
         });
       }
 
@@ -101,6 +101,7 @@ const make = Effect.gen(function* () {
         return {
           id: service.id,
           salonId: service.salonId,
+          serviceType: service.serviceType,
           name: service.name,
           description: service.description,
           priceInCents: service.priceInCents,
@@ -141,6 +142,7 @@ const make = Effect.gen(function* () {
           results.push({
             id: service.id,
             salonId: service.salonId,
+            serviceType: service.serviceType,
             name: service.name,
             description: service.description,
             priceInCents: service.priceInCents,

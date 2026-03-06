@@ -218,9 +218,19 @@ export async function setupTestContext(): Promise<TestContext> {
       // Create resources for service phase tests
       yield* Effect.tryPromise(() =>
         db.insert(salonResourcesTable).values([
-          { salonId: theSalonId, slug: "seat", name: "Styling Chair", amount: 3 },
+          {
+            salonId: theSalonId,
+            slug: "seat",
+            name: "Styling Chair",
+            amount: 3,
+          },
           { salonId: theSalonId, slug: "employee", name: "Stylist", amount: 5 },
-          { salonId: theSalonId, slug: "climazon", name: "Climazon", amount: 2 },
+          {
+            salonId: theSalonId,
+            slug: "climazon",
+            name: "Climazon",
+            amount: 2,
+          },
         ]),
       );
     }).pipe(Effect.provide(infrastructureLayer)),

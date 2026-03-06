@@ -17,6 +17,8 @@ import { CreateServiceDefinitionUseCase } from "./use-cases/create-service-defin
 import { UpdateServiceDefinitionUseCase } from "./use-cases/update-service-definition.use-case";
 import { DeleteServiceDefinitionUseCase } from "./use-cases/delete-service-definition.use-case";
 import { ListServiceDefinitionsUseCase } from "./use-cases/list-service-definitions.use-case";
+import { CreateSimpleServiceUseCase } from "./use-cases/create-simple-service.use-case";
+import { CreateColorationServiceUseCase } from "./use-cases/create-coloration-service.use-case";
 import { AssignEmployeeToServiceUseCase } from "./use-cases/assign-employee-to-service.use-case";
 import { UnassignEmployeeFromServiceUseCase } from "./use-cases/unassign-employee-from-service.use-case";
 import { ListEmployeeServicesUseCase } from "./use-cases/list-employee-services.use-case";
@@ -80,6 +82,12 @@ export const DeleteServiceDefinitionUseCaseLayer =
   DeleteServiceDefinitionUseCase.Default;
 export const ListServiceDefinitionsUseCaseLayer =
   ListServiceDefinitionsUseCase.Default;
+
+// Simplified service use case layers
+export const CreateSimpleServiceUseCaseLayer =
+  CreateSimpleServiceUseCase.Default.pipe(Layer.provide(ResourcePortLayer));
+export const CreateColorationServiceUseCaseLayer =
+  CreateColorationServiceUseCase.Default.pipe(Layer.provide(ResourcePortLayer));
 
 // Employee-service assignment use case layers
 export const AssignEmployeeToServiceUseCaseLayer =

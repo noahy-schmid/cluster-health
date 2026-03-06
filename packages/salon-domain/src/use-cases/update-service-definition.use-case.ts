@@ -72,10 +72,10 @@ const make = Effect.gen(function* () {
         }
 
         // Validate resources exist and belong to the same salon
-        const allResourceIds = command.phases.flatMap(
-          (p) => p.requiredResourceIds,
+        const allResourceSlugs = command.phases.flatMap(
+          (p) => p.requiredResourceSlugs,
         );
-        yield* validateResources.validate(serviceDef.salonId, allResourceIds);
+        yield* validateResources.validate(serviceDef.salonId, allResourceSlugs);
 
         return yield* aggregate.updateServiceDefinition(command.serviceId, {
           name: command.name,

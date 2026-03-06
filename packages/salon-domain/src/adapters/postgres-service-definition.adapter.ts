@@ -20,6 +20,7 @@ const make = Effect.gen(function* () {
             .insert(serviceDefinitionsTable)
             .values({
               salonId: input.salonId,
+              serviceType: input.serviceType,
               name: input.name,
               description: input.description,
               priceInCents: input.priceInCents,

@@ -6,6 +6,7 @@ import { InfrastructureError } from "../application/errors";
 export interface PortServiceDefinitionRow {
   id: string;
   salonId: string;
+  serviceType: string;
   name: string;
   description: string;
   priceInCents: number;
@@ -16,6 +17,7 @@ export interface PortServiceDefinitionRow {
 
 export interface PortCreateServiceDefinitionInput {
   salonId: string;
+  serviceType: string;
   name: string;
   description: string;
   priceInCents: number;

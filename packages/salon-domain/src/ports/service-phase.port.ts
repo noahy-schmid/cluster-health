@@ -14,7 +14,7 @@ export interface PortServicePhaseRow {
 export interface PortPhaseResourceRequirementRow {
   id: string;
   phaseId: string;
-  resourceId: string;
+  resourceSlug: string;
 }
 
 export interface PortCreateServicePhaseInput {
@@ -22,7 +22,7 @@ export interface PortCreateServicePhaseInput {
   name: string;
   durationMinutes: number;
   order: number;
-  requiredResourceIds: string[];
+  requiredResourceSlugs: string[];
 }
 
 // --- Port interface ---
@@ -52,22 +52,22 @@ export interface ServicePhasePort {
   /**
    * Fetches all phases for a service definition with their resource requirements.
    * @param serviceDefinitionId Service definition ID.
-   * @returns Effect resolving to phases with their resource requirement IDs.
+   * @returns Effect resolving to phases with their resource requirement slugs.
    */
   listPhasesByServiceDefinitionId(
     serviceDefinitionId: string,
   ): Effect.Effect<
-    (PortServicePhaseRow & { requiredResourceIds: string[] })[],
+    (PortServicePhaseRow & { requiredResourceSlugs: string[] })[],
     InfrastructureError
   >;
 
   /**
-   * Checks if a resource is referenced by any service phase requirement.
-   * @param resourceId The resource ID to check.
+   * Checks if a resource slug is referenced by any service phase requirement.
+   * @param resourceSlug The resource slug to check.
    * @returns Effect resolving to true if referenced.
    */
-  isResourceReferenced(
-    resourceId: string,
+  isResourceSlugReferenced(
+    resourceSlug: string,
   ): Effect.Effect<boolean, InfrastructureError>;
 }
 

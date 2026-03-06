@@ -14,8 +14,20 @@ export type Resource = PortResource;
 const make = Effect.gen(function* () {
   const resourcePort = yield* ResourcePort;
 
-  const createResource = (salonId: string, name: string, amount: number) =>
+  const createResource = (
+    salonId: string,
+    slug: string,
+    name: string,
+    amount: number,
+  ) =>
     Effect.gen(function* () {
+      if (!slug.trim()) {
+        return yield* Effect.fail(
+          new ValidationError({
+            message: "Resource slug cannot be empty",
+          }),
+        );
+      }
       if (!name.trim()) {
         return yield* Effect.fail(
           new ValidationError({
@@ -32,7 +44,12 @@ const make = Effect.gen(function* () {
       }
 
       const resource = yield* resourcePort
-        .createResource({ salonId, name: name.trim(), amount })
+        .createResource({
+          salonId,
+          slug: slug.trim(),
+          name: name.trim(),
+          amount,
+        })
         .pipe(
           Effect.mapError(
             (error) =>
@@ -43,11 +60,16 @@ const make = Effect.gen(function* () {
           ),
         );
 
-      yield* Effect.log("Resource created", resource.id);
+      yield* Effect.log("Resource created", salonId, slug);
       return resource;
     });
 
-  const updateResource = (resourceId: string, name: string, amount: number) =>
+  const updateResource = (
+    salonId: string,
+    slug: string,
+    name: string,
+    amount: number,
+  ) =>
     Effect.gen(function* () {
       if (!name.trim()) {
         return yield* Effect.fail(
@@ -65,7 +87,7 @@ const make = Effect.gen(function* () {
       }
 
       const updated = yield* resourcePort
-        .updateResource(resourceId, { name: name.trim(), amount })
+        .updateResource(salonId, slug, { name: name.trim(), amount })
         .pipe(
           Effect.mapError(
             (error) =>
@@ -78,17 +100,17 @@ const make = Effect.gen(function* () {
 
       if (!updated) {
         return yield* Effect.fail(
-          new NotFoundError({ entity: "Resource", id: resourceId }),
+          new NotFoundError({ entity: "Resource", id: `${salonId}/${slug}` }),
         );
       }
 
-      yield* Effect.log("Resource updated", resourceId);
+      yield* Effect.log("Resource updated", salonId, slug);
       return updated;
     });
 
-  const deleteResource = (resourceId: string) =>
+  const deleteResource = (salonId: string, slug: string) =>
     Effect.gen(function* () {
-      const deleted = yield* resourcePort.deleteResource(resourceId).pipe(
+      const deleted = yield* resourcePort.deleteResource(salonId, slug).pipe(
         Effect.mapError(
           (error) =>
             new InternalError({
@@ -100,11 +122,11 @@ const make = Effect.gen(function* () {
 
       if (!deleted) {
         return yield* Effect.fail(
-          new NotFoundError({ entity: "Resource", id: resourceId }),
+          new NotFoundError({ entity: "Resource", id: `${salonId}/${slug}` }),
         );
       }
 
-      yield* Effect.log("Resource deleted", resourceId);
+      yield* Effect.log("Resource deleted", salonId, slug);
     });
 
   const listResources = (salonId: string) =>

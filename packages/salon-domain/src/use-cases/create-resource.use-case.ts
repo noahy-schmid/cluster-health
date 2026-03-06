@@ -9,6 +9,7 @@ import { InternalError, ValidationError } from "../application/resource/errors";
 
 export interface CreateResourceCommand {
   salonId: string;
+  slug: string;
   name: string;
   amount: number;
 }
@@ -33,7 +34,12 @@ const make = Effect.gen(function* () {
     execute: (
       command: CreateResourceCommand,
     ): Effect.Effect<CreateResourceResult, InternalError | ValidationError> =>
-      aggregate.createResource(command.salonId, command.name, command.amount),
+      aggregate.createResource(
+        command.salonId,
+        command.slug,
+        command.name,
+        command.amount,
+      ),
   };
 });
 

@@ -29,7 +29,11 @@ describe("DeleteServiceDefinitionUseCase", () => {
         description: "Will be deleted",
         priceInCents: 2000,
         phases: [
-          { name: "Quick Phase", durationMinutes: 15, requiredResourceSlugs: [] },
+          {
+            name: "Quick Phase",
+            durationMinutes: 15,
+            requiredResourceSlugs: [],
+          },
         ],
       });
 
