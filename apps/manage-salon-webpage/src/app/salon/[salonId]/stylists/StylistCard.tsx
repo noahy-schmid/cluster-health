@@ -3,27 +3,23 @@
 
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
-import { Option } from "effect";
-import { Stylist } from "@repo/salon-domain";
 import { deleteStylist } from "@/app/salon/[salonId]/stylists/stylist.actions";
 import { getMediaUrl } from "@/api/media-actions";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
+import { StylistDto } from "./stylist.dto";
 
 interface StylistCardProps {
-  stylist: Stylist;
+  stylist: StylistDto;
   salonId: string;
 }
 
 export default function StylistCard({ stylist, salonId }: StylistCardProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const profileImageMediaId = Option.getOrUndefined(
-    stylist.profileImageMediaId,
-  );
+  const profileImageMediaId = stylist.profileImageMediaId;
 
   const { data: profileImageUrl } = useQuery({
     queryKey: ["mediaUrl", profileImageMediaId],

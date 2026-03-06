@@ -1,27 +1,26 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Stylist } from "@repo/salon-domain";
-import { Option } from "effect";
 import FormInput from "@/components/website/forms/FormInput";
+import FormActions from "@/components/website/forms/FormActions";
 import FormTextarea from "@/components/website/forms/FormTextarea";
 import MediaSelector from "@/components/media/media-selector";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { StylistDto } from "@/app/salon/[salonId]/stylists/stylist.dto";
 
 export interface StylistFormData {
   name: string;
   subtitle: string;
   description: string;
-  profileImageMediaId: Option.Option<string>;
+  profileImageMediaId?: string;
 }
 
 interface StylistFormProps {
   salonId: string;
-  stylist?: Stylist;
+  stylist?: StylistDto;
   onSubmit: (data: StylistFormData) => Promise<void>;
   onCancel?: () => void;
-  saveLabel?: string;
 }
 
 export default function StylistForm({
@@ -29,7 +28,6 @@ export default function StylistForm({
   stylist,
   onSubmit,
   onCancel,
-  saveLabel,
 }: StylistFormProps) {
   const { showNotification } = useNotifications();
   const isEditMode = !!stylist;
@@ -38,7 +36,7 @@ export default function StylistForm({
   const [description, setDescription] = useState(stylist?.description || "");
   const [profileImageMediaId, setProfileImageMediaId] = useState<
     string | undefined
-  >(Option.getOrUndefined(stylist?.profileImageMediaId ?? Option.none()));
+  >(stylist?.profileImageMediaId);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
@@ -54,9 +52,7 @@ export default function StylistForm({
     name: stylist?.name || "",
     subtitle: stylist?.subtitle || "",
     description: stylist?.description || "",
-    profileImageMediaId: Option.getOrUndefined(
-      stylist?.profileImageMediaId ?? Option.none(),
-    ),
+    profileImageMediaId: stylist?.profileImageMediaId,
   });
 
   const isDirty =
@@ -78,9 +74,7 @@ export default function StylistForm({
       name: trimmedName,
       subtitle: trimmedSubtitle,
       description: trimmedDescription,
-      profileImageMediaId: profileImageMediaId
-        ? Option.some(profileImageMediaId)
-        : Option.none(),
+      profileImageMediaId,
     });
 
     initialRef.current = {
@@ -113,9 +107,7 @@ export default function StylistForm({
         name: trimmedName,
         subtitle: trimmedSubtitle,
         description: trimmedDescription,
-        profileImageMediaId: profileImageMediaId
-          ? Option.some(profileImageMediaId)
-          : Option.none(),
+        profileImageMediaId,
       });
 
       initialRef.current = {
@@ -183,27 +175,14 @@ export default function StylistForm({
           </div>
         )}
 
-        {!isEditMode && (
-          <div className="flex gap-md justify-end pt-lg">
-            {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
-                disabled={isSaving}
-              >
-                Abbrechen
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving || !isDirty}
-              className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? "Speichern..." : saveLabel || "Speichern"}
-            </button>
-          </div>
+        {!isEditMode && onCancel && (
+          <FormActions
+            onCancel={onCancel}
+            onSave={handleSave}
+            saveLabel={isSaving ? "Speichern..." : "Stylist erstellen"}
+            isSaving={isSaving}
+            isSaveDisabled={!isDirty}
+          />
         )}
       </div>
     </div>

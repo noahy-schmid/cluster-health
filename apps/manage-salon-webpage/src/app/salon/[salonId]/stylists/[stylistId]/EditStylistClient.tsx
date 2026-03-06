@@ -12,14 +12,14 @@ import {
   assignStylistToService,
   unassignStylistFromService,
 } from "@/app/salon/[salonId]/services/service.actions";
-import { Stylist } from "@repo/salon-domain";
 import type { StylistServiceAssignment } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
+import { StylistDto } from "../stylist.dto";
 
 interface EditStylistClientProps {
   salonId: string;
   stylistId: string;
-  initialStylist: Stylist;
+  initialStylist: StylistDto;
   initialAssignments: StylistServiceAssignment[];
   allServices: { id: string; name: string }[];
 }
@@ -97,7 +97,6 @@ export default function EditStylistClient({
           salonId={salonId}
           stylist={initialStylist}
           onSubmit={handleSubmit}
-          saveLabel="Änderungen speichern"
         />
 
         <AssignmentList

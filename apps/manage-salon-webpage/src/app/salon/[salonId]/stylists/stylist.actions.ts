@@ -8,25 +8,64 @@ import {
   UpdateStylistInput,
 } from "@repo/salon-domain";
 import { SalonAccessGuard } from "@/api/guards/salon.guard";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
+import { StylistDto } from "./stylist.dto";
+
+interface CreateStylistInputDto {
+  salonId: string;
+  name: string;
+  subtitle: string;
+  description: string;
+  profileImageMediaId?: string;
+}
+
+interface UpdateStylistInputDto {
+  name: string;
+  subtitle: string;
+  description: string;
+  profileImageMediaId?: string;
+}
+
+function serializeStylist(stylist: Stylist): StylistDto {
+  return {
+    id: stylist.id,
+    createdAt: stylist.createdAt.toISOString(),
+    updatedAt: stylist.updatedAt.toISOString(),
+    salonId: stylist.salonId,
+    name: stylist.name,
+    subtitle: stylist.subtitle,
+    description: stylist.description,
+    profileImageMediaId: Option.getOrUndefined(stylist.profileImageMediaId),
+  };
+}
 
 /**
  * Server action to create a new stylist
  * Takes salonId and stylist details, returns the created stylist with generated ID
  */
-export async function createStylist(input: CreateStylistInput) {
+export async function createStylist(input: CreateStylistInputDto) {
   const access = await SalonAccessGuard.canAccessSalon(input.salonId);
 
   if (!access.success) {
     return { success: false, error: access.error };
   }
 
+  const createStylistInput: CreateStylistInput = {
+    ...input,
+    profileImageMediaId: input.profileImageMediaId
+      ? Option.some(input.profileImageMediaId)
+      : Option.none(),
+  };
+
   const program = Effect.gen(function* () {
     const stylistService = yield* StylistService;
     return yield* stylistService
-      .createStylist(input)
+      .createStylist(createStylistInput)
       .pipe(
-        Effect.map((stylist) => ({ success: true as const, data: stylist })),
+        Effect.map((stylist) => ({
+          success: true as const,
+          data: serializeStylist(stylist),
+        })),
       );
   }).pipe(
     Effect.catchTags({
@@ -47,7 +86,7 @@ export async function createStylist(input: CreateStylistInput) {
 export async function fetchStylists(
   salonId: string,
 ): Promise<
-  { success: true; data: Stylist[] } | { success: false; error: string }
+  { success: true; data: StylistDto[] } | { success: false; error: string }
 > {
   const access = await SalonAccessGuard.canAccessSalon(salonId);
 
@@ -60,7 +99,10 @@ export async function fetchStylists(
     return yield* stylistService
       .getStylistsBySalonId(salonId)
       .pipe(
-        Effect.map((stylists) => ({ success: true as const, data: stylists })),
+        Effect.map((stylists) => ({
+          success: true as const,
+          data: stylists.map(serializeStylist),
+        })),
       );
   }).pipe(
     Effect.catchTags({
@@ -80,7 +122,7 @@ export async function fetchStylist(
   salonId: string,
   stylistId: string,
 ): Promise<
-  { success: true; data: Stylist } | { success: false; error: string }
+  { success: true; data: StylistDto } | { success: false; error: string }
 > {
   const access = await SalonAccessGuard.canAccessSalon(salonId);
 
@@ -97,7 +139,7 @@ export async function fetchStylist(
         error: "Stylist gehört nicht zu diesem Salon",
       };
     }
-    return { success: true as const, data: stylist };
+    return { success: true as const, data: serializeStylist(stylist) };
   }).pipe(
     Effect.catchTags({
       StylistNotFoundError: (error) =>
@@ -123,13 +165,20 @@ export async function fetchStylist(
 export async function updateStylist(
   salonId: string,
   stylistId: string,
-  updates: UpdateStylistInput,
+  updates: UpdateStylistInputDto,
 ) {
   const access = await SalonAccessGuard.canAccessSalon(salonId);
 
   if (!access.success) {
     return { success: false as const, error: access.error };
   }
+
+  const updateStylistInput: UpdateStylistInput = {
+    ...updates,
+    profileImageMediaId: updates.profileImageMediaId
+      ? Option.some(updates.profileImageMediaId)
+      : Option.none(),
+  };
 
   const program = Effect.gen(function* () {
     const stylistService = yield* StylistService;
@@ -142,9 +191,9 @@ export async function updateStylist(
     }
     const updatedStylist = yield* stylistService.updateStylist(
       stylistId,
-      updates,
+      updateStylistInput,
     );
-    return { success: true as const, data: updatedStylist };
+    return { success: true as const, data: serializeStylist(updatedStylist) };
   }).pipe(
     Effect.catchTags({
       StylistNotFoundError: (error) =>
