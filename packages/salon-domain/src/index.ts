@@ -39,7 +39,10 @@ export {
 
 // Resource domain types
 export type { Resource } from "./application/resource/resource.aggregate";
-export { SEAT_SLUG, CLIMAZON_SLUG } from "./application/resource/resource.constants";
+export {
+  SEAT_SLUG,
+  CLIMAZON_SLUG,
+} from "./application/resource/resource.constants";
 
 // Resource use cases
 export {
