@@ -8,8 +8,6 @@ import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
 import { ColorSettings } from "@/api/website-actions";
 import PageHeader from "@/components/PageHeader";
 
-export const dynamic = "force-dynamic";
-
 export default function ColorsPage() {
   const router = useRouter();
   const { salonId, websiteId } = useWebsiteRouteContext();

@@ -10,8 +10,10 @@ export type {
   ServiceEmployeeItem,
 } from "@repo/salon-domain";
 
-export const SEAT_SLUG = "seat";
-export const CLIMAZON_SLUG = "climazon";
+export {
+  SEAT_SLUG,
+  CLIMAZON_SLUG,
+} from "@repo/salon-domain/src/application/resource/resource.constants";
 
 /**
  * The type of a service definition.

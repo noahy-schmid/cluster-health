@@ -4,14 +4,7 @@ import { InternalError, NotFoundError, ValidationError } from "./errors";
 import { DatabaseLayer } from "../../infrastructure/database.service";
 import { ConfigurationLayer } from "../../infrastructure/config.service";
 import { PostgresResourceAdapter } from "../../adapters/postgres-resource.adapter";
-
-// --- Well-known resource slugs ---
-
-/** Resource slug for styling seats / chairs. */
-export const SEAT_SLUG = "seat";
-
-/** Resource slug for climazon heating lamps. */
-export const CLIMAZON_SLUG = "climazon";
+export { SEAT_SLUG, CLIMAZON_SLUG } from "./resource.constants";
 
 // --- Domain types (re-export port types directly since there is no mapping needed) ---
 
