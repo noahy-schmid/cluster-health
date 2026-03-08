@@ -18,21 +18,29 @@ export const ServiceGuard = {
     const program = Effect.gen(function* () {
       const useCase = yield* GetServiceDefinitionUseCase;
       const service = yield* useCase.execute({ serviceId });
-      return service.salonId;
+      return { salonId: service.salonId, error: null };
     }).pipe(
       Effect.catchTags({
-        NotFoundError: () => Effect.succeed(null),
-        InternalError: () => Effect.succeed(null),
+        NotFoundError: () =>
+          Effect.succeed({
+            salonId: null as string | null,
+            error: "Dienstleistung nicht gefunden",
+          }),
+        InternalError: (e) =>
+          Effect.succeed({
+            salonId: null as string | null,
+            error: e.message,
+          }),
       }),
       Effect.provide(GetServiceDefinitionUseCaseLayer),
     );
 
-    const salonId = await Effect.runPromise(program);
-    if (!salonId) {
-      return { success: false, error: "Dienstleistung nicht gefunden" };
+    const result = await Effect.runPromise(program);
+    if (!result.salonId) {
+      return { success: false, error: result.error! };
     }
 
-    const access = await SalonAccessGuard.canAccessSalon(salonId);
+    const access = await SalonAccessGuard.canAccessSalon(result.salonId);
     if (!access.success) {
       return { success: false, error: access.error };
     }
@@ -51,24 +59,32 @@ export const ServiceGuard = {
     const program = Effect.gen(function* () {
       const useCase = yield* GetServiceDefinitionUseCase;
       const service = yield* useCase.execute({ serviceId });
-      return service.salonId;
+      return { salonId: service.salonId, error: null };
     }).pipe(
       Effect.catchTags({
-        NotFoundError: () => Effect.succeed(null),
-        InternalError: () => Effect.succeed(null),
+        NotFoundError: () =>
+          Effect.succeed({
+            salonId: null as string | null,
+            error: "Dienstleistung nicht gefunden",
+          }),
+        InternalError: (e) =>
+          Effect.succeed({
+            salonId: null as string | null,
+            error: e.message,
+          }),
       }),
       Effect.provide(GetServiceDefinitionUseCaseLayer),
     );
 
-    const salonId = await Effect.runPromise(program);
-    if (!salonId) {
-      return { success: false, error: "Dienstleistung nicht gefunden" };
+    const result = await Effect.runPromise(program);
+    if (!result.salonId) {
+      return { success: false, error: result.error! };
     }
 
-    const access = await SalonAccessGuard.canAccessSalon(salonId);
+    const access = await SalonAccessGuard.canAccessSalon(result.salonId);
     if (!access.success) {
       return { success: false, error: access.error };
     }
-    return { success: true, salonId };
+    return { success: true, salonId: result.salonId };
   },
 };
