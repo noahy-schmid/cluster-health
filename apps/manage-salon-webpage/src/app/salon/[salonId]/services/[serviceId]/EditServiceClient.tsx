@@ -20,7 +20,6 @@ import type {
 import { useNotifications } from "@/components/notifications/useNotifications";
 
 interface EditServiceClientProps {
-  salonId: string;
   serviceId: string;
   initialService: ServiceDefinition;
   initialResources: Resource[];
@@ -29,7 +28,6 @@ interface EditServiceClientProps {
 }
 
 export default function EditServiceClient({
-  salonId,
   serviceId,
   initialService,
   initialResources,
@@ -46,7 +44,7 @@ export default function EditServiceClient({
     priceInCents: number;
     phases: ServiceDefinition["phases"];
   }) => {
-    const result = await updateServiceDefinition(salonId, serviceId, {
+    const result = await updateServiceDefinition(serviceId, {
       name: data.name,
       description: data.description,
       priceInCents: data.priceInCents,
@@ -61,34 +59,26 @@ export default function EditServiceClient({
 
   const handleAssignStylist = useCallback(
     async (stylistId: string) => {
-      const result = await assignStylistToService(
-        salonId,
-        stylistId,
-        serviceId,
-      );
+      const result = await assignStylistToService(stylistId, serviceId);
       if (!result.success) {
         showNotification(result.error, "error", "long");
         return;
       }
       setAssignments((prev) => [...prev, result.data]);
     },
-    [salonId, serviceId, showNotification],
+    [serviceId, showNotification],
   );
 
   const handleUnassignStylist = useCallback(
     async (stylistId: string) => {
-      const result = await unassignStylistFromService(
-        salonId,
-        stylistId,
-        serviceId,
-      );
+      const result = await unassignStylistFromService(stylistId, serviceId);
       if (!result.success) {
         showNotification(result.error, "error", "long");
         return;
       }
       setAssignments((prev) => prev.filter((a) => a.stylistId !== stylistId));
     },
-    [salonId, serviceId, showNotification],
+    [serviceId, showNotification],
   );
 
   const renderForm = () => {

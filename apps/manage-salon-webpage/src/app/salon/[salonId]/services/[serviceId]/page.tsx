@@ -19,9 +19,9 @@ export default async function EditServicePage({
 
   const [serviceResult, resourcesResult, assignmentsResult, stylistsResult] =
     await Promise.all([
-      fetchServiceDefinition(salonId, serviceId),
+      fetchServiceDefinition(serviceId),
       fetchSalonResources(salonId),
-      fetchStylistsForService(salonId, serviceId),
+      fetchStylistsForService(serviceId),
       fetchStylists(salonId),
     ]);
 
@@ -39,7 +39,6 @@ export default async function EditServicePage({
 
   return (
     <EditServiceClient
-      salonId={salonId}
       serviceId={serviceId}
       initialService={serviceResult.data}
       initialResources={resourcesResult.success ? resourcesResult.data : []}
