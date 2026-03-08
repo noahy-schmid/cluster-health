@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Stylist } from "@repo/salon-domain";
+import type { Stylist } from "@repo/salon-domain";
 import FormInput from "@/components/website/forms/FormInput";
 import FormTextarea from "@/components/website/forms/FormTextarea";
 import { useNotifications } from "@/components/notifications/useNotifications";

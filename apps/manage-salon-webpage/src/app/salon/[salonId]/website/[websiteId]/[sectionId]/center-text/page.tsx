@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import CenterTextForm from "./center-text.form";
 
+export const dynamic = "force-dynamic";
+
 export default async function CenterTextEditPage({
   params,
 }: {

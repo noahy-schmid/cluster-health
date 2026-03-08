@@ -3,6 +3,8 @@ import { fetchStylists } from "@/app/salon/[salonId]/stylists/stylist.actions";
 import StylistList from "./StylistList";
 import StylistsPageHeader from "./StylistsPageHeader";
 
+export const dynamic = "force-dynamic";
+
 interface StylistsPageProps {
   params: Promise<{ salonId: string }>;
 }

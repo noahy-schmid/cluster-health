@@ -3,6 +3,8 @@ import { fetchServiceDefinitions } from "./service.actions";
 import ServiceList from "./ServiceList";
 import ServicesPageHeader from "./ServicesPageHeader";
 
+export const dynamic = "force-dynamic";
+
 interface ServicesPageProps {
   params: Promise<{ salonId: string }>;
 }

@@ -12,8 +12,7 @@ import {
   assignStylistToService,
   unassignStylistFromService,
 } from "@/app/salon/[salonId]/services/service.actions";
-import { Stylist } from "@repo/salon-domain";
-import type { EmployeeServiceItem } from "@repo/salon-domain";
+import type { Stylist, EmployeeServiceItem } from "@repo/salon-domain";
 import { useNotifications } from "@/components/notifications/useNotifications";
 
 interface EditStylistClientProps {

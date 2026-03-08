@@ -3,6 +3,8 @@ import { fetchSections } from "@/api/sections-actions";
 import { getHeroSettings } from "@/api/website-actions";
 import WebsiteEditorClient from "@/components/website/WebsiteEditorClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function WebsiteEditorPage({
   params,
 }: {

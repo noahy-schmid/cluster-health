@@ -2,6 +2,8 @@ import PageHeader from "@/components/PageHeader";
 import BackButton from "@/components/BackButton";
 import SectionTypeSelection from "./SectionTypeSelection";
 
+export const dynamic = "force-dynamic";
+
 export default function SelectSectionPage() {
   return (
     <div className="max-w-4xl mx-auto">

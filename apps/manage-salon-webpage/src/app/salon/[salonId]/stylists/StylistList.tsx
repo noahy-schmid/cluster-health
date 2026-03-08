@@ -1,4 +1,4 @@
-import { Stylist } from "@repo/salon-domain";
+import type { Stylist } from "@repo/salon-domain";
 import StylistCard from "./StylistCard";
 
 interface StylistListProps {

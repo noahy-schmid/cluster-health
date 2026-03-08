@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getWebsiteSettings } from "../../settings.actions";
 import WebsiteSettingsPageClient from "./client";
 
+export const dynamic = "force-dynamic";
+
 export default async function WebsiteSettingsPage({
   params,
 }: {
