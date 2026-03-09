@@ -128,7 +128,7 @@ describe("Section Use Cases Integration Tests", () => {
           salonId: theSalonId,
           slug: "test-sections-website",
           title: "Test Sections Website",
-          favicon: Option.none(),
+          faviconMediaId: Option.none(),
         });
         websiteId = resultingId;
       }).pipe(
