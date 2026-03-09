@@ -129,7 +129,7 @@ export async function getWebsiteSettings(websiteId: string): Promise<
  * Server action to create a new website with custom settings
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
- * @param faviconMediaId - Optional URL to favicon image
+ * @param faviconMediaId - Optional media ID of the favicon image managed by the salon media system
  * @returns Result with the created website ID or error
  */
 export async function createWebsite(
