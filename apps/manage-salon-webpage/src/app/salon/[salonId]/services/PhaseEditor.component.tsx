@@ -104,7 +104,7 @@ export default function PhaseEditor({
         </button>
 
         {/* Phase Content */}
-        <div className="flex-1 min-w-0 bg-bg-0 border border-border rounded-lg p-md">
+        <div className="flex-1 min-w-0 bg-bg-1 border border-border rounded-lg p-md">
           <div className="flex items-center gap-sm mb-md">
             <span className="text-sm font-focus text-fg-muted flex-shrink-0">
               Phase {index + 1}
@@ -113,7 +113,7 @@ export default function PhaseEditor({
             <FlatIconButton
               icon={XIcon}
               onClick={onRemove}
-              elevation={0}
+              elevation={1}
               ariaLabel="Phase entfernen"
               isError
             />
@@ -167,7 +167,7 @@ export default function PhaseEditor({
                       icon={Plus}
                       text="Mitarbeiter"
                       onClick={handleToggleEmployee}
-                      elevation={0}
+                      elevation={1}
                     />
                   )}
                   {unassignedResources.map((resource) => (
@@ -176,7 +176,7 @@ export default function PhaseEditor({
                       icon={Plus}
                       text={resource.name}
                       onClick={() => handleAddResource(resource)}
-                      elevation={0}
+                      elevation={1}
                     />
                   ))}
                 </div>

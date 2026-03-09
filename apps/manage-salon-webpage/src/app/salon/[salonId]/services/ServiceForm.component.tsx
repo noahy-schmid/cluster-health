@@ -17,11 +17,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import type { ServiceDefinition, Resource } from "@/lib/types/service-types";
-import FormInput from "@/components/website/forms/FormInput";
-import FormTextarea from "@/components/website/forms/FormTextarea";
-import FormMoney from "@/components/website/forms/FormMoney";
+import FormActions from "@/components/website/forms/FormActions";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import PhaseEditor from "./PhaseEditor.component";
+import ServiceDetailsCard from "./ServiceDetailsCard.component";
 import { useServiceFormState } from "./ServiceForm.state";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -216,118 +215,87 @@ export default function ServiceForm({
   );
 
   return (
-    <div className="bg-bg-1 rounded-lg p-lg">
-      <div className="space-y-lg">
-        <FormInput
-          label="Name"
-          value={state.name}
-          onChange={setName}
-          onBlur={handleFormBlur}
-          placeholder="z.B. Haarschnitt Damen"
-          required
-        />
+    <div className="space-y-lg">
+      <ServiceDetailsCard
+        name={state.name}
+        description={state.description}
+        priceInCents={state.priceInCents}
+        onNameChange={setName}
+        onDescriptionChange={setDescription}
+        onPriceChange={setPrice}
+        onBlur={handleFormBlur}
+      />
 
-        <FormTextarea
-          label="Beschreibung"
-          value={state.description}
-          onChange={setDescription}
-          onBlur={handleFormBlur}
-          placeholder="Beschreibe die Dienstleistung..."
-          rows={3}
-        />
-
-        <FormMoney
-          label="Preis"
-          value={state.priceInCents}
-          onChange={setPrice}
-          onBlur={handleFormBlur}
-          min={0}
-          max={100000}
-        />
-
-        {/* Phases section */}
-        <div className="flex flex-col gap-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-focus text-fg-strong">Phasen</h3>
-              {state.phases.length > 0 && (
-                <p className="text-sm text-fg-muted">
-                  Gesamtdauer: {totalDuration} Minuten
-                </p>
-              )}
-            </div>
-            <FlatIconTextButton
-              icon={Plus}
-              text="Phase hinzufügen"
-              onClick={addPhase}
-              elevation={0}
-            />
-          </div>
-
-          {state.phases.length === 0 && (
-            <div className="text-center py-lg border border-dashed border-border rounded-lg">
-              <p className="text-fg-muted text-sm">
-                Noch keine Phasen vorhanden. Füge eine Phase hinzu um den Ablauf
-                der Dienstleistung zu definieren.
+      <div className="flex flex-col gap-md">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-focus text-fg-strong">
+              Phasen und Dauer
+            </h3>
+            {state.phases.length > 0 && (
+              <p className="text-sm text-fg-muted">
+                Gesamtdauer: {totalDuration} Minuten
               </p>
-            </div>
-          )}
-
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={phaseIds}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-md">
-                {state.phases.map((phase, index) => (
-                  <PhaseEditor
-                    key={phase.id}
-                    phase={phase}
-                    index={index}
-                    availableResources={availableResources}
-                    onUpdate={handlePhaseUpdate}
-                    onRemove={() => handleRemovePhase(phase.id)}
-                    onBlur={handlePhaseBlur}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+            )}
+          </div>
+          <FlatIconTextButton
+            icon={Plus}
+            text="Phase hinzufügen"
+            onClick={addPhase}
+            elevation={0}
+          />
         </div>
 
-        {state.error && (
-          <div className="p-md bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-700">{state.error}</p>
+        {state.phases.length === 0 && (
+          <div className="text-center py-lg border border-dashed border-border rounded-lg">
+            <p className="text-fg-muted text-sm">
+              Noch keine Phasen vorhanden. Füge eine Phase hinzu um den Ablauf
+              der Dienstleistung zu definieren.
+            </p>
           </div>
         )}
 
-        {!isEditMode && (
-          <div className="flex gap-md justify-end pt-lg">
-            {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
-                disabled={state.isSaving}
-              >
-                Abbrechen
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={state.isSaving || !isDirty}
-              className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
-            </button>
-          </div>
-        )}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={phaseIds}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-md">
+              {state.phases.map((phase, index) => (
+                <PhaseEditor
+                  key={phase.id}
+                  phase={phase}
+                  index={index}
+                  availableResources={availableResources}
+                  onUpdate={handlePhaseUpdate}
+                  onRemove={() => handleRemovePhase(phase.id)}
+                  onBlur={handlePhaseBlur}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       </div>
+
+      {state.error && (
+        <div className="p-md bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-700">{state.error}</p>
+        </div>
+      )}
+
+      {!isEditMode && (
+        <FormActions
+          onCancel={onCancel}
+          onSave={handleSave}
+          saveLabel={state.isSaving ? "Speichern..." : saveLabel || "Speichern"}
+          isSaving={state.isSaving}
+          isSaveDisabled={!isDirty}
+        />
+      )}
     </div>
   );
 }
