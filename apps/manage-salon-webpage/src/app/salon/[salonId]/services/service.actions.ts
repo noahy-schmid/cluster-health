@@ -33,7 +33,6 @@ import type {
   EmployeeServiceItem,
   CreateServicePhaseInput,
 } from "@repo/salon-domain";
-import type { ServiceType } from "@/lib/types/service-types";
 import { ServiceGuard } from "@/api/guards/service.guard";
 import { EmployeeGuard } from "@/api/guards/employee.guard";
 import { SalonAccessGuard } from "@/api/guards/salon.guard";
@@ -71,14 +70,14 @@ export async function fetchServiceDefinitions(
 
 /**
  * Fetches a single service definition by ID.
+ * Verifies service ownership via serviceId.
  */
 export async function fetchServiceDefinition(
-  salonId: string,
   serviceId: string,
 ): Promise<
   { success: true; data: ServiceDefinition } | { success: false; error: string }
 > {
-  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  const access = await ServiceGuard.canAccessService(serviceId);
   if (!access.success) {
     return { success: false, error: access.error };
   }
@@ -86,12 +85,6 @@ export async function fetchServiceDefinition(
   const program = Effect.gen(function* () {
     const useCase = yield* GetServiceDefinitionUseCase;
     const service = yield* useCase.execute({ serviceId });
-    if (service.salonId !== salonId) {
-      return {
-        success: false as const,
-        error: "Dienstleistung gehört nicht zu diesem Salon",
-      };
-    }
     return { success: true as const, data: service };
   }).pipe(
     Effect.catchTags({
@@ -110,43 +103,21 @@ export async function fetchServiceDefinition(
 }
 
 /**
- * Creates a new service definition.
- * Routes to the appropriate backend use case based on serviceType.
+ * Creates a simple service (single phase with employee + seat).
  */
-export async function createServiceDefinition(input: {
+export async function createSimpleService(input: {
   salonId: string;
   name: string;
   description: string;
   priceInCents: number;
-  serviceType: ServiceType;
-  phases: CreateServicePhaseInput[];
+  durationMinutes: number;
 }): Promise<
   { success: true; data: ServiceDefinition } | { success: false; error: string }
 > {
-  const guard = await ServiceGuard.canEditService(input.salonId);
+  const guard = await SalonAccessGuard.canAccessSalon(input.salonId);
   if (!guard.success) {
     return { success: false, error: guard.error };
   }
-
-  if (input.serviceType === "simple") {
-    return createSimpleService(input);
-  }
-  if (input.serviceType === "coloration") {
-    return createColorationService(input);
-  }
-  return createCustomService(input);
-}
-
-async function createSimpleService(input: {
-  salonId: string;
-  name: string;
-  description: string;
-  priceInCents: number;
-  phases: CreateServicePhaseInput[];
-}): Promise<
-  { success: true; data: ServiceDefinition } | { success: false; error: string }
-> {
-  const durationMinutes = input.phases[0]?.durationMinutes ?? 30;
 
   const program = Effect.gen(function* () {
     const useCase = yield* CreateSimpleServiceUseCase;
@@ -155,7 +126,7 @@ async function createSimpleService(input: {
       name: input.name,
       description: input.description,
       priceInCents: input.priceInCents,
-      durationMinutes,
+      durationMinutes: input.durationMinutes,
     });
     return { success: true as const, data: service };
   }).pipe(
@@ -181,18 +152,24 @@ async function createSimpleService(input: {
   return Effect.runPromise(program);
 }
 
-async function createColorationService(input: {
+/**
+ * Creates a coloration service (3 phases: application, processing, finishing).
+ */
+export async function createColorationService(input: {
   salonId: string;
   name: string;
   description: string;
   priceInCents: number;
-  phases: CreateServicePhaseInput[];
+  applicationDurationMinutes: number;
+  processingDurationMinutes: number;
+  finishingDurationMinutes: number;
 }): Promise<
   { success: true; data: ServiceDefinition } | { success: false; error: string }
 > {
-  const applicationDuration = input.phases[0]?.durationMinutes ?? 20;
-  const processingDuration = input.phases[1]?.durationMinutes ?? 30;
-  const finishingDuration = input.phases[2]?.durationMinutes ?? 15;
+  const guard = await SalonAccessGuard.canAccessSalon(input.salonId);
+  if (!guard.success) {
+    return { success: false, error: guard.error };
+  }
 
   const program = Effect.gen(function* () {
     const useCase = yield* CreateColorationServiceUseCase;
@@ -201,9 +178,9 @@ async function createColorationService(input: {
       name: input.name,
       description: input.description,
       priceInCents: input.priceInCents,
-      applicationDurationMinutes: applicationDuration,
-      processingDurationMinutes: processingDuration,
-      finishingDurationMinutes: finishingDuration,
+      applicationDurationMinutes: input.applicationDurationMinutes,
+      processingDurationMinutes: input.processingDurationMinutes,
+      finishingDurationMinutes: input.finishingDurationMinutes,
     });
     return { success: true as const, data: service };
   }).pipe(
@@ -229,7 +206,10 @@ async function createColorationService(input: {
   return Effect.runPromise(program);
 }
 
-async function createCustomService(input: {
+/**
+ * Creates a custom service with user-defined phases.
+ */
+export async function createCustomService(input: {
   salonId: string;
   name: string;
   description: string;
@@ -238,6 +218,11 @@ async function createCustomService(input: {
 }): Promise<
   { success: true; data: ServiceDefinition } | { success: false; error: string }
 > {
+  const guard = await SalonAccessGuard.canAccessSalon(input.salonId);
+  if (!guard.success) {
+    return { success: false, error: guard.error };
+  }
+
   const program = Effect.gen(function* () {
     const useCase = yield* CreateCustomServiceUseCase;
     const service = yield* useCase.execute({
@@ -273,9 +258,9 @@ async function createCustomService(input: {
 
 /**
  * Updates an existing service definition.
+ * Verifies service ownership via serviceId (not client-provided salonId).
  */
 export async function updateServiceDefinition(
-  salonId: string,
   serviceId: string,
   input: {
     name: string;
@@ -286,7 +271,7 @@ export async function updateServiceDefinition(
 ): Promise<
   { success: true; data: ServiceDefinition } | { success: false; error: string }
 > {
-  const guard = await ServiceGuard.canEditService(salonId);
+  const guard = await ServiceGuard.canEditService(serviceId);
   if (!guard.success) {
     return { success: false, error: guard.error };
   }
@@ -326,12 +311,12 @@ export async function updateServiceDefinition(
 
 /**
  * Deletes a service definition (soft delete).
+ * Verifies service ownership via serviceId.
  */
 export async function deleteServiceDefinition(
-  salonId: string,
   serviceId: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
-  const guard = await ServiceGuard.canEditService(salonId);
+  const guard = await ServiceGuard.canEditService(serviceId);
   if (!guard.success) {
     return { success: false, error: guard.error };
   }
@@ -385,15 +370,15 @@ export async function fetchSalonResources(
 
 /**
  * Fetches all stylists assigned to a specific service.
+ * Verifies service ownership via serviceId.
  */
 export async function fetchStylistsForService(
-  salonId: string,
   serviceId: string,
 ): Promise<
   | { success: true; data: ServiceEmployeeItem[] }
   | { success: false; error: string }
 > {
-  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  const access = await ServiceGuard.canAccessService(serviceId);
   if (!access.success) {
     return { success: false, error: access.error };
   }
@@ -414,17 +399,22 @@ export async function fetchStylistsForService(
 
 /**
  * Assigns a stylist to a service.
- * Requires canEditEmployee guard since we're modifying stylist assignments.
+ * Requires canEditEmployee guard.
+ * Verifies service ownership via serviceId.
  */
 export async function assignStylistToService(
-  salonId: string,
   stylistId: string,
   serviceId: string,
 ): Promise<
   | { success: true; data: ServiceEmployeeItem }
   | { success: false; error: string }
 > {
-  const guard = await EmployeeGuard.canEditEmployee(salonId);
+  const serviceAccess = await ServiceGuard.canAccessService(serviceId);
+  if (!serviceAccess.success) {
+    return { success: false, error: serviceAccess.error };
+  }
+
+  const guard = await EmployeeGuard.canEditEmployee(serviceAccess.salonId);
   if (!guard.success) {
     return { success: false, error: guard.error };
   }
@@ -476,14 +466,18 @@ export async function assignStylistToService(
 
 /**
  * Unassigns a stylist from a service.
- * Requires canEditEmployee guard.
+ * Verifies service ownership via serviceId.
  */
 export async function unassignStylistFromService(
-  salonId: string,
   stylistId: string,
   serviceId: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
-  const guard = await EmployeeGuard.canEditEmployee(salonId);
+  const serviceAccess = await ServiceGuard.canAccessService(serviceId);
+  if (!serviceAccess.success) {
+    return { success: false, error: serviceAccess.error };
+  }
+
+  const guard = await EmployeeGuard.canEditEmployee(serviceAccess.salonId);
   if (!guard.success) {
     return { success: false, error: guard.error };
   }

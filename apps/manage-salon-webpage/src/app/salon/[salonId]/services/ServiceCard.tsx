@@ -40,7 +40,7 @@ export default function ServiceCard({ service, salonId }: ServiceCardProps) {
       return;
     }
 
-    const result = await deleteServiceDefinition(salonId, service.id);
+    const result = await deleteServiceDefinition(service.id);
 
     if (!result.success) {
       showNotification(`Fehler beim Löschen: ${result.error}`, "error", "long");

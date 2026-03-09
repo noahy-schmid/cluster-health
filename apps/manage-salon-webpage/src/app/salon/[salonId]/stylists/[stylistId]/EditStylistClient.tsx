@@ -49,11 +49,7 @@ export default function EditStylistClient({
 
   const handleAssignService = useCallback(
     async (serviceId: string) => {
-      const result = await assignStylistToService(
-        salonId,
-        stylistId,
-        serviceId,
-      );
+      const result = await assignStylistToService(stylistId, serviceId);
       if (!result.success) {
         showNotification(result.error, "error", "long");
         return;
@@ -69,16 +65,12 @@ export default function EditStylistClient({
         },
       ]);
     },
-    [salonId, stylistId, showNotification, allServices],
+    [stylistId, showNotification, allServices],
   );
 
   const handleUnassignService = useCallback(
     async (serviceId: string) => {
-      const result = await unassignStylistFromService(
-        salonId,
-        stylistId,
-        serviceId,
-      );
+      const result = await unassignStylistFromService(stylistId, serviceId);
       if (!result.success) {
         showNotification(result.error, "error", "long");
         return;
@@ -87,7 +79,7 @@ export default function EditStylistClient({
         prev.filter((a) => a.serviceDefinitionId !== serviceId),
       );
     },
-    [salonId, stylistId, showNotification],
+    [stylistId, showNotification],
   );
 
   return (
