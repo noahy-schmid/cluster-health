@@ -13,15 +13,10 @@ export async function generateMetadata({
     await fetchWebsiteMetadataSettingsBySalonSlug(salonSlug);
 
   if (metadataResult.success && metadataResult.settings) {
-    const { title, favicon } = metadataResult.settings;
+    const { title } = metadataResult.settings;
 
     return {
       title,
-      ...(favicon && {
-        icons: {
-          icon: favicon,
-        },
-      }),
     };
   }
 
