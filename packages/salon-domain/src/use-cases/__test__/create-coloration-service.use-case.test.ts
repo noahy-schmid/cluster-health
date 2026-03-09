@@ -53,18 +53,15 @@ describe("CreateColorationServiceUseCase", () => {
 
   it("should fail with NotFoundError when salon does not exist", async () => {
     const program = Effect.gen(function* () {
-      const useCase = yield* CreateColorationServiceUseCase;
-      const result = yield* useCase
-        .execute({
-          salonId: crypto.randomUUID(),
-          name: "No Salon Service",
-          description: "Missing salon",
-          priceInCents: 10000,
-          applicationDurationMinutes: 20,
-          processingDurationMinutes: 30,
-          finishingDurationMinutes: 15,
-        })
-        .pipe(Effect.either);
+      const result = yield* CreateColorationServiceUseCase.execute({
+        salonId: crypto.randomUUID(),
+        name: "No Salon Service",
+        description: "Missing salon",
+        priceInCents: 10000,
+        applicationDurationMinutes: 20,
+        processingDurationMinutes: 30,
+        finishingDurationMinutes: 15,
+      }).pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
       if (Either.isLeft(result)) {

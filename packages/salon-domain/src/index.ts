@@ -26,6 +26,8 @@ export * from "./types/media-errors";
 export * from "./services/media/media.interface";
 export * from "./layers";
 
+export { type ServiceType } from "./application/service/service.aggregate";
+
 // Shared domain errors
 export {
   InternalError,
@@ -42,7 +44,7 @@ export type { Resource } from "./application/resource/resource.aggregate";
 export {
   SEAT_SLUG,
   CLIMAZON_SLUG,
-} from "./application/resource/resource.aggregate";
+} from "./application/resource/resource.constants";
 
 // Resource use cases
 export {

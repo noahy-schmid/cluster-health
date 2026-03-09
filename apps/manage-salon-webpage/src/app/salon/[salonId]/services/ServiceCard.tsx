@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Clock } from "lucide-react";
 import { useState } from "react";
 import type { ServiceDefinition } from "@/lib/types/service-types";
-import type { ServiceType } from "@/lib/types/service-types";
 import { deleteServiceDefinition } from "./service.actions";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import { useNotifications } from "@/components/notifications/useNotifications";
+import { ServiceType } from "@repo/salon-domain";
 
 const serviceTypeLabels: Record<ServiceType, string> = {
   simple: "Einfach",

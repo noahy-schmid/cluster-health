@@ -10,12 +10,6 @@ export type {
   ServiceEmployeeItem,
 } from "@repo/salon-domain";
 
-export { SEAT_SLUG, CLIMAZON_SLUG } from "@repo/salon-domain";
-
-/**
- * The type of a service definition.
- * - simple: Single phase requiring employee + chair
- * - coloration: Three hardcoded phases (Coloring, Heating, Finishing)
- * - custom: Fully customizable phases (existing behavior)
- */
-export type ServiceType = "simple" | "coloration" | "custom";
+// Keep resource slugs local to avoid a runtime dependency from client code to the backend package.
+export const SEAT_SLUG = "seat";
+export const CLIMAZON_SLUG = "climazon";

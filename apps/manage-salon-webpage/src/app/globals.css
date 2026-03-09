@@ -38,6 +38,7 @@
   --color-bg-2: oklch(0.98 0.0029 72.23);
 
   /* Font Families */
+  --font-inter: "Inter", system-ui, -apple-system, sans-serif;
   --font-brand:
     "Libre Baskerville", "Libre Baskerville Fallback", Georgia, serif;
   --font-normal: var(--font-inter), system-ui, -apple-system, sans-serif;
