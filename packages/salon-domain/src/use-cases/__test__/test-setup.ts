@@ -208,7 +208,7 @@ export async function setupTestContext(): Promise<TestContext> {
             name: "Test Stylist",
             subtitle: "Senior Stylist",
             description: "An experienced stylist",
-            profileImage: "https://example.com/image.jpg",
+            profileImageMediaId: null,
           })
           .returning({ id: stylistsTable.id }),
       );

@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Option } from "effect";
 import { eq } from "drizzle-orm";
 import { db } from "../database";
 import { stylistsTable } from "../schema";
@@ -81,7 +81,9 @@ const genStylistRepositoryLive: Effect.Effect<StylistRepository> = Effect.gen(
                 name: input.name,
                 subtitle: input.subtitle,
                 description: input.description,
-                profileImage: input.profileImage,
+                profileImageMediaId: Option.getOrNull(
+                  input.profileImageMediaId,
+                ),
               })
               .returning(),
           catch: (error) =>
@@ -100,7 +102,10 @@ const genStylistRepositoryLive: Effect.Effect<StylistRepository> = Effect.gen(
         }
 
         yield* Effect.log("Stylist created", created.id);
-        return created;
+        return {
+          ...created,
+          profileImageMediaId: Option.fromNullable(created.profileImageMediaId),
+        };
       });
 
     const fetchStylistsBySalonId: StylistRepository["fetchStylistsBySalonId"] =
@@ -123,7 +128,10 @@ const genStylistRepositoryLive: Effect.Effect<StylistRepository> = Effect.gen(
             `Fetched ${stylists.length} stylists for salon`,
             salonId,
           );
-          return stylists;
+          return stylists.map((s) => ({
+            ...s,
+            profileImageMediaId: Option.fromNullable(s.profileImageMediaId),
+          }));
         });
 
     const fetchStylistById: StylistRepository["fetchStylistById"] = (id) =>
@@ -148,7 +156,10 @@ const genStylistRepositoryLive: Effect.Effect<StylistRepository> = Effect.gen(
         }
 
         yield* Effect.log("Fetched stylist", id);
-        return stylist;
+        return {
+          ...stylist,
+          profileImageMediaId: Option.fromNullable(stylist.profileImageMediaId),
+        };
       });
 
     const updateStylist: StylistRepository["updateStylist"] = (id, updates) =>
@@ -161,7 +172,9 @@ const genStylistRepositoryLive: Effect.Effect<StylistRepository> = Effect.gen(
                 name: updates.name,
                 subtitle: updates.subtitle,
                 description: updates.description,
-                profileImage: updates.profileImage,
+                profileImageMediaId: Option.getOrNull(
+                  updates.profileImageMediaId,
+                ),
                 updatedAt: new Date(),
               })
               .where(eq(stylistsTable.id, id))
@@ -180,7 +193,10 @@ const genStylistRepositoryLive: Effect.Effect<StylistRepository> = Effect.gen(
         }
 
         yield* Effect.log("Stylist updated", id);
-        return updated;
+        return {
+          ...updated,
+          profileImageMediaId: Option.fromNullable(updated.profileImageMediaId),
+        };
       });
 
     const deleteStylist: StylistRepository["deleteStylist"] = (id) =>

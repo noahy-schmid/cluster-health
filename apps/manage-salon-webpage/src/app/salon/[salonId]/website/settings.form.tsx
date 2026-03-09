@@ -3,14 +3,16 @@
 import { useState } from "react";
 import FormInput from "../../../../components/website/forms/FormInput";
 import FormActions from "../../../../components/website/forms/FormActions";
+import MediaSelector from "@/components/media/media-selector";
 
 export interface WebsiteSettings {
   slug: string;
   title: string;
-  faviconUrl: string;
+  faviconMediaId: string;
 }
 
 interface WebsiteSettingsFormProps {
+  salonId: string;
   initialValues: WebsiteSettings;
   onSubmit: (settings: WebsiteSettings) => void;
   onCancel: () => void;
@@ -20,6 +22,7 @@ interface WebsiteSettingsFormProps {
 }
 
 export default function WebsiteSettingsForm({
+  salonId,
   initialValues,
   onSubmit,
   onCancel,
@@ -29,13 +32,15 @@ export default function WebsiteSettingsForm({
 }: WebsiteSettingsFormProps) {
   const [slug, setSlug] = useState(initialValues.slug);
   const [title, setTitle] = useState(initialValues.title);
-  const [faviconUrl, setFaviconUrl] = useState(initialValues.faviconUrl);
+  const [faviconMediaId, setFaviconMediaId] = useState(
+    initialValues.faviconMediaId,
+  );
 
   const handleSave = () => {
     if (!slug.trim() || !title.trim()) {
       return;
     }
-    onSubmit({ slug, title, faviconUrl });
+    onSubmit({ slug, title, faviconMediaId });
   };
 
   return (
@@ -58,13 +63,12 @@ export default function WebsiteSettingsForm({
         helperText="Der Titel, der im Browser-Tab und in Suchergebnissen angezeigt wird"
       />
 
-      <FormInput
-        label="Favicon URL"
-        value={faviconUrl}
-        onChange={setFaviconUrl}
-        placeholder="https://example.com/favicon.ico"
-        type="url"
-        helperText="Die URL zu Ihrem Favicon-Bild (optional)"
+      <MediaSelector
+        salonId={salonId}
+        label="Favicon"
+        value={faviconMediaId || undefined}
+        onChange={setFaviconMediaId}
+        helperText="Das Favicon wird im Browser-Tab angezeigt (optional)"
       />
 
       {error && (

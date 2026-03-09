@@ -1,8 +1,8 @@
-import { Stylist } from "@repo/salon-domain";
+import { StylistDto } from "./stylist.dto";
 import StylistCard from "./StylistCard";
 
 interface StylistListProps {
-  stylists: Stylist[];
+  stylists: StylistDto[];
   salonId: string;
 }
 
