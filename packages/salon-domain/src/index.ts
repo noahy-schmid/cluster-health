@@ -26,6 +26,8 @@ export * from "./types/media-errors";
 export * from "./services/media/media.interface";
 export * from "./layers";
 
+export { type ServiceType } from "./application/service/service.aggregate";
+
 // Shared domain errors
 export {
   InternalError,

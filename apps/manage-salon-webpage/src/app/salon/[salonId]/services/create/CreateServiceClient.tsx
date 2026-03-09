@@ -7,11 +7,12 @@ import ServiceForm from "../ServiceForm.component";
 import SimpleServiceForm from "../SimpleServiceForm.component";
 import ColorationServiceForm from "../ColorationServiceForm.component";
 import { createServiceDefinition } from "../service.actions";
-import type { Resource, ServiceType } from "@/lib/types/service-types";
+import type { Resource } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import TypeSelectionPanel, {
   type TypeSelectionOption,
 } from "@/components/TypeSelectionPanel";
+import { ServiceType } from "@repo/salon-domain";
 
 const serviceTypeOptions: TypeSelectionOption<ServiceType>[] = [
   {
