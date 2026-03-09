@@ -10,11 +10,11 @@ import {
 } from "../application/service/errors";
 import { ResourcePort } from "../ports/resource.port";
 import { SalonPort } from "../ports/salon.port";
-import { SEAT_SLUG } from "../application/resource/resource.aggregate";
 import {
   ResourceMissingError,
   collapseErrorsToInternalError,
 } from "../application/errors";
+import { SEAT_SLUG } from "../application/resource/resource.constants";
 
 // --- Command DTO ---
 

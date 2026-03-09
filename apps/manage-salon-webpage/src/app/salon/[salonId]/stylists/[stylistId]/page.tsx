@@ -7,8 +7,6 @@ import {
 } from "@/app/salon/[salonId]/services/service.actions";
 import EditStylistClient from "./EditStylistClient";
 
-export const dynamic = "force-dynamic";
-
 interface EditStylistPageProps {
   params: Promise<{ salonId: string; stylistId: string }>;
 }

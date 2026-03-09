@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { getWebsiteIdForSalon } from "@/api/website-actions";
 
-export const dynamic = "force-dynamic";
-
 export default async function SalonWebsiteIndexPage({
   params,
 }: {

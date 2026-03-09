@@ -9,8 +9,6 @@ import StylistForm, {
 import BackButton from "@/components/BackButton";
 import { createStylist } from "@/app/salon/[salonId]/stylists/stylist.actions";
 
-export const dynamic = "force-dynamic";
-
 interface CreateStylistPageProps {
   params: Promise<{ salonId: string }>;
 }

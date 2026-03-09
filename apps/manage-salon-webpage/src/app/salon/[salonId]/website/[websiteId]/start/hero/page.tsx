@@ -2,8 +2,6 @@ import { getHeroSettings } from "@/api/website-actions";
 import { redirect } from "next/navigation";
 import HeroEditClient from "./HeroEditClient";
 
-export const dynamic = "force-dynamic";
-
 export default async function HeroEditPage({
   params,
 }: {

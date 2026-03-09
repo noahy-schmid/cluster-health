@@ -8,8 +8,6 @@ import {
 import { fetchStylists } from "@/app/salon/[salonId]/stylists/stylist.actions";
 import EditServiceClient from "./EditServiceClient";
 
-export const dynamic = "force-dynamic";
-
 interface EditServicePageProps {
   params: Promise<{ salonId: string; serviceId: string }>;
 }

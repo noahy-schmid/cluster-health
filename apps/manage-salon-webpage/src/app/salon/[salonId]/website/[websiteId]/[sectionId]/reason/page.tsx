@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import ReasonForm from "./reason.form";
 
-export const dynamic = "force-dynamic";
-
 export default async function ReasonEditPage({
   params,
 }: {

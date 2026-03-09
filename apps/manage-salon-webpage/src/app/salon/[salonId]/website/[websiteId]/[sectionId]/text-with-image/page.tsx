@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import TextWithImageForm from "./text-with-image.form";
 
-export const dynamic = "force-dynamic";
-
 export default async function TextWithImageEditPage({
   params,
 }: {

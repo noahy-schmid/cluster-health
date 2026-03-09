@@ -3,8 +3,6 @@ import BackButton from "@/components/BackButton";
 import { fetchSalonResources } from "../service.actions";
 import CreateServiceClient from "./CreateServiceClient";
 
-export const dynamic = "force-dynamic";
-
 interface CreateServicePageProps {
   params: Promise<{ salonId: string }>;
 }
