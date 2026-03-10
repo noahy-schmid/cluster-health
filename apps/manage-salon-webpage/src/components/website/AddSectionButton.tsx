@@ -10,6 +10,7 @@ export function AddSectionButton({ onClick }: AddSectionButtonProps) {
   return (
     <div className="flex justify-center py-sm">
       <button
+        data-testid="add-section-button"
         onClick={onClick}
         className="flex items-center gap-sm p-sm bg-transparent hover:bg-primary/10 border border-dashed border-fg-normal/30 hover:border-primary rounded transition-all group cursor-pointer"
         aria-label="Abschnitt hinzufügen"
