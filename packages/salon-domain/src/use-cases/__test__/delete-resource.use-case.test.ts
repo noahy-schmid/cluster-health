@@ -104,12 +104,7 @@ describe("DeleteResourceUseCase", () => {
 
   it("should ignore resource references in other salons", async () => {
     const program = Effect.gen(function* () {
-      const createSalonUC = yield* CreateSalonUseCase;
-      const createResourceUC = yield* CreateResourceUseCase;
-      const createServiceUC = yield* CreateCustomServiceUseCase;
-      const deleteResourceUC = yield* DeleteResourceUseCase;
-
-      const otherSalon = yield* createSalonUC.execute({
+      const otherSalon = yield* CreateSalonUseCase.execute({
         name: "Other Salon",
         street: "Nebenstraße 3",
         postalCode: "80331",
@@ -117,14 +112,14 @@ describe("DeleteResourceUseCase", () => {
         phone: "+49 89 987654",
       });
 
-      yield* createResourceUC.execute({
+      yield* CreateResourceUseCase.execute({
         salonId: otherSalon.id,
         slug: "shared-resource",
         name: "Shared Resource",
         amount: 1,
       });
 
-      yield* createServiceUC.execute({
+      yield* CreateCustomServiceUseCase.execute({
         salonId: otherSalon.id,
         name: "Other Salon Service",
         description: "Test",
@@ -139,16 +134,17 @@ describe("DeleteResourceUseCase", () => {
         ],
       });
 
-      const deletable = yield* createResourceUC.execute({
+      const deletable = yield* CreateResourceUseCase.execute({
         salonId: ctx.salonId,
         slug: "shared-resource",
         name: "Shared Resource",
         amount: 1,
       });
 
-      const result = yield* deleteResourceUC
-        .execute({ salonId: ctx.salonId, slug: deletable.slug })
-        .pipe(Effect.either);
+      const result = yield* DeleteResourceUseCase.execute({
+        salonId: ctx.salonId,
+        slug: deletable.slug,
+      }).pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(false);
     });
@@ -158,6 +154,60 @@ describe("DeleteResourceUseCase", () => {
         Effect.provide(ctx.salonUseCaseLayer),
         Effect.provide(ctx.resourceUseCaseLayer),
         Effect.provide(ctx.serviceUseCaseLayer),
+      ),
+    );
+  });
+
+  it("should delete a resource in one salon while keeping the same slug in another salon", async () => {
+    const program = Effect.gen(function* () {
+      const otherSalon = yield* CreateSalonUseCase.execute({
+        name: "Second Other Salon",
+        street: "Parallelstraße 7",
+        postalCode: "80333",
+        city: "München",
+        phone: "+49 89 111222",
+      });
+
+      const slug = "cross-salon-shared-resource";
+
+      yield* CreateResourceUseCase.execute({
+        salonId: ctx.salonId,
+        slug,
+        name: "Shared Slug Resource",
+        amount: 1,
+      });
+
+      yield* CreateResourceUseCase.execute({
+        salonId: otherSalon.id,
+        slug,
+        name: "Shared Slug Resource",
+        amount: 2,
+      });
+
+      yield* DeleteResourceUseCase.execute({
+        salonId: ctx.salonId,
+        slug,
+      });
+
+      const firstSalonResources = yield* ListResourcesUseCase.execute({
+        salonId: ctx.salonId,
+      });
+      const secondSalonResources = yield* ListResourcesUseCase.execute({
+        salonId: otherSalon.id,
+      });
+
+      expect(
+        firstSalonResources.some((resource) => resource.slug === slug),
+      ).toBe(false);
+      expect(
+        secondSalonResources.some((resource) => resource.slug === slug),
+      ).toBe(true);
+    });
+
+    await Effect.runPromise(
+      program.pipe(
+        Effect.provide(ctx.salonUseCaseLayer),
+        Effect.provide(ctx.resourceUseCaseLayer),
       ),
     );
   });
