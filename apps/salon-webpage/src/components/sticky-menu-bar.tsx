@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import MenuChip from "@/components/menu-chip";
-import styles from "../styles/menu.module.css";
 
 export interface MenuItem {
   id: string;
@@ -13,11 +12,15 @@ export interface MenuItem {
 interface StickyMenuBarProps {
   menuItems: MenuItem[];
   logoUrl: string;
+  menuTitle?: string | null;
+  logoPosition?: "left" | "center";
 }
 
 export default function StickyMenuBar({
   menuItems,
   logoUrl,
+  menuTitle,
+  logoPosition = "left",
 }: StickyMenuBarProps) {
   const [activeSection, setActiveSection] = useState(
     menuItems.length > 0 ? menuItems[0].id : "",
@@ -129,6 +132,9 @@ export default function StickyMenuBar({
     };
   }, []);
 
+  const trimmedMenuTitle = menuTitle?.trim();
+  const showMenuTitle = logoPosition === "left" && Boolean(trimmedMenuTitle);
+
   return (
     <>
       <div
@@ -139,11 +145,28 @@ export default function StickyMenuBar({
             : "bg-salon-bg-base h-[100px] transition-colors"
         }`}
       >
-        <div
-          className={`${styles.stickyLogo} ${showStickyLogo ? styles.visible : ""}`}
-        >
-          <img src={logoUrl} alt="logo" width={60} height={60} />
-        </div>
+        {showStickyLogo && (
+          <div
+            className={`absolute top-4 flex items-center gap-3 text-salon-fg-strong ${
+              logoPosition === "center"
+                ? "left-1/2 -translate-x-1/2"
+                : "left-4 max-w-[calc(100%-2rem)]"
+            }`}
+          >
+            <img
+              src={logoUrl}
+              alt="logo"
+              width={60}
+              height={60}
+              className="shrink-0"
+            />
+            {showMenuTitle && (
+              <span className="text-lg font-semibold truncate">
+                {trimmedMenuTitle}
+              </span>
+            )}
+          </div>
+        )}
         <div
           className={`scroll-smooth overflow-x-auto whitespace-nowrap flex gap-2 hide-scrollbar p-4 justify-start ${
             showStickyLogo ? "pt-[92px]" : ""

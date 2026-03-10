@@ -1,6 +1,7 @@
 import { Effect, Layer, Option, Schema } from "effect";
 import type {
   CreateWebsiteInput,
+  MenuLogoPosition,
   WebsiteId,
   WebsiteSettings,
 } from "../../types/website";
@@ -26,12 +27,17 @@ import {
 /**
  * Maps database website record to WebsiteSettings domain model.
  */
+const toMenuLogoPosition = (position: string): MenuLogoPosition =>
+  position === "center" ? "center" : "left";
+
 const mapToWebsiteSettings = (
   dbWebsite: SelectDatabaseWebsite,
 ): WebsiteSettings => ({
   title: dbWebsite.title,
   slug: dbWebsite.slug,
   favicon: Option.fromNullable(dbWebsite.favicon),
+  menuBarTitle: Option.fromNullable(dbWebsite.menuBarTitle),
+  menuLogoPosition: toMenuLogoPosition(dbWebsite.menuLogoPosition),
 });
 
 /**
@@ -84,6 +90,8 @@ const make = Effect.gen(function* () {
         slug: validatedInput.slug,
         title: validatedInput.title,
         favicon: Option.getOrNull(validatedInput.favicon),
+        menuBarTitle: Option.getOrNull(validatedInput.menuBarTitle),
+        menuLogoPosition: validatedInput.menuLogoPosition,
         // Default values for required fields - these should come from business logic or defaults
         heroImage: "",
         logo: "",
@@ -188,6 +196,14 @@ const make = Effect.gen(function* () {
       }
       if (validatedUpdates.favicon !== undefined) {
         updateData.favicon = Option.getOrNull(validatedUpdates.favicon);
+      }
+      if (validatedUpdates.menuBarTitle !== undefined) {
+        updateData.menuBarTitle = Option.getOrNull(
+          validatedUpdates.menuBarTitle,
+        );
+      }
+      if (validatedUpdates.menuLogoPosition !== undefined) {
+        updateData.menuLogoPosition = validatedUpdates.menuLogoPosition;
       }
 
       const updatedWebsiteOption = yield* websiteRepo

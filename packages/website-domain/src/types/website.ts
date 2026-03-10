@@ -1,5 +1,9 @@
 import { Schema } from "effect";
 
+export const MenuLogoPositionSchema = Schema.Literal("left", "center");
+
+export type MenuLogoPosition = typeof MenuLogoPositionSchema.Type;
+
 /**
  * Full website schema with all fields and validation.
  */
@@ -19,6 +23,15 @@ const WebsiteSchema = Schema.Struct({
   favicon: Schema.OptionFromSelf(
     Schema.String.pipe(Schema.compose(Schema.Trim)),
   ),
+  menuBarTitle: Schema.OptionFromSelf(
+    Schema.String.pipe(
+      Schema.compose(Schema.Trim),
+      Schema.nonEmptyString({
+        message: () => "Menu bar title cannot be empty",
+      }),
+    ),
+  ),
+  menuLogoPosition: MenuLogoPositionSchema,
   subtitle: Schema.String.pipe(Schema.compose(Schema.Trim)),
   heroImage: Schema.String.pipe(Schema.compose(Schema.Trim)),
   heroTitle: Schema.String.pipe(Schema.compose(Schema.Trim)),
@@ -35,7 +48,7 @@ const WebsiteSchema = Schema.Struct({
 });
 
 export const WebsiteSettingsSchema = WebsiteSchema.pipe(
-  Schema.pick("title", "slug", "favicon"),
+  Schema.pick("title", "slug", "favicon", "menuBarTitle", "menuLogoPosition"),
 );
 
 export type WebsiteSettings = typeof WebsiteSettingsSchema.Type;

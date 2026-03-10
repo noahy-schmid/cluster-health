@@ -23,6 +23,8 @@ export default async function WebsiteSettingsPage({
         slug: settingsResult.slug,
         title: settingsResult.title,
         faviconUrl: settingsResult.faviconUrl,
+        menuBarTitle: settingsResult.menuBarTitle,
+        menuLogoPosition: settingsResult.menuLogoPosition,
       }}
     />
   );

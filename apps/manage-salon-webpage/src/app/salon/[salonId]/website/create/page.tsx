@@ -31,6 +31,8 @@ export default async function WebsiteCreatePage({
             slug: initialValuesResult.slug,
             title: initialValuesResult.title,
             faviconUrl: initialValuesResult.faviconUrl,
+            menuBarTitle: initialValuesResult.menuBarTitle,
+            menuLogoPosition: initialValuesResult.menuLogoPosition,
           }}
         />
       </div>

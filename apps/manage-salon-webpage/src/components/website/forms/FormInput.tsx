@@ -9,6 +9,7 @@ interface FormInputProps {
   type?: "text" | "url";
   required?: boolean;
   helperText?: string;
+  disabled?: boolean;
 }
 
 export default function FormInput({
@@ -20,6 +21,7 @@ export default function FormInput({
   required = false,
   helperText,
   onBlur,
+  disabled = false,
 }: FormInputProps) {
   return (
     <div className="flex flex-col gap-sm">
@@ -34,7 +36,8 @@ export default function FormInput({
         onBlur={(e) => onBlur?.(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal"
+        disabled={disabled}
+        className="px-md py-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-200 bg-bg-0 text-fg-normal disabled:opacity-60 disabled:cursor-not-allowed"
       />
       {helperText && <p className="text-sm text-fg-muted">{helperText}</p>}
     </div>

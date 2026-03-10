@@ -33,6 +33,8 @@ export async function getWebsiteInitialValues(): Promise<
       slug: string;
       title: string;
       faviconUrl: string;
+      menuBarTitle: string;
+      menuLogoPosition: "left" | "center";
     }
   | {
       success: false;
@@ -63,6 +65,8 @@ export async function getWebsiteInitialValues(): Promise<
     slug: slugify(salon.name),
     title: `${salon.name} - Dein Salon`,
     faviconUrl: "",
+    menuBarTitle: salon.name,
+    menuLogoPosition: "left" as const,
   };
 }
 
@@ -77,6 +81,8 @@ export async function getWebsiteSettings(websiteId: string): Promise<
       slug: string;
       title: string;
       faviconUrl: string;
+      menuBarTitle: string;
+      menuLogoPosition: "left" | "center";
     }
   | {
       success: false;
@@ -101,6 +107,8 @@ export async function getWebsiteSettings(websiteId: string): Promise<
         slug: settings.slug,
         title: settings.title,
         faviconUrl: Option.getOrElse(settings.favicon, () => ""),
+        menuBarTitle: Option.getOrElse(settings.menuBarTitle, () => ""),
+        menuLogoPosition: settings.menuLogoPosition,
       };
     }).pipe(
       Effect.catchTags({
@@ -130,12 +138,16 @@ export async function getWebsiteSettings(websiteId: string): Promise<
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
  * @param faviconUrl - Optional URL to favicon image
+ * @param menuBarTitle - Optional title rendered next to the sticky menu logo
+ * @param menuLogoPosition - Position of the sticky menu logo
  * @returns Result with the created website ID or error
  */
 export async function createWebsite(
   slug: string,
   title: string,
   faviconUrl: string,
+  menuBarTitle: string,
+  menuLogoPosition: "left" | "center",
 ): Promise<
   | {
       success: true;
@@ -165,6 +177,10 @@ export async function createWebsite(
           slug,
           title,
           favicon: faviconUrl ? Option.some(faviconUrl) : Option.none<string>(),
+          menuBarTitle: menuBarTitle.trim()
+            ? Option.some(menuBarTitle.trim())
+            : Option.none<string>(),
+          menuLogoPosition,
         })
         .pipe(
           Effect.map((websiteId) => ({ websiteId, success: true as const })),
@@ -194,6 +210,8 @@ export async function createWebsite(
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
  * @param faviconUrl - Optional URL to favicon image
+ * @param menuBarTitle - Optional title rendered next to the sticky menu logo
+ * @param menuLogoPosition - Position of the sticky menu logo
  * @returns Result indicating success or error
  */
 export async function updateWebsiteSettings(
@@ -201,6 +219,8 @@ export async function updateWebsiteSettings(
   slug: string,
   title: string,
   faviconUrl: string,
+  menuBarTitle: string,
+  menuLogoPosition: "left" | "center",
 ): Promise<
   | {
       success: true;
@@ -223,6 +243,10 @@ export async function updateWebsiteSettings(
         slug,
         title,
         favicon: faviconUrl ? Option.some(faviconUrl) : Option.none(),
+        menuBarTitle: menuBarTitle.trim()
+          ? Option.some(menuBarTitle.trim())
+          : Option.none(),
+        menuLogoPosition,
       });
       return { success: true as const };
     }).pipe(

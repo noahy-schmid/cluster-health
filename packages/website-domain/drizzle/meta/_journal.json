@@ -64,6 +64,13 @@
       "when": 1772230470476,
       "tag": "0008_closed_franklin_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773100830242,
+      "tag": "0009_typical_blackheart",
+      "breakpoints": true
     }
   ]
 }

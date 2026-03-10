@@ -15,6 +15,8 @@ export const fetchWebsiteMetadataSettingsBySalonSlug = unstable_cache(
     settings?: {
       title: string;
       favicon: string | null;
+      menuBarTitle: string | null;
+      menuLogoPosition: "left" | "center";
     };
     error?: string;
   }> => {
@@ -26,6 +28,8 @@ export const fetchWebsiteMetadataSettingsBySalonSlug = unstable_cache(
           settings: {
             title: settings.title,
             favicon: Option.getOrNull(settings.favicon),
+            menuBarTitle: Option.getOrNull(settings.menuBarTitle),
+            menuLogoPosition: settings.menuLogoPosition,
           },
         })),
         Effect.catchTag("WebsiteNotFoundError", () =>
