@@ -1,61 +1,68 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
-import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
+import {
+  createSalon,
+  createServiceDefinition,
+  createStylist,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { AssignEmployeeToServiceUseCase } from "../assign-employee-to-service.use-case";
 import { UnassignEmployeeFromServiceUseCase } from "../unassign-employee-from-service.use-case";
 import { ListServiceEmployeesUseCase } from "../list-service-employees.use-case";
 import { ListEmployeeServicesUseCase } from "../list-employee-services.use-case";
 
 describe("Employee-Service Assignment Use Cases", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let stylistId: string;
   let serviceId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
 
-    // Create a service for these tests
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const createService = yield* CreateCustomServiceUseCase;
-        const service = yield* createService.execute({
-          salonId: ctx.salonId,
-          name: "Assignment Test Service",
-          description: "For assignment tests",
-          priceInCents: 8000,
-          phases: [
-            {
-              name: "Apply Color",
-              durationMinutes: 30,
-              employeeRequired: true,
-              requiredResourceSlugs: [],
-            },
-          ],
-        });
-        serviceId = service.id;
-      }).pipe(Effect.provide(ctx.serviceUseCaseLayer)),
-    );
+    const salon = await createSalon(env);
+    const stylist = await createStylist(env, {
+      salonId: salon.id,
+      name: "Test Stylist",
+    });
+    const service = await createServiceDefinition(env, {
+      salonId: salon.id,
+      name: "Assignment Test Service",
+      description: "For assignment tests",
+      priceInCents: 8000,
+      phases: [
+        {
+          name: "Apply Color",
+          durationMinutes: 30,
+          employeeRequired: true,
+          requiredResourceSlugs: [],
+        },
+      ],
+    });
+
+    stylistId = stylist.id;
+    serviceId = service.id;
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should assign an employee to a service", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* AssignEmployeeToServiceUseCase;
       const assignment = yield* useCase.execute({
-        stylistId: ctx.stylistId,
+        stylistId,
         serviceId,
       });
 
-      expect(assignment.stylistId).toBe(ctx.stylistId);
+      expect(assignment.stylistId).toBe(stylistId);
       expect(assignment.serviceDefinitionId).toBe(serviceId);
       expect(assignment.createdAt).toBeDefined();
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.assignmentUseCaseLayer)),
+      program.pipe(Effect.provide(env.assignmentUseCaseLayer)),
     );
   });
 
@@ -63,7 +70,7 @@ describe("Employee-Service Assignment Use Cases", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* ListEmployeeServicesUseCase;
       const services = yield* useCase.execute({
-        stylistId: ctx.stylistId,
+        stylistId,
       });
 
       expect(services.length).toBeGreaterThanOrEqual(1);
@@ -76,7 +83,7 @@ describe("Employee-Service Assignment Use Cases", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.assignmentUseCaseLayer)),
+      program.pipe(Effect.provide(env.assignmentUseCaseLayer)),
     );
   });
 
@@ -86,14 +93,14 @@ describe("Employee-Service Assignment Use Cases", () => {
       const employees = yield* useCase.execute({ serviceId });
 
       expect(employees.length).toBeGreaterThanOrEqual(1);
-      expect(employees.some((e) => e.stylistId === ctx.stylistId)).toBe(true);
+      expect(employees.some((e) => e.stylistId === stylistId)).toBe(true);
       // Verify enriched data includes stylist name
-      const matched = employees.find((e) => e.stylistId === ctx.stylistId);
+      const matched = employees.find((e) => e.stylistId === stylistId);
       expect(matched?.stylistName).toBe("Test Stylist");
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.assignmentUseCaseLayer)),
+      program.pipe(Effect.provide(env.assignmentUseCaseLayer)),
     );
   });
 
@@ -101,7 +108,7 @@ describe("Employee-Service Assignment Use Cases", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* AssignEmployeeToServiceUseCase;
       const result = yield* useCase
-        .execute({ stylistId: ctx.stylistId, serviceId })
+        .execute({ stylistId, serviceId })
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -111,7 +118,7 @@ describe("Employee-Service Assignment Use Cases", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.assignmentUseCaseLayer)),
+      program.pipe(Effect.provide(env.assignmentUseCaseLayer)),
     );
   });
 
@@ -129,7 +136,7 @@ describe("Employee-Service Assignment Use Cases", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.assignmentUseCaseLayer)),
+      program.pipe(Effect.provide(env.assignmentUseCaseLayer)),
     );
   });
 
@@ -138,7 +145,7 @@ describe("Employee-Service Assignment Use Cases", () => {
       const useCase = yield* AssignEmployeeToServiceUseCase;
       const result = yield* useCase
         .execute({
-          stylistId: ctx.stylistId,
+          stylistId,
           serviceId: crypto.randomUUID(),
         })
         .pipe(Effect.either);
@@ -150,7 +157,7 @@ describe("Employee-Service Assignment Use Cases", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.assignmentUseCaseLayer)),
+      program.pipe(Effect.provide(env.assignmentUseCaseLayer)),
     );
   });
 
@@ -158,17 +165,17 @@ describe("Employee-Service Assignment Use Cases", () => {
     const program = Effect.gen(function* () {
       const unassignUC = yield* UnassignEmployeeFromServiceUseCase;
       yield* unassignUC.execute({
-        stylistId: ctx.stylistId,
+        stylistId,
         serviceId,
       });
 
       const listUC = yield* ListServiceEmployeesUseCase;
       const employees = yield* listUC.execute({ serviceId });
-      expect(employees.some((e) => e.stylistId === ctx.stylistId)).toBe(false);
+      expect(employees.some((e) => e.stylistId === stylistId)).toBe(false);
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.assignmentUseCaseLayer)),
+      program.pipe(Effect.provide(env.assignmentUseCaseLayer)),
     );
   });
 
@@ -176,7 +183,7 @@ describe("Employee-Service Assignment Use Cases", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* UnassignEmployeeFromServiceUseCase;
       const result = yield* useCase
-        .execute({ stylistId: ctx.stylistId, serviceId })
+        .execute({ stylistId, serviceId })
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -186,7 +193,7 @@ describe("Employee-Service Assignment Use Cases", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.assignmentUseCaseLayer)),
+      program.pipe(Effect.provide(env.assignmentUseCaseLayer)),
     );
   });
 });

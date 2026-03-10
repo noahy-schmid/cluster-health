@@ -1,24 +1,32 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
+import {
+  createSalon,
+  createWellKnownResources,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { CreateSimpleServiceUseCase } from "../create-simple-service.use-case";
 
 describe("CreateSimpleServiceUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env)).id;
+    await createWellKnownResources(env, salonId);
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should create a simple service with one phase", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSimpleServiceUseCase;
       const service = yield* useCase.execute({
-        salonId: ctx.salonId,
+        salonId,
         name: "Quick Cut",
         description: "A simple haircut",
         priceInCents: 2500,
@@ -26,7 +34,7 @@ describe("CreateSimpleServiceUseCase", () => {
       });
 
       expect(service.id).toBeDefined();
-      expect(service.salonId).toBe(ctx.salonId);
+      expect(service.salonId).toBe(salonId);
       expect(service.name).toBe("Quick Cut");
       expect(service.serviceType).toBe("simple");
       expect(service.priceInCents).toBe(2500);
@@ -41,7 +49,7 @@ describe("CreateSimpleServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.simpleColorationUseCaseLayer)),
+      program.pipe(Effect.provide(env.simpleColorationUseCaseLayer)),
     );
   });
 
@@ -65,7 +73,7 @@ describe("CreateSimpleServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.simpleColorationUseCaseLayer)),
+      program.pipe(Effect.provide(env.simpleColorationUseCaseLayer)),
     );
   });
 });

@@ -1,24 +1,30 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
+import {
+  createSalon,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 
 describe("CreateCustomServiceUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env)).id;
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should create a custom service definition with phases", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateCustomServiceUseCase;
       const service = yield* useCase.execute({
-        salonId: ctx.salonId,
+        salonId,
         name: "Haircut & Style",
         description: "A complete haircut and styling service",
         priceInCents: 4500,
@@ -45,7 +51,7 @@ describe("CreateCustomServiceUseCase", () => {
       });
 
       expect(service.id).toBeDefined();
-      expect(service.salonId).toBe(ctx.salonId);
+      expect(service.salonId).toBe(salonId);
       expect(service.name).toBe("Haircut & Style");
       expect(service.serviceType).toBe("custom");
       expect(service.priceInCents).toBe(4500);
@@ -60,7 +66,7 @@ describe("CreateCustomServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 
@@ -69,7 +75,7 @@ describe("CreateCustomServiceUseCase", () => {
       const useCase = yield* CreateCustomServiceUseCase;
       const result = yield* useCase
         .execute({
-          salonId: ctx.salonId,
+          salonId,
           name: "Empty Service",
           description: "",
           priceInCents: 1000,
@@ -84,7 +90,7 @@ describe("CreateCustomServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 
@@ -93,7 +99,7 @@ describe("CreateCustomServiceUseCase", () => {
       const useCase = yield* CreateCustomServiceUseCase;
       const result = yield* useCase
         .execute({
-          salonId: ctx.salonId,
+          salonId,
           name: "  ",
           description: "",
           priceInCents: 1000,
@@ -115,7 +121,7 @@ describe("CreateCustomServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 
@@ -146,7 +152,7 @@ describe("CreateCustomServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 });

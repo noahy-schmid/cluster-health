@@ -1,39 +1,44 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
-import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
+import {
+  createSalon,
+  createServiceDefinition,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { UpdateCustomServiceUseCase } from "../update-custom-service.use-case";
 
 describe("UpdateCustomServiceUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env)).id;
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should update a custom service definition with new phases", async () => {
-    const program = Effect.gen(function* () {
-      const createUseCase = yield* CreateCustomServiceUseCase;
-      const updateUseCase = yield* UpdateCustomServiceUseCase;
+    const service = await createServiceDefinition(env, {
+      salonId,
+      name: "Original Service",
+      description: "Original description",
+      priceInCents: 4500,
+      phases: [
+        {
+          name: "Phase A",
+          durationMinutes: 20,
+          employeeRequired: true,
+          requiredResourceSlugs: [],
+        },
+      ],
+    });
 
-      const service = yield* createUseCase.execute({
-        salonId: ctx.salonId,
-        name: "Original Service",
-        description: "Original description",
-        priceInCents: 4500,
-        phases: [
-          {
-            name: "Phase A",
-            durationMinutes: 20,
-            employeeRequired: true,
-            requiredResourceSlugs: [],
-          },
-        ],
-      });
+    const program = Effect.gen(function* () {
+      const updateUseCase = yield* UpdateCustomServiceUseCase;
 
       const updated = yield* updateUseCase.execute({
         serviceId: service.id,
@@ -63,7 +68,7 @@ describe("UpdateCustomServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 
@@ -94,7 +99,7 @@ describe("UpdateCustomServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 });

@@ -1,42 +1,47 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
-import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
+import {
+  createSalon,
+  createServiceDefinition,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { ListServiceDefinitionsUseCase } from "../list-service-definitions.use-case";
 
 describe("ListServiceDefinitionsUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env)).id;
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should list service definitions for a salon", async () => {
+    await createServiceDefinition(env, {
+      salonId,
+      name: "List Test Service",
+      description: "For listing",
+      priceInCents: 3000,
+      phases: [
+        {
+          name: "Phase 1",
+          durationMinutes: 20,
+          employeeRequired: true,
+          requiredResourceSlugs: [],
+        },
+      ],
+    });
+
     const program = Effect.gen(function* () {
-      const createUseCase = yield* CreateCustomServiceUseCase;
       const listUseCase = yield* ListServiceDefinitionsUseCase;
 
-      yield* createUseCase.execute({
-        salonId: ctx.salonId,
-        name: "List Test Service",
-        description: "For listing",
-        priceInCents: 3000,
-        phases: [
-          {
-            name: "Phase 1",
-            durationMinutes: 20,
-            employeeRequired: true,
-            requiredResourceSlugs: [],
-          },
-        ],
-      });
-
       const services = yield* listUseCase.execute({
-        salonId: ctx.salonId,
+        salonId,
       });
 
       expect(services.length).toBeGreaterThanOrEqual(1);
@@ -44,7 +49,7 @@ describe("ListServiceDefinitionsUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 });

@@ -1,24 +1,32 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
+import {
+  createSalon,
+  createWellKnownResources,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { CreateColorationServiceUseCase } from "../create-coloration-service.use-case";
 
 describe("CreateColorationServiceUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env)).id;
+    await createWellKnownResources(env, salonId);
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should create a coloration service with three phases", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateColorationServiceUseCase;
       const service = yield* useCase.execute({
-        salonId: ctx.salonId,
+        salonId,
         name: "Full Color",
         description: "Complete coloration service",
         priceInCents: 12000,
@@ -28,7 +36,7 @@ describe("CreateColorationServiceUseCase", () => {
       });
 
       expect(service.id).toBeDefined();
-      expect(service.salonId).toBe(ctx.salonId);
+      expect(service.salonId).toBe(salonId);
       expect(service.name).toBe("Full Color");
       expect(service.serviceType).toBe("coloration");
       expect(service.priceInCents).toBe(12000);
@@ -47,7 +55,7 @@ describe("CreateColorationServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.simpleColorationUseCaseLayer)),
+      program.pipe(Effect.provide(env.simpleColorationUseCaseLayer)),
     );
   });
 
@@ -70,7 +78,7 @@ describe("CreateColorationServiceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.simpleColorationUseCaseLayer)),
+      program.pipe(Effect.provide(env.simpleColorationUseCaseLayer)),
     );
   });
 });

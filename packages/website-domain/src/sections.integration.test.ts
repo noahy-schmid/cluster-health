@@ -1,18 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { Effect, Either, Layer, Option } from "effect";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { getOrCreatePostgreSQLContainer } from "@repo/test-fixtures";
-import { PostgresWebsiteAdapter } from "./adapters/postgres-website.adapter";
-import { SalonPort } from "./ports/salon.port";
-import { Configuration } from "./infrastructure/config.interface";
-import { Database } from "./infrastructure/database.interface";
-import { DatabaseLayer } from "./infrastructure/database.service";
-import { PostgresSectionAdapter } from "./adapters/section/postgres-section.adapter";
-import { PostgresGallerySectionAdapter } from "./adapters/section/postgres-gallery-section.adapter";
-import { PostgresTextWithImageSectionAdapter } from "./adapters/section/postgres-text-with-image-section.adapter";
-import { PostgresCenterTextSectionAdapter } from "./adapters/section/postgres-center-text-section.adapter";
-import { PostgresReasonSectionAdapter } from "./adapters/section/postgres-reason-section.adapter";
-import { PostgresStylistsSectionAdapter } from "./adapters/section/postgres-stylists-section.adapter";
+import { Effect, Either, Layer } from "effect";
 import {
   CreateSectionUseCase,
   type CreateSectionCommand,
@@ -31,14 +18,16 @@ import {
   SectionAggregate,
   type AllSections,
 } from "./application/section/section.aggregate";
-import { MediaPort } from "./ports/media.port";
-import { WebsiteService } from "./application/website/website.interface";
-import { WebsiteServiceLive } from "./application/website/website.service";
+import {
+  createWebsite,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 
 describe("Section Use Cases Integration Tests", () => {
-  let pgContainer: Awaited<ReturnType<typeof getOrCreatePostgreSQLContainer>>;
+  let env: TestEnvironment;
   let websiteId: string;
-  let theSalonId: string;
+  let salonId: string;
   let useCaseLayer: Layer.Layer<
     | CreateSectionUseCase
     | UpdateSectionUseCase
@@ -50,99 +39,18 @@ describe("Section Use Cases Integration Tests", () => {
   >;
 
   beforeAll(async () => {
-    pgContainer = await getOrCreatePostgreSQLContainer();
-
-    theSalonId = crypto.randomUUID();
-
-    const testConfigurationLayer = Layer.effect(
-      Configuration,
-      Effect.succeed({
-        databaseUrl: pgContainer.databaseUrl,
-        s3Url: "",
-        s3Region: "us-east-1",
-        s3AccessKey: "",
-        s3SecretKey: "",
-        s3BucketName: "test-bucket",
-      }),
-    );
-
-    const mockSalonPortLayer = Layer.succeed(SalonPort, {
-      salonExists: (salonId) => Effect.succeed(salonId === theSalonId),
+    env = await setupTestEnvironment();
+    useCaseLayer = env.useCaseLayer;
+    salonId = env.createSalon();
+    websiteId = await createWebsite(env, {
+      salonId,
+      slug: "test-sections-website",
+      title: "Test Sections Website",
     });
-
-    const mockMediaPortLayer = Layer.succeed(MediaPort, {
-      mediaIdsExist: (ids) =>
-        Effect.succeed(ids.every((id) => id.startsWith("media-"))),
-    });
-
-    const infrastructureLayer = DatabaseLayer.pipe(
-      Layer.provideMerge(testConfigurationLayer),
-    );
-
-    const sectionTypeAdaptersLayer = Layer.mergeAll(
-      PostgresGallerySectionAdapter,
-      PostgresTextWithImageSectionAdapter,
-      PostgresCenterTextSectionAdapter,
-      PostgresReasonSectionAdapter,
-      PostgresStylistsSectionAdapter,
-    );
-
-    const sectionPortLayer = PostgresSectionAdapter.pipe(
-      Layer.provide(sectionTypeAdaptersLayer),
-      Layer.provide(infrastructureLayer),
-    );
-
-    const aggregateLayer = SectionAggregate.DefaultWithoutDependencies.pipe(
-      Layer.provide(sectionPortLayer),
-    );
-
-    const portsLayer = Layer.mergeAll(
-      PostgresWebsiteAdapter.pipe(Layer.provide(infrastructureLayer)),
-      mockMediaPortLayer,
-    );
-
-    const depsLayer = Layer.mergeAll(aggregateLayer, portsLayer);
-
-    useCaseLayer = Layer.mergeAll(
-      CreateSectionUseCase.DefaultWithoutDependencies,
-      UpdateSectionUseCase.DefaultWithoutDependencies,
-      DeleteSectionUseCase.DefaultWithoutDependencies,
-      ListSectionsUseCase.DefaultWithoutDependencies,
-      ReorderSectionsUseCase.DefaultWithoutDependencies,
-    ).pipe(Layer.provide(depsLayer), Layer.orDie);
-
-    const websitePortLayer = Layer.mergeAll(
-      PostgresWebsiteAdapter,
-      mockSalonPortLayer,
-    ).pipe(Layer.provideMerge(infrastructureLayer));
-
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const { db } = yield* Database;
-        yield* Effect.tryPromise(() =>
-          migrate(db, { migrationsFolder: "drizzle" }),
-        );
-
-        const websiteService = yield* WebsiteService;
-        const resultingId = yield* websiteService.createWebsite({
-          salonId: theSalonId,
-          slug: "test-sections-website",
-          title: "Test Sections Website",
-          faviconMediaId: Option.none(),
-        });
-        websiteId = resultingId;
-      }).pipe(
-        Effect.provide(
-          WebsiteServiceLive.pipe(Layer.provideMerge(websitePortLayer)),
-        ),
-      ),
-    );
   }, 60_000);
 
   afterAll(async () => {
-    if (pgContainer) {
-      await pgContainer.stop();
-    }
+    await env.stop();
   });
 
   it("should create a center-text section with defaults", async () => {

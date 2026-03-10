@@ -1,20 +1,26 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
+import {
+  createSalon,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { CreateResourceUseCase } from "../create-resource.use-case";
 import { DeleteResourceUseCase } from "../delete-resource.use-case";
 import { ListResourcesUseCase } from "../list-resources.use-case";
 import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 
 describe("DeleteResourceUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env)).id;
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should delete a resource that is not referenced", async () => {
@@ -24,30 +30,30 @@ describe("DeleteResourceUseCase", () => {
       const listUseCase = yield* ListResourcesUseCase;
 
       const resource = yield* createUseCase.execute({
-        salonId: ctx.salonId,
+        salonId,
         slug: "deletable",
         name: "Deletable Resource",
         amount: 1,
       });
 
       const beforeDelete = yield* listUseCase.execute({
-        salonId: ctx.salonId,
+        salonId,
       });
       const countBefore = beforeDelete.length;
 
       yield* deleteUseCase.execute({
-        salonId: ctx.salonId,
+        salonId,
         slug: resource.slug,
       });
 
       const afterDelete = yield* listUseCase.execute({
-        salonId: ctx.salonId,
+        salonId,
       });
       expect(afterDelete.length).toBe(countBefore - 1);
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.resourceUseCaseLayer)),
+      program.pipe(Effect.provide(env.resourceUseCaseLayer)),
     );
   });
 
@@ -59,7 +65,7 @@ describe("DeleteResourceUseCase", () => {
 
       // Create a resource to reference
       const resource = yield* createResourceUC.execute({
-        salonId: ctx.salonId,
+        salonId,
         slug: "ref-resource",
         name: "Referenced Resource",
         amount: 2,
@@ -67,7 +73,7 @@ describe("DeleteResourceUseCase", () => {
 
       // Create a service that references this resource
       yield* createServiceUC.execute({
-        salonId: ctx.salonId,
+        salonId,
         name: "Service with Resource",
         description: "Test",
         priceInCents: 5000,
@@ -83,7 +89,7 @@ describe("DeleteResourceUseCase", () => {
 
       // Now try to delete the resource - should fail
       const result = yield* deleteResourceUC
-        .execute({ salonId: ctx.salonId, slug: resource.slug })
+        .execute({ salonId, slug: resource.slug })
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -94,8 +100,8 @@ describe("DeleteResourceUseCase", () => {
 
     await Effect.runPromise(
       program.pipe(
-        Effect.provide(ctx.resourceUseCaseLayer),
-        Effect.provide(ctx.serviceUseCaseLayer),
+        Effect.provide(env.resourceUseCaseLayer),
+        Effect.provide(env.serviceUseCaseLayer),
       ),
     );
   });
