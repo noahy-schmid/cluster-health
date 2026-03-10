@@ -14,10 +14,7 @@ import {
   ReorderSectionsUseCase,
   type ReorderSectionsCommand,
 } from "./use-cases/reorder-sections.use-case";
-import {
-  SectionAggregate,
-  type AllSections,
-} from "./application/section/section.aggregate";
+import { type AllSections } from "./application/section/section.aggregate";
 import {
   createWebsite,
   setupTestEnvironment,
