@@ -148,15 +148,17 @@ const make = Effect.gen(function* () {
       const validatedInput = yield* validateSalonInput(input);
       yield* ensureNameIsAvailable(validatedInput.name, existingSalon.id);
 
-      const updatedSalon = yield* salonPort.updateSalon(salonId, validatedInput).pipe(
-        Effect.mapError(
-          (error) =>
-            new InternalError({
-              message: error.message,
-              cause: error,
-            }),
-        ),
-      );
+      const updatedSalon = yield* salonPort
+        .updateSalon(salonId, validatedInput)
+        .pipe(
+          Effect.mapError(
+            (error) =>
+              new InternalError({
+                message: error.message,
+                cause: error,
+              }),
+          ),
+        );
 
       if (!updatedSalon) {
         return yield* Effect.fail(

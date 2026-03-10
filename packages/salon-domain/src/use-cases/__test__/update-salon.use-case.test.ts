@@ -31,7 +31,9 @@ describe("UpdateSalonUseCase", () => {
       expect(updated.city).toBe("Leipzig");
     });
 
-    await Effect.runPromise(program.pipe(Effect.provide(ctx.salonUseCaseLayer)));
+    await Effect.runPromise(
+      program.pipe(Effect.provide(ctx.salonUseCaseLayer)),
+    );
   });
 
   it("should fail when updating to an existing salon name", async () => {
@@ -64,7 +66,9 @@ describe("UpdateSalonUseCase", () => {
       }
     });
 
-    await Effect.runPromise(program.pipe(Effect.provide(ctx.salonUseCaseLayer)));
+    await Effect.runPromise(
+      program.pipe(Effect.provide(ctx.salonUseCaseLayer)),
+    );
   });
 
   it("should fail when the salon does not exist", async () => {
@@ -87,6 +91,8 @@ describe("UpdateSalonUseCase", () => {
       }
     });
 
-    await Effect.runPromise(program.pipe(Effect.provide(ctx.salonUseCaseLayer)));
+    await Effect.runPromise(
+      program.pipe(Effect.provide(ctx.salonUseCaseLayer)),
+    );
   });
 });

@@ -30,7 +30,9 @@ describe("CreateSalonUseCase", () => {
       expect(salon.city).toBe("Berlin");
     });
 
-    await Effect.runPromise(program.pipe(Effect.provide(ctx.salonUseCaseLayer)));
+    await Effect.runPromise(
+      program.pipe(Effect.provide(ctx.salonUseCaseLayer)),
+    );
   });
 
   it("should fail when the salon name already exists", async () => {
@@ -61,7 +63,9 @@ describe("CreateSalonUseCase", () => {
       }
     });
 
-    await Effect.runPromise(program.pipe(Effect.provide(ctx.salonUseCaseLayer)));
+    await Effect.runPromise(
+      program.pipe(Effect.provide(ctx.salonUseCaseLayer)),
+    );
   });
 
   it("should fail with empty required fields", async () => {
@@ -84,6 +88,8 @@ describe("CreateSalonUseCase", () => {
       }
     });
 
-    await Effect.runPromise(program.pipe(Effect.provide(ctx.salonUseCaseLayer)));
+    await Effect.runPromise(
+      program.pipe(Effect.provide(ctx.salonUseCaseLayer)),
+    );
   });
 });

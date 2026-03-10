@@ -39,7 +39,11 @@ const make = Effect.gen(function* () {
   const findSalonById: SalonPort["findSalonById"] = (salonId) =>
     Effect.gen(function* () {
       const [row] = yield* Effect.tryPromise(() =>
-        db.select().from(salonsTable).where(eq(salonsTable.id, salonId)).limit(1),
+        db
+          .select()
+          .from(salonsTable)
+          .where(eq(salonsTable.id, salonId))
+          .limit(1),
       ).pipe(
         Effect.mapError(
           (error) =>

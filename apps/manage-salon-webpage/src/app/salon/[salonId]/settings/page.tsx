@@ -1,8 +1,5 @@
 import PageHeader from "@/components/PageHeader";
-import {
-  fetchSalon,
-  fetchSalonResources,
-} from "@/api/salon-actions";
+import { fetchSalon, fetchSalonResources } from "@/api/salon-actions";
 import SalonSettingsPageClient from "./client";
 
 interface SalonSettingsPageProps {

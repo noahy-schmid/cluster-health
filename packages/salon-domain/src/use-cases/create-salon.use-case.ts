@@ -28,8 +28,7 @@ const make = Effect.gen(function* () {
     ): Effect.Effect<
       CreateSalonResult,
       InternalError | ConflictError | ValidationError
-    > =>
-      aggregate.createSalon(command),
+    > => aggregate.createSalon(command),
   };
 });
 

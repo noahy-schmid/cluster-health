@@ -57,7 +57,10 @@ export async function getWebsiteInitialValues(): Promise<
     }).pipe(
       Effect.catchTags({
         NotFoundError: () =>
-          Effect.succeed({ success: false as const, error: "Salon nicht gefunden" }),
+          Effect.succeed({
+            success: false as const,
+            error: "Salon nicht gefunden",
+          }),
         InternalError: () =>
           Effect.succeed({
             success: false as const,

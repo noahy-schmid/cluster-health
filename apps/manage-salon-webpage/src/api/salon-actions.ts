@@ -66,6 +66,14 @@ type ResourceInput = {
   amount: number;
 };
 
+function getResourceDisplayName(slug: typeof SEAT_SLUG | typeof CLIMAZON_SLUG) {
+  if (slug === SEAT_SLUG) {
+    return "Bedienplätze";
+  }
+
+  return "Climazons";
+}
+
 /**
  * Creates a salon, binds it to the current management user, and redirects to
  * the resource onboarding step.
@@ -173,7 +181,9 @@ export async function createSalonAction(
     };
   }
 
-  const tokenResult = await authRepository.issueTokenForUser(authResult.data.userId);
+  const tokenResult = await authRepository.issueTokenForUser(
+    authResult.data.userId,
+  );
 
   if (!tokenResult.success) {
     return {

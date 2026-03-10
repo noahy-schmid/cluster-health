@@ -23,7 +23,9 @@ describe("GetSalonUseCase", () => {
       expect(salon.name).toContain("Test Service Salon");
     });
 
-    await Effect.runPromise(program.pipe(Effect.provide(ctx.salonUseCaseLayer)));
+    await Effect.runPromise(
+      program.pipe(Effect.provide(ctx.salonUseCaseLayer)),
+    );
   });
 
   it("should fail when the salon does not exist", async () => {
@@ -39,6 +41,8 @@ describe("GetSalonUseCase", () => {
       }
     });
 
-    await Effect.runPromise(program.pipe(Effect.provide(ctx.salonUseCaseLayer)));
+    await Effect.runPromise(
+      program.pipe(Effect.provide(ctx.salonUseCaseLayer)),
+    );
   });
 });

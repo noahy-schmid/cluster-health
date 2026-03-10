@@ -49,8 +49,8 @@ export function useSalonResourcesState({
   const initialWellKnownAmounts = useMemo(
     () => ({
       [SEAT_SLUG]:
-        initialResources.find((resource) => resource.slug === SEAT_SLUG)?.amount ??
-        0,
+        initialResources.find((resource) => resource.slug === SEAT_SLUG)
+          ?.amount ?? 0,
       [CLIMAZON_SLUG]:
         initialResources.find((resource) => resource.slug === CLIMAZON_SLUG)
           ?.amount ?? 0,
@@ -58,7 +58,9 @@ export function useSalonResourcesState({
     [initialResources],
   );
 
-  const [seatAmount, setSeatAmount] = useState(initialWellKnownAmounts[SEAT_SLUG]);
+  const [seatAmount, setSeatAmount] = useState(
+    initialWellKnownAmounts[SEAT_SLUG],
+  );
   const [climazonAmount, setClimazonAmount] = useState(
     initialWellKnownAmounts[CLIMAZON_SLUG],
   );
@@ -92,7 +94,9 @@ export function useSalonResourcesState({
         [SEAT_SLUG, CLIMAZON_SLUG].concat(
           customResources
             .filter((resource) => resource.id !== currentId)
-            .map((resource) => resource.slug || slugifyResourceName(resource.name))
+            .map(
+              (resource) => resource.slug || slugifyResourceName(resource.name),
+            )
             .filter((slug) => slug.length > 0),
         ),
       );
@@ -164,7 +168,9 @@ export function useSalonResourcesState({
 
   const persistCustomResource = useCallback(
     async (resourceId: string, options?: { showSuccess?: boolean }) => {
-      const draft = customResources.find((resource) => resource.id === resourceId);
+      const draft = customResources.find(
+        (resource) => resource.id === resourceId,
+      );
       if (!draft) {
         return true;
       }
@@ -243,7 +249,9 @@ export function useSalonResourcesState({
 
   const removeCustomResource = useCallback(
     async (resourceId: string) => {
-      const draft = customResources.find((resource) => resource.id === resourceId);
+      const draft = customResources.find(
+        (resource) => resource.id === resourceId,
+      );
       if (!draft) {
         return;
       }
