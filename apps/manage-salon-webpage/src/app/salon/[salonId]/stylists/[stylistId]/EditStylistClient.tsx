@@ -12,14 +12,15 @@ import {
   assignStylistToService,
   unassignStylistFromService,
 } from "@/app/salon/[salonId]/services/service.actions";
-import type { Stylist, EmployeeServiceItem } from "@repo/salon-domain";
+import type { ServiceEmployeeItem } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
+import { StylistDto } from "../stylist.dto";
 
 interface EditStylistClientProps {
   salonId: string;
   stylistId: string;
-  initialStylist: Stylist;
-  initialAssignments: EmployeeServiceItem[];
+  initialStylist: StylistDto;
+  initialAssignments: ServiceEmployeeItem[];
   allServices: { id: string; name: string }[];
 }
 
@@ -32,10 +33,15 @@ export default function EditStylistClient({
 }: EditStylistClientProps) {
   const { showNotification } = useNotifications();
   const [assignments, setAssignments] =
-    useState<EmployeeServiceItem[]>(initialAssignments);
+    useState<ServiceEmployeeItem[]>(initialAssignments);
 
   const handleSubmit = async (data: StylistFormData) => {
-    const result = await updateStylist(salonId, initialStylist.id, data);
+    const result = await updateStylist(salonId, initialStylist.id, {
+      name: data.name,
+      subtitle: data.subtitle,
+      description: data.description,
+      profileImageMediaId: data.profileImageMediaId,
+    });
 
     if (!result.success) {
       showNotification(
@@ -91,9 +97,9 @@ export default function EditStylistClient({
       />
       <div className="space-y-lg">
         <StylistForm
+          salonId={salonId}
           stylist={initialStylist}
           onSubmit={handleSubmit}
-          saveLabel="Änderungen speichern"
         />
 
         <AssignmentList

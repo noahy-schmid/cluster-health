@@ -16,7 +16,7 @@ const WebsiteSchema = Schema.Struct({
     Schema.compose(Schema.Trim),
     Schema.nonEmptyString({ message: () => "Title cannot be empty" }),
   ),
-  favicon: Schema.OptionFromSelf(
+  faviconMediaId: Schema.OptionFromSelf(
     Schema.String.pipe(Schema.compose(Schema.Trim)),
   ),
   subtitle: Schema.String.pipe(Schema.compose(Schema.Trim)),
@@ -35,7 +35,7 @@ const WebsiteSchema = Schema.Struct({
 });
 
 export const WebsiteSettingsSchema = WebsiteSchema.pipe(
-  Schema.pick("title", "slug", "favicon"),
+  Schema.pick("title", "slug", "faviconMediaId"),
 );
 
 export type WebsiteSettings = typeof WebsiteSettingsSchema.Type;

@@ -22,7 +22,7 @@ export default async function WebsiteSettingsPage({
       initialSettings={{
         slug: settingsResult.slug,
         title: settingsResult.title,
-        faviconUrl: settingsResult.faviconUrl,
+        faviconMediaId: settingsResult.faviconMediaId,
       }}
     />
   );

@@ -50,9 +50,9 @@ export default function CreateStylistPage({ params }: CreateStylistPageProps) {
         subtitle="Füge einen neuen Stylisten zu deinem Team hinzu"
       />
       <StylistForm
+        salonId={salonId}
         onSubmit={handleSubmit}
         onCancel={() => router.push(`/salon/${salonId}/stylists`)}
-        saveLabel="Stylist erstellen"
       />
     </div>
   );

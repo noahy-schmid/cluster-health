@@ -8,7 +8,7 @@ interface StylistMember {
   id: string;
   name: string;
   role: string;
-  imageSrc: string;
+  imageSrc?: string;
 }
 
 interface StylistsSliderProps {
