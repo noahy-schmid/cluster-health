@@ -32,6 +32,7 @@ import type {
   ServiceEmployeeItem,
   EmployeeServiceItem,
   CreateServicePhaseInput,
+  EmployeeServiceAssignment,
 } from "@repo/salon-domain";
 import { ServiceGuard } from "@/api/guards/service.guard";
 import { EmployeeGuard } from "@/api/guards/employee.guard";
@@ -406,7 +407,7 @@ export async function assignStylistToService(
   stylistId: string,
   serviceId: string,
 ): Promise<
-  | { success: true; data: ServiceEmployeeItem }
+  | { success: true; data: EmployeeServiceAssignment }
   | { success: false; error: string }
 > {
   const serviceAccess = await ServiceGuard.canAccessService(serviceId);
@@ -420,22 +421,11 @@ export async function assignStylistToService(
   }
 
   const program = Effect.gen(function* () {
-    const assignUseCase = yield* AssignEmployeeToServiceUseCase;
-    yield* assignUseCase.execute({ stylistId, serviceId });
-
-    // Fetch the full employee list for this service to get the stylist name
-    const listUseCase = yield* ListServiceEmployeesUseCase;
-    const employees = yield* listUseCase.execute({ serviceId });
-    const assigned = employees.find((e) => e.stylistId === stylistId);
-
-    if (!assigned) {
-      return {
-        success: false as const,
-        error: "Zuweisung konnte nicht bestätigt werden",
-      };
-    }
-
-    return { success: true as const, data: assigned };
+    const result = yield* AssignEmployeeToServiceUseCase.execute({
+      stylistId,
+      serviceId,
+    });
+    return { success: true as const, data: result };
   }).pipe(
     Effect.catchTags({
       NotFoundError: () =>

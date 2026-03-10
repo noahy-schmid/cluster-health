@@ -12,15 +12,15 @@ import {
   assignStylistToService,
   unassignStylistFromService,
 } from "@/app/salon/[salonId]/services/service.actions";
-import type { ServiceEmployeeItem } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import { StylistDto } from "../stylist.dto";
+import { EmployeeServiceItem } from "@repo/salon-domain";
 
 interface EditStylistClientProps {
   salonId: string;
   stylistId: string;
   initialStylist: StylistDto;
-  initialAssignments: ServiceEmployeeItem[];
+  initialAssignments: EmployeeServiceItem[];
   allServices: { id: string; name: string }[];
 }
 
@@ -33,7 +33,7 @@ export default function EditStylistClient({
 }: EditStylistClientProps) {
   const { showNotification } = useNotifications();
   const [assignments, setAssignments] =
-    useState<ServiceEmployeeItem[]>(initialAssignments);
+    useState<EmployeeServiceItem[]>(initialAssignments);
 
   const handleSubmit = async (data: StylistFormData) => {
     const result = await updateStylist(salonId, initialStylist.id, {
@@ -60,14 +60,15 @@ export default function EditStylistClient({
         showNotification(result.error, "error", "long");
         return;
       }
-      // Construct the EmployeeServiceItem from known data
-      const service = allServices.find((s) => s.id === serviceId);
+      const serviceName =
+        allServices.find((s) => s.id === serviceId)?.name ||
+        "Unbekannte Dienstleistung";
       setAssignments((prev) => [
         ...prev,
         {
-          serviceDefinitionId: serviceId,
-          serviceName: service?.name ?? "",
-          createdAt: new Date(),
+          serviceDefinitionId: result.data.serviceDefinitionId,
+          serviceName,
+          createdAt: result.data.createdAt,
         },
       ]);
     },

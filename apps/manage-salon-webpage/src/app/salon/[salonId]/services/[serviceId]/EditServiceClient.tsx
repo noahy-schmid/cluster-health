@@ -64,9 +64,18 @@ export default function EditServiceClient({
         showNotification(result.error, "error", "long");
         return;
       }
-      setAssignments((prev) => [...prev, result.data]);
+      setAssignments((prev) => [
+        ...prev,
+        {
+          stylistId: result.data.stylistId,
+          createdAt: result.data.createdAt,
+          stylistName:
+            allStylists.find((s) => s.id === stylistId)?.name ||
+            "Unbekannter Stylist",
+        },
+      ]);
     },
-    [serviceId, showNotification],
+    [serviceId, showNotification, allStylists],
   );
 
   const handleUnassignStylist = useCallback(
