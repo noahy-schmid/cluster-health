@@ -6,12 +6,17 @@ import { Scissors, Paintbrush, Settings } from "lucide-react";
 import ServiceForm from "../ServiceForm.component";
 import SimpleServiceForm from "../SimpleServiceForm.component";
 import ColorationServiceForm from "../ColorationServiceForm.component";
-import { createServiceDefinition } from "../service.actions";
-import type { SalonResource, ServiceType } from "@/lib/types/service-types";
+import {
+  createSimpleService,
+  createColorationService,
+  createCustomService,
+} from "../service.actions";
+import type { Resource } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import TypeSelectionPanel, {
   type TypeSelectionOption,
 } from "@/components/TypeSelectionPanel";
+import { ServiceType } from "@repo/salon-domain";
 
 const serviceTypeOptions: TypeSelectionOption<ServiceType>[] = [
   {
@@ -39,7 +44,7 @@ const serviceTypeOptions: TypeSelectionOption<ServiceType>[] = [
 
 interface CreateServiceClientProps {
   salonId: string;
-  availableResources: SalonResource[];
+  availableResources: Resource[];
 }
 
 export default function CreateServiceClient({
@@ -52,26 +57,67 @@ export default function CreateServiceClient({
     undefined,
   );
 
-  const handleSubmit = async (data: {
+  const handleSimpleSubmit = async (data: {
+    name: string;
+    description: string;
+    priceInCents: number;
+    phases: { durationMinutes: number }[];
+  }) => {
+    const result = await createSimpleService({
+      salonId,
+      name: data.name,
+      description: data.description,
+      priceInCents: data.priceInCents,
+      durationMinutes: data.phases[0]?.durationMinutes ?? 30,
+    });
+
+    if (!result.success) {
+      showNotification(result.error, "error", "long");
+      throw new Error(result.error);
+    }
+    router.push(`/salon/${salonId}/services`);
+  };
+
+  const handleColorationSubmit = async (data: {
+    name: string;
+    description: string;
+    priceInCents: number;
+    phases: { durationMinutes: number }[];
+  }) => {
+    const result = await createColorationService({
+      salonId,
+      name: data.name,
+      description: data.description,
+      priceInCents: data.priceInCents,
+      applicationDurationMinutes: data.phases[0]?.durationMinutes ?? 20,
+      processingDurationMinutes: data.phases[1]?.durationMinutes ?? 30,
+      finishingDurationMinutes: data.phases[2]?.durationMinutes ?? 15,
+    });
+
+    if (!result.success) {
+      showNotification(result.error, "error", "long");
+      throw new Error(result.error);
+    }
+    router.push(`/salon/${salonId}/services`);
+  };
+
+  const handleCustomSubmit = async (data: {
     name: string;
     description: string;
     priceInCents: number;
     phases: {
       name: string;
       durationMinutes: number;
-      requiresEmployee: boolean;
-      requiredResources: { resourceId: string; resourceName: string }[];
+      employeeRequired: boolean;
+      requiredResourceSlugs: string[];
       order: number;
     }[];
   }) => {
-    if (!selectedType) return;
-
-    const result = await createServiceDefinition({
+    const result = await createCustomService({
       salonId,
       name: data.name,
       description: data.description,
       priceInCents: data.priceInCents,
-      serviceType: selectedType,
       phases: data.phases,
     });
 
@@ -79,7 +125,6 @@ export default function CreateServiceClient({
       showNotification(result.error, "error", "long");
       throw new Error(result.error);
     }
-
     router.push(`/salon/${salonId}/services`);
   };
 
@@ -99,7 +144,7 @@ export default function CreateServiceClient({
   if (selectedType === "simple") {
     return (
       <SimpleServiceForm
-        onSubmit={handleSubmit}
+        onSubmit={handleSimpleSubmit}
         onCancel={handleCancel}
         saveLabel="Dienstleistung erstellen"
       />
@@ -109,7 +154,7 @@ export default function CreateServiceClient({
   if (selectedType === "coloration") {
     return (
       <ColorationServiceForm
-        onSubmit={handleSubmit}
+        onSubmit={handleColorationSubmit}
         onCancel={handleCancel}
         saveLabel="Dienstleistung erstellen"
       />
@@ -119,7 +164,7 @@ export default function CreateServiceClient({
   return (
     <ServiceForm
       availableResources={availableResources}
-      onSubmit={handleSubmit}
+      onSubmit={handleCustomSubmit}
       onCancel={handleCancel}
       saveLabel="Dienstleistung erstellen"
     />

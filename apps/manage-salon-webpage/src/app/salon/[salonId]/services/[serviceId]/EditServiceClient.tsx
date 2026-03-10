@@ -14,22 +14,20 @@ import {
 } from "../service.actions";
 import type {
   ServiceDefinition,
-  SalonResource,
-  StylistServiceAssignment,
+  Resource,
+  ServiceEmployeeItem,
 } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
 
 interface EditServiceClientProps {
-  salonId: string;
   serviceId: string;
   initialService: ServiceDefinition;
-  initialResources: SalonResource[];
-  initialAssignments: StylistServiceAssignment[];
+  initialResources: Resource[];
+  initialAssignments: ServiceEmployeeItem[];
   allStylists: { id: string; name: string }[];
 }
 
 export default function EditServiceClient({
-  salonId,
   serviceId,
   initialService,
   initialResources,
@@ -38,7 +36,7 @@ export default function EditServiceClient({
 }: EditServiceClientProps) {
   const { showNotification } = useNotifications();
   const [assignments, setAssignments] =
-    useState<StylistServiceAssignment[]>(initialAssignments);
+    useState<ServiceEmployeeItem[]>(initialAssignments);
 
   const handleSubmit = async (data: {
     name: string;
@@ -46,7 +44,7 @@ export default function EditServiceClient({
     priceInCents: number;
     phases: ServiceDefinition["phases"];
   }) => {
-    const result = await updateServiceDefinition(salonId, serviceId, {
+    const result = await updateServiceDefinition(serviceId, {
       name: data.name,
       description: data.description,
       priceInCents: data.priceInCents,
@@ -61,34 +59,35 @@ export default function EditServiceClient({
 
   const handleAssignStylist = useCallback(
     async (stylistId: string) => {
-      const result = await assignStylistToService(
-        salonId,
-        stylistId,
-        serviceId,
-      );
+      const result = await assignStylistToService(stylistId, serviceId);
       if (!result.success) {
         showNotification(result.error, "error", "long");
         return;
       }
-      setAssignments((prev) => [...prev, result.data]);
+      setAssignments((prev) => [
+        ...prev,
+        {
+          stylistId: result.data.stylistId,
+          createdAt: result.data.createdAt,
+          stylistName:
+            allStylists.find((s) => s.id === stylistId)?.name ||
+            "Unbekannter Stylist",
+        },
+      ]);
     },
-    [salonId, serviceId, showNotification],
+    [serviceId, showNotification, allStylists],
   );
 
   const handleUnassignStylist = useCallback(
     async (stylistId: string) => {
-      const result = await unassignStylistFromService(
-        salonId,
-        stylistId,
-        serviceId,
-      );
+      const result = await unassignStylistFromService(stylistId, serviceId);
       if (!result.success) {
         showNotification(result.error, "error", "long");
         return;
       }
       setAssignments((prev) => prev.filter((a) => a.stylistId !== stylistId));
     },
-    [salonId, serviceId, showNotification],
+    [serviceId, showNotification],
   );
 
   const renderForm = () => {

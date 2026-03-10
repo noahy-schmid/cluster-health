@@ -1,4 +1,4 @@
-import { StylistDto } from "./stylist.dto";
+import type { StylistDto } from "./stylist.dto";
 import StylistCard from "./StylistCard";
 
 interface StylistListProps {

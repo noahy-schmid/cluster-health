@@ -17,6 +17,7 @@ import { CreateCustomServiceUseCase } from "./use-cases/create-custom-service.us
 import { UpdateCustomServiceUseCase } from "./use-cases/update-custom-service.use-case";
 import { DeleteServiceDefinitionUseCase } from "./use-cases/delete-service-definition.use-case";
 import { ListServiceDefinitionsUseCase } from "./use-cases/list-service-definitions.use-case";
+import { GetServiceDefinitionUseCase } from "./use-cases/get-service-definition.use-case";
 import { CreateSimpleServiceUseCase } from "./use-cases/create-simple-service.use-case";
 import { CreateColorationServiceUseCase } from "./use-cases/create-coloration-service.use-case";
 import { AssignEmployeeToServiceUseCase } from "./use-cases/assign-employee-to-service.use-case";
@@ -85,6 +86,8 @@ export const DeleteServiceDefinitionUseCaseLayer =
   DeleteServiceDefinitionUseCase.Default;
 export const ListServiceDefinitionsUseCaseLayer =
   ListServiceDefinitionsUseCase.Default;
+export const GetServiceDefinitionUseCaseLayer =
+  GetServiceDefinitionUseCase.Default;
 
 // Simplified service use case layers
 export const CreateSimpleServiceUseCaseLayer =

@@ -23,10 +23,18 @@ export interface ServicePhase {
   requiredResourceSlugs: string[];
 }
 
+/**
+ * The type of a service definition.
+ * - simple: Single phase requiring employee + chair
+ * - coloration: Three hardcoded phases (Coloring, Heating, Finishing)
+ * - custom: Fully customizable phases (existing behavior)
+ */
+export type ServiceType = "simple" | "coloration" | "custom";
+
 export interface ServiceDefinition {
   id: string;
   salonId: string;
-  serviceType: string;
+  serviceType: ServiceType;
   name: string;
   description: string;
   priceInCents: number;
@@ -45,7 +53,7 @@ export interface CreateServicePhaseInput {
 
 export interface CreateServiceInput {
   salonId: string;
-  serviceType: string;
+  serviceType: ServiceType;
   name: string;
   description: string;
   priceInCents: number;
@@ -66,7 +74,7 @@ const fromPort = (
 ): ServiceDefinition => ({
   id: portService.id,
   salonId: portService.salonId,
-  serviceType: portService.serviceType,
+  serviceType: portService.serviceType as ServiceType,
   name: portService.name,
   description: portService.description,
   priceInCents: portService.priceInCents,

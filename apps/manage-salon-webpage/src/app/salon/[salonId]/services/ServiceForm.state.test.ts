@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { serviceFormReducer, type ServiceFormState } from "./ServiceForm.state";
-import type { ServicePhase, SalonResource } from "@/lib/types/service-types";
+import type { ServicePhase } from "@/lib/types/service-types";
 
 function createInitialState(
   overrides?: Partial<ServiceFormState>,
@@ -21,8 +21,8 @@ function createPhase(overrides?: Partial<ServicePhase>): ServicePhase {
     id: "phase-1",
     name: "Test Phase",
     durationMinutes: 15,
-    requiresEmployee: true,
-    requiredResources: [],
+    employeeRequired: true,
+    requiredResourceSlugs: [],
     order: 0,
     ...overrides,
   };
@@ -69,8 +69,8 @@ describe("serviceFormReducer", () => {
       expect(result.phases).toHaveLength(1);
       expect(result.phases[0].order).toBe(0);
       expect(result.phases[0].durationMinutes).toBe(15);
-      expect(result.phases[0].requiresEmployee).toBe(true);
-      expect(result.phases[0].requiredResources).toEqual([]);
+      expect(result.phases[0].employeeRequired).toBe(true);
+      expect(result.phases[0].requiredResourceSlugs).toEqual([]);
     });
 
     it("should add phases with incrementing order", () => {
@@ -154,15 +154,15 @@ describe("serviceFormReducer", () => {
       expect(result.phases[0].durationMinutes).toBe(30);
     });
 
-    it("should toggle requiresEmployee", () => {
+    it("should toggle employeeRequired", () => {
       const state = createInitialState({
-        phases: [createPhase({ id: "p1", requiresEmployee: true })],
+        phases: [createPhase({ id: "p1", employeeRequired: true })],
       });
       const result = serviceFormReducer(state, {
         type: "UPDATE_PHASE",
-        payload: { phaseId: "p1", updates: { requiresEmployee: false } },
+        payload: { phaseId: "p1", updates: { employeeRequired: false } },
       });
-      expect(result.phases[0].requiresEmployee).toBe(false);
+      expect(result.phases[0].employeeRequired).toBe(false);
     });
 
     it("should update multiple properties at once", () => {
@@ -179,68 +179,38 @@ describe("serviceFormReducer", () => {
       expect(result.phases[0].name).toBe("New Name");
       expect(result.phases[0].durationMinutes).toBe(45);
     });
-  });
 
-  describe("ADD_PHASE_RESOURCE", () => {
-    it("should add a resource to a phase", () => {
+    it("should add a resource slug to a phase", () => {
       const state = createInitialState({
         phases: [createPhase({ id: "p1" })],
       });
-      const resource: SalonResource = {
-        id: "r1",
-        salonId: "s1",
-        name: "Stuhl",
-      };
       const result = serviceFormReducer(state, {
-        type: "ADD_PHASE_RESOURCE",
-        payload: { phaseId: "p1", resource },
+        type: "UPDATE_PHASE",
+        payload: {
+          phaseId: "p1",
+          updates: { requiredResourceSlugs: ["seat"] },
+        },
       });
-      expect(result.phases[0].requiredResources).toHaveLength(1);
-      expect(result.phases[0].requiredResources[0].resourceId).toBe("r1");
-      expect(result.phases[0].requiredResources[0].resourceName).toBe("Stuhl");
+      expect(result.phases[0].requiredResourceSlugs).toEqual(["seat"]);
     });
 
-    it("should not add duplicate resources", () => {
+    it("should remove a resource slug from a phase", () => {
       const state = createInitialState({
         phases: [
           createPhase({
             id: "p1",
-            requiredResources: [{ resourceId: "r1", resourceName: "Stuhl" }],
-          }),
-        ],
-      });
-      const resource: SalonResource = {
-        id: "r1",
-        salonId: "s1",
-        name: "Stuhl",
-      };
-      const result = serviceFormReducer(state, {
-        type: "ADD_PHASE_RESOURCE",
-        payload: { phaseId: "p1", resource },
-      });
-      expect(result.phases[0].requiredResources).toHaveLength(1);
-    });
-  });
-
-  describe("REMOVE_PHASE_RESOURCE", () => {
-    it("should remove a resource from a phase", () => {
-      const state = createInitialState({
-        phases: [
-          createPhase({
-            id: "p1",
-            requiredResources: [
-              { resourceId: "r1", resourceName: "Stuhl" },
-              { resourceId: "r2", resourceName: "Waschbecken" },
-            ],
+            requiredResourceSlugs: ["seat", "climazon"],
           }),
         ],
       });
       const result = serviceFormReducer(state, {
-        type: "REMOVE_PHASE_RESOURCE",
-        payload: { phaseId: "p1", resourceId: "r1" },
+        type: "UPDATE_PHASE",
+        payload: {
+          phaseId: "p1",
+          updates: { requiredResourceSlugs: ["climazon"] },
+        },
       });
-      expect(result.phases[0].requiredResources).toHaveLength(1);
-      expect(result.phases[0].requiredResources[0].resourceId).toBe("r2");
+      expect(result.phases[0].requiredResourceSlugs).toEqual(["climazon"]);
     });
   });
 
@@ -344,10 +314,10 @@ describe("serviceFormReducer", () => {
 
       // Add resource to first phase
       state = serviceFormReducer(state, {
-        type: "ADD_PHASE_RESOURCE",
+        type: "UPDATE_PHASE",
         payload: {
           phaseId: phase1Id,
-          resource: { id: "r1", salonId: "s1", name: "Waschbecken" },
+          updates: { requiredResourceSlugs: ["wash-sink"] },
         },
       });
 
@@ -357,7 +327,7 @@ describe("serviceFormReducer", () => {
       expect(state.phases).toHaveLength(2);
       expect(state.phases[0].name).toBe("Waschen");
       expect(state.phases[0].durationMinutes).toBe(10);
-      expect(state.phases[0].requiredResources).toHaveLength(1);
+      expect(state.phases[0].requiredResourceSlugs).toEqual(["wash-sink"]);
       expect(state.phases[1].name).toBe("Schneiden");
       expect(state.phases[1].durationMinutes).toBe(30);
     });

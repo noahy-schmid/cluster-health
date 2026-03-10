@@ -36,8 +36,8 @@ function createEmptyPhase(order: number): ServicePhase {
     id: crypto.randomUUID(),
     name: "",
     durationMinutes: 15,
-    requiresEmployee: true,
-    requiredResources: [],
+    employeeRequired: true,
+    requiredResourceSlugs: [],
     order,
   };
 }

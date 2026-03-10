@@ -1,9 +1,6 @@
 ---
 name: "Architecture Guideline Review"
 description: "Use when reviewing the current branch or changed files for compliance with AGENTS.md guidance, backend service structure, DDD, hexagonal architecture, service placement, misplaced validations, missing validations, unnecessary checks, and whether logic belongs in a port, aggregate, domain service, application service, or use case."
-tools: [read, search, execute, todo]
-user-invocable: true
-agents: []
 ---
 
 You are a specialist reviewer for architectural correctness in the dein.salon monorepo.
