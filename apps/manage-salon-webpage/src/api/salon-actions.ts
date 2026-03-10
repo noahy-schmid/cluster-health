@@ -125,8 +125,7 @@ export async function createSalonAction(
 
   const createResult = await Effect.runPromise(
     Effect.gen(function* () {
-      const useCase = yield* CreateSalonUseCase;
-      const salon = yield* useCase.execute({
+      const salon = yield* CreateSalonUseCase.execute({
         name: parsed.data.salonName,
         street: parsed.data.street,
         postalCode: parsed.data.postalCode,
@@ -214,8 +213,7 @@ export async function fetchSalon(
 
   return Effect.runPromise(
     Effect.gen(function* () {
-      const useCase = yield* GetSalonUseCase;
-      const salon = yield* useCase.execute({ salonId });
+      const salon = yield* GetSalonUseCase.execute({ salonId });
       return { success: true as const, data: salon };
     }).pipe(
       Effect.catchTags({
@@ -246,8 +244,7 @@ export async function updateSalonSettings(
 
   return Effect.runPromise(
     Effect.gen(function* () {
-      const useCase = yield* UpdateSalonUseCase;
-      const salon = yield* useCase.execute({
+      const salon = yield* UpdateSalonUseCase.execute({
         salonId,
         name: input.name,
         street: input.street,
@@ -295,8 +292,7 @@ export async function fetchSalonResources(
 
   return Effect.runPromise(
     Effect.gen(function* () {
-      const useCase = yield* ListResourcesUseCase;
-      const resources = yield* useCase.execute({ salonId });
+      const resources = yield* ListResourcesUseCase.execute({ salonId });
       return { success: true as const, data: resources };
     }).pipe(
       Effect.catchTag("InternalError", () =>
@@ -321,8 +317,7 @@ export async function createSalonResource(
 
   return Effect.runPromise(
     Effect.gen(function* () {
-      const useCase = yield* CreateResourceUseCase;
-      const resource = yield* useCase.execute({
+      const resource = yield* CreateResourceUseCase.execute({
         salonId,
         slug: input.slug,
         name: input.name,
@@ -365,8 +360,7 @@ export async function updateSalonResource(
 
   return Effect.runPromise(
     Effect.gen(function* () {
-      const useCase = yield* UpdateResourceUseCase;
-      const resource = yield* useCase.execute({
+      const resource = yield* UpdateResourceUseCase.execute({
         salonId,
         slug,
         name: input.name,
@@ -408,8 +402,7 @@ export async function deleteSalonResource(
 
   return Effect.runPromise(
     Effect.gen(function* () {
-      const useCase = yield* DeleteResourceUseCase;
-      yield* useCase.execute({ salonId, slug });
+      yield* DeleteResourceUseCase.execute({ salonId, slug });
       return { success: true as const, data: null };
     }).pipe(
       Effect.catchTags({

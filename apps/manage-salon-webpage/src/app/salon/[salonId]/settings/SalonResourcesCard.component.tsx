@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import FormInput from "@/components/website/forms/FormInput";
 import FormNumber from "@/components/website/forms/FormNumber";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
+import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import SettingsCard from "./SettingsCard.component";
 import type { CustomResourceDraft } from "./salon-resources.state";
 
@@ -83,14 +84,12 @@ export default function SalonResourcesCard({
               Fügen Sie weitere salonindividuelle Ressourcen hinzu.
             </p>
           </div>
-          <button
-            type="button"
+          <FlatIconTextButton
+            icon={Plus}
+            text="Ressource hinzufügen"
             onClick={onAddCustomResource}
-            className="inline-flex cursor-pointer items-center gap-sm rounded-md border border-border px-md py-sm text-sm text-fg-normal transition-colors hover:bg-bg-0"
-          >
-            <Plus className="h-4 w-4" />
-            Ressource hinzufügen
-          </button>
+            elevation={1}
+          />
         </div>
 
         {customResources.length === 0 && (

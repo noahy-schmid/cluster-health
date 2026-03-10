@@ -35,6 +35,19 @@ function createSalonFormState(salon: Salon): SalonFormState {
   };
 }
 
+function areSalonFormStatesEqual(
+  currentState: SalonFormState,
+  savedState: SalonFormState,
+) {
+  return (
+    currentState.name === savedState.name &&
+    currentState.street === savedState.street &&
+    currentState.postalCode === savedState.postalCode &&
+    currentState.city === savedState.city &&
+    currentState.phone === savedState.phone
+  );
+}
+
 export default function SalonSettingsPageClient({
   salonId,
   initialSalon,
@@ -53,23 +66,12 @@ export default function SalonSettingsPageClient({
     salonStateRef.current = salonState;
   }, [salonState]);
 
-  const isSalonDirty =
-    salonState.name !== savedSalonState.name ||
-    salonState.street !== savedSalonState.street ||
-    salonState.postalCode !== savedSalonState.postalCode ||
-    salonState.city !== savedSalonState.city ||
-    salonState.phone !== savedSalonState.phone;
+  const isSalonDirty = !areSalonFormStatesEqual(salonState, savedSalonState);
 
   const saveSalon = useCallback(async () => {
     const currentState = salonStateRef.current;
 
-    if (
-      currentState.name === savedSalonState.name &&
-      currentState.street === savedSalonState.street &&
-      currentState.postalCode === savedSalonState.postalCode &&
-      currentState.city === savedSalonState.city &&
-      currentState.phone === savedSalonState.phone
-    ) {
+    if (areSalonFormStatesEqual(currentState, savedSalonState)) {
       return;
     }
 

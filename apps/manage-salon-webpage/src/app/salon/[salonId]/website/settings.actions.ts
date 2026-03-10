@@ -51,8 +51,9 @@ export async function getWebsiteInitialValues(): Promise<
 
   const salonResult = await Effect.runPromise(
     Effect.gen(function* () {
-      const useCase = yield* GetSalonUseCase;
-      const salon = yield* useCase.execute({ salonId: authToken.salonId });
+      const salon = yield* GetSalonUseCase.execute({
+        salonId: authToken.salonId,
+      });
       return { success: true as const, data: salon };
     }).pipe(
       Effect.catchTags({

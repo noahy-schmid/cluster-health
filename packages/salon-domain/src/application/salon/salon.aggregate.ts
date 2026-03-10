@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Effect, Layer, ParseResult, Schema } from "effect";
 import {
   SalonPort,
   type PortSalon,
@@ -19,64 +19,38 @@ export type Salon = PortSalon;
 export type CreateSalonInput = PortCreateSalonInput;
 export type UpdateSalonInput = PortUpdateSalonInput;
 
-const validateSalonInput = (
-  input: CreateSalonInput | UpdateSalonInput,
-): Effect.Effect<CreateSalonInput | UpdateSalonInput, ValidationError> =>
-  Effect.gen(function* () {
-    const name = input.name.trim();
-    const street = input.street.trim();
-    const postalCode = input.postalCode.trim();
-    const city = input.city.trim();
-    const phone = input.phone.trim();
+const SalonInputSchema = Schema.Struct({
+  name: Schema.NonEmptyTrimmedString.annotations({
+    message: () => "Salon name cannot be empty",
+  }),
+  street: Schema.NonEmptyTrimmedString.annotations({
+    message: () => "Salon street cannot be empty",
+  }),
+  postalCode: Schema.NonEmptyTrimmedString.annotations({
+    message: () => "Salon postal code cannot be empty",
+  }),
+  city: Schema.NonEmptyTrimmedString.annotations({
+    message: () => "Salon city cannot be empty",
+  }),
+  phone: Schema.NonEmptyTrimmedString.annotations({
+    message: () => "Salon phone cannot be empty",
+  }),
+});
 
-    if (!name) {
-      return yield* Effect.fail(
+const decodeSalonInput = Schema.decodeUnknown(SalonInputSchema);
+
+const parseErrorToValidationError = (
+  error: ParseResult.ParseError,
+): Effect.Effect<never, ValidationError> =>
+  ParseResult.ArrayFormatter.formatError(error).pipe(
+    Effect.flatMap((issues) =>
+      Effect.fail(
         new ValidationError({
-          message: "Salon name cannot be empty",
+          message: issues[0]?.message ?? "Invalid salon input",
         }),
-      );
-    }
-
-    if (!street) {
-      return yield* Effect.fail(
-        new ValidationError({
-          message: "Salon street cannot be empty",
-        }),
-      );
-    }
-
-    if (!postalCode) {
-      return yield* Effect.fail(
-        new ValidationError({
-          message: "Salon postal code cannot be empty",
-        }),
-      );
-    }
-
-    if (!city) {
-      return yield* Effect.fail(
-        new ValidationError({
-          message: "Salon city cannot be empty",
-        }),
-      );
-    }
-
-    if (!phone) {
-      return yield* Effect.fail(
-        new ValidationError({
-          message: "Salon phone cannot be empty",
-        }),
-      );
-    }
-
-    return {
-      name,
-      street,
-      postalCode,
-      city,
-      phone,
-    };
-  });
+      ),
+    ),
+  );
 
 const make = Effect.gen(function* () {
   const salonPort = yield* SalonPort;
@@ -104,7 +78,9 @@ const make = Effect.gen(function* () {
 
   const createSalon = (input: CreateSalonInput) =>
     Effect.gen(function* () {
-      const validatedInput = yield* validateSalonInput(input);
+      const validatedInput = yield* decodeSalonInput(input).pipe(
+        Effect.catchTag("ParseError", parseErrorToValidationError),
+      );
       yield* ensureNameIsAvailable(validatedInput.name);
 
       return yield* salonPort.createSalon(validatedInput).pipe(
@@ -145,7 +121,9 @@ const make = Effect.gen(function* () {
   const updateSalon = (salonId: string, input: UpdateSalonInput) =>
     Effect.gen(function* () {
       const existingSalon = yield* getSalon(salonId);
-      const validatedInput = yield* validateSalonInput(input);
+      const validatedInput = yield* decodeSalonInput(input).pipe(
+        Effect.catchTag("ParseError", parseErrorToValidationError),
+      );
       yield* ensureNameIsAvailable(validatedInput.name, existingSalon.id);
 
       const updatedSalon = yield* salonPort
