@@ -44,7 +44,7 @@ export interface CreateWebsiteFixtureInput {
   faviconMediaId?: string | null;
 }
 
-function createMockSuffix() {
+function createFixtureSuffix() {
   return crypto.randomUUID().slice(0, 8);
 }
 
@@ -143,7 +143,7 @@ export async function createWebsite(
   env: TestEnvironment,
   input: CreateWebsiteFixtureInput,
 ) {
-  const suffix = createMockSuffix();
+  const suffix = createFixtureSuffix();
 
   return Effect.runPromise(
     WebsiteService.pipe(

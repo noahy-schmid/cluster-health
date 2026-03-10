@@ -23,7 +23,10 @@ import { PostgresSalonPortAdapter } from "../../adapters/postgres-salon-port.ada
 import { ResourceAggregate } from "../../application/resource/resource.aggregate";
 import { ServiceAggregate } from "../../application/service/service.aggregate";
 import { EmployeeServiceAggregate } from "../../application/employee-service/employee-service.aggregate";
-import { SEAT_SLUG, CLIMAZON_SLUG } from "../../application/resource/resource.constants";
+import {
+  SEAT_SLUG,
+  CLIMAZON_SLUG,
+} from "../../application/resource/resource.constants";
 import { CreateResourceUseCase } from "../create-resource.use-case";
 import { UpdateResourceUseCase } from "../update-resource.use-case";
 import { DeleteResourceUseCase } from "../delete-resource.use-case";
@@ -77,35 +80,35 @@ export type CreateSalonInput = Partial<
   Omit<SalonInsert, "id" | "createdAt" | "updatedAt">
 >;
 
-export interface CreateStylistInput
-  extends Partial<
-    Omit<StylistInsert, "id" | "createdAt" | "updatedAt" | "salonId">
-  > {
+export interface CreateStylistInput extends Partial<
+  Omit<StylistInsert, "id" | "createdAt" | "updatedAt" | "salonId">
+> {
   salonId: string;
 }
 
-export interface CreateResourceInput
-  extends Partial<Omit<ResourceInsert, "createdAt" | "updatedAt" | "salonId">> {
+export interface CreateResourceInput extends Partial<
+  Omit<ResourceInsert, "createdAt" | "updatedAt" | "salonId">
+> {
   salonId: string;
 }
 
-export interface CreateServicePhaseInput
-  extends Partial<Omit<ServicePhaseInsert, "id" | "serviceDefinitionId" | "order">> {
+export interface CreateServicePhaseInput extends Partial<
+  Omit<ServicePhaseInsert, "id" | "serviceDefinitionId" | "order">
+> {
   requiredResourceSlugs?: string[];
 }
 
-export interface CreateServiceDefinitionInput
-  extends Partial<
-    Omit<
-      ServiceDefinitionInsert,
-      "id" | "createdAt" | "updatedAt" | "deletedAt" | "salonId"
-    >
-  > {
+export interface CreateServiceDefinitionInput extends Partial<
+  Omit<
+    ServiceDefinitionInsert,
+    "id" | "createdAt" | "updatedAt" | "deletedAt" | "salonId"
+  >
+> {
   salonId: string;
   phases?: CreateServicePhaseInput[];
 }
 
-function createMockSuffix() {
+function createFixtureSuffix() {
   return crypto.randomUUID().slice(0, 8);
 }
 
@@ -122,12 +125,17 @@ function getDefaultServicePhases(): CreateServicePhaseInput[] {
 
 async function withDatabase<A>(
   env: TestEnvironment,
+  description: string,
   operation: (db: Database["db"]) => Promise<A>,
 ) {
   return Effect.runPromise(
     Effect.gen(function* () {
       const { db } = yield* Database;
-      return yield* Effect.tryPromise(() => operation(db));
+      return yield* Effect.tryPromise({
+        try: () => operation(db),
+        catch: (error) =>
+          new Error(`Failed to ${description}`, { cause: error }),
+      });
     }).pipe(Effect.provide(env.infrastructureLayer)),
   );
 }
@@ -267,8 +275,8 @@ export async function createSalon(
   env: TestEnvironment,
   input: CreateSalonInput = {},
 ) {
-  const suffix = createMockSuffix();
-  const [salon] = await withDatabase(env, (db) =>
+  const suffix = createFixtureSuffix();
+  const [salon] = await withDatabase(env, "create mock salon", (db) =>
     db
       .insert(salonsTable)
       .values({
@@ -293,9 +301,9 @@ export async function createStylist(
   env: TestEnvironment,
   input: CreateStylistInput,
 ) {
-  const suffix = createMockSuffix();
+  const suffix = createFixtureSuffix();
   const { salonId, ...stylistInput } = input;
-  const [stylist] = await withDatabase(env, (db) =>
+  const [stylist] = await withDatabase(env, "create mock stylist", (db) =>
     db
       .insert(stylistsTable)
       .values({
@@ -320,9 +328,9 @@ export async function createResource(
   env: TestEnvironment,
   input: CreateResourceInput,
 ) {
-  const suffix = createMockSuffix();
+  const suffix = createFixtureSuffix();
   const { salonId, ...resourceInput } = input;
-  const [resource] = await withDatabase(env, (db) =>
+  const [resource] = await withDatabase(env, "create mock resource", (db) =>
     db
       .insert(salonResourcesTable)
       .values({
@@ -346,24 +354,27 @@ export async function createWellKnownResources(
   env: TestEnvironment,
   salonId: string,
 ) {
-  const [seat, climazon] = await withDatabase(env, (db) =>
-    db
-      .insert(salonResourcesTable)
-      .values([
-        {
-          salonId,
-          slug: SEAT_SLUG,
-          name: "Mock Styling Chair",
-          amount: 3,
-        },
-        {
-          salonId,
-          slug: CLIMAZON_SLUG,
-          name: "Mock Climazon",
-          amount: 2,
-        },
-      ])
-      .returning(),
+  const [seat, climazon] = await withDatabase(
+    env,
+    "create well-known salon resources",
+    (db) =>
+      db
+        .insert(salonResourcesTable)
+        .values([
+          {
+            salonId,
+            slug: SEAT_SLUG,
+            name: "Mock Styling Chair",
+            amount: 3,
+          },
+          {
+            salonId,
+            slug: CLIMAZON_SLUG,
+            name: "Mock Climazon",
+            amount: 2,
+          },
+        ])
+        .returning(),
   );
 
   if (!seat || !climazon) {
@@ -377,38 +388,46 @@ export async function createServiceDefinition(
   env: TestEnvironment,
   input: CreateServiceDefinitionInput,
 ) {
-  const suffix = createMockSuffix();
-  const phases = input.phases?.length ? input.phases : getDefaultServicePhases();
-  const [serviceDefinition] = await withDatabase(env, (db) =>
-    db
-      .insert(serviceDefinitionsTable)
-      .values({
-        salonId: input.salonId,
-        serviceType: input.serviceType ?? "custom",
-        name: input.name ?? `Mock Service ${suffix}`,
-        description: input.description ?? "Mock service description",
-        priceInCents: input.priceInCents ?? 2500,
-      })
-      .returning(),
+  const suffix = createFixtureSuffix();
+  const phases = input.phases?.length
+    ? input.phases
+    : getDefaultServicePhases();
+  const [serviceDefinition] = await withDatabase(
+    env,
+    "create mock service definition",
+    (db) =>
+      db
+        .insert(serviceDefinitionsTable)
+        .values({
+          salonId: input.salonId,
+          serviceType: input.serviceType ?? "custom",
+          name: input.name ?? `Mock Service ${suffix}`,
+          description: input.description ?? "Mock service description",
+          priceInCents: input.priceInCents ?? 2500,
+        })
+        .returning(),
   );
 
   if (!serviceDefinition) {
     throw new Error("Failed to create mock service definition");
   }
 
-  const createdPhases = await withDatabase(env, (db) =>
-    db
-      .insert(servicePhasesTable)
-      .values(
-        phases.map((phase, index) => ({
-          serviceDefinitionId: serviceDefinition.id,
-          name: phase.name ?? `Mock Phase ${index + 1}`,
-          durationMinutes: phase.durationMinutes ?? 30,
-          order: index,
-          employeeRequired: phase.employeeRequired ?? true,
-        })),
-      )
-      .returning(),
+  const createdPhases = await withDatabase(
+    env,
+    "create mock service phases",
+    (db) =>
+      db
+        .insert(servicePhasesTable)
+        .values(
+          phases.map((phase, index) => ({
+            serviceDefinitionId: serviceDefinition.id,
+            name: phase.name ?? `Mock Phase ${index + 1}`,
+            durationMinutes: phase.durationMinutes ?? 30,
+            order: index,
+            employeeRequired: phase.employeeRequired ?? true,
+          })),
+        )
+        .returning(),
   );
 
   const resourceRequirements = createdPhases.flatMap((phase, index) =>
@@ -419,7 +438,7 @@ export async function createServiceDefinition(
   );
 
   if (resourceRequirements.length > 0) {
-    await withDatabase(env, (db) =>
+    await withDatabase(env, "persist mock phase resource requirements", (db) =>
       db.insert(phaseResourceRequirementsTable).values(resourceRequirements),
     );
   }
@@ -437,8 +456,11 @@ export async function createEmployeeServiceAssignment(
   env: TestEnvironment,
   input: typeof employeeServiceAssignmentsTable.$inferInsert,
 ) {
-  const [assignment] = await withDatabase(env, (db) =>
-    db.insert(employeeServiceAssignmentsTable).values(input).returning(),
+  const [assignment] = await withDatabase(
+    env,
+    "create mock employee service assignment",
+    (db) =>
+      db.insert(employeeServiceAssignmentsTable).values(input).returning(),
   );
 
   if (!assignment) {
