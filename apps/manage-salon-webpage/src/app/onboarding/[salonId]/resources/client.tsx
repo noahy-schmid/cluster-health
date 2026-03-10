@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Resource } from "@repo/salon-domain";
+import SalonResourcesCard from "@/app/salon/[salonId]/settings/SalonResourcesCard.component";
 import {
   CLIMAZON_SLUG,
-  type Resource,
   SEAT_SLUG,
-} from "@repo/salon-domain";
-import SalonResourcesCard from "@/app/salon/[salonId]/settings/SalonResourcesCard.component";
+} from "@/app/salon/[salonId]/settings/resource.constants";
 import { useSalonResourcesState } from "@/app/salon/[salonId]/settings/salon-resources.state";
 
 interface ResourceOnboardingClientProps {

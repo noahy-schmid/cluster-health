@@ -21,7 +21,7 @@ export type UpdateSalonInput = PortUpdateSalonInput;
 
 const validateSalonInput = (
   input: CreateSalonInput | UpdateSalonInput,
-): Effect.Effect<CreateSalonInput, ValidationError> =>
+): Effect.Effect<CreateSalonInput | UpdateSalonInput, ValidationError> =>
   Effect.gen(function* () {
     const name = input.name.trim();
     const street = input.street.trim();

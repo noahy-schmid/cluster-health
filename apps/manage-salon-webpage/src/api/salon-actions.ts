@@ -6,7 +6,6 @@ import z from "zod";
 import { ManagementUserRepository } from "@repo/auth-domain";
 import {
   CLIMAZON_SLUG,
-  ConflictError,
   CreateResourceUseCase,
   CreateResourceUseCaseLayer,
   CreateSalonUseCase,
@@ -15,10 +14,8 @@ import {
   DeleteResourceUseCaseLayer,
   GetSalonUseCase,
   GetSalonUseCaseLayer,
-  InternalError,
   ListResourcesUseCase,
   ListResourcesUseCaseLayer,
-  NotFoundError,
   type Resource,
   type Salon,
   SEAT_SLUG,
@@ -26,7 +23,6 @@ import {
   UpdateResourceUseCaseLayer,
   UpdateSalonUseCase,
   UpdateSalonUseCaseLayer,
-  ValidationError,
 } from "@repo/salon-domain";
 import { Effect } from "effect";
 import { SalonAccessGuard } from "./guards/salon.guard";
@@ -69,18 +65,6 @@ type ResourceInput = {
   name: string;
   amount: number;
 };
-
-function getResourceDisplayName(slug: string) {
-  if (slug === SEAT_SLUG) {
-    return "Bedienplätze";
-  }
-
-  if (slug === CLIMAZON_SLUG) {
-    return "Climazons";
-  }
-
-  return "Ressource";
-}
 
 /**
  * Creates a salon, binds it to the current management user, and redirects to
@@ -424,12 +408,10 @@ export async function deleteSalonResource(
             success: false as const,
             error: "Ressource nicht gefunden",
           }),
-        ConflictError: (error: ConflictError) =>
+        ConflictError: (error) =>
           Effect.succeed({
             success: false as const,
-            error:
-              error.message ||
-              `${getResourceDisplayName(slug)} wird noch in Dienstleistungen verwendet`,
+            error: error.message,
           }),
         InternalError: () =>
           Effect.succeed({

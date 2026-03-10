@@ -17,6 +17,13 @@ export default async function ResourceOnboardingPage({
   ]);
 
   if (!salonResult.success || !resourcesResult.success) {
+    let errorMessage = "Die Ressourcen konnten nicht geladen werden.";
+    if (!salonResult.success) {
+      errorMessage = salonResult.error;
+    } else if (!resourcesResult.success) {
+      errorMessage = resourcesResult.error;
+    }
+
     return (
       <div className="min-h-screen bg-bg-0 text-fg-normal">
         <div className="mx-auto max-w-4xl px-lg py-xl md:py-2xl">
@@ -26,7 +33,7 @@ export default async function ResourceOnboardingPage({
             subtitle="Die Resource-Konfiguration konnte nicht geladen werden."
           />
           <div className="rounded-lg border border-border bg-bg-1 p-lg text-fg-muted">
-            {salonResult.success ? resourcesResult.error : salonResult.error}
+            {errorMessage}
           </div>
         </div>
       </div>

@@ -1,12 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import {
-  CLIMAZON_SLUG,
-  type Resource,
-  type Salon,
-  SEAT_SLUG,
-} from "@repo/salon-domain";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Resource, Salon } from "@repo/salon-domain";
 import PageHeader from "@/components/PageHeader";
 import FormInput from "@/components/website/forms/FormInput";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -14,6 +9,7 @@ import { updateSalonSettings } from "@/api/salon-actions";
 import SettingsCard from "./SettingsCard.component";
 import SalonResourcesCard from "./SalonResourcesCard.component";
 import { useSalonResourcesState } from "./salon-resources.state";
+import { CLIMAZON_SLUG, SEAT_SLUG } from "./resource.constants";
 
 interface SalonSettingsPageClientProps {
   salonId: string;
@@ -47,29 +43,32 @@ export default function SalonSettingsPageClient({
   const [salonState, setSalonState] = useState(() =>
     createSalonFormState(initialSalon),
   );
+  const [savedSalonState, setSavedSalonState] = useState(() =>
+    createSalonFormState(initialSalon),
+  );
   const [salonError, setSalonError] = useState<string | undefined>();
 
   const salonStateRef = useRef(salonState);
-  salonStateRef.current = salonState;
-
-  const initialSalonRef = useRef(createSalonFormState(initialSalon));
+  useEffect(() => {
+    salonStateRef.current = salonState;
+  }, [salonState]);
 
   const isSalonDirty =
-    salonState.name !== initialSalonRef.current.name ||
-    salonState.street !== initialSalonRef.current.street ||
-    salonState.postalCode !== initialSalonRef.current.postalCode ||
-    salonState.city !== initialSalonRef.current.city ||
-    salonState.phone !== initialSalonRef.current.phone;
+    salonState.name !== savedSalonState.name ||
+    salonState.street !== savedSalonState.street ||
+    salonState.postalCode !== savedSalonState.postalCode ||
+    salonState.city !== savedSalonState.city ||
+    salonState.phone !== savedSalonState.phone;
 
   const saveSalon = useCallback(async () => {
     const currentState = salonStateRef.current;
 
     if (
-      currentState.name === initialSalonRef.current.name &&
-      currentState.street === initialSalonRef.current.street &&
-      currentState.postalCode === initialSalonRef.current.postalCode &&
-      currentState.city === initialSalonRef.current.city &&
-      currentState.phone === initialSalonRef.current.phone
+      currentState.name === savedSalonState.name &&
+      currentState.street === savedSalonState.street &&
+      currentState.postalCode === savedSalonState.postalCode &&
+      currentState.city === savedSalonState.city &&
+      currentState.phone === savedSalonState.phone
     ) {
       return;
     }
@@ -81,10 +80,10 @@ export default function SalonSettingsPageClient({
     }
 
     const nextState = createSalonFormState(result.data);
-    initialSalonRef.current = nextState;
+    setSavedSalonState(nextState);
     setSalonState(nextState);
     setSalonError(undefined);
-  }, [salonId]);
+  }, [salonId, savedSalonState]);
 
   const triggerSalonSave = useAutoSave(saveSalon);
 

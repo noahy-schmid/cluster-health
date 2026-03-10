@@ -1,11 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import {
-  CLIMAZON_SLUG,
-  type Resource,
-  SEAT_SLUG,
-} from "@repo/salon-domain";
+import type { Resource } from "@repo/salon-domain";
 import {
   createSalonResource,
   deleteSalonResource,
@@ -13,6 +9,7 @@ import {
   upsertWellKnownSalonResource,
 } from "@/api/salon-actions";
 import { useNotifications } from "@/components/notifications/useNotifications";
+import { CLIMAZON_SLUG, SEAT_SLUG } from "./resource.constants";
 
 export interface CustomResourceDraft {
   id: string;
