@@ -30,6 +30,8 @@ export default function ResourceOnboardingClient({
     customResources,
     setCustomResources,
     resourceError,
+    wellKnownResourceWarning,
+    hasWellKnownResourceIssues,
     clearResourceError,
     addCustomResource,
     removeCustomResource,
@@ -60,6 +62,7 @@ export default function ResourceOnboardingClient({
       climazonAmount={climazonAmount}
       customResources={customResources}
       resourceError={resourceError}
+      wellKnownResourceWarning={wellKnownResourceWarning}
       onSeatChange={(amount) => {
         clearResourceError();
         setSeatAmount(amount);
@@ -111,7 +114,7 @@ export default function ResourceOnboardingClient({
             type="button"
             onClick={() => void handleContinue()}
             className="cursor-pointer rounded-md bg-primary-500 px-lg py-sm text-base font-focus text-fg-inv transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isContinuing}
+            disabled={isContinuing || hasWellKnownResourceIssues}
           >
             {isContinuing ? "Speichern..." : "Weiter zum Salon"}
           </button>

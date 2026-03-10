@@ -449,16 +449,7 @@ export async function upsertWellKnownSalonResource(
   const name = getResourceDisplayName(slug);
 
   if (amount <= 0) {
-    if (!existingResource) {
-      return { success: true, data: null };
-    }
-
-    const deleteResult = await deleteSalonResource(salonId, slug);
-    if (!deleteResult.success) {
-      return deleteResult;
-    }
-
-    return { success: true, data: null };
+    return { success: true, data: existingResource };
   }
 
   if (existingResource) {

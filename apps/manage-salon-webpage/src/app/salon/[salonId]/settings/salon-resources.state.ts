@@ -83,6 +83,15 @@ export function useSalonResourcesState({
       })),
   );
 
+  const wellKnownResourceWarning = useMemo(() => {
+    if (seatAmount <= 0 || climazonAmount <= 0) {
+      return "Bitte hinterlegen Sie für Bedienplätze und Climazons einen Wert größer als 0, da Dienstleistungen diese Ressourcen für die Terminplanung benötigen.";
+    }
+
+    return undefined;
+  }, [climazonAmount, seatAmount]);
+  const hasWellKnownResourceIssues = !!wellKnownResourceWarning;
+
   const getUniqueSlug = useCallback(
     (name: string, currentId: string) => {
       const baseSlug = slugifyResourceName(name);
@@ -130,6 +139,10 @@ export function useSalonResourcesState({
       }
 
       setResourceError(undefined);
+      if (amount <= 0) {
+        return false;
+      }
+
       const result = await upsertWellKnownSalonResource(salonId, slug, amount);
 
       if (!result.success) {
@@ -281,6 +294,10 @@ export function useSalonResourcesState({
   );
 
   const persistAllResources = useCallback(async () => {
+    if (hasWellKnownResourceIssues) {
+      return false;
+    }
+
     const seatSaved = await persistWellKnownResource(SEAT_SLUG, {
       showSuccess: false,
     });
@@ -311,6 +328,7 @@ export function useSalonResourcesState({
     persistCustomResource,
     persistWellKnownResource,
     showNotification,
+    hasWellKnownResourceIssues,
   ]);
 
   return {
@@ -321,6 +339,8 @@ export function useSalonResourcesState({
     customResources,
     setCustomResources,
     resourceError,
+    wellKnownResourceWarning,
+    hasWellKnownResourceIssues,
     clearResourceError: () => setResourceError(undefined),
     addCustomResource,
     removeCustomResource,

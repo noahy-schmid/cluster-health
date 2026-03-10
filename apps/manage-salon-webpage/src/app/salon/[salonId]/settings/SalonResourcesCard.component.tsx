@@ -13,6 +13,7 @@ interface SalonResourcesCardProps {
   climazonAmount: number;
   customResources: CustomResourceDraft[];
   resourceError?: string;
+  wellKnownResourceWarning?: string;
   footer?: ReactNode;
   onSeatChange: (amount: number) => void;
   onSeatBlur: () => void;
@@ -30,6 +31,7 @@ export default function SalonResourcesCard({
   climazonAmount,
   customResources,
   resourceError,
+  wellKnownResourceWarning,
   footer,
   onSeatChange,
   onSeatBlur,
@@ -51,7 +53,7 @@ export default function SalonResourcesCard({
           label="Bedienplätze"
           value={seatAmount}
           min={0}
-          helperText="0 entfernt die Ressource aus dem Salon."
+          helperText="Diese Ressource wird für die Terminplanung benötigt und muss größer als 0 sein."
           onChange={onSeatChange}
           onBlur={onSeatBlur}
         />
@@ -59,11 +61,17 @@ export default function SalonResourcesCard({
           label="Climazons"
           value={climazonAmount}
           min={0}
-          helperText="0 entfernt die Ressource aus dem Salon."
+          helperText="Diese Ressource wird für die Terminplanung benötigt und muss größer als 0 sein."
           onChange={onClimazonChange}
           onBlur={onClimazonBlur}
         />
       </div>
+
+      {wellKnownResourceWarning && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-md">
+          <p className="text-sm text-amber-800">{wellKnownResourceWarning}</p>
+        </div>
+      )}
 
       <div className="space-y-md">
         <div className="flex items-center justify-between gap-md">
