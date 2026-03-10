@@ -4,7 +4,32 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import z from "zod";
 import { ManagementUserRepository } from "@repo/auth-domain";
-import { SalonRepository } from "@repo/salon-domain";
+import {
+  CLIMAZON_SLUG,
+  ConflictError,
+  CreateResourceUseCase,
+  CreateResourceUseCaseLayer,
+  CreateSalonUseCase,
+  CreateSalonUseCaseLayer,
+  DeleteResourceUseCase,
+  DeleteResourceUseCaseLayer,
+  GetSalonUseCase,
+  GetSalonUseCaseLayer,
+  InternalError,
+  ListResourcesUseCase,
+  ListResourcesUseCaseLayer,
+  NotFoundError,
+  type Resource,
+  type Salon,
+  SEAT_SLUG,
+  UpdateResourceUseCase,
+  UpdateResourceUseCaseLayer,
+  UpdateSalonUseCase,
+  UpdateSalonUseCaseLayer,
+  ValidationError,
+} from "@repo/salon-domain";
+import { Effect } from "effect";
+import { SalonAccessGuard } from "./guards/salon.guard";
 
 const createSalonSchema = z.object({
   salonName: z.string().min(1),
@@ -28,14 +53,41 @@ type CreateSalonActionResult =
       };
     };
 
+type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+type SalonSettingsInput = {
+  name: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  phone: string;
+};
+
+type ResourceInput = {
+  name: string;
+  amount: number;
+};
+
+function getResourceDisplayName(slug: string) {
+  if (slug === SEAT_SLUG) {
+    return "Bedienplätze";
+  }
+
+  if (slug === CLIMAZON_SLUG) {
+    return "Climazons";
+  }
+
+  return "Ressource";
+}
+
 /**
- * Creates a salon, binds it to the current management user, and redirects to the salon page.
- * @param prevState - Previous action state (unused).
- * @param formData - Form data from onboarding/create.
- * @returns Success state or field errors.
+ * Creates a salon, binds it to the current management user, and redirects to
+ * the resource onboarding step.
  */
 export async function createSalonAction(
-  prevState: unknown,
+  _prevState: unknown,
   formData: FormData,
 ): Promise<CreateSalonActionResult> {
   const data = Object.fromEntries(formData.entries());
@@ -79,31 +131,48 @@ export async function createSalonAction(
     };
   }
 
-  const salonRepository = new SalonRepository();
-  const createResult = await salonRepository.createSalon({
-    name: parsed.data.salonName,
-    street: parsed.data.street,
-    postalCode: parsed.data.postalCode,
-    city: parsed.data.city,
-    phone: parsed.data.phone,
-  });
+  const createResult = await Effect.runPromise(
+    Effect.gen(function* () {
+      const useCase = yield* CreateSalonUseCase;
+      const salon = yield* useCase.execute({
+        name: parsed.data.salonName,
+        street: parsed.data.street,
+        postalCode: parsed.data.postalCode,
+        city: parsed.data.city,
+        phone: parsed.data.phone,
+      });
+
+      return { success: true as const, data: salon };
+    }).pipe(
+      Effect.catchTags({
+        ValidationError: (error) =>
+          Effect.succeed({
+            success: false as const,
+            errors: {
+              form: { errors: [error.message] },
+            },
+          }),
+        ConflictError: () =>
+          Effect.succeed({
+            success: false as const,
+            errors: {
+              salonName: { errors: ["Salonname ist bereits vergeben."] },
+            },
+          }),
+        InternalError: () =>
+          Effect.succeed({
+            success: false as const,
+            errors: {
+              form: { errors: ["Salon konnte nicht erstellt werden."] },
+            },
+          }),
+      }),
+      Effect.provide(CreateSalonUseCaseLayer),
+    ),
+  );
 
   if (!createResult.success) {
-    if (createResult.errors === "Salon name already exists") {
-      return {
-        success: false,
-        errors: {
-          salonName: { errors: ["Salonname ist bereits vergeben."] },
-        },
-      };
-    }
-
-    return {
-      success: false,
-      errors: {
-        form: { errors: [createResult.errors] },
-      },
-    };
+    return createResult;
   }
 
   const bindResult = await authRepository.bindSalonToUser(
@@ -120,9 +189,7 @@ export async function createSalonAction(
     };
   }
 
-  const tokenResult = await authRepository.issueTokenForUser(
-    authResult.data.userId,
-  );
+  const tokenResult = await authRepository.issueTokenForUser(authResult.data.userId);
 
   if (!tokenResult.success) {
     return {
@@ -140,5 +207,278 @@ export async function createSalonAction(
     sameSite: "strict",
   });
 
-  redirect(`/salon/${createResult.data.id}`);
+  redirect(`/onboarding/${createResult.data.id}/resources`);
+}
+
+export async function fetchSalon(
+  salonId: string,
+): Promise<ActionResult<Salon>> {
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const useCase = yield* GetSalonUseCase;
+      const salon = yield* useCase.execute({ salonId });
+      return { success: true as const, data: salon };
+    }).pipe(
+      Effect.catchTags({
+        NotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Salon nicht gefunden",
+          }),
+        InternalError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Salon konnte nicht geladen werden",
+          }),
+      }),
+      Effect.provide(GetSalonUseCaseLayer),
+    ),
+  );
+}
+
+export async function updateSalonSettings(
+  salonId: string,
+  input: SalonSettingsInput,
+): Promise<ActionResult<Salon>> {
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const useCase = yield* UpdateSalonUseCase;
+      const salon = yield* useCase.execute({
+        salonId,
+        name: input.name,
+        street: input.street,
+        postalCode: input.postalCode,
+        city: input.city,
+        phone: input.phone,
+      });
+
+      return { success: true as const, data: salon };
+    }).pipe(
+      Effect.catchTags({
+        ValidationError: (error) =>
+          Effect.succeed({
+            success: false as const,
+            error: error.message,
+          }),
+        ConflictError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Salonname ist bereits vergeben",
+          }),
+        NotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Salon nicht gefunden",
+          }),
+        InternalError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Salon konnte nicht gespeichert werden",
+          }),
+      }),
+      Effect.provide(UpdateSalonUseCaseLayer),
+    ),
+  );
+}
+
+export async function fetchSalonResources(
+  salonId: string,
+): Promise<ActionResult<Resource[]>> {
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const useCase = yield* ListResourcesUseCase;
+      const resources = yield* useCase.execute({ salonId });
+      return { success: true as const, data: resources };
+    }).pipe(
+      Effect.catchTag("InternalError", () =>
+        Effect.succeed({
+          success: false as const,
+          error: "Ressourcen konnten nicht geladen werden",
+        }),
+      ),
+      Effect.provide(ListResourcesUseCaseLayer),
+    ),
+  );
+}
+
+export async function createSalonResource(
+  salonId: string,
+  input: ResourceInput & { slug: string },
+): Promise<ActionResult<Resource>> {
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const useCase = yield* CreateResourceUseCase;
+      const resource = yield* useCase.execute({
+        salonId,
+        slug: input.slug,
+        name: input.name,
+        amount: input.amount,
+      });
+
+      return { success: true as const, data: resource };
+    }).pipe(
+      Effect.catchTags({
+        ValidationError: (error) =>
+          Effect.succeed({
+            success: false as const,
+            error: error.message,
+          }),
+        NotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Salon nicht gefunden",
+          }),
+        InternalError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Ressource konnte nicht erstellt werden",
+          }),
+      }),
+      Effect.provide(CreateResourceUseCaseLayer),
+    ),
+  );
+}
+
+export async function updateSalonResource(
+  salonId: string,
+  slug: string,
+  input: ResourceInput,
+): Promise<ActionResult<Resource>> {
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const useCase = yield* UpdateResourceUseCase;
+      const resource = yield* useCase.execute({
+        salonId,
+        slug,
+        name: input.name,
+        amount: input.amount,
+      });
+
+      return { success: true as const, data: resource };
+    }).pipe(
+      Effect.catchTags({
+        ValidationError: (error) =>
+          Effect.succeed({
+            success: false as const,
+            error: error.message,
+          }),
+        NotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Ressource nicht gefunden",
+          }),
+        InternalError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Ressource konnte nicht gespeichert werden",
+          }),
+      }),
+      Effect.provide(UpdateResourceUseCaseLayer),
+    ),
+  );
+}
+
+export async function deleteSalonResource(
+  salonId: string,
+  slug: string,
+): Promise<ActionResult<null>> {
+  const access = await SalonAccessGuard.canAccessSalon(salonId);
+  if (!access.success) {
+    return { success: false, error: access.error };
+  }
+
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const useCase = yield* DeleteResourceUseCase;
+      yield* useCase.execute({ salonId, slug });
+      return { success: true as const, data: null };
+    }).pipe(
+      Effect.catchTags({
+        NotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Ressource nicht gefunden",
+          }),
+        ConflictError: (error: ConflictError) =>
+          Effect.succeed({
+            success: false as const,
+            error:
+              error.message ||
+              `${getResourceDisplayName(slug)} wird noch in Dienstleistungen verwendet`,
+          }),
+        InternalError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Ressource konnte nicht gelöscht werden",
+          }),
+      }),
+      Effect.provide(DeleteResourceUseCaseLayer),
+    ),
+  );
+}
+
+export async function upsertWellKnownSalonResource(
+  salonId: string,
+  slug: typeof SEAT_SLUG | typeof CLIMAZON_SLUG,
+  amount: number,
+): Promise<ActionResult<Resource | null>> {
+  const existingResources = await fetchSalonResources(salonId);
+  if (!existingResources.success) {
+    return existingResources;
+  }
+
+  const existingResource =
+    existingResources.data.find((resource) => resource.slug === slug) ?? null;
+  const name = getResourceDisplayName(slug);
+
+  if (amount <= 0) {
+    if (!existingResource) {
+      return { success: true, data: null };
+    }
+
+    const deleteResult = await deleteSalonResource(salonId, slug);
+    if (!deleteResult.success) {
+      return deleteResult;
+    }
+
+    return { success: true, data: null };
+  }
+
+  if (existingResource) {
+    return updateSalonResource(salonId, slug, {
+      name,
+      amount,
+    });
+  }
+
+  return createSalonResource(salonId, {
+    slug,
+    name,
+    amount,
+  });
 }

@@ -2,7 +2,7 @@
 
 import { AuthGuard } from "@/api/guards/auth.guard";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
-import { SalonRepository } from "@repo/salon-domain";
+import { GetSalonUseCase, GetSalonUseCaseLayer } from "@repo/salon-domain";
 import { Effect, Option } from "effect";
 import { WebsiteService, type WebsiteId } from "@repo/website-domain";
 import { WebsiteLayer } from "@repo/website-domain/src/layers";
@@ -49,8 +49,24 @@ export async function getWebsiteInitialValues(): Promise<
     return { success: false, error: "Kein Salon zugeordnet" };
   }
 
-  const salonRepository = new SalonRepository();
-  const salonResult = await salonRepository.fetchSalonById(authToken.salonId);
+  const salonResult = await Effect.runPromise(
+    Effect.gen(function* () {
+      const useCase = yield* GetSalonUseCase;
+      const salon = yield* useCase.execute({ salonId: authToken.salonId });
+      return { success: true as const, data: salon };
+    }).pipe(
+      Effect.catchTags({
+        NotFoundError: () =>
+          Effect.succeed({ success: false as const, error: "Salon nicht gefunden" }),
+        InternalError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Salon konnte nicht geladen werden",
+          }),
+      }),
+      Effect.provide(GetSalonUseCaseLayer),
+    ),
+  );
 
   if (!salonResult.success) {
     return { success: false, error: "Salon nicht gefunden" };

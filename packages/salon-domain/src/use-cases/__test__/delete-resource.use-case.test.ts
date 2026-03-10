@@ -5,6 +5,7 @@ import { CreateResourceUseCase } from "../create-resource.use-case";
 import { DeleteResourceUseCase } from "../delete-resource.use-case";
 import { ListResourcesUseCase } from "../list-resources.use-case";
 import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
+import { CreateSalonUseCase } from "../create-salon.use-case";
 
 describe("DeleteResourceUseCase", () => {
   let ctx: TestContext;
@@ -94,6 +95,67 @@ describe("DeleteResourceUseCase", () => {
 
     await Effect.runPromise(
       program.pipe(
+        Effect.provide(ctx.resourceUseCaseLayer),
+        Effect.provide(ctx.salonUseCaseLayer),
+        Effect.provide(ctx.serviceUseCaseLayer),
+      ),
+    );
+  });
+
+  it("should ignore resource references in other salons", async () => {
+    const program = Effect.gen(function* () {
+      const createSalonUC = yield* CreateSalonUseCase;
+      const createResourceUC = yield* CreateResourceUseCase;
+      const createServiceUC = yield* CreateCustomServiceUseCase;
+      const deleteResourceUC = yield* DeleteResourceUseCase;
+
+      const otherSalon = yield* createSalonUC.execute({
+        name: "Other Salon",
+        street: "Nebenstraße 3",
+        postalCode: "80331",
+        city: "München",
+        phone: "+49 89 987654",
+      });
+
+      yield* createResourceUC.execute({
+        salonId: otherSalon.id,
+        slug: "shared-resource",
+        name: "Shared Resource",
+        amount: 1,
+      });
+
+      yield* createServiceUC.execute({
+        salonId: otherSalon.id,
+        name: "Other Salon Service",
+        description: "Test",
+        priceInCents: 4000,
+        phases: [
+          {
+            name: "Phase 1",
+            durationMinutes: 20,
+            employeeRequired: true,
+            requiredResourceSlugs: ["shared-resource"],
+          },
+        ],
+      });
+
+      const deletable = yield* createResourceUC.execute({
+        salonId: ctx.salonId,
+        slug: "shared-resource",
+        name: "Shared Resource",
+        amount: 1,
+      });
+
+      const result = yield* deleteResourceUC
+        .execute({ salonId: ctx.salonId, slug: deletable.slug })
+        .pipe(Effect.either);
+
+      expect(Either.isLeft(result)).toBe(false);
+    });
+
+    await Effect.runPromise(
+      program.pipe(
+        Effect.provide(ctx.salonUseCaseLayer),
         Effect.provide(ctx.resourceUseCaseLayer),
         Effect.provide(ctx.serviceUseCaseLayer),
       ),

@@ -39,6 +39,28 @@ export {
   collapseErrorsToInternalError,
 } from "./application/errors";
 
+// Salon domain types
+export type { Salon } from "./application/salon/salon.aggregate";
+
+// Salon use cases
+export {
+  CreateSalonUseCase,
+  type CreateSalonCommand,
+  type CreateSalonResult,
+} from "./use-cases/create-salon.use-case";
+
+export {
+  GetSalonUseCase,
+  type GetSalonQuery,
+  type GetSalonResult,
+} from "./use-cases/get-salon.use-case";
+
+export {
+  UpdateSalonUseCase,
+  type UpdateSalonCommand,
+  type UpdateSalonResult,
+} from "./use-cases/update-salon.use-case";
+
 // Resource domain types
 export type { Resource } from "./application/resource/resource.aggregate";
 export {
