@@ -21,7 +21,7 @@ export class StylistTopic {
         subtitle: input.subtitle ?? `Senior Stylist ${stylistNumber}`,
         description:
           input.description ??
-          `Playwright Beschreibung fuer Stylist ${stylistNumber}.`,
+          `Playwright Beschreibung für Stylist ${stylistNumber}.`,
         profileImagePath: input.profileImagePath,
       };
 

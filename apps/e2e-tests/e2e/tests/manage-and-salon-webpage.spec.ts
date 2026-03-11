@@ -1,6 +1,8 @@
 import { expect, test } from "../fixtures/cross-app.fixture";
 import path from "path";
 
+const repositoryRoot = path.resolve(__dirname, "../../../..");
+
 test.describe("Manage Salon webpage + Salon webpage", () => {
   test.describe.configure({ timeout: 120_000 });
 
@@ -47,12 +49,12 @@ test.describe("Manage Salon webpage + Salon webpage", () => {
     publicPage,
   }) => {
     const firstStylistImagePath = path.resolve(
-      __dirname,
-      "../../../../apps/salon-webpage/public/images/hair.png",
+      repositoryRoot,
+      "apps/salon-webpage/public/images/hair.png",
     );
     const secondStylistImagePath = path.resolve(
-      __dirname,
-      "../../../../apps/salon-webpage/public/images/house.png",
+      repositoryRoot,
+      "apps/salon-webpage/public/images/house.png",
     );
 
     await scenario.iHaveAnAccount();
@@ -93,7 +95,7 @@ test.describe("Manage Salon webpage + Salon webpage", () => {
     const secondStylist = await scenario.iCreateAStylist({
       name: "Playwright Stylist Two",
       subtitle: "Color Specialist",
-      description: "Bekannt fuer individuelle Farben und Beratung.",
+      description: "Bekannt für individuelle Farben und Beratung.",
       profileImagePath: secondStylistImagePath,
     });
 
