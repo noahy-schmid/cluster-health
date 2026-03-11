@@ -128,7 +128,9 @@ export async function createSalonAction(
     };
   }
 
-  const tokenResult = await authRepository.issueTokenForUser(authPayload.userId);
+  const tokenResult = await authRepository.issueTokenForUser(
+    authPayload.userId,
+  );
   if (!tokenResult.success) {
     return {
       success: false,

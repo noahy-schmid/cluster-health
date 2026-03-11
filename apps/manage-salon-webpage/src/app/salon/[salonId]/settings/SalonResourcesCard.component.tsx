@@ -81,7 +81,8 @@ export default function SalonResourcesCard({
               Weitere Ausstattung
             </h3>
             <p className="text-sm text-fg-muted">
-              Ergänzen Sie weitere Geräte oder Plätze, die für Ihre Terminplanung relevant sind.
+              Ergänzen Sie weitere Geräte oder Plätze, die für Ihre
+              Terminplanung relevant sind.
             </p>
           </div>
           <FlatIconTextButton

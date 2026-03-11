@@ -1,6 +1,9 @@
 "use server";
 
-import { UpdateSalonUseCase, UpdateSalonUseCaseLayer } from "@repo/salon-domain";
+import {
+  UpdateSalonUseCase,
+  UpdateSalonUseCaseLayer,
+} from "@repo/salon-domain";
 import type { Salon } from "@repo/salon-domain";
 import { Effect } from "effect";
 import { SalonAccessGuard } from "@/api/guards/salon.guard";
