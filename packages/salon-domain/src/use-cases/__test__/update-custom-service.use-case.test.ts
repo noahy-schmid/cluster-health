@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
 import {
-  createSalon,
-  createServiceDefinition,
+  createMockSalon,
+  createMockServiceDefinition,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
@@ -14,7 +14,7 @@ describe("UpdateCustomServiceUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createSalon(env)).id;
+    salonId = (await createMockSalon(env)).id;
   }, 60_000);
 
   afterAll(async () => {
@@ -22,7 +22,7 @@ describe("UpdateCustomServiceUseCase", () => {
   });
 
   it("should update a custom service definition with new phases", async () => {
-    const service = await createServiceDefinition(env, {
+    const service = await createMockServiceDefinition(env, {
       salonId,
       name: "Original Service",
       description: "Original description",

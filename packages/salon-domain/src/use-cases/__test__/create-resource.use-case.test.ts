@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
 import {
-  createSalon,
+  createMockSalon,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
@@ -13,7 +13,7 @@ describe("CreateResourceUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createSalon(env)).id;
+    salonId = (await createMockSalon(env)).id;
   }, 60_000);
 
   afterAll(async () => {

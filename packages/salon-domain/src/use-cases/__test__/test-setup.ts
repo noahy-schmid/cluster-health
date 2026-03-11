@@ -297,6 +297,8 @@ export async function createSalon(
   return salon;
 }
 
+export const createMockSalon = createSalon;
+
 export async function createStylist(
   env: TestEnvironment,
   input: CreateStylistInput,
@@ -324,6 +326,8 @@ export async function createStylist(
   return stylist;
 }
 
+export const createMockStylist = createStylist;
+
 export async function createResource(
   env: TestEnvironment,
   input: CreateResourceInput,
@@ -349,6 +353,8 @@ export async function createResource(
 
   return resource;
 }
+
+export const createMockResource = createResource;
 
 export async function createWellKnownResources(
   env: TestEnvironment,
@@ -383,6 +389,8 @@ export async function createWellKnownResources(
 
   return [seat, climazon] as const;
 }
+
+export const createMockWellKnownResources = createWellKnownResources;
 
 export async function createServiceDefinition(
   env: TestEnvironment,
@@ -452,6 +460,8 @@ export async function createServiceDefinition(
   };
 }
 
+export const createMockServiceDefinition = createServiceDefinition;
+
 export async function createEmployeeServiceAssignment(
   env: TestEnvironment,
   input: typeof employeeServiceAssignmentsTable.$inferInsert,
@@ -469,3 +479,6 @@ export async function createEmployeeServiceAssignment(
 
   return assignment;
 }
+
+export const createMockEmployeeServiceAssignment =
+  createEmployeeServiceAssignment;

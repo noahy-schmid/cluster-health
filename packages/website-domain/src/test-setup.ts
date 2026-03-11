@@ -21,6 +21,7 @@ import { SectionAggregate } from "./application/section/section.aggregate";
 import { MediaPort } from "./ports/media.port";
 import { WebsiteService } from "./application/website/website.interface";
 import { WebsiteServiceLive } from "./application/website/website.service";
+import type { CreateSectionCommand } from "./use-cases/create-section.use-case";
 
 export interface TestEnvironment {
   useCaseLayer: Layer.Layer<
@@ -42,6 +43,12 @@ export interface CreateWebsiteFixtureInput {
   slug?: string;
   title?: string;
   faviconMediaId?: string | null;
+}
+
+export interface CreateSectionFixtureInput {
+  websiteId: string;
+  type: CreateSectionCommand["type"];
+  position?: number;
 }
 
 function createFixtureSuffix() {
@@ -159,6 +166,42 @@ export async function createWebsite(
         }),
       ),
       Effect.provide(env.websiteServiceLayer),
+    ),
+  );
+}
+
+export function createMockSalon(env: TestEnvironment) {
+  return env.createSalon();
+}
+
+export const createMockWebsite = createWebsite;
+
+export async function createMockSection(
+  env: TestEnvironment,
+  input: CreateSectionFixtureInput,
+) {
+  return Effect.runPromise(
+    CreateSectionUseCase.pipe(
+      Effect.flatMap((useCase) =>
+        useCase.execute({
+          websiteId: input.websiteId,
+          type: input.type,
+          position: input.position ?? 0,
+        }),
+      ),
+      Effect.provide(env.useCaseLayer),
+    ),
+  );
+}
+
+export async function createMockSections(
+  env: TestEnvironment,
+  websiteId: string,
+  types: CreateSectionCommand["type"][],
+) {
+  return Promise.all(
+    types.map((type, index) =>
+      createMockSection(env, { websiteId, type, position: index }),
     ),
   );
 }

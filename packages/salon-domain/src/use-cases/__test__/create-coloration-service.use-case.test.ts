@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
 import {
-  createSalon,
-  createWellKnownResources,
+  createMockSalon,
+  createMockWellKnownResources,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
@@ -14,8 +14,8 @@ describe("CreateColorationServiceUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createSalon(env)).id;
-    await createWellKnownResources(env, salonId);
+    salonId = (await createMockSalon(env)).id;
+    await createMockWellKnownResources(env, salonId);
   }, 60_000);
 
   afterAll(async () => {

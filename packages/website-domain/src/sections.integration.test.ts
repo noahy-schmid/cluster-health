@@ -16,15 +16,16 @@ import {
 } from "./use-cases/reorder-sections.use-case";
 import { type AllSections } from "./application/section/section.aggregate";
 import {
-  createWebsite,
+  createMockSalon,
+  createMockSection,
+  createMockSections,
+  createMockWebsite,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
 
 describe("Section Use Cases Integration Tests", () => {
   let env: TestEnvironment;
-  let websiteId: string;
-  let salonId: string;
   let useCaseLayer: Layer.Layer<
     | CreateSectionUseCase
     | UpdateSectionUseCase
@@ -38,12 +39,6 @@ describe("Section Use Cases Integration Tests", () => {
   beforeAll(async () => {
     env = await setupTestEnvironment();
     useCaseLayer = env.useCaseLayer;
-    salonId = env.createSalon();
-    websiteId = await createWebsite(env, {
-      salonId,
-      slug: "test-sections-website",
-      title: "Test Sections Website",
-    });
   }, 60_000);
 
   afterAll(async () => {
@@ -51,6 +46,10 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a center-text section with defaults", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+
     const command: CreateSectionCommand = {
       websiteId,
       type: "center-text",
@@ -78,6 +77,10 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a gallery section with defaults", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+
     const command: CreateSectionCommand = {
       websiteId,
       type: "gallery",
@@ -102,6 +105,10 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a text-with-image section with defaults", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+
     const command: CreateSectionCommand = {
       websiteId,
       type: "text-with-image",
@@ -125,6 +132,10 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a reason section with default items", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+
     const command: CreateSectionCommand = {
       websiteId,
       type: "reason",
@@ -149,6 +160,10 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a stylists section with defaults", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+
     const command: CreateSectionCommand = {
       websiteId,
       type: "stylists-section",
@@ -172,6 +187,17 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should list all created sections for the website", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+    await createMockSections(env, websiteId, [
+      "center-text",
+      "gallery",
+      "text-with-image",
+      "reason",
+      "stylists-section",
+    ]);
+
     const program = Effect.gen(function* () {
       const useCase = yield* ListSectionsUseCase;
       const sections = yield* useCase.execute({ websiteId });
@@ -192,15 +218,20 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should update a center-text section", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+    const centerText = await createMockSection(env, {
+      websiteId,
+      type: "center-text",
+      position: 0,
+    });
+
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
       const updateUseCase = yield* UpdateSectionUseCase;
 
-      const sections = yield* listUseCase.execute({ websiteId });
-      const centerText = sections.find((s) => s.type === "center-text");
-      expect(centerText).toBeDefined();
-
-      if (centerText && centerText.type === "center-text") {
+      if (centerText.type === "center-text") {
         const updatedSection: AllSections = {
           ...centerText,
           settings: {
@@ -225,15 +256,20 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should update a gallery section", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+    const gallery = await createMockSection(env, {
+      websiteId,
+      type: "gallery",
+      position: 0,
+    });
+
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
       const updateUseCase = yield* UpdateSectionUseCase;
 
-      const sections = yield* listUseCase.execute({ websiteId });
-      const gallery = sections.find((s) => s.type === "gallery");
-      expect(gallery).toBeDefined();
-
-      if (gallery && gallery.type === "gallery") {
+      if (gallery.type === "gallery") {
         const updatedSection: AllSections = {
           ...gallery,
           settings: {
@@ -258,6 +294,15 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should delete a section", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+    const sectionToDelete = await createMockSection(env, {
+      websiteId,
+      type: "stylists-section",
+      position: 0,
+    });
+
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
       const deleteUseCase = yield* DeleteSectionUseCase;
@@ -265,8 +310,6 @@ describe("Section Use Cases Integration Tests", () => {
       const sections = yield* listUseCase.execute({ websiteId });
       const initialCount = sections.length;
       expect(initialCount).toBeGreaterThan(0);
-
-      const sectionToDelete = sections[sections.length - 1]!;
       yield* deleteUseCase.execute({
         websiteId,
         sectionId: sectionToDelete.id,
@@ -283,6 +326,15 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should reorder sections", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+    await createMockSections(env, websiteId, [
+      "center-text",
+      "gallery",
+      "reason",
+    ]);
+
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
       const reorderUseCase = yield* ReorderSectionsUseCase;
@@ -308,6 +360,10 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should fail to create section with invalid type", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;
       const result = yield* useCase
@@ -348,6 +404,10 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should fail to reorder with mismatched section IDs", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+
     const program = Effect.gen(function* () {
       const reorderUseCase = yield* ReorderSectionsUseCase;
       const result = yield* reorderUseCase
@@ -367,15 +427,19 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should validate reason section items on update", async () => {
+    const websiteId = await createMockWebsite(env, {
+      salonId: createMockSalon(env),
+    });
+    const reasonSection = await createMockSection(env, {
+      websiteId,
+      type: "reason",
+      position: 0,
+    });
+
     const program = Effect.gen(function* () {
-      const listUseCase = yield* ListSectionsUseCase;
       const updateUseCase = yield* UpdateSectionUseCase;
 
-      const sections = yield* listUseCase.execute({ websiteId });
-      const reasonSection = sections.find((s) => s.type === "reason");
-      expect(reasonSection).toBeDefined();
-
-      if (reasonSection && reasonSection.type === "reason") {
+      if (reasonSection.type === "reason") {
         // Try to update with only 1 item (should fail - minimum is 2)
         const invalidSection: AllSections = {
           ...reasonSection,

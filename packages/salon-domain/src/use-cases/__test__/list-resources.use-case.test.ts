@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect } from "effect";
 import {
-  createResource,
-  createSalon,
+  createMockResource,
+  createMockSalon,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
@@ -14,7 +14,7 @@ describe("ListResourcesUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createSalon(env)).id;
+    salonId = (await createMockSalon(env)).id;
   }, 60_000);
 
   afterAll(async () => {
@@ -22,7 +22,7 @@ describe("ListResourcesUseCase", () => {
   });
 
   it("should list resources for a salon", async () => {
-    await createResource(env, {
+    await createMockResource(env, {
       salonId,
       slug: "list-test",
       name: "List Test Resource",

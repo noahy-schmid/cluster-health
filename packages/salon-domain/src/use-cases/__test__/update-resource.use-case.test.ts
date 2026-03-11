@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect } from "effect";
 import {
-  createSalon,
+  createMockResource,
+  createMockSalon,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
-import { CreateResourceUseCase } from "../create-resource.use-case";
 import { UpdateResourceUseCase } from "../update-resource.use-case";
 
 describe("UpdateResourceUseCase", () => {
@@ -14,7 +14,7 @@ describe("UpdateResourceUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createSalon(env)).id;
+    salonId = (await createMockSalon(env)).id;
   }, 60_000);
 
   afterAll(async () => {
@@ -22,16 +22,15 @@ describe("UpdateResourceUseCase", () => {
   });
 
   it("should update a resource", async () => {
-    const program = Effect.gen(function* () {
-      const createUseCase = yield* CreateResourceUseCase;
-      const updateUseCase = yield* UpdateResourceUseCase;
+    const resource = await createMockResource(env, {
+      salonId,
+      slug: "old-resource",
+      name: "Old Name",
+      amount: 2,
+    });
 
-      const resource = yield* createUseCase.execute({
-        salonId,
-        slug: "old-resource",
-        name: "Old Name",
-        amount: 2,
-      });
+    const program = Effect.gen(function* () {
+      const updateUseCase = yield* UpdateResourceUseCase;
 
       const updated = yield* updateUseCase.execute({
         salonId,

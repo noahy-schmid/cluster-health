@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
 import {
-  createSalon,
-  createServiceDefinition,
-  createStylist,
+  createMockSalon,
+  createMockServiceDefinition,
+  createMockStylist,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
@@ -20,12 +20,12 @@ describe("Employee-Service Assignment Use Cases", () => {
   beforeAll(async () => {
     env = await setupTestEnvironment();
 
-    const salon = await createSalon(env);
-    const stylist = await createStylist(env, {
+    const salon = await createMockSalon(env);
+    const stylist = await createMockStylist(env, {
       salonId: salon.id,
       name: "Test Stylist",
     });
-    const service = await createServiceDefinition(env, {
+    const service = await createMockServiceDefinition(env, {
       salonId: salon.id,
       name: "Assignment Test Service",
       description: "For assignment tests",

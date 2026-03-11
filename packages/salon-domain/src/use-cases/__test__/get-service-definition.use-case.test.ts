@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect } from "effect";
 import {
-  createSalon,
-  createServiceDefinition,
+  createMockSalon,
+  createMockServiceDefinition,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
@@ -14,7 +14,7 @@ describe("GetServiceDefinitionUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createSalon(env)).id;
+    salonId = (await createMockSalon(env)).id;
   }, 60_000);
 
   afterAll(async () => {
@@ -22,7 +22,7 @@ describe("GetServiceDefinitionUseCase", () => {
   });
 
   it("should return a service definition by id", async () => {
-    const created = await createServiceDefinition(env, {
+    const created = await createMockServiceDefinition(env, {
       salonId,
       name: "Get Test Service",
       description: "For getting",
