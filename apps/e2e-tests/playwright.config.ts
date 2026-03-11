@@ -3,6 +3,8 @@ import path from "path";
 import { e2eEnvironment } from "./e2e/env";
 
 const repositoryRoot = path.resolve(__dirname, "../..");
+const appServerStartupTimeout = 240_000;
+const salonWebpageBuildIdPath = "apps/salon-webpage/.next/BUILD_ID";
 const htmlReporter = ["html", { open: "never" }] as const;
 const minioCommand = [
   "docker rm -f deinsalon-e2e-minio >/dev/null 2>&1 || true",
@@ -19,7 +21,12 @@ const prepareManageAppCommand = [
   "pnpm build",
   `node -e "require('fs').rmSync('.turbo/cache', { recursive: true, force: true })"`,
   "pnpm drizzle:push",
-  "pnpm dev --filter manage-salon-webpage",
+  "pnpm --filter manage-salon-webpage start",
+].join(" && ");
+const waitForSalonBuildCommand = [
+  "corepack enable",
+  `node -e "const fs=require('fs'); const path='${salonWebpageBuildIdPath}'; const startedAt=Date.now(); const timeoutMs=${appServerStartupTimeout}; const wait=()=>{ if (fs.existsSync(path)) process.exit(0); if (Date.now() - startedAt > timeoutMs) { console.error('Timed out waiting for salon-webpage build output at ' + path); process.exit(1); } setTimeout(wait, 1000); }; wait()"`,
+  "pnpm --filter salon-webpage start",
 ].join(" && ");
 
 export default defineConfig({
@@ -69,11 +76,10 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       stdout: "pipe",
       stderr: "pipe",
-      timeout: 240_000,
+      timeout: appServerStartupTimeout,
     },
     {
-      command:
-        "corepack pnpm --filter salon-webpage exec next dev --turbopack -p 3001",
+      command: waitForSalonBuildCommand,
       cwd: repositoryRoot,
       env: {
         ...process.env,
@@ -87,12 +93,13 @@ export default defineConfig({
         S3_WEBSITE_BUCKET_NAME: e2eEnvironment.s3BucketName,
         NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS: "1",
         NODE_ENV: e2eEnvironment.nodeEnv,
+        PORT: "3001",
       },
       port: 3001,
       reuseExistingServer: !process.env.CI,
       stdout: "pipe",
       stderr: "pipe",
-      timeout: 90_000,
+      timeout: appServerStartupTimeout,
     },
   ],
   projects: [
