@@ -4,10 +4,6 @@ import { e2eEnvironment } from "./e2e/env";
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 const htmlReporter = ["html", { open: "never" }] as const;
-const junitReporter = [
-  "junit",
-  { outputFile: path.join(__dirname, "test-results", "junit.xml") },
-] as const;
 const minioCommand = [
   "docker rm -f deinsalon-e2e-minio >/dev/null 2>&1 || true",
   [
@@ -38,7 +34,7 @@ export default defineConfig({
   workers: 1,
   timeout: 60_000,
   reporter: process.env.CI
-    ? [htmlReporter, ["github"], junitReporter]
+    ? [htmlReporter, ["github"]]
     : [htmlReporter, ["list"]],
   use: {
     baseURL: e2eEnvironment.manageBaseUrl,
