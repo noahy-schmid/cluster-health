@@ -415,9 +415,7 @@ class CrossAppScenario {
 
   private extractWebsiteIdFromManageUrl(): string {
     const { pathname } = new URL(this.managePage.url());
-    const match = pathname.match(
-      /^\/salon\/[^/]+\/website\/([0-9a-f-]{36})$/,
-    );
+    const match = pathname.match(/^\/salon\/[^/]+\/website\/([0-9a-f-]{36})$/);
     const websiteId = match?.[1];
 
     if (!websiteId) {
