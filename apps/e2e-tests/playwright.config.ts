@@ -15,15 +15,11 @@ const minioCommand = [
   ].join(" "),
 ].join(" && ");
 const prepareManageAppCommand = [
-  "corepack pnpm --filter @repo/test-fixtures build",
-  "corepack pnpm --filter @repo/auth-domain build",
-  "corepack pnpm --filter @repo/salon-domain build",
-  "corepack pnpm --filter @repo/website-domain build",
-  "corepack pnpm --filter @repo/ui build",
-  "corepack pnpm --filter @repo/auth-domain drizzle:push",
-  "corepack pnpm --filter @repo/salon-domain drizzle:push",
-  "corepack pnpm --filter @repo/website-domain drizzle:push",
-  "corepack pnpm --filter manage-salon-webpage exec next dev -p 3000",
+  "corepack enable",
+  "pnpm build",
+  `node -e "require('fs').rmSync('.turbo/cache', { recursive: true, force: true })"`,
+  "pnpm drizzle:push",
+  "pnpm dev --filter manage-salon-webpage",
 ].join(" && ");
 
 export default defineConfig({
@@ -65,13 +61,15 @@ export default defineConfig({
         S3_SALON_ACCESS_KEY: e2eEnvironment.s3AccessKey,
         S3_SALON_SECRET_KEY: e2eEnvironment.s3SecretKey,
         S3_WEBSITE_BUCKET_NAME: e2eEnvironment.s3BucketName,
+        NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS: "1",
         NODE_ENV: e2eEnvironment.nodeEnv,
+        PORT: "3000",
       },
       port: 3000,
       reuseExistingServer: !process.env.CI,
       stdout: "pipe",
       stderr: "pipe",
-      timeout: 90_000,
+      timeout: 240_000,
     },
     {
       command:
@@ -87,6 +85,7 @@ export default defineConfig({
         S3_SALON_ACCESS_KEY: e2eEnvironment.s3AccessKey,
         S3_SALON_SECRET_KEY: e2eEnvironment.s3SecretKey,
         S3_WEBSITE_BUCKET_NAME: e2eEnvironment.s3BucketName,
+        NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS: "1",
         NODE_ENV: e2eEnvironment.nodeEnv,
       },
       port: 3001,
