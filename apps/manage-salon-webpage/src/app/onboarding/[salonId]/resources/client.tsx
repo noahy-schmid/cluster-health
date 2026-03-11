@@ -30,8 +30,6 @@ export default function ResourceOnboardingClient({
     customResources,
     setCustomResources,
     resourceError,
-    wellKnownResourceWarning,
-    hasWellKnownResourceIssues,
     clearResourceError,
     addCustomResource,
     removeCustomResource,
@@ -56,13 +54,25 @@ export default function ResourceOnboardingClient({
     }
   };
 
+  const handleSkip = async () => {
+    setIsContinuing(true);
+
+    try {
+      const saved = await persistAllResources();
+      if (saved) {
+        router.push(`/salon/${salonId}`);
+      }
+    } finally {
+      setIsContinuing(false);
+    }
+  };
+
   return (
     <SalonResourcesCard
       seatAmount={seatAmount}
       climazonAmount={climazonAmount}
       customResources={customResources}
       resourceError={resourceError}
-      wellKnownResourceWarning={wellKnownResourceWarning}
       onSeatChange={(amount) => {
         clearResourceError();
         setSeatAmount(amount);
@@ -104,7 +114,7 @@ export default function ResourceOnboardingClient({
         <div className="flex flex-col-reverse gap-md pt-sm md:flex-row md:justify-end">
           <button
             type="button"
-            onClick={() => router.push(`/salon/${salonId}`)}
+            onClick={() => void handleSkip()}
             className="cursor-pointer rounded-md border border-border px-lg py-sm text-base text-fg-normal transition-colors hover:bg-bg-0"
             disabled={isContinuing}
           >
@@ -114,7 +124,7 @@ export default function ResourceOnboardingClient({
             type="button"
             onClick={() => void handleContinue()}
             className="cursor-pointer rounded-md bg-primary-500 px-lg py-sm text-base font-focus text-fg-inv transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isContinuing || hasWellKnownResourceIssues}
+            disabled={isContinuing}
           >
             {isContinuing ? "Speichern..." : "Weiter zum Salon"}
           </button>

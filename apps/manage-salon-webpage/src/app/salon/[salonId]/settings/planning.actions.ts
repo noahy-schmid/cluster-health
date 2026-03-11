@@ -169,10 +169,6 @@ export async function upsertWellKnownSalonResource(
     existingResources.data.find((resource) => resource.slug === slug) ?? null;
   const name = getWellKnownResourceLabel(slug);
 
-  if (amount <= 0) {
-    return { success: true, data: existingResource };
-  }
-
   if (existingResource) {
     return updateSalonResource(salonId, slug, {
       name,

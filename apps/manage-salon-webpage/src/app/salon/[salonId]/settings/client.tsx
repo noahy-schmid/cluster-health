@@ -103,7 +103,6 @@ export default function SalonSettingsPageClient({
     customResources,
     setCustomResources,
     resourceError,
-    wellKnownResourceWarning,
     clearResourceError,
     addCustomResource,
     removeCustomResource,
@@ -211,7 +210,6 @@ export default function SalonSettingsPageClient({
           climazonAmount={climazonAmount}
           customResources={customResources}
           resourceError={resourceError}
-          wellKnownResourceWarning={wellKnownResourceWarning}
           onSeatChange={(amount) => {
             clearResourceError();
             setSeatAmount(amount);

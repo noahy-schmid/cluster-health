@@ -14,7 +14,6 @@ interface SalonResourcesCardProps {
   climazonAmount: number;
   customResources: CustomResourceDraft[];
   resourceError?: string;
-  wellKnownResourceWarning?: string;
   footer?: ReactNode;
   onSeatChange: (amount: number) => void;
   onSeatBlur: () => void;
@@ -32,7 +31,6 @@ export default function SalonResourcesCard({
   climazonAmount,
   customResources,
   resourceError,
-  wellKnownResourceWarning,
   footer,
   onSeatChange,
   onSeatBlur,
@@ -54,7 +52,6 @@ export default function SalonResourcesCard({
           label="Bedienplätze"
           value={seatAmount}
           min={0}
-          helperText="Diese Angabe beeinflusst die Terminplanung und sollte korrekt gepflegt sein."
           onChange={onSeatChange}
           onBlur={onSeatBlur}
         />
@@ -62,17 +59,14 @@ export default function SalonResourcesCard({
           label="Climazons"
           value={climazonAmount}
           min={0}
-          helperText="Diese Angabe beeinflusst die Terminplanung und sollte korrekt gepflegt sein."
           onChange={onClimazonChange}
           onBlur={onClimazonBlur}
         />
       </div>
-
-      {wellKnownResourceWarning && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-md">
-          <p className="text-sm text-amber-800">{wellKnownResourceWarning}</p>
-        </div>
-      )}
+      <div className="text-sm text-fg-muted">
+        Die Angaben über Bedienplätze und Climazons sollten der Anzahl im Salon
+        entsprechen, damit die Terminplanung korrekt funktioniert.
+      </div>
 
       <div className="space-y-md">
         <div className="flex items-center justify-between gap-md">
