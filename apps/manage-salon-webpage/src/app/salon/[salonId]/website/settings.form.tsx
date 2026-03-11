@@ -51,6 +51,7 @@ export default function WebsiteSettingsForm({
         onChange={setSlug}
         placeholder="mein-salon"
         required
+        testId="website-slug-input"
         helperText="Der URL-Slug wird verwendet, um Ihre Website zu identifizieren (z.B. slug.dein.salon)"
       />
 
@@ -60,6 +61,7 @@ export default function WebsiteSettingsForm({
         onChange={setTitle}
         placeholder="Mein Friseursalon - Willkommen"
         required
+        testId="website-title-input"
         helperText="Der Titel, der im Browser-Tab und in Suchergebnissen angezeigt wird"
       />
 
@@ -82,6 +84,7 @@ export default function WebsiteSettingsForm({
         onCancel={onCancel}
         saveLabel={saveLabel}
         isSaving={isSubmitting}
+        saveTestId="website-save-button"
       />
     </form>
   );

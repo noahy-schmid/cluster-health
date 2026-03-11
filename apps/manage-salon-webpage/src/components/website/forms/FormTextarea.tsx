@@ -8,6 +8,7 @@ interface FormTextareaProps {
   placeholder?: string;
   rows?: number;
   required?: boolean;
+  testId?: string;
 }
 
 export default function FormTextarea({
@@ -18,6 +19,7 @@ export default function FormTextarea({
   placeholder,
   rows = 4,
   required = false,
+  testId,
 }: FormTextareaProps) {
   return (
     <div className="flex flex-col gap-sm">
@@ -26,6 +28,7 @@ export default function FormTextarea({
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <textarea
+        data-testid={testId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onBlur={(e) => onBlur?.(e.target.value)}
