@@ -3,6 +3,11 @@ import path from "path";
 import { e2eEnvironment } from "./e2e/env";
 
 const repositoryRoot = path.resolve(__dirname, "../..");
+const htmlReporter = ["html", { open: "never" }] as const;
+const junitReporter = [
+  "junit",
+  { outputFile: path.join(__dirname, "test-results", "junit.xml") },
+] as const;
 
 export default defineConfig({
   testDir: "./e2e/tests",
@@ -12,8 +17,8 @@ export default defineConfig({
   workers: 1,
   timeout: 60_000,
   reporter: process.env.CI
-    ? [["html", { open: "never" }], ["github"]]
-    : [["html", { open: "never" }], ["list"]],
+    ? [htmlReporter, ["github"], junitReporter]
+    : [htmlReporter, ["list"]],
   use: {
     baseURL: e2eEnvironment.manageBaseUrl,
     trace: "on-first-retry",

@@ -65,6 +65,10 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      checks: write
 
     services:
       postgres:
@@ -123,12 +127,39 @@ jobs:
       - name: Run Playwright end-to-end tests
         run: pnpm test:e2e
 
-      - name: Upload Playwright report
+      - name: Publish Playwright test summary
+        if: always() && !cancelled()
+        uses: EnricoMi/publish-unit-test-result-action@v2.23.0
+        with:
+          files: apps/e2e-tests/test-results/junit.xml
+          check_name: Playwright E2E Results
+          comment_mode: off
+
+      - name: Add Playwright artifact links to job summary
+        if: always()
+        run: |
+          {
+            echo "## Playwright report artifacts"
+            echo ""
+            echo "- Download **playwright-html-report** for the full Playwright HTML report with screenshots and attachments."
+            echo "- Download **playwright-test-results** for raw screenshots, videos, traces, and the JUnit result file."
+            echo "- Open the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) and use the **Artifacts** section."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: |
-            apps/e2e-tests/playwright-report
-            apps/e2e-tests/test-results
+          name: playwright-html-report
+          path: apps/e2e-tests/playwright-report
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: apps/e2e-tests/test-results
+          retention-days: 14
           if-no-files-found: ignore
