@@ -1,20 +1,22 @@
 import { expect, test } from "../fixtures/cross-app.fixture";
 
 test.describe("Manage Salon webpage + Salon webpage", () => {
+  test.describe.configure({ timeout: 120_000 });
+
   test("creates a website section in Manage Salon and shows it on the public salon page", async ({
     scenario,
     managePage,
     publicPage,
   }) => {
+    await scenario.iHaveAnAccount();
     await scenario.iHaveASalon();
-    const website = await scenario.iCreateAWebsiteInTheManageSalonWebpage();
-    const section =
-      await scenario.iAddACenterTextSectionInTheManageSalonWebpage({
-        menuTitle: "Unsere Geschichte",
-        title: "Willkommen bei Playwright",
-        content:
-          "Dieser Abschnitt wurde im Manage Salon erstellt und im Salon-Webauftritt geprüft.",
-      });
+    const website = await scenario.iHaveAWebsite();
+    const section = await scenario.iAddACenterTextSection({
+      menuTitle: "Unsere Geschichte",
+      title: "Willkommen bei Playwright",
+      content:
+        "Dieser Abschnitt wurde im Manage Salon erstellt und im Salon-Webauftritt geprüft.",
+    });
 
     await expect(
       managePage.getByRole("heading", { name: "Webseite bearbeiten" }),

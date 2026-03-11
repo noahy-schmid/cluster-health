@@ -4,13 +4,6 @@ import { e2eEnvironment } from "./e2e/env";
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 
-process.env.DATABASE_URL ??= e2eEnvironment.databaseUrl;
-process.env.SALON_URL ??= e2eEnvironment.salonBaseUrl;
-process.env.JWT_SECRET ??= e2eEnvironment.jwtSecret;
-process.env.NODE_ENV ??= e2eEnvironment.nodeEnv;
-process.env.PLAYWRIGHT_MANAGEMENT_PASSWORD ??=
-  e2eEnvironment.managementPassword;
-
 export default defineConfig({
   testDir: "./e2e/tests",
   fullyParallel: false,
@@ -36,6 +29,7 @@ export default defineConfig({
         ...process.env,
         DATABASE_URL: e2eEnvironment.databaseUrl,
         JWT_SECRET: e2eEnvironment.jwtSecret,
+        PLAYWRIGHT_MANAGEMENT_PASSWORD: e2eEnvironment.managementPassword,
         SALON_URL: e2eEnvironment.salonBaseUrl,
         NODE_ENV: e2eEnvironment.nodeEnv,
       },
@@ -52,6 +46,7 @@ export default defineConfig({
         ...process.env,
         DATABASE_URL: e2eEnvironment.databaseUrl,
         JWT_SECRET: e2eEnvironment.jwtSecret,
+        PLAYWRIGHT_MANAGEMENT_PASSWORD: e2eEnvironment.managementPassword,
         SALON_URL: e2eEnvironment.salonBaseUrl,
         NODE_ENV: e2eEnvironment.nodeEnv,
       },

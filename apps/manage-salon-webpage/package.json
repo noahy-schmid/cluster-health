@@ -9,8 +9,6 @@
     "lint": "eslint --max-warnings=3",
     "lint:fix": "eslint --fix",
     "test": "vitest run",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
     "docker:build": "docker build -t manage-salon-webpage:latest -f Dockerfile ../../"
   },
   "dependencies": {
@@ -37,7 +35,6 @@
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
-    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/culori": "^4.0.1",
     "@types/node": "^20",
