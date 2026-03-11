@@ -1,4 +1,4 @@
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer } from "effect";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { getOrCreatePostgreSQLContainer } from "@repo/test-fixtures";
 import { PostgresWebsiteAdapter } from "./adapters/postgres-website.adapter";
@@ -21,7 +21,7 @@ import { SectionAggregate } from "./application/section/section.aggregate";
 import { MediaPort } from "./ports/media.port";
 import { WebsiteService } from "./application/website/website.interface";
 import { WebsiteServiceLive } from "./application/website/website.service";
-import type { CreateSectionCommand } from "./use-cases/create-section.use-case";
+import type { CreateWebsiteInput } from "./types/website";
 
 export interface TestEnvironment {
   useCaseLayer: Layer.Layer<
@@ -36,28 +36,6 @@ export interface TestEnvironment {
   websiteServiceLayer: Layer.Layer<WebsiteService, never, never>;
   createSalon: () => string;
   stop: () => Promise<void>;
-}
-
-/**
- * Optional overrides for auto-generated website fixture values.
- * The required salonId dependency is passed as a separate parameter.
- */
-export interface CreateWebsiteFixtureInput {
-  slug?: string;
-  title?: string;
-  faviconMediaId?: string | null;
-}
-
-/**
- * Optional overrides for auto-generated section fixture values.
- * The required websiteId and section type dependencies are passed separately.
- */
-export interface CreateSectionFixtureInput {
-  position?: number;
-}
-
-function createFixtureSuffix() {
-  return crypto.randomUUID().slice(0, 8);
 }
 
 export async function setupTestEnvironment(): Promise<TestEnvironment> {
@@ -153,22 +131,16 @@ export async function setupTestEnvironment(): Promise<TestEnvironment> {
 
 export async function createWebsite(
   env: TestEnvironment,
-  salonId: string,
-  input: CreateWebsiteFixtureInput = {},
+  input: CreateWebsiteInput,
 ) {
-  const suffix = createFixtureSuffix();
-
   return Effect.runPromise(
     WebsiteService.pipe(
       Effect.flatMap((websiteService) =>
         websiteService.createWebsite({
-          salonId,
-          slug: input.slug ?? `mock-website-${suffix}`,
-          title: input.title ?? `Mock Website ${suffix}`,
-          faviconMediaId:
-            input.faviconMediaId === undefined
-              ? Option.none()
-              : Option.fromNullable(input.faviconMediaId),
+          salonId: input.salonId,
+          slug: input.slug,
+          title: input.title,
+          faviconMediaId: input.faviconMediaId,
         }),
       ),
       Effect.provide(env.websiteServiceLayer),
@@ -176,42 +148,6 @@ export async function createWebsite(
   );
 }
 
-export function createMockSalon(env: TestEnvironment) {
+export function createSalon(env: TestEnvironment) {
   return env.createSalon();
-}
-
-export function createMockWebsite(env: TestEnvironment, salonId: string) {
-  return createWebsite(env, salonId);
-}
-
-export async function createMockSection(
-  env: TestEnvironment,
-  websiteId: string,
-  type: CreateSectionCommand["type"],
-  input: CreateSectionFixtureInput = {},
-) {
-  return Effect.runPromise(
-    CreateSectionUseCase.pipe(
-      Effect.flatMap((useCase) =>
-        useCase.execute({
-          websiteId,
-          type,
-          position: input.position ?? 0,
-        }),
-      ),
-      Effect.provide(env.useCaseLayer),
-    ),
-  );
-}
-
-export async function createMockSections(
-  env: TestEnvironment,
-  websiteId: string,
-  types: CreateSectionCommand["type"][],
-) {
-  return Promise.all(
-    types.map((type, index) =>
-      createMockSection(env, websiteId, type, { position: index }),
-    ),
-  );
 }

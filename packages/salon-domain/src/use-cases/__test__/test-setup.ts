@@ -4,15 +4,7 @@ import { getOrCreatePostgreSQLContainer } from "@repo/test-fixtures";
 import { Configuration } from "../../infrastructure/config.interface";
 import { Database } from "../../infrastructure/database.interface";
 import { DatabaseLayer } from "../../infrastructure/database.service";
-import {
-  employeeServiceAssignmentsTable,
-  phaseResourceRequirementsTable,
-  salonResourcesTable,
-  salonsTable,
-  serviceDefinitionsTable,
-  servicePhasesTable,
-  stylistsTable,
-} from "../../schema";
+import { salonsTable, stylistsTable } from "../../schema";
 import { PostgresResourceAdapter } from "../../adapters/postgres-resource.adapter";
 import { PostgresServiceDefinitionAdapter } from "../../adapters/postgres-service-definition.adapter";
 import { PostgresServicePhaseAdapter } from "../../adapters/postgres-service-phase.adapter";
@@ -23,10 +15,6 @@ import { PostgresSalonPortAdapter } from "../../adapters/postgres-salon-port.ada
 import { ResourceAggregate } from "../../application/resource/resource.aggregate";
 import { ServiceAggregate } from "../../application/service/service.aggregate";
 import { EmployeeServiceAggregate } from "../../application/employee-service/employee-service.aggregate";
-import {
-  SEAT_SLUG,
-  CLIMAZON_SLUG,
-} from "../../application/resource/resource.constants";
 import { CreateResourceUseCase } from "../create-resource.use-case";
 import { UpdateResourceUseCase } from "../update-resource.use-case";
 import { DeleteResourceUseCase } from "../delete-resource.use-case";
@@ -45,9 +33,6 @@ import { CreateColorationServiceUseCase } from "../create-coloration-service.use
 
 type SalonInsert = typeof salonsTable.$inferInsert;
 type StylistInsert = typeof stylistsTable.$inferInsert;
-type ResourceInsert = typeof salonResourcesTable.$inferInsert;
-type ServiceDefinitionInsert = typeof serviceDefinitionsTable.$inferInsert;
-type ServicePhaseInsert = typeof servicePhasesTable.$inferInsert;
 
 export interface TestEnvironment {
   resourceUseCaseLayer: Layer.Layer<
@@ -86,50 +71,8 @@ export interface CreateStylistInput extends Partial<
   salonId: string;
 }
 
-export interface CreateResourceInput extends Partial<
-  Omit<ResourceInsert, "createdAt" | "updatedAt" | "salonId">
-> {
-  salonId: string;
-}
-
-export interface CreateServicePhaseInput extends Partial<
-  Omit<ServicePhaseInsert, "id" | "serviceDefinitionId" | "order">
-> {
-  requiredResourceSlugs?: string[];
-}
-
-export interface CreateServiceDefinitionInput extends Partial<
-  Omit<
-    ServiceDefinitionInsert,
-    "id" | "createdAt" | "updatedAt" | "deletedAt" | "salonId"
-  >
-> {
-  salonId: string;
-  phases?: CreateServicePhaseInput[];
-}
-
-/**
- * Optional overrides for auto-generated service definition fixture values.
- * The required salonId dependency is passed as a separate parameter.
- */
-export interface CreateMockServiceDefinitionInput {
-  serviceType?: CreateServiceDefinitionInput["serviceType"];
-  phases?: CreateServicePhaseInput[];
-}
-
 function createFixtureSuffix() {
   return crypto.randomUUID().slice(0, 8);
-}
-
-function getDefaultServicePhases(): CreateServicePhaseInput[] {
-  return [
-    {
-      name: "Mock Phase",
-      durationMinutes: 30,
-      employeeRequired: true,
-      requiredResourceSlugs: [],
-    },
-  ];
 }
 
 async function withDatabase<A>(
@@ -306,10 +249,6 @@ export async function createSalon(
   return salon;
 }
 
-export function createMockSalon(env: TestEnvironment) {
-  return createSalon(env);
-}
-
 export async function createStylist(
   env: TestEnvironment,
   input: CreateStylistInput,
@@ -335,188 +274,4 @@ export async function createStylist(
   }
 
   return stylist;
-}
-
-export function createMockStylist(env: TestEnvironment, salonId: string) {
-  return createStylist(env, { salonId });
-}
-
-export async function createResource(
-  env: TestEnvironment,
-  input: CreateResourceInput,
-) {
-  const suffix = createFixtureSuffix();
-  const { salonId, ...resourceInput } = input;
-  const [resource] = await withDatabase(env, "create mock resource", (db) =>
-    db
-      .insert(salonResourcesTable)
-      .values({
-        salonId,
-        slug: `mock-resource-${suffix}`,
-        name: `Mock Resource ${suffix}`,
-        amount: 1,
-        ...resourceInput,
-      })
-      .returning(),
-  );
-
-  if (!resource) {
-    throw new Error("Failed to create mock resource");
-  }
-
-  return resource;
-}
-
-export function createMockResource(env: TestEnvironment, salonId: string) {
-  return createResource(env, { salonId });
-}
-
-export async function createWellKnownResources(
-  env: TestEnvironment,
-  salonId: string,
-) {
-  const [seat, climazon] = await withDatabase(
-    env,
-    "create well-known salon resources",
-    (db) =>
-      db
-        .insert(salonResourcesTable)
-        .values([
-          {
-            salonId,
-            slug: SEAT_SLUG,
-            name: "Mock Styling Chair",
-            amount: 3,
-          },
-          {
-            salonId,
-            slug: CLIMAZON_SLUG,
-            name: "Mock Climazon",
-            amount: 2,
-          },
-        ])
-        .returning(),
-  );
-
-  if (!seat || !climazon) {
-    throw new Error("Failed to create well-known salon resources");
-  }
-
-  return [seat, climazon] as const;
-}
-
-export function createMockWellKnownResources(
-  env: TestEnvironment,
-  salonId: string,
-) {
-  return createWellKnownResources(env, salonId);
-}
-
-export async function createServiceDefinition(
-  env: TestEnvironment,
-  input: CreateServiceDefinitionInput,
-) {
-  const suffix = createFixtureSuffix();
-  const phases = input.phases?.length
-    ? input.phases
-    : getDefaultServicePhases();
-  const [serviceDefinition] = await withDatabase(
-    env,
-    "create mock service definition",
-    (db) =>
-      db
-        .insert(serviceDefinitionsTable)
-        .values({
-          salonId: input.salonId,
-          serviceType: input.serviceType ?? "custom",
-          name: input.name ?? `Mock Service ${suffix}`,
-          description: input.description ?? "Mock service description",
-          priceInCents: input.priceInCents ?? 2500,
-        })
-        .returning(),
-  );
-
-  if (!serviceDefinition) {
-    throw new Error("Failed to create mock service definition");
-  }
-
-  const createdPhases = await withDatabase(
-    env,
-    "create mock service phases",
-    (db) =>
-      db
-        .insert(servicePhasesTable)
-        .values(
-          phases.map((phase, index) => ({
-            serviceDefinitionId: serviceDefinition.id,
-            name: phase.name ?? `Mock Phase ${index + 1}`,
-            durationMinutes: phase.durationMinutes ?? 30,
-            order: index,
-            employeeRequired: phase.employeeRequired ?? true,
-          })),
-        )
-        .returning(),
-  );
-
-  const resourceRequirements = createdPhases.flatMap((phase, index) =>
-    (phases[index]?.requiredResourceSlugs ?? []).map((resourceSlug) => ({
-      phaseId: phase.id,
-      resourceSlug,
-    })),
-  );
-
-  if (resourceRequirements.length > 0) {
-    await withDatabase(env, "persist mock phase resource requirements", (db) =>
-      db.insert(phaseResourceRequirementsTable).values(resourceRequirements),
-    );
-  }
-
-  return {
-    ...serviceDefinition,
-    phases: createdPhases.map((phase, index) => ({
-      ...phase,
-      requiredResourceSlugs: phases[index]?.requiredResourceSlugs ?? [],
-    })),
-  };
-}
-
-export function createMockServiceDefinition(
-  env: TestEnvironment,
-  salonId: string,
-  input: CreateMockServiceDefinitionInput = {},
-) {
-  return createServiceDefinition(env, {
-    salonId,
-    serviceType: input.serviceType,
-    phases: input.phases,
-  });
-}
-
-export async function createEmployeeServiceAssignment(
-  env: TestEnvironment,
-  input: typeof employeeServiceAssignmentsTable.$inferInsert,
-) {
-  const [assignment] = await withDatabase(
-    env,
-    "create mock employee service assignment",
-    (db) =>
-      db.insert(employeeServiceAssignmentsTable).values(input).returning(),
-  );
-
-  if (!assignment) {
-    throw new Error("Failed to create mock employee service assignment");
-  }
-
-  return assignment;
-}
-
-export function createMockEmployeeServiceAssignment(
-  env: TestEnvironment,
-  stylistId: string,
-  serviceDefinitionId: string,
-) {
-  return createEmployeeServiceAssignment(env, {
-    stylistId,
-    serviceDefinitionId,
-  });
 }

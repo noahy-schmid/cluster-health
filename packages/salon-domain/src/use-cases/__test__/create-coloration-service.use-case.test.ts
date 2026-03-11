@@ -1,11 +1,20 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
 import {
-  createMockSalon,
-  createMockWellKnownResources,
+  CLIMAZON_SLUG,
+  SEAT_SLUG,
+} from "../../application/resource/resource.constants";
+import {
+  createColorationServiceCommand,
+  createResourceCommand,
+  createSalonInput,
+} from "./fixtures";
+import {
+  createSalon,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
+import { CreateResourceUseCase } from "../create-resource.use-case";
 import { CreateColorationServiceUseCase } from "../create-coloration-service.use-case";
 
 describe("CreateColorationServiceUseCase", () => {
@@ -14,8 +23,27 @@ describe("CreateColorationServiceUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createMockSalon(env)).id;
-    await createMockWellKnownResources(env, salonId);
+    salonId = (await createSalon(env, createSalonInput())).id;
+    await Effect.runPromise(
+      Effect.all([
+        CreateResourceUseCase.execute(
+          createResourceCommand({
+            salonId,
+            slug: SEAT_SLUG,
+            name: "Mock Styling Chair",
+            amount: 3,
+          }),
+        ),
+        CreateResourceUseCase.execute(
+          createResourceCommand({
+            salonId,
+            slug: CLIMAZON_SLUG,
+            name: "Mock Climazon",
+            amount: 2,
+          }),
+        ),
+      ]).pipe(Effect.provide(env.resourceUseCaseLayer)),
+    );
   }, 60_000);
 
   afterAll(async () => {
@@ -25,7 +53,7 @@ describe("CreateColorationServiceUseCase", () => {
   it("should create a coloration service with three phases", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateColorationServiceUseCase;
-      const service = yield* useCase.execute({
+      const command = createColorationServiceCommand({
         salonId,
         name: "Full Color",
         description: "Complete coloration service",
@@ -34,6 +62,7 @@ describe("CreateColorationServiceUseCase", () => {
         processingDurationMinutes: 30,
         finishingDurationMinutes: 15,
       });
+      const service = yield* useCase.execute(command);
 
       expect(service.id).toBeDefined();
       expect(service.salonId).toBe(salonId);
@@ -61,15 +90,17 @@ describe("CreateColorationServiceUseCase", () => {
 
   it("should fail with NotFoundError when salon does not exist", async () => {
     const program = Effect.gen(function* () {
-      const result = yield* CreateColorationServiceUseCase.execute({
-        salonId: crypto.randomUUID(),
-        name: "No Salon Service",
-        description: "Missing salon",
-        priceInCents: 10000,
-        applicationDurationMinutes: 20,
-        processingDurationMinutes: 30,
-        finishingDurationMinutes: 15,
-      }).pipe(Effect.either);
+      const result = yield* CreateColorationServiceUseCase.execute(
+        createColorationServiceCommand({
+          salonId: crypto.randomUUID(),
+          name: "No Salon Service",
+          description: "Missing salon",
+          priceInCents: 10000,
+          applicationDurationMinutes: 20,
+          processingDurationMinutes: 30,
+          finishingDurationMinutes: 15,
+        }),
+      ).pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
       if (Either.isLeft(result)) {

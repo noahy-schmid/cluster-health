@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
+import { createResourceCommand, createSalonInput } from "./fixtures";
 import {
-  createMockSalon,
+  createSalon,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
@@ -13,7 +14,7 @@ describe("CreateResourceUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createMockSalon(env)).id;
+    salonId = (await createSalon(env, createSalonInput())).id;
   }, 60_000);
 
   afterAll(async () => {
@@ -23,12 +24,14 @@ describe("CreateResourceUseCase", () => {
   it("should create a resource", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
-      const resource = yield* useCase.execute({
-        salonId,
-        slug: "dryer",
-        name: "Dryer",
-        amount: 3,
-      });
+      const resource = yield* useCase.execute(
+        createResourceCommand({
+          salonId,
+          slug: "dryer",
+          name: "Dryer",
+          amount: 3,
+        }),
+      );
 
       expect(resource.slug).toBe("dryer");
       expect(resource.salonId).toBe(salonId);
@@ -45,7 +48,14 @@ describe("CreateResourceUseCase", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
       const result = yield* useCase
-        .execute({ salonId, slug: "blank", name: "  ", amount: 1 })
+        .execute(
+          createResourceCommand({
+            salonId,
+            slug: "blank",
+            name: "  ",
+            amount: 1,
+          }),
+        )
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -63,12 +73,14 @@ describe("CreateResourceUseCase", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
       const result = yield* useCase
-        .execute({
-          salonId,
-          slug: "bad",
-          name: "Dryer",
-          amount: 0,
-        })
+        .execute(
+          createResourceCommand({
+            salonId,
+            slug: "bad",
+            name: "Dryer",
+            amount: 0,
+          }),
+        )
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);

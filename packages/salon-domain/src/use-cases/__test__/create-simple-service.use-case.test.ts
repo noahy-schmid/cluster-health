@@ -1,11 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
+import { SEAT_SLUG } from "../../application/resource/resource.constants";
 import {
-  createMockSalon,
-  createMockWellKnownResources,
+  createResourceCommand,
+  createSalonInput,
+  createSimpleServiceCommand,
+} from "./fixtures";
+import {
+  createSalon,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
+import { CreateResourceUseCase } from "../create-resource.use-case";
 import { CreateSimpleServiceUseCase } from "../create-simple-service.use-case";
 
 describe("CreateSimpleServiceUseCase", () => {
@@ -14,8 +20,17 @@ describe("CreateSimpleServiceUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createMockSalon(env)).id;
-    await createMockWellKnownResources(env, salonId);
+    salonId = (await createSalon(env, createSalonInput())).id;
+    await Effect.runPromise(
+      CreateResourceUseCase.execute(
+        createResourceCommand({
+          salonId,
+          slug: SEAT_SLUG,
+          name: "Mock Styling Chair",
+          amount: 3,
+        }),
+      ).pipe(Effect.provide(env.resourceUseCaseLayer)),
+    );
   }, 60_000);
 
   afterAll(async () => {
@@ -25,13 +40,15 @@ describe("CreateSimpleServiceUseCase", () => {
   it("should create a simple service with one phase", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSimpleServiceUseCase;
-      const service = yield* useCase.execute({
-        salonId,
-        name: "Quick Cut",
-        description: "A simple haircut",
-        priceInCents: 2500,
-        durationMinutes: 30,
-      });
+      const service = yield* useCase.execute(
+        createSimpleServiceCommand({
+          salonId,
+          name: "Quick Cut",
+          description: "A simple haircut",
+          priceInCents: 2500,
+          durationMinutes: 30,
+        }),
+      );
 
       expect(service.id).toBeDefined();
       expect(service.salonId).toBe(salonId);
@@ -57,13 +74,15 @@ describe("CreateSimpleServiceUseCase", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSimpleServiceUseCase;
       const result = yield* useCase
-        .execute({
-          salonId: crypto.randomUUID(),
-          name: "No Salon Service",
-          description: "Missing salon",
-          priceInCents: 2000,
-          durationMinutes: 20,
-        })
+        .execute(
+          createSimpleServiceCommand({
+            salonId: crypto.randomUUID(),
+            name: "No Salon Service",
+            description: "Missing salon",
+            priceInCents: 2000,
+            durationMinutes: 20,
+          }),
+        )
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);

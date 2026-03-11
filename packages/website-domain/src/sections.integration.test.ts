@@ -16,13 +16,18 @@ import {
 } from "./use-cases/reorder-sections.use-case";
 import { type AllSections } from "./application/section/section.aggregate";
 import {
-  createMockSalon,
-  createMockSection,
-  createMockSections,
-  createMockWebsite,
+  createSalon,
+  createWebsite,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
+import {
+  createDeleteSectionCommand,
+  createListSectionsQuery,
+  createReorderSectionsCommand,
+  createSectionCommand,
+  createWebsiteInput,
+} from "./test-fixtures";
 
 describe("Section Use Cases Integration Tests", () => {
   let env: TestEnvironment;
@@ -46,13 +51,16 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a center-text section with defaults", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
 
-    const command: CreateSectionCommand = {
+    const command: CreateSectionCommand = createSectionCommand({
       websiteId,
       type: "center-text",
       position: 0,
-    };
+    });
 
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;
@@ -75,13 +83,16 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a gallery section with defaults", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
 
-    const command: CreateSectionCommand = {
+    const command: CreateSectionCommand = createSectionCommand({
       websiteId,
       type: "gallery",
       position: 1,
-    };
+    });
 
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;
@@ -101,13 +112,16 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a text-with-image section with defaults", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
 
-    const command: CreateSectionCommand = {
+    const command: CreateSectionCommand = createSectionCommand({
       websiteId,
       type: "text-with-image",
       position: 2,
-    };
+    });
 
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;
@@ -126,13 +140,16 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a reason section with default items", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
 
-    const command: CreateSectionCommand = {
+    const command: CreateSectionCommand = createSectionCommand({
       websiteId,
       type: "reason",
       position: 3,
-    };
+    });
 
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;
@@ -152,13 +169,16 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a stylists section with defaults", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
 
-    const command: CreateSectionCommand = {
+    const command: CreateSectionCommand = createSectionCommand({
       websiteId,
       type: "stylists-section",
       position: 4,
-    };
+    });
 
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;
@@ -177,18 +197,35 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should list all created sections for the website", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
-    await createMockSections(env, websiteId, [
-      "center-text",
-      "gallery",
-      "text-with-image",
-      "reason",
-      "stylists-section",
-    ]);
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
+    await Promise.all(
+      [
+        "center-text",
+        "gallery",
+        "text-with-image",
+        "reason",
+        "stylists-section",
+      ].map((type, index) =>
+        Effect.runPromise(
+          CreateSectionUseCase.execute(
+            createSectionCommand({
+              websiteId,
+              type: type as CreateSectionCommand["type"],
+              position: index,
+            }),
+          ).pipe(Effect.provide(useCaseLayer)),
+        ),
+      ),
+    );
 
     const program = Effect.gen(function* () {
       const useCase = yield* ListSectionsUseCase;
-      const sections = yield* useCase.execute({ websiteId });
+      const sections = yield* useCase.execute(
+        createListSectionsQuery({ websiteId }),
+      );
 
       expect(sections.length).toBe(5);
 
@@ -206,8 +243,15 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should update a center-text section", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
-    const centerText = await createMockSection(env, websiteId, "center-text");
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
+    const centerText = await Effect.runPromise(
+      CreateSectionUseCase.execute(
+        createSectionCommand({ websiteId, type: "center-text" }),
+      ).pipe(Effect.provide(useCaseLayer)),
+    );
 
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
@@ -224,7 +268,9 @@ describe("Section Use Cases Integration Tests", () => {
 
         yield* updateUseCase.execute(updatedSection as UpdateSectionCommand);
 
-        const refreshed = yield* listUseCase.execute({ websiteId });
+        const refreshed = yield* listUseCase.execute(
+          createListSectionsQuery({ websiteId }),
+        );
         const updated = refreshed.find((s) => s.id === centerText.id);
         expect(updated).toBeDefined();
         if (updated && updated.type === "center-text") {
@@ -238,8 +284,15 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should update a gallery section", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
-    const gallery = await createMockSection(env, websiteId, "gallery");
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
+    const gallery = await Effect.runPromise(
+      CreateSectionUseCase.execute(
+        createSectionCommand({ websiteId, type: "gallery" }),
+      ).pipe(Effect.provide(useCaseLayer)),
+    );
 
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
@@ -257,7 +310,9 @@ describe("Section Use Cases Integration Tests", () => {
 
         yield* updateUseCase.execute(updatedSection as UpdateSectionCommand);
 
-        const refreshed = yield* listUseCase.execute({ websiteId });
+        const refreshed = yield* listUseCase.execute(
+          createListSectionsQuery({ websiteId }),
+        );
         const updated = refreshed.find((s) => s.id === gallery.id);
         if (updated && updated.type === "gallery") {
           expect(updated.settings.title).toBe("Updated Gallery");
@@ -270,26 +325,35 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should delete a section", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
-    const sectionToDelete = await createMockSection(
+    const websiteId = await createWebsite(
       env,
-      websiteId,
-      "stylists-section",
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
+    const sectionToDelete = await Effect.runPromise(
+      CreateSectionUseCase.execute(
+        createSectionCommand({ websiteId, type: "stylists-section" }),
+      ).pipe(Effect.provide(useCaseLayer)),
     );
 
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
       const deleteUseCase = yield* DeleteSectionUseCase;
 
-      const sections = yield* listUseCase.execute({ websiteId });
+      const sections = yield* listUseCase.execute(
+        createListSectionsQuery({ websiteId }),
+      );
       const initialCount = sections.length;
       expect(initialCount).toBeGreaterThan(0);
-      yield* deleteUseCase.execute({
-        websiteId,
-        sectionId: sectionToDelete.id,
-      });
+      yield* deleteUseCase.execute(
+        createDeleteSectionCommand({
+          websiteId,
+          sectionId: sectionToDelete.id,
+        }),
+      );
 
-      const afterDelete = yield* listUseCase.execute({ websiteId });
+      const afterDelete = yield* listUseCase.execute(
+        createListSectionsQuery({ websiteId }),
+      );
       expect(afterDelete.length).toBe(initialCount - 1);
       expect(
         afterDelete.find((s) => s.id === sectionToDelete.id),
@@ -300,31 +364,46 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should reorder sections", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
-    await createMockSections(env, websiteId, [
-      "center-text",
-      "gallery",
-      "reason",
-    ]);
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
+    await Promise.all(
+      ["center-text", "gallery", "reason"].map((type, index) =>
+        Effect.runPromise(
+          CreateSectionUseCase.execute(
+            createSectionCommand({
+              websiteId,
+              type: type as CreateSectionCommand["type"],
+              position: index,
+            }),
+          ).pipe(Effect.provide(useCaseLayer)),
+        ),
+      ),
+    );
 
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
       const reorderUseCase = yield* ReorderSectionsUseCase;
 
-      const sections = yield* listUseCase.execute({ websiteId });
+      const sections = yield* listUseCase.execute(
+        createListSectionsQuery({ websiteId }),
+      );
       expect(sections.length).toBeGreaterThanOrEqual(2);
 
       // Reverse the order
       const reversedIds = sections.map((s) => s.id).reverse();
 
-      const command: ReorderSectionsCommand = {
+      const command: ReorderSectionsCommand = createReorderSectionsCommand({
         websiteId,
         sectionIds: reversedIds,
-      };
+      });
 
       yield* reorderUseCase.execute(command);
 
-      const reordered = yield* listUseCase.execute({ websiteId });
+      const reordered = yield* listUseCase.execute(
+        createListSectionsQuery({ websiteId }),
+      );
       expect(reordered.map((s) => s.id)).toEqual(reversedIds);
     });
 
@@ -332,16 +411,21 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should fail to create section with invalid type", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
 
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;
       const result = yield* useCase
-        .execute({
-          websiteId,
-          type: "invalid-type" as CreateSectionCommand["type"],
-          position: 0,
-        })
+        .execute(
+          createSectionCommand({
+            websiteId,
+            type: "invalid-type" as CreateSectionCommand["type"],
+            position: 0,
+          }),
+        )
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -357,11 +441,13 @@ describe("Section Use Cases Integration Tests", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;
       const result = yield* useCase
-        .execute({
-          websiteId: crypto.randomUUID(),
-          type: "center-text",
-          position: 0,
-        })
+        .execute(
+          createSectionCommand({
+            websiteId: crypto.randomUUID(),
+            type: "center-text",
+            position: 0,
+          }),
+        )
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -374,15 +460,20 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should fail to reorder with mismatched section IDs", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
 
     const program = Effect.gen(function* () {
       const reorderUseCase = yield* ReorderSectionsUseCase;
       const result = yield* reorderUseCase
-        .execute({
-          websiteId,
-          sectionIds: [crypto.randomUUID()],
-        })
+        .execute(
+          createReorderSectionsCommand({
+            websiteId,
+            sectionIds: [crypto.randomUUID()],
+          }),
+        )
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -395,8 +486,15 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should validate reason section items on update", async () => {
-    const websiteId = await createMockWebsite(env, createMockSalon(env));
-    const reasonSection = await createMockSection(env, websiteId, "reason");
+    const websiteId = await createWebsite(
+      env,
+      createWebsiteInput({ salonId: createSalon(env) }),
+    );
+    const reasonSection = await Effect.runPromise(
+      CreateSectionUseCase.execute(
+        createSectionCommand({ websiteId, type: "reason" }),
+      ).pipe(Effect.provide(useCaseLayer)),
+    );
 
     const program = Effect.gen(function* () {
       const updateUseCase = yield* UpdateSectionUseCase;

@@ -1,11 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect } from "effect";
 import {
-  createMockSalon,
-  createMockServiceDefinition,
+  createCustomServiceCommand,
+  createGetServiceDefinitionQuery,
+  createSalonInput,
+} from "./fixtures";
+import {
+  createSalon,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
+import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 import { GetServiceDefinitionUseCase } from "../get-service-definition.use-case";
 
 describe("GetServiceDefinitionUseCase", () => {
@@ -14,7 +19,7 @@ describe("GetServiceDefinitionUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createMockSalon(env)).id;
+    salonId = (await createSalon(env, createSalonInput())).id;
   }, 60_000);
 
   afterAll(async () => {
@@ -22,12 +27,18 @@ describe("GetServiceDefinitionUseCase", () => {
   });
 
   it("should return a service definition by id", async () => {
-    const created = await createMockServiceDefinition(env, salonId);
+    const created = await Effect.runPromise(
+      CreateCustomServiceUseCase.execute(
+        createCustomServiceCommand({ salonId }),
+      ).pipe(Effect.provide(env.serviceUseCaseLayer)),
+    );
 
     const program = Effect.gen(function* () {
       const getUseCase = yield* GetServiceDefinitionUseCase;
 
-      const found = yield* getUseCase.execute({ serviceId: created.id });
+      const found = yield* getUseCase.execute(
+        createGetServiceDefinitionQuery({ serviceId: created.id }),
+      );
 
       expect(found.id).toBe(created.id);
       expect(found.name).toBe(created.name);

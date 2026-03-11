@@ -1,12 +1,19 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
 import {
-  createMockResource,
-  createMockSalon,
-  createMockServiceDefinition,
+  createCustomServiceCommand,
+  createDeleteResourceCommand,
+  createListResourcesQuery,
+  createResourceCommand,
+  createSalonInput,
+} from "./fixtures";
+import {
+  createSalon,
   setupTestEnvironment,
   type TestEnvironment,
 } from "./test-setup";
+import { CreateResourceUseCase } from "../create-resource.use-case";
+import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 import { DeleteResourceUseCase } from "../delete-resource.use-case";
 import { ListResourcesUseCase } from "../list-resources.use-case";
 
@@ -16,7 +23,7 @@ describe("DeleteResourceUseCase", () => {
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
-    salonId = (await createMockSalon(env)).id;
+    salonId = (await createSalon(env, createSalonInput())).id;
   }, 60_000);
 
   afterAll(async () => {
@@ -24,25 +31,28 @@ describe("DeleteResourceUseCase", () => {
   });
 
   it("should delete a resource that is not referenced", async () => {
-    const resource = await createMockResource(env, salonId);
+    const resource = await Effect.runPromise(
+      CreateResourceUseCase.execute(createResourceCommand({ salonId })).pipe(
+        Effect.provide(env.resourceUseCaseLayer),
+      ),
+    );
 
     const program = Effect.gen(function* () {
       const deleteUseCase = yield* DeleteResourceUseCase;
       const listUseCase = yield* ListResourcesUseCase;
 
-      const beforeDelete = yield* listUseCase.execute({
-        salonId,
-      });
+      const beforeDelete = yield* listUseCase.execute(
+        createListResourcesQuery({ salonId }),
+      );
       const countBefore = beforeDelete.length;
 
-      yield* deleteUseCase.execute({
-        salonId,
-        slug: resource.slug,
-      });
+      yield* deleteUseCase.execute(
+        createDeleteResourceCommand({ salonId, slug: resource.slug }),
+      );
 
-      const afterDelete = yield* listUseCase.execute({
-        salonId,
-      });
+      const afterDelete = yield* listUseCase.execute(
+        createListResourcesQuery({ salonId }),
+      );
       expect(afterDelete.length).toBe(countBefore - 1);
     });
 
@@ -52,22 +62,31 @@ describe("DeleteResourceUseCase", () => {
   });
 
   it("should fail to delete a resource referenced by a service phase", async () => {
-    const resource = await createMockResource(env, salonId);
-    await createMockServiceDefinition(env, salonId, {
-      phases: [
-        {
-          name: "Phase Using Resource",
-          durationMinutes: 30,
-          employeeRequired: true,
-          requiredResourceSlugs: [resource.slug],
-        },
-      ],
-    });
+    const resource = await Effect.runPromise(
+      CreateResourceUseCase.execute(createResourceCommand({ salonId })).pipe(
+        Effect.provide(env.resourceUseCaseLayer),
+      ),
+    );
+    await Effect.runPromise(
+      CreateCustomServiceUseCase.execute(
+        createCustomServiceCommand({
+          salonId,
+          phases: [
+            {
+              name: "Phase Using Resource",
+              durationMinutes: 30,
+              employeeRequired: true,
+              requiredResourceSlugs: [resource.slug],
+            },
+          ],
+        }),
+      ).pipe(Effect.provide(env.serviceUseCaseLayer)),
+    );
 
     const program = Effect.gen(function* () {
       const deleteResourceUC = yield* DeleteResourceUseCase;
       const result = yield* deleteResourceUC
-        .execute({ salonId, slug: resource.slug })
+        .execute(createDeleteResourceCommand({ salonId, slug: resource.slug }))
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
