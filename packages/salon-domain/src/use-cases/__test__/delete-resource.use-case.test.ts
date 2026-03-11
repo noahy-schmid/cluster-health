@@ -56,6 +56,9 @@ describe("DeleteResourceUseCase", () => {
     await createMockServiceDefinition(env, salonId, {
       phases: [
         {
+          name: "Phase Using Resource",
+          durationMinutes: 30,
+          employeeRequired: true,
           requiredResourceSlugs: [resource.slug],
         },
       ],

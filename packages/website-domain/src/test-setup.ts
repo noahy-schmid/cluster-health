@@ -38,12 +38,20 @@ export interface TestEnvironment {
   stop: () => Promise<void>;
 }
 
+/**
+ * Optional overrides for auto-generated website fixture values.
+ * The required salonId dependency is passed as a separate parameter.
+ */
 export interface CreateWebsiteFixtureInput {
   slug?: string;
   title?: string;
   faviconMediaId?: string | null;
 }
 
+/**
+ * Optional overrides for auto-generated section fixture values.
+ * The required websiteId and section type dependencies are passed separately.
+ */
 export interface CreateSectionFixtureInput {
   position?: number;
 }

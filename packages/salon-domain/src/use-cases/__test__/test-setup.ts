@@ -108,6 +108,10 @@ export interface CreateServiceDefinitionInput extends Partial<
   phases?: CreateServicePhaseInput[];
 }
 
+/**
+ * Optional overrides for auto-generated service definition fixture values.
+ * The required salonId dependency is passed as a separate parameter.
+ */
 export interface CreateMockServiceDefinitionInput {
   serviceType?: CreateServiceDefinitionInput["serviceType"];
   phases?: CreateServicePhaseInput[];
