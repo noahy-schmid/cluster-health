@@ -4,6 +4,8 @@ import { ScreenshotHelper } from "../helpers/screenshot-helper";
 import type {
   CenterTextInput,
   CenterTextSectionState,
+  StylistsSectionInput,
+  StylistsSectionState,
   WebsiteInput,
   WebsiteState,
 } from "../helpers/types";
@@ -12,6 +14,7 @@ import type { SalonTopic } from "./salon.topic";
 export class WebsiteTopic {
   private website: WebsiteState | undefined;
   private centerTextSection: CenterTextSectionState | undefined;
+  private stylistsSection: StylistsSectionState | undefined;
 
   constructor(
     private readonly managePage: Page,
@@ -157,6 +160,100 @@ export class WebsiteTopic {
       );
 
       return this.centerTextSection;
+    });
+  }
+
+  async iAddAStylistsSection(
+    input: StylistsSectionInput = {},
+  ): Promise<StylistsSectionState> {
+    return base.step("I add a stylists section", async () => {
+      if (this.stylistsSection) {
+        return this.stylistsSection;
+      }
+
+      const { salonId } = await this.salonTopic.iHaveASalon();
+      const website = await this.iHaveAWebsite();
+      const menuTitle = input.menuTitle ?? "Team";
+      const title = input.title ?? "Unser Team";
+      const subtitle =
+        input.subtitle ??
+        "Lernen Sie die Stylisten kennen, die Ihren Look gestalten.";
+
+      await this.managePage.goto(
+        `${e2eEnvironment.manageBaseUrl}/salon/${salonId}/website/${website.websiteId}`,
+      );
+      await this.managePage.getByTestId("add-section-button").first().click();
+
+      await expect(this.managePage).toHaveURL(
+        new RegExp(`/website/${website.websiteId}/select-section`),
+        {
+          timeout: 20_000,
+        },
+      );
+
+      await this.managePage
+        .getByTestId("section-type-stylists-section")
+        .click();
+
+      await expect(this.managePage).toHaveURL(
+        new RegExp(
+          `/website/${website.websiteId}/[0-9a-f-]{36}/stylists-section$`,
+        ),
+        {
+          timeout: 20_000,
+        },
+      );
+
+      const match = new URL(this.managePage.url()).pathname.match(
+        /^\/salon\/[^/]+\/website\/[0-9a-f-]{36}\/([0-9a-f-]{36})\/stylists-section$/,
+      );
+      const sectionId = match?.[1];
+
+      if (!sectionId) {
+        throw new Error(
+          `Could not extract sectionId from ${this.managePage.url()}`,
+        );
+      }
+
+      await this.managePage
+        .getByPlaceholder("Abschnitt im Menu anzeigen")
+        .fill(menuTitle);
+      await this.managePage.getByPlaceholder("z.B. Unser Team").fill(title);
+      await this.managePage
+        .getByPlaceholder(
+          "z.B. Lernen Sie unsere professionellen Stylisten kennen",
+        )
+        .fill(subtitle);
+      await this.managePage
+        .getByRole("button", { name: "Änderungen speichern" })
+        .click();
+
+      await expect(this.managePage).toHaveURL(
+        new RegExp(`/website/${website.websiteId}$`),
+        {
+          timeout: 20_000,
+        },
+      );
+      await expect(
+        this.managePage.getByText(title, { exact: true }),
+      ).toBeVisible();
+      await expect(
+        this.managePage.getByText(menuTitle, { exact: true }),
+      ).toBeVisible();
+
+      this.stylistsSection = {
+        sectionId,
+        menuTitle,
+        title,
+        subtitle,
+      };
+
+      await this.screenshotHelper.capture(
+        this.managePage,
+        "manage-website-editor-after-stylists-section-save",
+      );
+
+      return this.stylistsSection;
     });
   }
 }

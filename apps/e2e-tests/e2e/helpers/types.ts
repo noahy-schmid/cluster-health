@@ -22,6 +22,20 @@ export type CenterTextSectionState = {
   content: string;
 };
 
+export type StylistsSectionState = {
+  sectionId: string;
+  menuTitle: string;
+  title: string;
+  subtitle: string;
+};
+
+export type StylistState = {
+  name: string;
+  subtitle: string;
+  description: string;
+  profileImagePath?: string;
+};
+
 export type WebsiteInput = {
   slug?: string;
   title?: string;
@@ -31,4 +45,17 @@ export type CenterTextInput = {
   menuTitle?: string;
   title?: string;
   content?: string;
+};
+
+export type StylistsSectionInput = {
+  menuTitle?: string;
+  title?: string;
+  subtitle?: string;
+};
+
+export type StylistInput = {
+  name?: string;
+  subtitle?: string;
+  description?: string;
+  profileImagePath?: string;
 };
