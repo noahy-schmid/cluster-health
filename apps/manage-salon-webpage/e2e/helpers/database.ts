@@ -21,7 +21,7 @@ export async function resetDatabase(): Promise<void> {
 
     if (result.rows.length === 0) {
       throw new Error(
-        "No tables were found in the auth, salon, or website schemas. Did you run pnpm e2e:prepare?",
+        "No tables were found in the auth, salon, or website schemas. Ensure the schemas exist and run `pnpm e2e:prepare` from the monorepo root directory to initialize the tables.",
       );
     }
 

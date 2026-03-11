@@ -8,19 +8,20 @@ test.describe("Manage Salon webpage + Salon webpage", () => {
   }) => {
     await scenario.iHaveASalon();
     const website = await scenario.iCreateAWebsiteInTheManageSalonWebpage();
-    const section = await scenario.iAddACenterTextSectionInTheManageSalonWebpage(
-      {
+    const section =
+      await scenario.iAddACenterTextSectionInTheManageSalonWebpage({
         menuTitle: "Unsere Geschichte",
         title: "Willkommen bei Playwright",
         content:
           "Dieser Abschnitt wurde im Manage Salon erstellt und im Salon-Webauftritt geprüft.",
-      },
-    );
+      });
 
     await expect(
       managePage.getByRole("heading", { name: "Webseite bearbeiten" }),
     ).toBeVisible();
-    await expect(managePage.getByText(section.title, { exact: true })).toBeVisible();
+    await expect(
+      managePage.getByText(section.title, { exact: true }),
+    ).toBeVisible();
     await expect(
       managePage.getByText(section.menuTitle, { exact: true }),
     ).toBeVisible();

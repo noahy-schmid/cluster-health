@@ -1,4 +1,10 @@
-import { expect, test as base, type BrowserContext, type Page } from "@playwright/test";
+import {
+  expect,
+  test as base,
+  type BrowserContext,
+  type Page,
+} from "@playwright/test";
+import { randomUUID } from "crypto";
 import { ManagementUserRepository } from "@repo/auth-domain";
 import { MediaLayer, SalonRepository } from "@repo/salon-domain";
 import {
@@ -53,9 +59,7 @@ type CenterTextInput = {
 };
 
 class CrossAppScenario {
-  private readonly uniqueId = `${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2, 8)}`;
+  private readonly uniqueId = randomUUID();
 
   private managementAccount: ManagementAccount | undefined;
   private salon: SalonState | undefined;
@@ -105,7 +109,9 @@ class CrossAppScenario {
         throw new Error(bindResult.errors);
       }
 
-      const tokenResult = await authRepository.issueTokenForUser(account.userId);
+      const tokenResult = await authRepository.issueTokenForUser(
+        account.userId,
+      );
 
       if (!tokenResult.success) {
         throw new Error(tokenResult.errors);
@@ -268,7 +274,7 @@ class CrossAppScenario {
         await this.managePage.getByTestId("website-save-button").click();
 
         await expect(this.managePage).toHaveURL(
-          new RegExp(`/salon/${salonId}/website/[^/]+$`),
+          new RegExp(`/salon/${salonId}/website/[0-9a-f-]{36}$`),
         );
 
         const websiteId = this.extractWebsiteIdFromManageUrl();
@@ -296,7 +302,8 @@ class CrossAppScenario {
     return base.step(
       "I add a center text section in the Manage Salon webpage",
       async () => {
-        const website = this.website ?? (await this.iCreateAWebsiteInTheManageSalonWebpage());
+        const website =
+          this.website ?? (await this.iCreateAWebsiteInTheManageSalonWebpage());
         const menuTitle = input.menuTitle ?? "Über uns";
         const title = input.title ?? `Willkommen ${this.uniqueId}`;
         const content =
@@ -312,12 +319,12 @@ class CrossAppScenario {
           new RegExp(`/website/${website.websiteId}/select-section`),
         );
 
-        await this.managePage
-          .getByTestId("section-type-center-text")
-          .click();
+        await this.managePage.getByTestId("section-type-center-text").click();
 
         await expect(this.managePage).toHaveURL(
-          new RegExp(`/website/${website.websiteId}/[^/]+/center-text$`),
+          new RegExp(
+            `/website/${website.websiteId}/[0-9a-f-]{36}/center-text$`,
+          ),
         );
 
         const sectionId = this.extractSectionIdFromManageUrl();
@@ -325,7 +332,9 @@ class CrossAppScenario {
         await this.managePage
           .getByTestId("center-text-menu-title-input")
           .fill(menuTitle);
-        await this.managePage.getByTestId("center-text-title-input").fill(title);
+        await this.managePage
+          .getByTestId("center-text-title-input")
+          .fill(title);
         await this.managePage
           .getByTestId("center-text-content-input")
           .fill(content);
@@ -334,7 +343,9 @@ class CrossAppScenario {
         await expect(this.managePage).toHaveURL(
           new RegExp(`/website/${website.websiteId}$`),
         );
-        await expect(this.managePage.getByText(title, { exact: true })).toBeVisible();
+        await expect(
+          this.managePage.getByText(title, { exact: true }),
+        ).toBeVisible();
 
         this.centerTextSection = {
           sectionId,
@@ -360,10 +371,7 @@ class CrossAppScenario {
       await this.publicPage.goto(website.publicUrl);
       await expect(this.publicPage).toHaveURL(website.publicUrl);
 
-      await this.captureScreenshot(
-        this.publicPage,
-        "public-salon-website",
-      );
+      await this.captureScreenshot(this.publicPage, "public-salon-website");
 
       return website;
     });
@@ -377,7 +385,7 @@ class CrossAppScenario {
 
       const repository = new ManagementUserRepository();
       const email = `playwright-${this.uniqueId}@example.com`;
-      const password = "Playwright123!";
+      const password = e2eEnvironment.managementPassword;
 
       const registerResult = await repository.registerUser(email, password);
 
@@ -407,7 +415,10 @@ class CrossAppScenario {
 
   private extractWebsiteIdFromManageUrl(): string {
     const { pathname } = new URL(this.managePage.url());
-    const [, , , , websiteId] = pathname.split("/");
+    const match = pathname.match(
+      /^\/salon\/[^/]+\/website\/([0-9a-f-]{36})$/,
+    );
+    const websiteId = match?.[1];
 
     if (!websiteId) {
       throw new Error(`Could not extract websiteId from ${pathname}`);
@@ -418,7 +429,10 @@ class CrossAppScenario {
 
   private extractSectionIdFromManageUrl(): string {
     const { pathname } = new URL(this.managePage.url());
-    const [, , , , , sectionId] = pathname.split("/");
+    const match = pathname.match(
+      /^\/salon\/[^/]+\/website\/[0-9a-f-]{36}\/([0-9a-f-]{36})\/center-text$/,
+    );
+    const sectionId = match?.[1];
 
     if (!sectionId) {
       throw new Error(`Could not extract sectionId from ${pathname}`);
@@ -445,25 +459,29 @@ type CrossAppFixtures = {
 };
 
 export const test = base.extend<CrossAppFixtures>({
-  appContext: async ({ browser }, use) => {
+  appContext: async ({ browser }, consumeFixture) => {
     const context = await browser.newContext();
-    await use(context);
+    await consumeFixture(context);
     await context.close();
   },
-  managePage: async ({ appContext }, use) => {
+  managePage: async ({ appContext }, consumeFixture) => {
     const page = await appContext.newPage();
-    await use(page);
+    await consumeFixture(page);
     await page.close();
   },
-  publicPage: async ({ appContext }, use) => {
+  publicPage: async ({ appContext }, consumeFixture) => {
     const page = await appContext.newPage();
-    await use(page);
+    await consumeFixture(page);
     await page.close();
   },
-  scenario: async ({ appContext, managePage, publicPage }, use, testInfo) => {
+  scenario: async (
+    { appContext, managePage, publicPage },
+    consumeFixture,
+    testInfo,
+  ) => {
     await resetDatabase();
 
-    await use(
+    await consumeFixture(
       new CrossAppScenario(
         appContext,
         managePage,

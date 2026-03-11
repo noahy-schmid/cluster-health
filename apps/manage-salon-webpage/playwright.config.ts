@@ -1,11 +1,15 @@
 import { defineConfig, devices } from "@playwright/test";
 import path from "path";
-import { fileURLToPath } from "url";
 import { e2eEnvironment } from "./e2e/env";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const repositoryRoot = path.resolve(__dirname, "../..");
+
+process.env.DATABASE_URL ??= e2eEnvironment.databaseUrl;
+process.env.SALON_URL ??= e2eEnvironment.salonBaseUrl;
+process.env.JWT_SECRET ??= e2eEnvironment.jwtSecret;
+process.env.NODE_ENV ??= e2eEnvironment.nodeEnv;
+process.env.PLAYWRIGHT_MANAGEMENT_PASSWORD ??=
+  e2eEnvironment.managementPassword;
 
 export default defineConfig({
   testDir: "./e2e/tests",
@@ -13,7 +17,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  timeout: 120_000,
+  timeout: 60_000,
   reporter: process.env.CI
     ? [["html", { open: "never" }], ["github"]]
     : [["html", { open: "never" }], ["list"]],
@@ -39,7 +43,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       stdout: "pipe",
       stderr: "pipe",
-      timeout: 240_000,
+      timeout: 90_000,
     },
     {
       command: "pnpm --filter salon-webpage exec next dev --turbopack -p 3001",
@@ -55,7 +59,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       stdout: "pipe",
       stderr: "pipe",
-      timeout: 240_000,
+      timeout: 90_000,
     },
   ],
   projects: [
