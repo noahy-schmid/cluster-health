@@ -51,6 +51,24 @@ class CrossAppScenario {
     return this.website.iAddACenterTextSection(input);
   }
 
+  async iReorderWebsiteSections(
+    fromPosition: number,
+    toPosition: number,
+    expectedTitles: string[],
+  ) {
+    return this.website.iReorderSection(
+      fromPosition,
+      toPosition,
+      expectedTitles,
+    );
+  }
+
+  async iReloadWebsiteEditorAndExpectSectionOrder(expectedTitles: string[]) {
+    return this.website.iReloadWebsiteEditorAndExpectSectionOrder(
+      expectedTitles,
+    );
+  }
+
   async iOpenMySalonWebsite() {
     return this.publicWebsite.iOpenMySalonWebsite();
   }

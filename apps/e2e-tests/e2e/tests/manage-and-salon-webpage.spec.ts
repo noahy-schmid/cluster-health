@@ -1,4 +1,15 @@
+import { type Page } from "@playwright/test";
 import { expect, test } from "../fixtures/cross-app.fixture";
+
+async function readMenuOrder(publicPage: Page, expectedTitles: string[]) {
+  return publicPage.locator("button").evaluateAll((elements, titles) => {
+    const expectedSet = new Set(titles as string[]);
+
+    return elements
+      .map((element) => element.textContent?.trim() ?? "")
+      .filter((text) => expectedSet.has(text));
+  }, expectedTitles);
+}
 
 test.describe("Manage Salon webpage + Salon webpage", () => {
   test.describe.configure({ timeout: 120_000 });
@@ -78,15 +89,29 @@ test.describe("Manage Salon webpage + Salon webpage", () => {
     ).toBeVisible();
     await expect(publicPage).toHaveURL(website.publicUrl);
     await expect
-      .poll(async () =>
-        publicPage.locator("button").evaluateAll((elements, expectedTitles) => {
-          const expectedSet = new Set(expectedTitles as string[]);
-
-          return elements
-            .map((element) => element.textContent?.trim() ?? "")
-            .filter((text) => expectedSet.has(text));
-        }, expectedMenuOrder),
-      )
+      .poll(async () => readMenuOrder(publicPage, expectedMenuOrder))
       .toEqual(expectedMenuOrder);
+
+    const reorderedManageTitles = [
+      insertedSection.title,
+      secondSection.title,
+      firstSection.title,
+    ];
+    const reorderedMenuTitles = [
+      insertedSection.menuTitle,
+      secondSection.menuTitle,
+      firstSection.menuTitle,
+    ];
+
+    await scenario.iReorderWebsiteSections(1, 2, reorderedManageTitles);
+    await scenario.iReloadWebsiteEditorAndExpectSectionOrder(
+      reorderedManageTitles,
+    );
+
+    await publicPage.reload();
+    await expect(publicPage).toHaveURL(website.publicUrl);
+    await expect
+      .poll(async () => readMenuOrder(publicPage, reorderedMenuTitles))
+      .toEqual(reorderedMenuTitles);
   });
 });

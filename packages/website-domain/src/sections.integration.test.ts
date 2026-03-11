@@ -438,6 +438,36 @@ describe("Section Use Cases Integration Tests", () => {
     await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
   });
 
+  it("should reorder a section from second to third position", async () => {
+    const program = Effect.gen(function* () {
+      const listUseCase = yield* ListSectionsUseCase;
+      const reorderUseCase = yield* ReorderSectionsUseCase;
+
+      const sections = yield* listUseCase.execute({ websiteId });
+      expect(sections.length).toBeGreaterThanOrEqual(3);
+
+      const command: ReorderSectionsCommand = {
+        websiteId,
+        sectionId: sections[1]!.id,
+        newIndex: 2,
+      };
+
+      yield* reorderUseCase.execute(command);
+
+      const reordered = yield* listUseCase.execute({ websiteId });
+      const expectedIds = [...sections.map((section) => section.id)];
+      const movedId = expectedIds.splice(1, 1)[0]!;
+      expectedIds.splice(2, 0, movedId);
+
+      expect(reordered.map((section) => section.id)).toEqual(expectedIds);
+      expect(reordered.map((section) => section.order)).toEqual(
+        reordered.map((_, index) => index),
+      );
+    });
+
+    await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
+  });
+
   it("should fail to create section with invalid type", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;

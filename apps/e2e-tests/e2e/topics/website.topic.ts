@@ -9,8 +9,24 @@ import type {
 } from "../helpers/types";
 import type { SalonTopic } from "./salon.topic";
 
+const REORDER_SECTION_LABEL = "Abschnitt verschieben";
+
 export class WebsiteTopic {
   private website: WebsiteState | undefined;
+
+  private async expectCenterTextOrder(expectedTitles: string[]): Promise<void> {
+    await expect
+      .poll(async () =>
+        this.managePage.locator("h4").evaluateAll((elements, titles) => {
+          const expectedSet = new Set(titles as string[]);
+
+          return elements
+            .map((element) => element.textContent?.trim() ?? "")
+            .filter((text) => expectedSet.has(text));
+        }, expectedTitles),
+      )
+      .toEqual(expectedTitles);
+  }
 
   constructor(
     private readonly managePage: Page,
@@ -92,7 +108,8 @@ export class WebsiteTopic {
       await this.managePage.goto(
         `${e2eEnvironment.manageBaseUrl}/salon/${salonId}/website/${website.websiteId}`,
       );
-      const addSectionButtons = this.managePage.getByTestId("add-section-button");
+      const addSectionButtons =
+        this.managePage.getByTestId("add-section-button");
       const buttonCount = await addSectionButtons.count();
       const targetPosition =
         position === undefined
@@ -161,5 +178,50 @@ export class WebsiteTopic {
 
       return centerTextSection;
     });
+  }
+
+  async iReorderSection(
+    fromPosition: number,
+    toPosition: number,
+    expectedTitles: string[],
+  ): Promise<void> {
+    await base.step("I reorder sections in the website editor", async () => {
+      const { salonId } = await this.salonTopic.iHaveASalon();
+      const website = await this.iHaveAWebsite();
+
+      await this.managePage.goto(
+        `${e2eEnvironment.manageBaseUrl}/salon/${salonId}/website/${website.websiteId}`,
+      );
+
+      const dragHandles = this.managePage.getByLabel(REORDER_SECTION_LABEL);
+      const expectedHandleCount = expectedTitles.length + 1; // hero + sections
+      await expect(dragHandles).toHaveCount(expectedHandleCount);
+
+      await dragHandles
+        .nth(fromPosition + 1)
+        .dragTo(dragHandles.nth(toPosition + 1));
+
+      await this.expectCenterTextOrder(expectedTitles);
+      await this.screenshotHelper.capture(
+        this.managePage,
+        "manage-website-editor-after-section-reorder",
+      );
+    });
+  }
+
+  async iReloadWebsiteEditorAndExpectSectionOrder(
+    expectedTitles: string[],
+  ): Promise<void> {
+    await base.step(
+      "I reload the website editor and the section order stays persisted",
+      async () => {
+        await this.managePage.reload();
+        await this.expectCenterTextOrder(expectedTitles);
+        await this.screenshotHelper.capture(
+          this.managePage,
+          "manage-website-editor-after-reload",
+        );
+      },
+    );
   }
 }
