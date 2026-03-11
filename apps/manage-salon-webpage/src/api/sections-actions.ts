@@ -156,12 +156,12 @@ export async function deleteSection(
 }
 
 /**
- * Server action to reorder sections
- * Takes websiteId and array of section IDs in their new order
+ * Server action to move a section to a new position
  */
-export async function reorderSections(
+export async function reorderSection(
   websiteId: string,
-  sectionIds: string[],
+  sectionId: string,
+  newIndex: number,
 ): Promise<Result<void, string>> {
   const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
@@ -171,7 +171,7 @@ export async function reorderSections(
 
   const program = Effect.gen(function* () {
     const useCase = yield* ReorderSectionsUseCase;
-    return yield* useCase.execute({ websiteId, sectionIds }).pipe(
+    return yield* useCase.execute({ websiteId, sectionId, newIndex }).pipe(
       Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchTag("SectionError", (error) =>
         Effect.succeed({

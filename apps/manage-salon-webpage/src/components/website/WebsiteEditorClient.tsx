@@ -24,7 +24,7 @@ import HeroCard from "@/components/website/section-cards/HeroCard";
 import { AllSections, HeroSettings } from "@repo/website-domain";
 import {
   deleteSection as deleteSectionAction,
-  reorderSections as reorderSectionsAction,
+  reorderSection as reorderSectionAction,
 } from "@/api/sections-actions";
 import { openWebsite } from "@/api/website-actions";
 import { useWebsiteRouteContext } from "@/components/WebsiteRouteContext";
@@ -34,6 +34,9 @@ interface WebsiteEditorClientProps {
   initialSections: AllSections[];
   heroSettings: HeroSettings;
 }
+
+const reindexSections = (sections: AllSections[]) =>
+  sections.map((section, index) => ({ ...section, order: index }));
 
 export default function WebsiteEditorClient({
   initialSections,
@@ -72,11 +75,12 @@ export default function WebsiteEditorClient({
     const nextSections = [...sections];
     const [movedSection] = nextSections.splice(oldIndex, 1);
     nextSections.splice(newIndex, 0, movedSection);
-    setSections(nextSections);
+    setSections(reindexSections(nextSections));
 
-    const result = await reorderSectionsAction(
+    const result = await reorderSectionAction(
       websiteId ?? "",
-      nextSections.map((section) => section.id),
+      String(active.id),
+      newIndex,
     );
 
     if (!result.success) {
@@ -93,7 +97,9 @@ export default function WebsiteEditorClient({
   };
 
   const handleDeleteSection = async (id: string) => {
-    const nextSections = sections.filter((section) => section.id !== id);
+    const nextSections = reindexSections(
+      sections.filter((section) => section.id !== id),
+    );
     setSections(nextSections);
 
     const result = await deleteSectionAction(websiteId ?? "", id);

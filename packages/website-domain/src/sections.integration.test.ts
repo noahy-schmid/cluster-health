@@ -286,6 +286,34 @@ describe("Section Use Cases Integration Tests", () => {
     await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
   });
 
+  it("should insert a section at the requested position and shift following sections", async () => {
+    const command: CreateSectionCommand = {
+      websiteId,
+      type: "center-text",
+      position: 0,
+    };
+
+    const program = Effect.gen(function* () {
+      const listUseCase = yield* ListSectionsUseCase;
+      const createUseCase = yield* CreateSectionUseCase;
+
+      const beforeInsert = yield* listUseCase.execute({ websiteId });
+      const originalFirstSectionId = beforeInsert[0]?.id;
+
+      const insertedSection = yield* createUseCase.execute(command);
+      const afterInsert = yield* listUseCase.execute({ websiteId });
+
+      expect(insertedSection.order).toBe(0);
+      expect(afterInsert[0]?.id).toBe(insertedSection.id);
+      expect(afterInsert[1]?.id).toBe(originalFirstSectionId);
+      expect(afterInsert.map((section) => section.order)).toEqual(
+        afterInsert.map((_, index) => index),
+      );
+    });
+
+    await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
+  });
+
   it("should update a center-text section", async () => {
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
@@ -372,6 +400,9 @@ describe("Section Use Cases Integration Tests", () => {
       expect(
         afterDelete.find((s) => s.id === sectionToDelete.id),
       ).toBeUndefined();
+      expect(afterDelete.map((section) => section.order)).toEqual(
+        afterDelete.map((_, index) => index),
+      );
     });
 
     await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
@@ -385,18 +416,23 @@ describe("Section Use Cases Integration Tests", () => {
       const sections = yield* listUseCase.execute({ websiteId });
       expect(sections.length).toBeGreaterThanOrEqual(2);
 
-      // Reverse the order
-      const reversedIds = sections.map((s) => s.id).reverse();
-
       const command: ReorderSectionsCommand = {
         websiteId,
-        sectionIds: reversedIds,
+        sectionId: sections[sections.length - 1]!.id,
+        newIndex: 1,
       };
 
       yield* reorderUseCase.execute(command);
 
       const reordered = yield* listUseCase.execute({ websiteId });
-      expect(reordered.map((s) => s.id)).toEqual(reversedIds);
+      const expectedIds = [...sections.map((section) => section.id)];
+      const [movedId] = expectedIds.splice(sections.length - 1, 1);
+      expectedIds.splice(1, 0, movedId);
+
+      expect(reordered.map((section) => section.id)).toEqual(expectedIds);
+      expect(reordered.map((section) => section.order)).toEqual(
+        reordered.map((_, index) => index),
+      );
     });
 
     await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
@@ -442,13 +478,37 @@ describe("Section Use Cases Integration Tests", () => {
     await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
   });
 
-  it("should fail to reorder with mismatched section IDs", async () => {
+  it("should fail to reorder a section that does not belong to the website", async () => {
     const program = Effect.gen(function* () {
       const reorderUseCase = yield* ReorderSectionsUseCase;
       const result = yield* reorderUseCase
         .execute({
           websiteId,
-          sectionIds: [crypto.randomUUID()],
+          sectionId: crypto.randomUUID(),
+          newIndex: 0,
+        })
+        .pipe(Effect.either);
+
+      expect(Either.isLeft(result)).toBe(true);
+      if (Either.isLeft(result)) {
+        expect(result.left._tag).toBe("SectionError");
+      }
+    });
+
+    await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
+  });
+
+  it("should fail to reorder to an out-of-range index", async () => {
+    const program = Effect.gen(function* () {
+      const listUseCase = yield* ListSectionsUseCase;
+      const reorderUseCase = yield* ReorderSectionsUseCase;
+
+      const sections = yield* listUseCase.execute({ websiteId });
+      const result = yield* reorderUseCase
+        .execute({
+          websiteId,
+          sectionId: sections[0]!.id,
+          newIndex: sections.length,
         })
         .pipe(Effect.either);
 

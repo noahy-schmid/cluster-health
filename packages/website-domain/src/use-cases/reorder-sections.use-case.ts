@@ -6,7 +6,8 @@ import { SectionError } from "../application/section/errors";
 
 export interface ReorderSectionsCommand {
   websiteId: string;
-  sectionIds: string[];
+  sectionId: string;
+  newIndex: number;
 }
 
 // --- Use Case ---
@@ -18,7 +19,11 @@ const make = Effect.gen(function* () {
     execute: (
       command: ReorderSectionsCommand,
     ): Effect.Effect<void, SectionError> =>
-      aggregate.reorderSections(command.websiteId, command.sectionIds),
+      aggregate.reorderSection(
+        command.websiteId,
+        command.sectionId,
+        command.newIndex,
+      ),
   };
 });
 

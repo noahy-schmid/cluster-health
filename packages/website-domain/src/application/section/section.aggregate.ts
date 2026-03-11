@@ -107,8 +107,26 @@ const make = Effect.gen(function* () {
         );
       }
 
+      const existingSections = yield* sectionPort
+        .fetchSectionsByWebsiteId(websiteId)
+        .pipe(
+          Effect.mapError(
+            (error) =>
+              new SectionError({
+                websiteId,
+                sectionType: type,
+                message: error.message,
+              }),
+          ),
+        );
+
+      const insertPosition = Math.max(
+        0,
+        Math.min(position, existingSections.length),
+      );
+
       const portSection = yield* sectionPort
-        .createSection(websiteId, type, position)
+        .createSection(websiteId, type, insertPosition)
         .pipe(
           Effect.mapError(
             (error) =>
@@ -163,7 +181,11 @@ const make = Effect.gen(function* () {
       yield* Effect.log("Section deleted", sectionId);
     });
 
-  const reorderSections = (websiteId: string, sectionIds: string[]) =>
+  const reorderSection = (
+    websiteId: string,
+    sectionId: string,
+    newIndex: number,
+  ) =>
     Effect.gen(function* () {
       const existingSections = yield* sectionPort
         .fetchSectionsByWebsiteId(websiteId)
@@ -177,36 +199,38 @@ const make = Effect.gen(function* () {
           ),
         );
 
-      if (sectionIds.length !== existingSections.length) {
+      if (!existingSections.some((section) => section.id === sectionId)) {
         return yield* Effect.fail(
           new SectionError({
             websiteId,
-            message: `Provided sectionIds length (${sectionIds.length}) does not match number of sections in website (${existingSections.length})`,
+            sectionId,
+            message: "Provided section does not belong to the website",
           }),
         );
       }
 
-      const existingIdSet = new Set(existingSections.map((s) => s.id));
-      if (!sectionIds.every((id) => existingIdSet.has(id))) {
+      if (newIndex < 0 || newIndex >= existingSections.length) {
         return yield* Effect.fail(
           new SectionError({
             websiteId,
-            message: "Provided sectionIds do not match sections in website",
+            sectionId,
+            message: `Provided newIndex ${newIndex} is out of bounds for ${existingSections.length} sections`,
           }),
         );
       }
 
-      yield* sectionPort.reorderSections(websiteId, sectionIds).pipe(
+      yield* sectionPort.reorderSection(websiteId, sectionId, newIndex).pipe(
         Effect.mapError(
           (error) =>
             new SectionError({
               websiteId,
+              sectionId,
               message: error.message,
             }),
         ),
       );
 
-      yield* Effect.log("Sections reordered for website", websiteId);
+      yield* Effect.log("Section reordered for website", websiteId, sectionId);
     });
 
   const fetchSections = (websiteId: string) =>
@@ -230,7 +254,7 @@ const make = Effect.gen(function* () {
     createSection,
     updateSection,
     deleteSection,
-    reorderSections,
+    reorderSection,
     fetchSections,
   };
 });

@@ -28,6 +28,7 @@ export type WebsiteInput = {
 };
 
 export type CenterTextInput = {
+  position?: number;
   menuTitle?: string;
   title?: string;
   content?: string;

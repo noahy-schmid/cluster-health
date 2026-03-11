@@ -107,12 +107,30 @@ const make = Effect.gen(function* () {
   ) =>
     Effect.gen(function* () {
       const baseSection = yield* Effect.tryPromise(() =>
-        db
-          .insert(sectionsTable)
-          .values({ websiteId, type, order: position })
-          .returning(),
+        db.transaction(async (tx) => {
+          const existingSections = await tx
+            .select({ id: sectionsTable.id })
+            .from(sectionsTable)
+            .where(eq(sectionsTable.websiteId, websiteId))
+            .orderBy(sectionsTable.order);
+
+          for (const [index, section] of existingSections
+            .slice(position)
+            .entries()) {
+            await tx
+              .update(sectionsTable)
+              .set({ order: position + index + 1 })
+              .where(eq(sectionsTable.id, section.id));
+          }
+
+          const insertedSections = await tx
+            .insert(sectionsTable)
+            .values({ websiteId, type, order: position })
+            .returning();
+
+          return insertedSections[0];
+        }),
       ).pipe(
-        Effect.map((rows) => rows[0]),
         Effect.mapError(
           (error) =>
             new SectionPersistenceError({
@@ -174,14 +192,37 @@ const make = Effect.gen(function* () {
 
   const deleteSection: SectionPort["deleteSection"] = (websiteId, sectionId) =>
     Effect.tryPromise(() =>
-      db
-        .delete(sectionsTable)
-        .where(
+      db.transaction(async (tx) => {
+        const existingSections = await tx
+          .select({ id: sectionsTable.id })
+          .from(sectionsTable)
+          .where(eq(sectionsTable.websiteId, websiteId))
+          .orderBy(sectionsTable.order);
+
+        const deletedIndex = existingSections.findIndex(
+          (section) => section.id === sectionId,
+        );
+
+        await tx.delete(sectionsTable).where(
           and(
             eq(sectionsTable.id, sectionId),
             eq(sectionsTable.websiteId, websiteId),
           ),
-        ),
+        );
+
+        if (deletedIndex === -1) {
+          return;
+        }
+
+        for (const [index, section] of existingSections
+          .slice(deletedIndex + 1)
+          .entries()) {
+          await tx
+            .update(sectionsTable)
+            .set({ order: deletedIndex + index })
+            .where(eq(sectionsTable.id, section.id));
+        }
+      }),
     ).pipe(
       Effect.mapError(
         (error) =>
@@ -192,34 +233,71 @@ const make = Effect.gen(function* () {
       ),
     );
 
-  const reorderSections: SectionPort["reorderSections"] = (
+  const reorderSection: SectionPort["reorderSection"] = (
     websiteId,
-    sectionIds,
+    sectionId,
+    newIndex,
   ) =>
-    Effect.forEach(
-      sectionIds.map((id, index) => ({ id, index })),
-      ({ id, index }) =>
-        Effect.tryPromise(() =>
-          db
+    Effect.tryPromise(() =>
+      db.transaction(async (tx) => {
+        const existingSections = await tx
+          .select({ id: sectionsTable.id })
+          .from(sectionsTable)
+          .where(eq(sectionsTable.websiteId, websiteId))
+          .orderBy(sectionsTable.order);
+
+        const currentIndex = existingSections.findIndex(
+          (section) => section.id === sectionId,
+        );
+
+        if (currentIndex === -1) {
+          throw new SectionPersistenceError({
+            message: `Section not found: ${sectionId}`,
+          });
+        }
+
+        if (currentIndex === newIndex) {
+          return;
+        }
+
+        const reorderedSections = [...existingSections];
+        const [movedSection] = reorderedSections.splice(currentIndex, 1);
+
+        if (!movedSection) {
+          throw new SectionPersistenceError({
+            message: `Section not found: ${sectionId}`,
+          });
+        }
+
+        reorderedSections.splice(newIndex, 0, movedSection);
+
+        const startIndex = Math.min(currentIndex, newIndex);
+        const endIndex = Math.max(currentIndex, newIndex);
+
+        for (const [index, section] of reorderedSections
+          .slice(startIndex, endIndex + 1)
+          .entries()) {
+          await tx
             .update(sectionsTable)
-            .set({ order: index })
+            .set({ order: startIndex + index })
             .where(
               and(
-                eq(sectionsTable.id, id),
+                eq(sectionsTable.id, section.id),
                 eq(sectionsTable.websiteId, websiteId),
               ),
-            ),
-        ).pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionPersistenceError({
-                message: `Failed to reorder section ${id}: ${String(error)}`,
-                cause: error,
-              }),
-          ),
-        ),
-      { concurrency: 1 },
-    ).pipe(Effect.asVoid);
+            );
+        }
+      }),
+    ).pipe(
+      Effect.mapError((error) =>
+        error instanceof SectionPersistenceError
+          ? error
+          : new SectionPersistenceError({
+              message: `Failed to reorder section ${sectionId}: ${String(error)}`,
+              cause: error,
+            }),
+      ),
+    );
 
   const fetchSectionsByWebsiteId: SectionPort["fetchSectionsByWebsiteId"] = (
     websiteId,
@@ -277,7 +355,7 @@ const make = Effect.gen(function* () {
     createSection,
     updateSection,
     deleteSection,
-    reorderSections,
+    reorderSection,
     fetchSectionsByWebsiteId,
   } satisfies SectionPort;
 });

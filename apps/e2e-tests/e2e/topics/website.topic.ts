@@ -11,7 +11,6 @@ import type { SalonTopic } from "./salon.topic";
 
 export class WebsiteTopic {
   private website: WebsiteState | undefined;
-  private centerTextSection: CenterTextSectionState | undefined;
 
   constructor(
     private readonly managePage: Page,
@@ -81,12 +80,9 @@ export class WebsiteTopic {
     input: CenterTextInput = {},
   ): Promise<CenterTextSectionState> {
     return base.step("I add a center text section", async () => {
-      if (this.centerTextSection) {
-        return this.centerTextSection;
-      }
-
       const { salonId } = await this.salonTopic.iHaveASalon();
       const website = await this.iHaveAWebsite();
+      const position = input.position;
       const menuTitle = input.menuTitle ?? "Über uns";
       const title = input.title ?? `Willkommen ${this.uniqueSuffix}`;
       const content =
@@ -96,7 +92,14 @@ export class WebsiteTopic {
       await this.managePage.goto(
         `${e2eEnvironment.manageBaseUrl}/salon/${salonId}/website/${website.websiteId}`,
       );
-      await this.managePage.getByTestId("add-section-button").first().click();
+      const addSectionButtons = this.managePage.getByTestId("add-section-button");
+      const buttonCount = await addSectionButtons.count();
+      const targetPosition =
+        position === undefined
+          ? buttonCount - 1
+          : Math.max(0, Math.min(position, buttonCount - 1));
+
+      await addSectionButtons.nth(targetPosition).click();
 
       await expect(this.managePage).toHaveURL(
         new RegExp(`/website/${website.websiteId}/select-section`),
@@ -144,7 +147,7 @@ export class WebsiteTopic {
         this.managePage.getByText(title, { exact: true }),
       ).toBeVisible();
 
-      this.centerTextSection = {
+      const centerTextSection = {
         sectionId,
         menuTitle,
         title,
@@ -156,7 +159,7 @@ export class WebsiteTopic {
         "manage-website-editor-after-section-save",
       );
 
-      return this.centerTextSection;
+      return centerTextSection;
     });
   }
 }
