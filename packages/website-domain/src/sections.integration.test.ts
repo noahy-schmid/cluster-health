@@ -46,9 +46,7 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a center-text section with defaults", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
 
     const command: CreateSectionCommand = {
       websiteId,
@@ -77,9 +75,7 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a gallery section with defaults", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
 
     const command: CreateSectionCommand = {
       websiteId,
@@ -105,9 +101,7 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a text-with-image section with defaults", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
 
     const command: CreateSectionCommand = {
       websiteId,
@@ -132,9 +126,7 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a reason section with default items", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
 
     const command: CreateSectionCommand = {
       websiteId,
@@ -160,9 +152,7 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should create a stylists section with defaults", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
 
     const command: CreateSectionCommand = {
       websiteId,
@@ -187,9 +177,7 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should list all created sections for the website", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
     await createMockSections(env, websiteId, [
       "center-text",
       "gallery",
@@ -218,14 +206,8 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should update a center-text section", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
-    const centerText = await createMockSection(env, {
-      websiteId,
-      type: "center-text",
-      position: 0,
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const centerText = await createMockSection(env, websiteId, "center-text");
 
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
@@ -256,14 +238,8 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should update a gallery section", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
-    const gallery = await createMockSection(env, {
-      websiteId,
-      type: "gallery",
-      position: 0,
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const gallery = await createMockSection(env, websiteId, "gallery");
 
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
@@ -294,14 +270,12 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should delete a section", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
-    const sectionToDelete = await createMockSection(env, {
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const sectionToDelete = await createMockSection(
+      env,
       websiteId,
-      type: "stylists-section",
-      position: 0,
-    });
+      "stylists-section",
+    );
 
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
@@ -326,9 +300,7 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should reorder sections", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
     await createMockSections(env, websiteId, [
       "center-text",
       "gallery",
@@ -360,9 +332,7 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should fail to create section with invalid type", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
 
     const program = Effect.gen(function* () {
       const useCase = yield* CreateSectionUseCase;
@@ -404,9 +374,7 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should fail to reorder with mismatched section IDs", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
 
     const program = Effect.gen(function* () {
       const reorderUseCase = yield* ReorderSectionsUseCase;
@@ -427,14 +395,8 @@ describe("Section Use Cases Integration Tests", () => {
   });
 
   it("should validate reason section items on update", async () => {
-    const websiteId = await createMockWebsite(env, {
-      salonId: createMockSalon(env),
-    });
-    const reasonSection = await createMockSection(env, {
-      websiteId,
-      type: "reason",
-      position: 0,
-    });
+    const websiteId = await createMockWebsite(env, createMockSalon(env));
+    const reasonSection = await createMockSection(env, websiteId, "reason");
 
     const program = Effect.gen(function* () {
       const updateUseCase = yield* UpdateSectionUseCase;

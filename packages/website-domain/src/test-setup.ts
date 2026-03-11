@@ -39,15 +39,12 @@ export interface TestEnvironment {
 }
 
 export interface CreateWebsiteFixtureInput {
-  salonId: string;
   slug?: string;
   title?: string;
   faviconMediaId?: string | null;
 }
 
 export interface CreateSectionFixtureInput {
-  websiteId: string;
-  type: CreateSectionCommand["type"];
   position?: number;
 }
 
@@ -148,7 +145,8 @@ export async function setupTestEnvironment(): Promise<TestEnvironment> {
 
 export async function createWebsite(
   env: TestEnvironment,
-  input: CreateWebsiteFixtureInput,
+  salonId: string,
+  input: CreateWebsiteFixtureInput = {},
 ) {
   const suffix = createFixtureSuffix();
 
@@ -156,7 +154,7 @@ export async function createWebsite(
     WebsiteService.pipe(
       Effect.flatMap((websiteService) =>
         websiteService.createWebsite({
-          salonId: input.salonId,
+          salonId,
           slug: input.slug ?? `mock-website-${suffix}`,
           title: input.title ?? `Mock Website ${suffix}`,
           faviconMediaId:
@@ -174,18 +172,22 @@ export function createMockSalon(env: TestEnvironment) {
   return env.createSalon();
 }
 
-export const createMockWebsite = createWebsite;
+export function createMockWebsite(env: TestEnvironment, salonId: string) {
+  return createWebsite(env, salonId);
+}
 
 export async function createMockSection(
   env: TestEnvironment,
-  input: CreateSectionFixtureInput,
+  websiteId: string,
+  type: CreateSectionCommand["type"],
+  input: CreateSectionFixtureInput = {},
 ) {
   return Effect.runPromise(
     CreateSectionUseCase.pipe(
       Effect.flatMap((useCase) =>
         useCase.execute({
-          websiteId: input.websiteId,
-          type: input.type,
+          websiteId,
+          type,
           position: input.position ?? 0,
         }),
       ),
@@ -201,7 +203,7 @@ export async function createMockSections(
 ) {
   return Promise.all(
     types.map((type, index) =>
-      createMockSection(env, { websiteId, type, position: index }),
+      createMockSection(env, websiteId, type, { position: index }),
     ),
   );
 }

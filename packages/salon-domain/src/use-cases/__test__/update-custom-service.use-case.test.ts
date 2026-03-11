@@ -22,20 +22,7 @@ describe("UpdateCustomServiceUseCase", () => {
   });
 
   it("should update a custom service definition with new phases", async () => {
-    const service = await createMockServiceDefinition(env, {
-      salonId,
-      name: "Original Service",
-      description: "Original description",
-      priceInCents: 4500,
-      phases: [
-        {
-          name: "Phase A",
-          durationMinutes: 20,
-          employeeRequired: true,
-          requiredResourceSlugs: [],
-        },
-      ],
-    });
+    const service = await createMockServiceDefinition(env, salonId);
 
     const program = Effect.gen(function* () {
       const updateUseCase = yield* UpdateCustomServiceUseCase;

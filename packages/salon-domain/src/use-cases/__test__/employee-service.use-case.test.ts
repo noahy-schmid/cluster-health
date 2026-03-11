@@ -16,32 +16,20 @@ describe("Employee-Service Assignment Use Cases", () => {
   let env: TestEnvironment;
   let stylistId: string;
   let serviceId: string;
+  let stylistName: string;
+  let serviceName: string;
 
   beforeAll(async () => {
     env = await setupTestEnvironment();
 
     const salon = await createMockSalon(env);
-    const stylist = await createMockStylist(env, {
-      salonId: salon.id,
-      name: "Test Stylist",
-    });
-    const service = await createMockServiceDefinition(env, {
-      salonId: salon.id,
-      name: "Assignment Test Service",
-      description: "For assignment tests",
-      priceInCents: 8000,
-      phases: [
-        {
-          name: "Apply Color",
-          durationMinutes: 30,
-          employeeRequired: true,
-          requiredResourceSlugs: [],
-        },
-      ],
-    });
+    const stylist = await createMockStylist(env, salon.id);
+    const service = await createMockServiceDefinition(env, salon.id);
 
     stylistId = stylist.id;
+    stylistName = stylist.name;
     serviceId = service.id;
+    serviceName = service.name;
   }, 60_000);
 
   afterAll(async () => {
@@ -79,7 +67,7 @@ describe("Employee-Service Assignment Use Cases", () => {
       );
       // Verify enriched data includes service name
       const matched = services.find((s) => s.serviceDefinitionId === serviceId);
-      expect(matched?.serviceName).toBe("Assignment Test Service");
+      expect(matched?.serviceName).toBe(serviceName);
     });
 
     await Effect.runPromise(
@@ -96,7 +84,7 @@ describe("Employee-Service Assignment Use Cases", () => {
       expect(employees.some((e) => e.stylistId === stylistId)).toBe(true);
       // Verify enriched data includes stylist name
       const matched = employees.find((e) => e.stylistId === stylistId);
-      expect(matched?.stylistName).toBe("Test Stylist");
+      expect(matched?.stylistName).toBe(stylistName);
     });
 
     await Effect.runPromise(

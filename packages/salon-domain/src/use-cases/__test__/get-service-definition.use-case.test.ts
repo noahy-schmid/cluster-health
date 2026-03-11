@@ -22,20 +22,7 @@ describe("GetServiceDefinitionUseCase", () => {
   });
 
   it("should return a service definition by id", async () => {
-    const created = await createMockServiceDefinition(env, {
-      salonId,
-      name: "Get Test Service",
-      description: "For getting",
-      priceInCents: 2500,
-      phases: [
-        {
-          name: "Phase A",
-          durationMinutes: 15,
-          employeeRequired: true,
-          requiredResourceSlugs: [],
-        },
-      ],
-    });
+    const created = await createMockServiceDefinition(env, salonId);
 
     const program = Effect.gen(function* () {
       const getUseCase = yield* GetServiceDefinitionUseCase;
@@ -43,11 +30,11 @@ describe("GetServiceDefinitionUseCase", () => {
       const found = yield* getUseCase.execute({ serviceId: created.id });
 
       expect(found.id).toBe(created.id);
-      expect(found.name).toBe("Get Test Service");
-      expect(found.description).toBe("For getting");
-      expect(found.priceInCents).toBe(2500);
+      expect(found.name).toBe(created.name);
+      expect(found.description).toBe(created.description);
+      expect(found.priceInCents).toBe(created.priceInCents);
       expect(found.phases).toHaveLength(1);
-      expect(found.phases[0]?.name).toBe("Phase A");
+      expect(found.phases[0]?.name).toBe(created.phases[0]?.name);
     });
 
     await Effect.runPromise(

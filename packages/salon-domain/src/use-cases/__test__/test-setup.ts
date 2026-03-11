@@ -108,6 +108,11 @@ export interface CreateServiceDefinitionInput extends Partial<
   phases?: CreateServicePhaseInput[];
 }
 
+export interface CreateMockServiceDefinitionInput {
+  serviceType?: CreateServiceDefinitionInput["serviceType"];
+  phases?: CreateServicePhaseInput[];
+}
+
 function createFixtureSuffix() {
   return crypto.randomUUID().slice(0, 8);
 }
@@ -297,7 +302,9 @@ export async function createSalon(
   return salon;
 }
 
-export const createMockSalon = createSalon;
+export function createMockSalon(env: TestEnvironment) {
+  return createSalon(env);
+}
 
 export async function createStylist(
   env: TestEnvironment,
@@ -326,7 +333,9 @@ export async function createStylist(
   return stylist;
 }
 
-export const createMockStylist = createStylist;
+export function createMockStylist(env: TestEnvironment, salonId: string) {
+  return createStylist(env, { salonId });
+}
 
 export async function createResource(
   env: TestEnvironment,
@@ -354,7 +363,9 @@ export async function createResource(
   return resource;
 }
 
-export const createMockResource = createResource;
+export function createMockResource(env: TestEnvironment, salonId: string) {
+  return createResource(env, { salonId });
+}
 
 export async function createWellKnownResources(
   env: TestEnvironment,
@@ -390,7 +401,12 @@ export async function createWellKnownResources(
   return [seat, climazon] as const;
 }
 
-export const createMockWellKnownResources = createWellKnownResources;
+export function createMockWellKnownResources(
+  env: TestEnvironment,
+  salonId: string,
+) {
+  return createWellKnownResources(env, salonId);
+}
 
 export async function createServiceDefinition(
   env: TestEnvironment,
@@ -460,7 +476,17 @@ export async function createServiceDefinition(
   };
 }
 
-export const createMockServiceDefinition = createServiceDefinition;
+export function createMockServiceDefinition(
+  env: TestEnvironment,
+  salonId: string,
+  input: CreateMockServiceDefinitionInput = {},
+) {
+  return createServiceDefinition(env, {
+    salonId,
+    serviceType: input.serviceType,
+    phases: input.phases,
+  });
+}
 
 export async function createEmployeeServiceAssignment(
   env: TestEnvironment,
@@ -480,5 +506,13 @@ export async function createEmployeeServiceAssignment(
   return assignment;
 }
 
-export const createMockEmployeeServiceAssignment =
-  createEmployeeServiceAssignment;
+export function createMockEmployeeServiceAssignment(
+  env: TestEnvironment,
+  stylistId: string,
+  serviceDefinitionId: string,
+) {
+  return createEmployeeServiceAssignment(env, {
+    stylistId,
+    serviceDefinitionId,
+  });
+}

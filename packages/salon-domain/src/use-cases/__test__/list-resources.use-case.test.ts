@@ -22,12 +22,7 @@ describe("ListResourcesUseCase", () => {
   });
 
   it("should list resources for a salon", async () => {
-    await createMockResource(env, {
-      salonId,
-      slug: "list-test",
-      name: "List Test Resource",
-      amount: 1,
-    });
+    const resource = await createMockResource(env, salonId);
 
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListResourcesUseCase;
@@ -37,7 +32,7 @@ describe("ListResourcesUseCase", () => {
       });
 
       expect(resources.length).toBeGreaterThanOrEqual(1);
-      expect(resources.some((r) => r.name === "List Test Resource")).toBe(true);
+      expect(resources.some((r) => r.slug === resource.slug)).toBe(true);
     });
 
     await Effect.runPromise(

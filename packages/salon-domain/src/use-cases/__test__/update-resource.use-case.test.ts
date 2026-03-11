@@ -22,12 +22,7 @@ describe("UpdateResourceUseCase", () => {
   });
 
   it("should update a resource", async () => {
-    const resource = await createMockResource(env, {
-      salonId,
-      slug: "old-resource",
-      name: "Old Name",
-      amount: 2,
-    });
+    const resource = await createMockResource(env, salonId);
 
     const program = Effect.gen(function* () {
       const updateUseCase = yield* UpdateResourceUseCase;

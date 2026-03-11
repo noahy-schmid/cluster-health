@@ -23,20 +23,7 @@ describe("DeleteServiceDefinitionUseCase", () => {
   });
 
   it("should soft-delete a service definition", async () => {
-    const service = await createMockServiceDefinition(env, {
-      salonId,
-      name: "Temporary Service",
-      description: "Will be deleted",
-      priceInCents: 2000,
-      phases: [
-        {
-          name: "Quick Phase",
-          durationMinutes: 15,
-          employeeRequired: true,
-          requiredResourceSlugs: [],
-        },
-      ],
-    });
+    const service = await createMockServiceDefinition(env, salonId);
 
     const program = Effect.gen(function* () {
       const deleteUseCase = yield* DeleteServiceDefinitionUseCase;

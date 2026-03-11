@@ -22,20 +22,7 @@ describe("ListServiceDefinitionsUseCase", () => {
   });
 
   it("should list service definitions for a salon", async () => {
-    await createMockServiceDefinition(env, {
-      salonId,
-      name: "List Test Service",
-      description: "For listing",
-      priceInCents: 3000,
-      phases: [
-        {
-          name: "Phase 1",
-          durationMinutes: 20,
-          employeeRequired: true,
-          requiredResourceSlugs: [],
-        },
-      ],
-    });
+    const created = await createMockServiceDefinition(env, salonId);
 
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListServiceDefinitionsUseCase;
@@ -45,7 +32,7 @@ describe("ListServiceDefinitionsUseCase", () => {
       });
 
       expect(services.length).toBeGreaterThanOrEqual(1);
-      expect(services.some((s) => s.name === "List Test Service")).toBe(true);
+      expect(services.some((s) => s.name === created.name)).toBe(true);
     });
 
     await Effect.runPromise(

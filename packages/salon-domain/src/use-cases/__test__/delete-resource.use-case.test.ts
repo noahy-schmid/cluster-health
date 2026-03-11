@@ -24,12 +24,7 @@ describe("DeleteResourceUseCase", () => {
   });
 
   it("should delete a resource that is not referenced", async () => {
-    const resource = await createMockResource(env, {
-      salonId,
-      slug: "deletable",
-      name: "Deletable Resource",
-      amount: 1,
-    });
+    const resource = await createMockResource(env, salonId);
 
     const program = Effect.gen(function* () {
       const deleteUseCase = yield* DeleteResourceUseCase;
@@ -57,22 +52,10 @@ describe("DeleteResourceUseCase", () => {
   });
 
   it("should fail to delete a resource referenced by a service phase", async () => {
-    const resource = await createMockResource(env, {
-      salonId,
-      slug: "ref-resource",
-      name: "Referenced Resource",
-      amount: 2,
-    });
-    await createMockServiceDefinition(env, {
-      salonId,
-      name: "Service with Resource",
-      description: "Test",
-      priceInCents: 5000,
+    const resource = await createMockResource(env, salonId);
+    await createMockServiceDefinition(env, salonId, {
       phases: [
         {
-          name: "Phase 1",
-          durationMinutes: 30,
-          employeeRequired: true,
           requiredResourceSlugs: [resource.slug],
         },
       ],
