@@ -17,7 +17,9 @@ export class StylistTopic {
       const { salonId } = await this.salonTopic.iHaveASalon();
       const stylistNumber = this.stylists.length + 1;
       const stylist: StylistState = {
-        name: input.name ?? `Playwright Stylist ${stylistNumber} ${this.uniqueSuffix}`,
+        name:
+          input.name ??
+          `Playwright Stylist ${stylistNumber} ${this.uniqueSuffix}`,
         subtitle: input.subtitle ?? `Senior Stylist ${stylistNumber}`,
         description:
           input.description ??
