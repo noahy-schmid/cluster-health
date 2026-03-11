@@ -15,8 +15,6 @@ import {
   UpdateCustomServiceUseCaseLayer,
   DeleteServiceDefinitionUseCase,
   DeleteServiceDefinitionUseCaseLayer,
-  ListResourcesUseCase,
-  ListResourcesUseCaseLayer,
   ListServiceEmployeesUseCase,
   ListServiceEmployeesUseCaseLayer,
   ListEmployeeServicesUseCase,
@@ -28,7 +26,6 @@ import {
 } from "@repo/salon-domain";
 import type {
   ServiceDefinition,
-  Resource,
   ServiceEmployeeItem,
   EmployeeServiceItem,
   CreateServicePhaseInput,
@@ -144,7 +141,7 @@ export async function createSimpleService(input: {
       ResourceMissingError: (error) =>
         Effect.succeed({
           success: false as const,
-          error: `Ressource "${error.resourceSlug}" fehlt im Salon`,
+          error: `Ausstattung "${error.resourceSlug}" fehlt im Salon`,
         }),
     }),
     Effect.provide(CreateSimpleServiceUseCaseLayer),
@@ -198,7 +195,7 @@ export async function createColorationService(input: {
       ResourceMissingError: (error) =>
         Effect.succeed({
           success: false as const,
-          error: `Ressource "${error.resourceSlug}" fehlt im Salon`,
+          error: `Ausstattung "${error.resourceSlug}" fehlt im Salon`,
         }),
     }),
     Effect.provide(CreateColorationServiceUseCaseLayer),
@@ -248,7 +245,7 @@ export async function createCustomService(input: {
       ResourceMissingError: (error) =>
         Effect.succeed({
           success: false as const,
-          error: `Ressource "${error.resourceSlug}" fehlt im Salon`,
+          error: `Ausstattung "${error.resourceSlug}" fehlt im Salon`,
         }),
     }),
     Effect.provide(CreateCustomServiceUseCaseLayer),
@@ -301,7 +298,7 @@ export async function updateServiceDefinition(
       ResourceMissingError: (error) =>
         Effect.succeed({
           success: false as const,
-          error: `Ressource "${error.resourceSlug}" fehlt im Salon`,
+          error: `Ausstattung "${error.resourceSlug}" fehlt im Salon`,
         }),
     }),
     Effect.provide(UpdateCustomServiceUseCaseLayer),
@@ -337,33 +334,6 @@ export async function deleteServiceDefinition(
         Effect.succeed({ success: false as const, error: error.message }),
     }),
     Effect.provide(DeleteServiceDefinitionUseCaseLayer),
-  );
-
-  return Effect.runPromise(program);
-}
-
-/**
- * Fetches all available salon resources.
- */
-export async function fetchSalonResources(
-  salonId: string,
-): Promise<
-  { success: true; data: Resource[] } | { success: false; error: string }
-> {
-  const access = await SalonAccessGuard.canAccessSalon(salonId);
-  if (!access.success) {
-    return { success: false, error: access.error };
-  }
-
-  const program = Effect.gen(function* () {
-    const useCase = yield* ListResourcesUseCase;
-    const resources = yield* useCase.execute({ salonId });
-    return { success: true as const, data: resources };
-  }).pipe(
-    Effect.catchTag("InternalError", (error) =>
-      Effect.succeed({ success: false as const, error: error.message }),
-    ),
-    Effect.provide(ListResourcesUseCaseLayer),
   );
 
   return Effect.runPromise(program);

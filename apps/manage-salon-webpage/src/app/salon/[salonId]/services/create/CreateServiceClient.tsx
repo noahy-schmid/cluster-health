@@ -37,7 +37,7 @@ const serviceTypeOptions: TypeSelectionOption<ServiceType>[] = [
     type: "custom",
     label: "Individuell",
     description:
-      "Eine vollständig anpassbare Dienstleistung mit beliebigen Phasen und Ressourcen.",
+      "Eine vollständig anpassbare Dienstleistung mit beliebigen Phasen und benötigter Ausstattung.",
     icon: Settings,
   },
 ];

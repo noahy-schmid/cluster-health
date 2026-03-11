@@ -2,13 +2,13 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { Resource } from "@repo/salon-domain";
+import { useNotifications } from "@/components/notifications/useNotifications";
 import {
   createSalonResource,
   deleteSalonResource,
   updateSalonResource,
   upsertWellKnownSalonResource,
-} from "@/api/salon-actions";
-import { useNotifications } from "@/components/notifications/useNotifications";
+} from "./planning.actions";
 import { CLIMAZON_SLUG, SEAT_SLUG } from "./resource.constants";
 
 export interface CustomResourceDraft {
@@ -85,7 +85,7 @@ export function useSalonResourcesState({
 
   const wellKnownResourceWarning = useMemo(() => {
     if (seatAmount <= 0 || climazonAmount <= 0) {
-      return "Bitte hinterlegen Sie für Bedienplätze und Climazons einen Wert größer als 0, da Dienstleistungen diese Ressourcen für die Terminplanung benötigen.";
+      return "Bitte pflegen Sie die Angaben für Bedienplätze und Climazons korrekt. Ihre Dienstleistungsdefinitionen verwenden diese Werte, damit Termine korrekt geplant werden können.";
     }
 
     return undefined;
@@ -288,7 +288,7 @@ export function useSalonResourcesState({
       setCustomResources((currentResources) =>
         currentResources.filter((resource) => resource.id !== resourceId),
       );
-      showNotification("Ressource gelöscht", "info", "short");
+      showNotification("Ausstattung gelöscht", "info", "short");
     },
     [customResources, salonId, showNotification],
   );
@@ -321,7 +321,7 @@ export function useSalonResourcesState({
       }
     }
 
-    showNotification("Ressourcen gespeichert", "info", "short");
+    showNotification("Terminplanung gespeichert", "info", "short");
     return true;
   }, [
     customResources,

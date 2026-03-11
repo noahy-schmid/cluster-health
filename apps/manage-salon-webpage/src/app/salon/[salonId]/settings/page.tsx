@@ -1,5 +1,5 @@
 import PageHeader from "@/components/PageHeader";
-import { fetchSalon, fetchSalonResources } from "@/api/salon-actions";
+import { fetchSalon, fetchSalonResources } from "@/api/salon-read.actions";
 import SalonSettingsPageClient from "./client";
 
 interface SalonSettingsPageProps {
@@ -34,7 +34,7 @@ export default async function SalonSettingsPage({
       <div className="mx-auto max-w-5xl">
         <PageHeader
           title="Salon Einstellungen"
-          subtitle="Die Ressourcen konnten nicht geladen werden."
+          subtitle="Die Angaben für die Terminplanung konnten nicht geladen werden."
         />
         <div className="rounded-lg border border-border bg-bg-1 p-lg text-fg-muted">
           {resourcesResult.error}

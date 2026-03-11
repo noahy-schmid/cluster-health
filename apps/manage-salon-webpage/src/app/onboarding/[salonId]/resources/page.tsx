@@ -1,6 +1,6 @@
 import BackButton from "@/components/BackButton";
 import PageHeader from "@/components/PageHeader";
-import { fetchSalon, fetchSalonResources } from "@/api/salon-actions";
+import { fetchSalon, fetchSalonResources } from "@/api/salon-read.actions";
 import ResourceOnboardingClient from "./client";
 
 interface ResourceOnboardingPageProps {
@@ -17,7 +17,8 @@ export default async function ResourceOnboardingPage({
   ]);
 
   if (!salonResult.success || !resourcesResult.success) {
-    let errorMessage = "Die Ressourcen konnten nicht geladen werden.";
+    let errorMessage =
+      "Die Angaben für die Terminplanung konnten nicht geladen werden.";
     if (!salonResult.success) {
       errorMessage = salonResult.error;
     } else if (!resourcesResult.success) {
@@ -29,8 +30,8 @@ export default async function ResourceOnboardingPage({
         <div className="mx-auto max-w-4xl px-lg py-xl md:py-2xl">
           <BackButton text="Zurück" />
           <PageHeader
-            title="Ressourcen einrichten"
-            subtitle="Die Resource-Konfiguration konnte nicht geladen werden."
+            title="Terminplanung einrichten"
+            subtitle="Die Angaben für die Terminplanung konnten nicht geladen werden."
           />
           <div className="rounded-lg border border-border bg-bg-1 p-lg text-fg-muted">
             {errorMessage}
@@ -45,8 +46,8 @@ export default async function ResourceOnboardingPage({
       <div className="mx-auto max-w-4xl px-lg py-xl md:py-2xl">
         <BackButton text="Zurück" />
         <PageHeader
-          title="Ressourcen einrichten"
-          subtitle={`Legen Sie die wichtigsten Ressourcen für ${salonResult.data.name} fest.`}
+          title="Terminplanung einrichten"
+          subtitle={`Pflegen Sie Bedienplätze, Geräte und weitere Angaben für die Terminplanung von ${salonResult.data.name}.`}
         />
         <ResourceOnboardingClient
           salonId={salonId}

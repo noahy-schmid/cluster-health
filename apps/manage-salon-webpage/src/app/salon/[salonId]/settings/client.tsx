@@ -5,11 +5,11 @@ import type { Resource, Salon } from "@repo/salon-domain";
 import PageHeader from "@/components/PageHeader";
 import FormInput from "@/components/website/forms/FormInput";
 import { useAutoSave } from "@/hooks/useAutoSave";
-import { updateSalonSettings } from "@/api/salon-actions";
 import SettingsCard from "./SettingsCard.component";
 import SalonResourcesCard from "./SalonResourcesCard.component";
 import { useSalonResourcesState } from "./salon-resources.state";
 import { CLIMAZON_SLUG, SEAT_SLUG } from "./resource.constants";
+import { updateSalonSettings } from "./settings.actions";
 
 interface SalonSettingsPageClientProps {
   salonId: string;
@@ -118,7 +118,7 @@ export default function SalonSettingsPageClient({
     <div className="mx-auto max-w-5xl">
       <PageHeader
         title="Salon Einstellungen"
-        subtitle="Pflegen Sie Ihre Stammdaten und verwalten Sie die Ressourcen Ihres Salons."
+        subtitle="Pflegen Sie Ihre Stammdaten und verwalten Sie die Angaben für Ihre Terminplanung."
       />
 
       <div className="space-y-lg">

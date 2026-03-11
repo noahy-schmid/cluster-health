@@ -46,15 +46,15 @@ export default function SalonResourcesCard({
 }: SalonResourcesCardProps) {
   return (
     <SettingsCard
-      title="Ressourcen"
-      description="Pflegen Sie Ihre festen Ressourcen und ergänzen Sie bei Bedarf weitere Geräte oder Plätze."
+      title="Terminplanung"
+      description="Pflegen Sie Bedienplätze, Geräte und weitere Angaben, die Ihre Terminverfügbarkeit beeinflussen."
     >
       <div className="grid gap-md md:grid-cols-2">
         <FormNumber
           label="Bedienplätze"
           value={seatAmount}
           min={0}
-          helperText="Diese Ressource wird für die Terminplanung benötigt und muss größer als 0 sein."
+          helperText="Diese Angabe beeinflusst die Terminplanung und sollte korrekt gepflegt sein."
           onChange={onSeatChange}
           onBlur={onSeatBlur}
         />
@@ -62,7 +62,7 @@ export default function SalonResourcesCard({
           label="Climazons"
           value={climazonAmount}
           min={0}
-          helperText="Diese Ressource wird für die Terminplanung benötigt und muss größer als 0 sein."
+          helperText="Diese Angabe beeinflusst die Terminplanung und sollte korrekt gepflegt sein."
           onChange={onClimazonChange}
           onBlur={onClimazonBlur}
         />
@@ -78,15 +78,15 @@ export default function SalonResourcesCard({
         <div className="flex items-center justify-between gap-md">
           <div>
             <h3 className="text-base font-focus text-fg-strong">
-              Weitere Ressourcen
+              Weitere Ausstattung
             </h3>
             <p className="text-sm text-fg-muted">
-              Fügen Sie weitere salonindividuelle Ressourcen hinzu.
+              Ergänzen Sie weitere Geräte oder Plätze, die für Ihre Terminplanung relevant sind.
             </p>
           </div>
           <FlatIconTextButton
             icon={Plus}
-            text="Ressource hinzufügen"
+            text="Ausstattung hinzufügen"
             onClick={onAddCustomResource}
             elevation={1}
           />
@@ -94,7 +94,7 @@ export default function SalonResourcesCard({
 
         {customResources.length === 0 && (
           <div className="rounded-md border border-dashed border-border px-md py-lg text-sm text-fg-muted">
-            Noch keine zusätzlichen Ressourcen angelegt.
+            Noch keine zusätzliche Ausstattung angelegt.
           </div>
         )}
 
@@ -124,7 +124,7 @@ export default function SalonResourcesCard({
                   onClick={() => onRemoveCustomResource(resource.id)}
                   elevation={0}
                   isError
-                  ariaLabel="Ressource löschen"
+                  ariaLabel="Ausstattung löschen"
                 />
               </div>
             </div>
