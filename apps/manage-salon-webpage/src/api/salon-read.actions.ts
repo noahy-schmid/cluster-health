@@ -14,6 +14,14 @@ type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
+/**
+ * ### Fetches a salon by ID for authenticated users.
+ *
+ * - The calling user must be logged in and have access to the requested salon.
+ *
+ * @param salonId The identifier of the salon to fetch.
+ * @returns An object containing the salon data on success, or an error message on failure.
+ */
 export async function fetchSalon(
   salonId: string,
 ): Promise<ActionResult<Salon>> {
@@ -44,6 +52,10 @@ export async function fetchSalon(
   );
 }
 
+/**
+ * Loads appointment-planning resources for an authorized salon. Consumers use
+ * this in onboarding, settings, and service configuration screens.
+ */
 export async function fetchSalonResources(
   salonId: string,
 ): Promise<ActionResult<Resource[]>> {

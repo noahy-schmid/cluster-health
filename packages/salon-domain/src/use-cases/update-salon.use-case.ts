@@ -11,11 +11,29 @@ import {
 } from "../application/salon/errors";
 
 export interface UpdateSalonCommand {
+  /**
+   * The identifier of the salon to update.
+   */
   salonId: string;
+  /**
+   * The new name of the salon. Must be unique (case-insensitive) across all salons, but can be the same as the current name of the salon.
+   */
   name: string;
+  /**
+   * The new street address of the salon. Location existance is not validated.
+   */
   street: string;
+  /**
+   * New postal code of the salon address.
+   */
   postalCode: string;
+  /**
+   * New city of the salon address.
+   */
   city: string;
+  /**
+   * New contact phone number for the salon.
+   */
   phone: string;
 }
 
@@ -41,6 +59,12 @@ const make = Effect.gen(function* () {
   };
 });
 
+/**
+ * ### Command use case for updating salon base data.
+ * Updates salon base data by its identifier.
+ *
+ * - The salon name can be updated, but must be unique (case-insensitive) across all salons.
+ */
 export class UpdateSalonUseCase extends Effect.Service<UpdateSalonUseCase>()(
   "@repo/salon-domain/UpdateSalonUseCase",
   {

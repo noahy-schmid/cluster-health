@@ -34,8 +34,13 @@ type CreateSalonActionResult =
     };
 
 /**
- * Creates a salon, binds it to the current management user, and redirects to
- * the onboarding step for appointment planning data.
+ * ### Action for creating a new salon during onboarding.
+ * Creates a new salon using the provided form data. This salon is bound to the currently authenticated user.
+ *
+ * - The salon name must be unique (case-insensitive) across all salons.
+ * - The user must not have an existing salon binding, and must be authenticated.
+ *
+ * @returns An object indicating success or failure, and containing field-specific or general error messages on failure. On success, the user is redirected to the next onboarding step.
  */
 export async function createSalonAction(
   _prevState: unknown,

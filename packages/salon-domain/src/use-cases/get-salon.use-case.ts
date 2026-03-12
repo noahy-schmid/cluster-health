@@ -6,6 +6,9 @@ import {
 import { InternalError, NotFoundError } from "../application/salon/errors";
 
 export interface GetSalonQuery {
+  /**
+   * The identifier of the salon to retrieve.
+   */
   salonId: string;
 }
 
@@ -22,6 +25,9 @@ const make = Effect.gen(function* () {
   };
 });
 
+/**
+ * ### Query use case for retrieving a salon by ID.
+ */
 export class GetSalonUseCase extends Effect.Service<GetSalonUseCase>()(
   "@repo/salon-domain/GetSalonUseCase",
   {

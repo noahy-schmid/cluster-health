@@ -20,6 +20,13 @@ type SalonSettingsInput = {
   phone: string;
 };
 
+/**
+ * ### Action to update the salon's base data from the settings screen.
+ * Persists the salon's name, address, and contact details after verifying salon access.
+ *
+ * - The caller must be authenticated and have access to the salon.
+ * - The salon name must be unique across all salons.
+ */
 export async function updateSalonSettings(
   salonId: string,
   input: SalonSettingsInput,
