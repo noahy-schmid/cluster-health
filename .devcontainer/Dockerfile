@@ -21,8 +21,8 @@ RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/instal
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 
 # Install all development dependencies through Homebrew
+# Node.js 22 is already provided by the base image
 RUN brew install \
-    node@22 \
     pnpm \
     fzf \
     turbo \

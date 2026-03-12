@@ -7,7 +7,9 @@ fi
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
-# Plugins (fzf-tab must be loaded before autosuggestions and syntax-highlighting)
+# Plugins (fzf-tab must be loaded before other completion plugins)
+# zsh-autosuggestions and zsh-syntax-highlighting are sourced from
+# Homebrew below, so they are not listed here.
 plugins=(
     git
     docker
@@ -15,8 +17,6 @@ plugins=(
     npm
     fzf
     fzf-tab
-    zsh-autosuggestions
-    zsh-syntax-highlighting
 )
 
 source $ZSH/oh-my-zsh.sh
