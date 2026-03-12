@@ -1,54 +1,50 @@
 FROM mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm
 
-# Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NEXT_TELEMETRY_DISABLED=1
 
-
-
-# Install system dependencies
+# Install system dependencies needed for Homebrew and zsh plugins
 RUN apt-get update && apt-get install -y \
-    # Basic utilities
+    build-essential \
     curl \
-    wget \
+    file \
     git \
-    unzip 
+    procps \
+    zsh \
+    && rm -rf /var/lib/apt/lists/*
 
-# Switch to the non-root user (created by base image)
+# Switch to the non-root user (provided by the base image)
 USER node
 
-# Install Homebrew for the node user
-RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc && \
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# Install Homebrew
+RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 
-# Install tools via Homebrew (with proper PATH)
-RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
-    brew install fzf kubernetes-cli helm k9s
+# Install all development dependencies through Homebrew
+RUN brew install \
+    node@22 \
+    pnpm \
+    fzf \
+    turbo \
+    zsh-autosuggestions \
+    zsh-syntax-highlighting \
+    zsh-history-substring-search
 
-# Install pnpm globally
-RUN npm install -g pnpm@latest
+# Install Oh My Zsh
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
-# Set shell environment for pnpm setup
-ENV SHELL=/bin/bash
-RUN pnpm setup
+# Install Powerlevel10k theme
+RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
+    "${HOME}/.oh-my-zsh/custom/themes/powerlevel10k"
 
-# Set PNPM environment variables
-ENV PNPM_HOME="/home/node/.local/share/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+# Install fzf-tab plugin
+RUN git clone --depth=1 https://github.com/Aloxaf/fzf-tab.git \
+    "${HOME}/.oh-my-zsh/custom/plugins/fzf-tab"
 
-# Install additional Node.js tools
-RUN pnpm install -g \
-    typescript \
-    ts-node \
-    nodemon \
-    eslint \
-    prettier \
-    @types/node \
-    turbo
+# Set default shell to zsh
+ENV SHELL=/bin/zsh
 
-# Set working directory (will be created by dev container runtime)
-WORKDIR /workspaces/cluster-health
+# Set working directory
+WORKDIR /workspaces/deinsalon
 
-# Reset to noninteractive
 ENV DEBIAN_FRONTEND=

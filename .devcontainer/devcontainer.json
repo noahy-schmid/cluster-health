@@ -1,8 +1,8 @@
 {
-  "name": "Cluster Health Development",
+  "name": "dein.salon Development",
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
-  "workspaceFolder": "/workspaces/cluster-health",
+  "workspaceFolder": "/workspaces/deinsalon",
   "shutdownAction": "stopCompose",
   "postCreateCommand": ".devcontainer/setup-workspace.sh",
   "remoteUser": "node",
@@ -11,7 +11,7 @@
       "extensions": [
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
-        "likec4.likec4-vscode"
+        "dbaeumer.vscode-eslint"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "zsh",
