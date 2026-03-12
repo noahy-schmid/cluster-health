@@ -19,93 +19,58 @@ Use this skill before finishing a larger task, especially in agent-driven work, 
 
 ### Backend code
 
-- Add or update JSDoc for every backend use case
-- Add or update JSDoc for exported DTOs and other domain-facing types or objects exposed outside the domain boundary
-- Do not add broad JSDoc to domain-internal helper types or internal-only objects unless explicitly requested
+- JSDoc on each Use Case service class, describing first in a short sentence what it does. Then with a little more detail. And then a bullet list of important constraints on the input, invariants or side effects. e.g.
+
+```ts
+/**
+ * ### Command use case for updating salon base data.
+ * Updates salon base data by its identifier.
+ *
+ * - The salon name can be updated, but must be unique (case-insensitive) across all salons.
+ * - The salon data only updates if all updated fields are valid.
+ */
+```
+
+- JSDoc on the fields of any input or output data objects that are part of the public API of the domain, describing what they represent and any important constraints or requirements. e.g.
+
+  ```ts
+  export interface UpdateSalonInput {
+    /** The new name for the salon. Must be unique across all salons. */
+    name: string;
+    /** The new address for the salon. Optional. */
+    address?: string;
+    ...
+  }
+  ```
+
+- Dont write JSDoc for any other internal types, aggregates, or implementation details that are not part of the public API of the domain.
+
+- When writing documentation, never explain how the internal mechanism works but focus on how use cases can be used and what a caller needs to watch out for when calling.
 
 ### Frontend code
 
-- Add or update JSDoc for every server action
-- Document action purpose, inputs, side effects, returned data, and important failure behavior when that is not obvious from the type signature
+- JSDoc on server actions, describing what the action does, what the important constraints are (e.g. authentication, required fields, uniqueness), and what the expected input and output are. e.g.
 
-### Architecture and package docs
+```ts
+/**
+ * ### Action for creating a new salon during onboarding.
+ * Creates a new salon using the provided form data. This salon is bound to the currently authenticated user.
+ * - The salon name must be unique (case-insensitive) across all salons.
+ * - The user must not have an existing salon binding, and must be authenticated.
+ * @param salonData The base data for the new salon.
+ * @returns An object indicating success or failure, and containing field-specific or general error messages on failure. On success, the user is redirected to the next onboarding step.
+ */
+```
 
-- Keep LikeC4 documentation current
-- Model domains, aggregates, use cases, package boundaries, and infrastructure relationships
-- Represent frontends as single blocks when deeper frontend internals are not necessary for the architectural view
-- Maintain package-local documentation in a `docs` folder for each affected app or package
-- Package-local docs should show the local structure and relationships to other domains, infrastructure, and consumer applications
+- JSDoc for state services. Similarly to the actions the functions for state keeping services should be documented.
 
-## Procedure
+### Watch Outs
+- Do never generate any markdown documentation files.
+- For each documentation you write, ask yourself if it is neccessary for a consumer to know this information.
 
-1. Identify the affected scope.
-   Determine which apps, packages, domains, and infrastructure connections changed.
+## Architecture-level documentation
 
-2. Review changed code before writing docs.
-   Inspect new or modified use cases, exported DTOs, server actions, aggregates, adapters, and cross-package entry points.
+We use a LikeC4 architecture documentation. Each package and app has a `/docs` folder with a documentation in likec4 how the domain is structured. Therefore a `model.likec4` file should be updated in the docs folder which contains the use-cases, aggregates and dependencies to other domains, infrastructure or front ends or user groups. Next to the model there should be other files providing different views on the architecture also using likec4 like a `dependencies.likec4` file which only focuses on the basic dependencies of a domain to other domains, infrastructure etc. Other views can include sequence diagrams in likec4 for each use case provided by the domain. 
 
-3. Update backend JSDoc.
-   For each changed backend use case, document:
-   - the business intent of the use case
-   - the command or query it accepts
-   - the result it returns, if any
-   - important dependencies, orchestration responsibilities, or cross-domain validation
+Frontend logic should not be documented and instead should only be added as a single component in the root `/docs/model.likec4` file with a relationship to the use cases it uses. The frontend component should not be further detailed in the architecture documentation. The root model also includes user groups and their relationships to the frontends they use.
 
-4. Update exposed domain API JSDoc.
-   For each DTO, type, object, or service surface exposed by the domain, document:
-   - what it represents
-   - who consumes it
-   - any important invariants or expectations
-     Skip internal-only types that do not cross the domain boundary.
-
-5. Update frontend server action JSDoc.
-   For each changed server action, document:
-   - what mutation or query it performs
-   - expected input and return shape
-   - security, authorization, or cache implications when relevant
-   - noteworthy redirects, revalidation, or failure modes
-
-6. Update package-local docs.
-   In each affected app or package, create or update a `docs` folder and describe:
-   - the local module structure
-   - major aggregates and use cases where relevant
-   - outward dependencies on infrastructure or other packages
-   - inbound consumers from apps or other domains
-     Use the template in [package-documentation-template.md](./assets/package-documentation-template.md).
-
-7. Update LikeC4 architecture docs.
-   Reflect the current architecture in the shared LikeC4 model. Include:
-   - domain blocks and their main responsibilities
-   - use cases and aggregates within the domain or package they belong to
-   - relationships between domains
-   - relationships to infrastructure such as database and S3
-   - frontend applications as coarse-grained consumers when that is sufficient
-
-8. Run a completion audit.
-   Verify that the documentation matches the implemented names, relationships, and boundaries, not the intended design.
-
-## Decision Rules
-
-- If a type is exported from a domain package or appears in a public domain entry point, document it.
-- If a type is only used internally within a domain, do not document it by default.
-- If a frontend change only alters rendering and not server actions or architectural boundaries, package docs or LikeC4 updates may be unnecessary.
-- If a change affects cross-domain flows, infrastructure, or system boundaries, update both local docs and LikeC4.
-- If the exact architecture view is unclear, prefer a simpler accurate model over an overly detailed speculative one.
-
-## Quality Checks
-
-- Every changed backend use case has JSDoc
-- Every changed exported DTO or exposed domain-facing object has JSDoc
-- Every changed frontend server action has JSDoc
-- Each affected package or app has a current `docs` entry describing local structure and relationships
-- LikeC4 reflects current domains, aggregates, use cases, infrastructure, and main consumers
-- Documentation names match the actual code symbols and file structure
-- Documentation explains intent and boundaries, not just restates type names
-
-## Output Expectations
-
-When using this skill, finish by reporting:
-
-- which packages or apps had documentation updated
-- whether backend JSDoc, frontend JSDoc, package docs, and LikeC4 were all reviewed
-- any documentation gaps intentionally left unresolved because the architecture or ownership was unclear

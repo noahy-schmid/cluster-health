@@ -1,103 +1,10 @@
 specification {
   element person
-  element system
-  element container
   element component
+  element domain
+  element aggregate
+  element useCase
 }
 
-model {
-  // External Actors
-  customer = person "Salon Customer" {
-    description "A customer looking to book hair salon appointments"
-  }
-
-  // Salon Webpage System
-  salonSystem = system "Salon Webpage System" {
-    description "Online booking and information system for hair salon"
-
-    // Frontend Container
-    salonFrontend = container "Salon Webpage Frontend" {
-      description "Next.js React application providing salon information and booking interface"
-      technology "Next.js 15, React 19, TypeScript, Tailwind CSS"
-
-      salonPages = container "Salon Webpage Pages" {
-        description "Pages and components for the salon webpage"
-        technology "Next.js Pages"
-
-        homePage = component "Home Page" {
-          description "Main landing page with salon information, services, team, and contact form"
-          technology "Next.js Server Component"
-        }
-
-        reservationPage = component "Reservation Page [id]" {
-          description "Dynamic page for managing specific reservation details"
-          technology "Next.js Dynamic Route"
-        }
-
-        specialistPage = component "Specialist Page [id]" {
-          description "Dynamic page showing detailed specialist information and booking"
-          technology "Next.js Dynamic Route"
-        }
-      }
-
-
-      reservationService = component "Reservation Service" {
-        description "Service for creating, updating, and managing reservations using Zustand"
-        technology "TypeScript Service with Zustand"
-
-      }
-
-      // State Management
-      reservationStore = component "Reservation Store" {
-        description "Zustand store for managing reservation state"
-        technology "Zustand State Management"
-      }
-
-      // Data Layer
-      staffData = component "Staff Data" {
-        description "Mock data for staff members, services, and availability"
-        technology "TypeScript Data"
-      }
-
-      reservationsStorage = component "Reservations Storage" {
-        description "In-memory Map storage for reservation data"
-        technology "TypeScript Map"
-      }
-    }
-  }
-
-  // Relationships - User to Pages
-  customer -> salonSystem "Views salon information and books appointments"
-  customer -> homePage "Visits main page"
-  customer -> specialistPage "Views specialist details"
-  customer -> reservationPage "Manages reservation"
-
-  specialistPage -> reservationService "Creates reservations"
-
-  reservationPage -> reservationService "Manages reservation lifecycle"
-
-  reservationService -> reservationStore "Manages state"
-  reservationService -> reservationsStorage "Persists reservations"
-
-
-}
-
-views {
-  view pages of salonPages {
-    title "Pages View"
-    include *
-  }
-
-  dynamic view reservationUserFlow {
-    title "User Navigation Flow for Booking a Reservation"
-    customer -> homePage "Visits main page"
-    homePage -> specialistPage "Selects a specialist"
-    specialistPage -> specialistPage "Selects service, date and time"
-    specialistPage -> reservationPage "Reserves the appointment"
-    reservationPage -> reservationPage "Fills in contact details and confirms"
-  }
-
-
-}
 
 
