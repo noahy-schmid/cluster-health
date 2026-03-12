@@ -37,7 +37,7 @@ function getWellKnownResourceLabel(
 /**
  * ### Action to create a new salon resource for appointment planning.
  * Creates a new resource with the provided name and quantity that can be used for appointment planning and service definitions.
- * 
+ *
  * - The caller must be authenticated and have access to the salon.
  * - The resource slug needs to be unique across the salon.
  */

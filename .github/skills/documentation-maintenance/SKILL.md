@@ -65,12 +65,12 @@ Use this skill before finishing a larger task, especially in agent-driven work, 
 - JSDoc for state services. Similarly to the actions the functions for state keeping services should be documented.
 
 ### Watch Outs
+
 - Do never generate any markdown documentation files.
 - For each documentation you write, ask yourself if it is neccessary for a consumer to know this information.
 
 ## Architecture-level documentation
 
-We use a LikeC4 architecture documentation. Each package and app has a `/docs` folder with a documentation in likec4 how the domain is structured. Therefore a `model.likec4` file should be updated in the docs folder which contains the use-cases, aggregates and dependencies to other domains, infrastructure or front ends or user groups. Next to the model there should be other files providing different views on the architecture also using likec4 like a `dependencies.likec4` file which only focuses on the basic dependencies of a domain to other domains, infrastructure etc. Other views can include sequence diagrams in likec4 for each use case provided by the domain. 
+We use a LikeC4 architecture documentation. Each package and app has a `/docs` folder with a documentation in likec4 how the domain is structured. Therefore a `model.likec4` file should be updated in the docs folder which contains the use-cases, aggregates and dependencies to other domains, infrastructure or front ends or user groups. Next to the model there should be other files providing different views on the architecture also using likec4 like a `dependencies.likec4` file which only focuses on the basic dependencies of a domain to other domains, infrastructure etc. Other views can include sequence diagrams in likec4 for each use case provided by the domain.
 
 Frontend logic should not be documented and instead should only be added as a single component in the root `/docs/model.likec4` file with a relationship to the use cases it uses. The frontend component should not be further detailed in the architecture documentation. The root model also includes user groups and their relationships to the frontends they use.
-
