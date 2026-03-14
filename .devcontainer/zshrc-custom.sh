@@ -38,6 +38,30 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath 2>/
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza -1 --color=always $realpath 2>/dev/null || ls -1 --color=always $realpath'
 zstyle ':fzf-tab:*' switch-group ',' '.'
 
+# Keep cursor at line end when cycling through history
+function _history_search_up_end() {
+  if [[ -z $BUFFER ]]; then
+    zle up-line-or-history
+  else
+    zle history-beginning-search-backward
+  fi
+  zle end-of-line
+}
+zle -N _history_search_up_end
+
+function _history_search_down_end() {
+  if [[ -z $BUFFER ]]; then
+    zle down-line-or-history
+  else
+    zle history-beginning-search-forward
+  fi
+  zle end-of-line
+}
+zle -N _history_search_down_end
+
+bindkey '^[[A' _history_search_up_end
+bindkey '^[[B' _history_search_down_end
+
 # Custom aliases
 alias ll='ls -alF'
 alias la='ls -A'
