@@ -34,16 +34,16 @@
       "cache": false,
       "persistent": true
     },
-    "drizzle:generate": {
-      "dependsOn": ["^drizzle:generate"],
+    "db:generate": {
+      "dependsOn": ["^db:generate"],
       "inputs": ["$TURBO_DEFAULT$", "**/schema.ts"],
       "outputs": ["drizzle/**"]
     },
-    "drizzle:drop": {
+    "db:drop": {
       "cache": false,
       "outputs": []
     },
-    "drizzle:push": {
+    "db:push": {
       "inputs": ["$TURBO_DEFAULT$", "drizzle/**", "**/schema.ts"],
       "outputs": []
     },
