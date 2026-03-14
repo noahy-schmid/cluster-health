@@ -14,6 +14,7 @@
     "test": "turbo run test:run",
     "test:e2e": "pnpm --filter e2e-tests test:e2e",
     "test:e2e:ui": "pnpm --filter e2e-tests test:e2e:ui",
+    "test:e2e:install": "pnpm --filter e2e-tests test:e2e:install",
     "prepare": "husky install",
     "drizzle:generate": "turbo run drizzle:generate",
     "drizzle:push": "turbo run drizzle:push"
