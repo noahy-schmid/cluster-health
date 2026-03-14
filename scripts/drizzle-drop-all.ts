@@ -20,6 +20,30 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
+if (process.env.NODE_ENV === "production") {
+  console.error(
+    "Refusing to run db:drop when NODE_ENV=production. Aborting schema drop.",
+  );
+  process.exit(1);
+}
+
+const allowNonLocalDbDrop = process.env.ALLOW_NON_LOCAL_DB_DROP === "1";
+
+try {
+  const parsedDatabaseUrl = new URL(databaseUrl);
+  const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+
+  if (!allowNonLocalDbDrop && !localHosts.has(parsedDatabaseUrl.hostname)) {
+    console.error(
+      `Refusing to run db:drop against non-local host '${parsedDatabaseUrl.hostname}'. Set ALLOW_NON_LOCAL_DB_DROP=1 to override.`,
+    );
+    process.exit(1);
+  }
+} catch {
+  console.error("Invalid DATABASE_URL. Aborting schema drop.");
+  process.exit(1);
+}
+
 const client = new Client({ connectionString: databaseUrl });
 
 const dropAllSchemasSql = `

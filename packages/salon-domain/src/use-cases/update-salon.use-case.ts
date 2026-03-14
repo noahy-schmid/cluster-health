@@ -20,7 +20,7 @@ export interface UpdateSalonCommand {
    */
   name: string;
   /**
-   * The new street address of the salon. Location existance is not validated.
+   * The new street address of the salon. Location existence is not validated.
    */
   street: string;
   /**

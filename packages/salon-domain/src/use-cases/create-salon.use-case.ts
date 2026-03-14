@@ -15,7 +15,7 @@ export interface CreateSalonCommand {
    */
   name: string;
   /**
-   * The street address of the salon. Location existance is not validated.
+   * The street address of the salon. Location existence is not validated.
    */
   street: string;
   /**

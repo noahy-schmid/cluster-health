@@ -109,7 +109,7 @@ export default function SalonResourcesCard({
               <FormNumber
                 label="Anzahl"
                 value={resource.amount}
-                min={1}
+                min={0}
                 onChange={(value) => onCustomAmountChange(resource.id, value)}
                 onBlur={() => onCustomBlur(resource.id)}
               />
