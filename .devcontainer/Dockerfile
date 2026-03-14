@@ -25,13 +25,9 @@ ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}
 RUN brew install \
     pnpm \
     fzf \
-    turbo \
     zsh-autosuggestions \
     zsh-syntax-highlighting \
     zsh-history-substring-search
-
-# Install Oh My Zsh
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
 # Install Powerlevel10k theme
 RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
