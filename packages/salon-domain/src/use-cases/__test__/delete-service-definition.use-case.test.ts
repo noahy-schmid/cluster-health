@@ -1,58 +1,62 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
+import {
+  createCustomServiceCommand,
+  createDeleteServiceDefinitionCommand,
+  createListServiceDefinitionsQuery,
+  createSalonInput,
+} from "./fixtures";
+import {
+  createSalon,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 import { DeleteServiceDefinitionUseCase } from "../delete-service-definition.use-case";
 import { ListServiceDefinitionsUseCase } from "../list-service-definitions.use-case";
 
 describe("DeleteServiceDefinitionUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env, createSalonInput())).id;
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should soft-delete a service definition", async () => {
+    const service = await Effect.runPromise(
+      CreateCustomServiceUseCase.execute(
+        createCustomServiceCommand({ salonId }),
+      ).pipe(Effect.provide(env.serviceUseCaseLayer)),
+    );
+
     const program = Effect.gen(function* () {
-      const createUseCase = yield* CreateCustomServiceUseCase;
       const deleteUseCase = yield* DeleteServiceDefinitionUseCase;
       const listUseCase = yield* ListServiceDefinitionsUseCase;
 
-      const service = yield* createUseCase.execute({
-        salonId: ctx.salonId,
-        name: "Temporary Service",
-        description: "Will be deleted",
-        priceInCents: 2000,
-        phases: [
-          {
-            name: "Quick Phase",
-            durationMinutes: 15,
-            employeeRequired: true,
-            requiredResourceSlugs: [],
-          },
-        ],
-      });
-
-      const beforeDelete = yield* listUseCase.execute({
-        salonId: ctx.salonId,
-      });
+      const beforeDelete = yield* listUseCase.execute(
+        createListServiceDefinitionsQuery({ salonId }),
+      );
       const countBefore = beforeDelete.length;
 
-      yield* deleteUseCase.execute({ serviceId: service.id });
+      yield* deleteUseCase.execute(
+        createDeleteServiceDefinitionCommand({ serviceId: service.id }),
+      );
 
       // Soft-deleted services should not appear in the list
-      const afterDelete = yield* listUseCase.execute({
-        salonId: ctx.salonId,
-      });
+      const afterDelete = yield* listUseCase.execute(
+        createListServiceDefinitionsQuery({ salonId }),
+      );
       expect(afterDelete.length).toBe(countBefore - 1);
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 
@@ -60,7 +64,11 @@ describe("DeleteServiceDefinitionUseCase", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* DeleteServiceDefinitionUseCase;
       const result = yield* useCase
-        .execute({ serviceId: crypto.randomUUID() })
+        .execute(
+          createDeleteServiceDefinitionCommand({
+            serviceId: crypto.randomUUID(),
+          }),
+        )
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -70,7 +78,7 @@ describe("DeleteServiceDefinitionUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 });

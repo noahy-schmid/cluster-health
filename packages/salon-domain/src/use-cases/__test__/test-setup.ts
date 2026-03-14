@@ -4,7 +4,7 @@ import { getOrCreatePostgreSQLContainer } from "@repo/test-fixtures";
 import { Configuration } from "../../infrastructure/config.interface";
 import { Database } from "../../infrastructure/database.interface";
 import { DatabaseLayer } from "../../infrastructure/database.service";
-import { salonsTable, stylistsTable, salonResourcesTable } from "../../schema";
+import { salonsTable, stylistsTable } from "../../schema";
 import { PostgresResourceAdapter } from "../../adapters/postgres-resource.adapter";
 import { PostgresServiceDefinitionAdapter } from "../../adapters/postgres-service-definition.adapter";
 import { PostgresServicePhaseAdapter } from "../../adapters/postgres-service-phase.adapter";
@@ -31,9 +31,10 @@ import { ListServiceEmployeesUseCase } from "../list-service-employees.use-case"
 import { CreateSimpleServiceUseCase } from "../create-simple-service.use-case";
 import { CreateColorationServiceUseCase } from "../create-coloration-service.use-case";
 
-export interface TestContext {
-  salonId: string;
-  stylistId: string;
+type SalonInsert = typeof salonsTable.$inferInsert;
+type StylistInsert = typeof stylistsTable.$inferInsert;
+
+export interface TestEnvironment {
   resourceUseCaseLayer: Layer.Layer<
     | CreateResourceUseCase
     | UpdateResourceUseCase
@@ -60,7 +61,38 @@ export interface TestContext {
   stop: () => Promise<void>;
 }
 
-export async function setupTestContext(): Promise<TestContext> {
+export type CreateSalonInput = Partial<
+  Omit<SalonInsert, "id" | "createdAt" | "updatedAt">
+>;
+
+export interface CreateStylistInput extends Partial<
+  Omit<StylistInsert, "id" | "createdAt" | "updatedAt" | "salonId">
+> {
+  salonId: string;
+}
+
+function createFixtureSuffix() {
+  return crypto.randomUUID().slice(0, 8);
+}
+
+async function withDatabase<A>(
+  env: TestEnvironment,
+  description: string,
+  operation: (db: Database["db"]) => Promise<A>,
+) {
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const { db } = yield* Database;
+      return yield* Effect.tryPromise({
+        try: () => operation(db),
+        catch: (error) =>
+          new Error(`Failed to ${description}`, { cause: error }),
+      });
+    }).pipe(Effect.provide(env.infrastructureLayer)),
+  );
+}
+
+export async function setupTestEnvironment(): Promise<TestEnvironment> {
   const pgContainer = await getOrCreatePostgreSQLContainer();
 
   const testConfigurationLayer = Layer.effect(
@@ -79,7 +111,6 @@ export async function setupTestContext(): Promise<TestContext> {
     Layer.provideMerge(testConfigurationLayer),
   );
 
-  // Port layers
   const resourcePortLayer = PostgresResourceAdapter.pipe(
     Layer.provide(infrastructureLayer),
   );
@@ -102,7 +133,6 @@ export async function setupTestContext(): Promise<TestContext> {
     Layer.provide(infrastructureLayer),
   );
 
-  // Aggregate layers
   const resourceAggregateLayer =
     ResourceAggregate.DefaultWithoutDependencies.pipe(
       Layer.provide(resourcePortLayer),
@@ -124,7 +154,6 @@ export async function setupTestContext(): Promise<TestContext> {
       Layer.provide(employeeServicePortLayer),
     );
 
-  // Use case layers
   const resourceUseCaseLayer = Layer.mergeAll(
     CreateResourceUseCase.DefaultWithoutDependencies.pipe(
       Layer.provide(salonPortLayer),
@@ -175,74 +204,16 @@ export async function setupTestContext(): Promise<TestContext> {
     ),
   ).pipe(Layer.provide(serviceAggregateLayer), Layer.orDie);
 
-  // Run migrations and seed data
-  let theSalonId = "";
-  let theStylistId = "";
-
   await Effect.runPromise(
     Effect.gen(function* () {
-      const { db } = yield* Database;
+      const databaseService = yield* Database;
       yield* Effect.tryPromise(() =>
-        migrate(db, { migrationsFolder: "drizzle" }),
-      );
-
-      const [salon] = yield* Effect.tryPromise(() =>
-        db
-          .insert(salonsTable)
-          .values({
-            name: `Test Service Salon ${Date.now()}`,
-            street: "Test Street 1",
-            postalCode: "12345",
-            city: "Test City",
-            phone: "+49 123 456789",
-          })
-          .returning({ id: salonsTable.id }),
-      );
-      if (!salon) {
-        return yield* Effect.fail(new Error("Failed to create test salon"));
-      }
-      theSalonId = salon.id;
-
-      const [stylist] = yield* Effect.tryPromise(() =>
-        db
-          .insert(stylistsTable)
-          .values({
-            salonId: theSalonId,
-            name: "Test Stylist",
-            subtitle: "Senior Stylist",
-            description: "An experienced stylist",
-            profileImageMediaId: null,
-          })
-          .returning({ id: stylistsTable.id }),
-      );
-      if (!stylist) {
-        return yield* Effect.fail(new Error("Failed to create test stylist"));
-      }
-      theStylistId = stylist.id;
-
-      // Create resources for service phase tests (no "employee" resource - that's modeled via employeeRequired)
-      yield* Effect.tryPromise(() =>
-        db.insert(salonResourcesTable).values([
-          {
-            salonId: theSalonId,
-            slug: "seat",
-            name: "Styling Chair",
-            amount: 3,
-          },
-          {
-            salonId: theSalonId,
-            slug: "climazon",
-            name: "Climazon",
-            amount: 2,
-          },
-        ]),
+        migrate(databaseService.db, { migrationsFolder: "drizzle" }),
       );
     }).pipe(Effect.provide(infrastructureLayer)),
   );
 
   return {
-    salonId: theSalonId,
-    stylistId: theStylistId,
     resourceUseCaseLayer,
     serviceUseCaseLayer,
     assignmentUseCaseLayer,
@@ -250,4 +221,57 @@ export async function setupTestContext(): Promise<TestContext> {
     infrastructureLayer,
     stop: () => pgContainer.stop(),
   };
+}
+
+export async function createSalon(
+  env: TestEnvironment,
+  input: CreateSalonInput = {},
+) {
+  const suffix = createFixtureSuffix();
+  const [salon] = await withDatabase(env, "create mock salon", (db) =>
+    db
+      .insert(salonsTable)
+      .values({
+        name: `Mock Salon ${suffix}`,
+        street: "Mock Street 1",
+        postalCode: "12345",
+        city: "Mock City",
+        phone: "+49 123 456789",
+        ...input,
+      })
+      .returning(),
+  );
+
+  if (!salon) {
+    throw new Error("Failed to create mock salon");
+  }
+
+  return salon;
+}
+
+export async function createStylist(
+  env: TestEnvironment,
+  input: CreateStylistInput,
+) {
+  const suffix = createFixtureSuffix();
+  const { salonId, ...stylistInput } = input;
+  const [stylist] = await withDatabase(env, "create mock stylist", (db) =>
+    db
+      .insert(stylistsTable)
+      .values({
+        salonId,
+        name: `Mock Stylist ${suffix}`,
+        subtitle: "Senior Stylist",
+        description: "Mock stylist description",
+        profileImageMediaId: null,
+        ...stylistInput,
+      })
+      .returning(),
+  );
+
+  if (!stylist) {
+    throw new Error("Failed to create mock stylist");
+  }
+
+  return stylist;
 }

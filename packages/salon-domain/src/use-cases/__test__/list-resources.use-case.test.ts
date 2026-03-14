@@ -1,42 +1,51 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
+import {
+  createListResourcesQuery,
+  createResourceCommand,
+  createSalonInput,
+} from "./fixtures";
+import {
+  createSalon,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { CreateResourceUseCase } from "../create-resource.use-case";
 import { ListResourcesUseCase } from "../list-resources.use-case";
 
 describe("ListResourcesUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env, createSalonInput())).id;
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should list resources for a salon", async () => {
+    const resource = await Effect.runPromise(
+      CreateResourceUseCase.execute(createResourceCommand({ salonId })).pipe(
+        Effect.provide(env.resourceUseCaseLayer),
+      ),
+    );
+
     const program = Effect.gen(function* () {
-      const createUseCase = yield* CreateResourceUseCase;
       const listUseCase = yield* ListResourcesUseCase;
 
-      yield* createUseCase.execute({
-        salonId: ctx.salonId,
-        slug: "list-test",
-        name: "List Test Resource",
-        amount: 1,
-      });
-
-      const resources = yield* listUseCase.execute({
-        salonId: ctx.salonId,
-      });
+      const resources = yield* listUseCase.execute(
+        createListResourcesQuery({ salonId }),
+      );
 
       expect(resources.length).toBeGreaterThanOrEqual(1);
-      expect(resources.some((r) => r.name === "List Test Resource")).toBe(true);
+      expect(resources.some((r) => r.slug === resource.slug)).toBe(true);
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.resourceUseCaseLayer)),
+      program.pipe(Effect.provide(env.resourceUseCaseLayer)),
     );
   });
 });

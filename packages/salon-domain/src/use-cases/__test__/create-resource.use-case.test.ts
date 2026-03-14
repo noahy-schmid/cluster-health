@@ -1,37 +1,46 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect, Either } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
+import { createResourceCommand, createSalonInput } from "./fixtures";
+import {
+  createSalon,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { CreateResourceUseCase } from "../create-resource.use-case";
 
 describe("CreateResourceUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env, createSalonInput())).id;
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should create a resource", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
-      const resource = yield* useCase.execute({
-        salonId: ctx.salonId,
-        slug: "dryer",
-        name: "Dryer",
-        amount: 3,
-      });
+      const resource = yield* useCase.execute(
+        createResourceCommand({
+          salonId,
+          slug: "dryer",
+          name: "Dryer",
+          amount: 3,
+        }),
+      );
 
       expect(resource.slug).toBe("dryer");
-      expect(resource.salonId).toBe(ctx.salonId);
+      expect(resource.salonId).toBe(salonId);
       expect(resource.name).toBe("Dryer");
       expect(resource.amount).toBe(3);
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.resourceUseCaseLayer)),
+      program.pipe(Effect.provide(env.resourceUseCaseLayer)),
     );
   });
 
@@ -39,7 +48,14 @@ describe("CreateResourceUseCase", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
       const result = yield* useCase
-        .execute({ salonId: ctx.salonId, slug: "blank", name: "  ", amount: 1 })
+        .execute(
+          createResourceCommand({
+            salonId,
+            slug: "blank",
+            name: "  ",
+            amount: 1,
+          }),
+        )
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -49,7 +65,7 @@ describe("CreateResourceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.resourceUseCaseLayer)),
+      program.pipe(Effect.provide(env.resourceUseCaseLayer)),
     );
   });
 
@@ -57,12 +73,14 @@ describe("CreateResourceUseCase", () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
       const result = yield* useCase
-        .execute({
-          salonId: ctx.salonId,
-          slug: "bad",
-          name: "Dryer",
-          amount: 0,
-        })
+        .execute(
+          createResourceCommand({
+            salonId,
+            slug: "bad",
+            name: "Dryer",
+            amount: 0,
+          }),
+        )
         .pipe(Effect.either);
 
       expect(Either.isLeft(result)).toBe(true);
@@ -72,7 +90,7 @@ describe("CreateResourceUseCase", () => {
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.resourceUseCaseLayer)),
+      program.pipe(Effect.provide(env.resourceUseCaseLayer)),
     );
   });
 });

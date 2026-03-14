@@ -1,50 +1,51 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Effect } from "effect";
-import { setupTestContext, type TestContext } from "./test-setup";
+import {
+  createCustomServiceCommand,
+  createListServiceDefinitionsQuery,
+  createSalonInput,
+} from "./fixtures";
+import {
+  createSalon,
+  setupTestEnvironment,
+  type TestEnvironment,
+} from "./test-setup";
 import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 import { ListServiceDefinitionsUseCase } from "../list-service-definitions.use-case";
 
 describe("ListServiceDefinitionsUseCase", () => {
-  let ctx: TestContext;
+  let env: TestEnvironment;
+  let salonId: string;
 
   beforeAll(async () => {
-    ctx = await setupTestContext();
+    env = await setupTestEnvironment();
+    salonId = (await createSalon(env, createSalonInput())).id;
   }, 60_000);
 
   afterAll(async () => {
-    await ctx.stop();
+    await env.stop();
   });
 
   it("should list service definitions for a salon", async () => {
+    const created = await Effect.runPromise(
+      CreateCustomServiceUseCase.execute(
+        createCustomServiceCommand({ salonId }),
+      ).pipe(Effect.provide(env.serviceUseCaseLayer)),
+    );
+
     const program = Effect.gen(function* () {
-      const createUseCase = yield* CreateCustomServiceUseCase;
       const listUseCase = yield* ListServiceDefinitionsUseCase;
 
-      yield* createUseCase.execute({
-        salonId: ctx.salonId,
-        name: "List Test Service",
-        description: "For listing",
-        priceInCents: 3000,
-        phases: [
-          {
-            name: "Phase 1",
-            durationMinutes: 20,
-            employeeRequired: true,
-            requiredResourceSlugs: [],
-          },
-        ],
-      });
-
-      const services = yield* listUseCase.execute({
-        salonId: ctx.salonId,
-      });
+      const services = yield* listUseCase.execute(
+        createListServiceDefinitionsQuery({ salonId }),
+      );
 
       expect(services.length).toBeGreaterThanOrEqual(1);
-      expect(services.some((s) => s.name === "List Test Service")).toBe(true);
+      expect(services.some((s) => s.name === created.name)).toBe(true);
     });
 
     await Effect.runPromise(
-      program.pipe(Effect.provide(ctx.serviceUseCaseLayer)),
+      program.pipe(Effect.provide(env.serviceUseCaseLayer)),
     );
   });
 });
