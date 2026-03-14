@@ -10,6 +10,7 @@
     "check-types": "tsc --noEmit",
     "build": "tsc",
     "drizzle:generate": "drizzle-kit generate",
+    "drizzle:drop": "drizzle-kit drop",
     "drizzle:push": "drizzle-kit push",
     "drizzle:migrate": "drizzle-kit migrate"
   },

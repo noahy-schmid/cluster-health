@@ -20,7 +20,7 @@ const prepareManageAppCommand = [
   "corepack enable",
   "pnpm build",
   `node -e "require('fs').rmSync('.turbo/cache', { recursive: true, force: true })"`,
-  "pnpm drizzle:push",
+  "pnpm drizzle:reset",
   "pnpm --filter manage-salon-webpage start",
 ].join(" && ");
 const waitForSalonBuildCommand = [
