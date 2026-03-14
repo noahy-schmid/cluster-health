@@ -1,6 +1,0 @@
-dependencies:
-- name: marketing-webpage
-  repository: file://../apps/marketing-webpage/chart
-  version: 0.1.1
-digest: sha256:e9036e113bab737480b701c0c3fee3d1b411d9c5ece28fc27370989a09a30d4e
-generated: "2025-09-21T18:12:47.705819+02:00"
