@@ -1,0 +1,103 @@
+model {
+
+  infrastructure salonPostgres "PostgreSQL salon schema"
+  infrastructure salonS3 "S3 salon media bucket"
+
+  component salonDomain "Salon domain" {
+    aggregate salonAggregate "SalonAggregate"
+    aggregate resourceAggregate "ResourceAggregate"
+    aggregate serviceAggregate "ServiceAggregate"
+    aggregate employeeServiceAggregate "EmployeeServiceAggregate"
+
+    service mediaService "MediaService"
+
+    useCase createSalonUseCase "CreateSalonUseCase"
+
+    useCase getSalonUseCase "GetSalonUseCase"
+    useCase updateSalonUseCase "UpdateSalonUseCase"
+
+    useCase listResourcesUseCase "ListResourcesUseCase"
+    useCase createResourceUseCase "CreateResourceUseCase"
+    useCase updateResourceUseCase "UpdateResourceUseCase"
+    useCase deleteResourceUseCase "DeleteResourceUseCase"
+
+    useCase listServiceDefinitionsUseCase "ListServiceDefinitionsUseCase"
+    useCase getServiceDefinitionUseCase "GetServiceDefinitionUseCase"
+    useCase createCustomServiceUseCase "CreateCustomServiceUseCase"
+    useCase createSimpleServiceUseCase "CreateSimpleServiceUseCase"
+    useCase createColorationServiceUseCase "CreateColorationServiceUseCase"
+    useCase updateCustomServiceUseCase "UpdateCustomServiceUseCase"
+    useCase deleteServiceDefinitionUseCase "DeleteServiceDefinitionUseCase"
+
+    useCase assignEmployeeToServiceUseCase "AssignEmployeeToServiceUseCase"
+    useCase unassignEmployeeFromServiceUseCase "UnassignEmployeeFromServiceUseCase"
+    useCase listEmployeeServicesUseCase "ListEmployeeServicesUseCase"
+    useCase listServiceEmployeesUseCase "ListServiceEmployeesUseCase"
+  }
+
+  manageSalonWebpage -> createSalonUseCase "creates salon during onboarding"
+
+  manageSalonWebpage -> getSalonUseCase "loads salon base data"
+  manageSalonWebpage -> updateSalonUseCase "updates salon settings"
+
+  manageSalonWebpage -> listResourcesUseCase "loads planning resources"
+  manageSalonWebpage -> createResourceUseCase "creates planning resources"
+  manageSalonWebpage -> updateResourceUseCase "updates planning resources"
+  manageSalonWebpage -> deleteResourceUseCase "deletes planning resources"
+
+  manageSalonWebpage -> listServiceDefinitionsUseCase "loads service definitions"
+  manageSalonWebpage -> getServiceDefinitionUseCase "loads one service definition"
+  manageSalonWebpage -> createCustomServiceUseCase "creates custom service definition"
+  manageSalonWebpage -> createSimpleServiceUseCase "creates simple service"
+  manageSalonWebpage -> createColorationServiceUseCase "creates coloration service"
+  manageSalonWebpage -> updateCustomServiceUseCase "updates custom service definition"
+  manageSalonWebpage -> deleteServiceDefinitionUseCase "deletes service definition"
+
+  manageSalonWebpage -> assignEmployeeToServiceUseCase "assigns employee to service"
+  manageSalonWebpage -> unassignEmployeeFromServiceUseCase "removes employee assignment"
+  manageSalonWebpage -> listEmployeeServicesUseCase "loads services per employee"
+  manageSalonWebpage -> listServiceEmployeesUseCase "loads employees per service"
+
+  createSalonUseCase -> salonAggregate "creates salon"
+
+  getSalonUseCase -> salonAggregate "reads salon data"
+  updateSalonUseCase -> salonAggregate "updates salon base data"
+
+  listResourcesUseCase -> resourceAggregate "lists resources"
+  createResourceUseCase -> resourceAggregate "creates resource"
+  updateResourceUseCase -> resourceAggregate "updates resource"
+  deleteResourceUseCase -> resourceAggregate "deletes resource"
+
+  listServiceDefinitionsUseCase -> serviceAggregate "lists service definitions"
+  getServiceDefinitionUseCase -> serviceAggregate "gets one service definition"
+  createCustomServiceUseCase -> serviceAggregate "creates custom service definition"
+  createSimpleServiceUseCase -> serviceAggregate "creates simple service definition"
+  createColorationServiceUseCase -> serviceAggregate "creates coloration service definition"
+  updateCustomServiceUseCase -> serviceAggregate "updates custom service definition"
+  deleteServiceDefinitionUseCase -> serviceAggregate "deletes service definition"
+
+  assignEmployeeToServiceUseCase -> employeeServiceAggregate "creates assignment"
+  unassignEmployeeFromServiceUseCase -> employeeServiceAggregate "deletes assignment"
+  listEmployeeServicesUseCase -> employeeServiceAggregate "lists employee assignments"
+  listServiceEmployeesUseCase -> employeeServiceAggregate "lists service assignments"
+
+  createResourceUseCase -> salonPostgres "checks salon existence"
+  deleteResourceUseCase -> salonPostgres "checks phase-resource references"
+
+  createCustomServiceUseCase -> salonPostgres "validates salon and required resources"
+  createSimpleServiceUseCase -> salonPostgres "validates salon and seat resource"
+  createColorationServiceUseCase -> salonPostgres "validates salon and required resources"
+  updateCustomServiceUseCase -> salonPostgres "validates existing resources"
+
+  assignEmployeeToServiceUseCase -> salonPostgres "validates stylist and service definition"
+  listEmployeeServicesUseCase -> salonPostgres "loads referenced service definitions"
+  listServiceEmployeesUseCase -> salonPostgres "loads referenced stylists"
+
+  salonAggregate -> salonPostgres "persists salon rows"
+  resourceAggregate -> salonPostgres "persists salon resources"
+  serviceAggregate -> salonPostgres "persists service definitions and phases"
+  employeeServiceAggregate -> salonPostgres "persists employee-service assignments"
+
+  mediaService -> salonPostgres "persists media metadata"
+  mediaService -> salonS3 "stores and validates salon media objects"
+}

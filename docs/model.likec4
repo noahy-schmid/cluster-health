@@ -4,6 +4,38 @@ specification {
   element domain
   element aggregate
   element useCase
+  element service
+  element infrastructure
+}
+
+model {
+  person salonManager "Salon manager"
+
+  component manageSalonWebpage "Manage salon webpage"
+
+  salonManager -> manageSalonWebpage "manages salon settings and planning resources"
+
+  manageSalonWebpage -> salonDomain.createSalonUseCase "creates salon during onboarding"
+  manageSalonWebpage -> salonDomain.getSalonUseCase "loads salon base data"
+  manageSalonWebpage -> salonDomain.updateSalonUseCase "updates salon settings"
+
+  manageSalonWebpage -> salonDomain.listResourcesUseCase "loads planning resources"
+  manageSalonWebpage -> salonDomain.createResourceUseCase "creates planning resources"
+  manageSalonWebpage -> salonDomain.updateResourceUseCase "updates planning resources"
+  manageSalonWebpage -> salonDomain.deleteResourceUseCase "deletes planning resources"
+
+  manageSalonWebpage -> salonDomain.listServiceDefinitionsUseCase "loads service definitions"
+  manageSalonWebpage -> salonDomain.getServiceDefinitionUseCase "loads one service definition"
+  manageSalonWebpage -> salonDomain.createCustomServiceUseCase "creates custom service definition"
+  manageSalonWebpage -> salonDomain.createSimpleServiceUseCase "creates simple service"
+  manageSalonWebpage -> salonDomain.createColorationServiceUseCase "creates coloration service"
+  manageSalonWebpage -> salonDomain.updateCustomServiceUseCase "updates custom service definition"
+  manageSalonWebpage -> salonDomain.deleteServiceDefinitionUseCase "deletes service definition"
+
+  manageSalonWebpage -> salonDomain.assignEmployeeToServiceUseCase "assigns employee to service"
+  manageSalonWebpage -> salonDomain.unassignEmployeeFromServiceUseCase "removes employee assignment"
+  manageSalonWebpage -> salonDomain.listEmployeeServicesUseCase "loads services per employee"
+  manageSalonWebpage -> salonDomain.listServiceEmployeesUseCase "loads employees per service"
 }
 
 
