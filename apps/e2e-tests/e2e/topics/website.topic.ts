@@ -195,9 +195,7 @@ export class WebsiteTopic {
           },
         );
 
-        await this.managePage
-          .getByTestId("section-type-center-text")
-          .click();
+        await this.managePage.getByTestId("section-type-center-text").click();
 
         await expect(this.managePage).toHaveURL(
           new RegExp(
@@ -222,7 +220,9 @@ export class WebsiteTopic {
         await this.managePage
           .getByTestId("center-text-menu-title-input")
           .fill(menuTitle);
-        await this.managePage.getByTestId("center-text-title-input").fill(title);
+        await this.managePage
+          .getByTestId("center-text-title-input")
+          .fill(title);
         await this.managePage
           .getByTestId("center-text-content-input")
           .fill(content);

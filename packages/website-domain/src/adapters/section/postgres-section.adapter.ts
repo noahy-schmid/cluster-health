@@ -281,10 +281,7 @@ const make = Effect.gen(function* () {
       const remaining = existingSections.filter(
         (section) => section.id !== sectionId,
       );
-      const clampedIndex = Math.max(
-        0,
-        Math.min(safeIndex, remaining.length),
-      );
+      const clampedIndex = Math.max(0, Math.min(safeIndex, remaining.length));
 
       const movedSection = existingSections[currentIndex]!;
       const reordered = [...remaining];

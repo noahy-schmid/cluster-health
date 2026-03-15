@@ -65,10 +65,7 @@ class CrossAppScenario {
     return this.website.iAddACenterTextSection(input);
   }
 
-  async iInsertCenterTextSectionAt(
-    position: number,
-    input?: CenterTextInput,
-  ) {
+  async iInsertCenterTextSectionAt(position: number, input?: CenterTextInput) {
     return this.website.iInsertCenterTextSectionAt(position, input);
   }
 
