@@ -4,7 +4,9 @@ import { defineConfig } from "eslint/config";
 export default defineConfig([
   ...config,
   {
-    files: ["**/*.ts"],
     ignores: ["playwright-report/**", "test-results/**"],
+  },
+  {
+    files: ["e2e/**/*.ts"],
   },
 ]);

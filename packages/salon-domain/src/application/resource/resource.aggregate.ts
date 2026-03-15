@@ -34,10 +34,10 @@ const make = Effect.gen(function* () {
           }),
         );
       }
-      if (amount < 1) {
+      if (amount < 0) {
         return yield* Effect.fail(
           new ValidationError({
-            message: "Resource amount must be at least 1",
+            message: "Resource amount must not be negative",
           }),
         );
       }
@@ -77,10 +77,10 @@ const make = Effect.gen(function* () {
           }),
         );
       }
-      if (amount < 1) {
+      if (amount < 0) {
         return yield* Effect.fail(
           new ValidationError({
-            message: "Resource amount must be at least 1",
+            message: "Resource amount must not be negative",
           }),
         );
       }

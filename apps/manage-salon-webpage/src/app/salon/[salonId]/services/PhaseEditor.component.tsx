@@ -139,7 +139,7 @@ export default function PhaseEditor({
 
             <div className="flex flex-col gap-sm">
               <label className="text-sm font-normal text-fg-strong">
-                Benötigte Ressourcen
+                Benötigte Ausstattung
               </label>
               <div className="flex flex-wrap gap-sm">
                 {/* Employee resource as chip */}

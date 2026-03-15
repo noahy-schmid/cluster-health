@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import z from "zod";
 import { ManagementUserRepository } from "@repo/auth-domain";
+import { setSessionCookie } from "./session";
 
 const loginActionSchema = z.object({
   email: z.email(),
@@ -35,28 +35,6 @@ type RegisterActionResult =
         password?: { errors: string[] };
       };
     };
-
-/**
- * Sets the session cookie from a JWT token.
- * @param token JWT token from auth-domain.
- * @returns Resolves when cookie is set.
- */
-async function setSessionCookie(
-  token: string,
-  payload: { expiresAt?: Date },
-): Promise<void> {
-  const expires = payload.expiresAt;
-
-  const production = process.env.NODE_ENV === "production";
-
-  (await cookies()).set("session", token, {
-    secure: production,
-    httpOnly: true,
-    sameSite: "strict",
-    path: "/",
-    expires,
-  });
-}
 
 export async function loginAction(
   prevState: any,

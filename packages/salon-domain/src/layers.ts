@@ -9,6 +9,9 @@ import { PostgresServiceDefinitionAdapter } from "./adapters/postgres-service-de
 import { PostgresStylistPortAdapter } from "./adapters/postgres-stylist-port.adapter";
 import { PostgresResourceAdapter } from "./adapters/postgres-resource.adapter";
 import { PostgresSalonPortAdapter } from "./adapters/postgres-salon-port.adapter";
+import { CreateSalonUseCase } from "./use-cases/create-salon.use-case";
+import { GetSalonUseCase } from "./use-cases/get-salon.use-case";
+import { UpdateSalonUseCase } from "./use-cases/update-salon.use-case";
 import { CreateResourceUseCase } from "./use-cases/create-resource.use-case";
 import { UpdateResourceUseCase } from "./use-cases/update-resource.use-case";
 import { DeleteResourceUseCase } from "./use-cases/delete-resource.use-case";
@@ -60,6 +63,11 @@ const SalonPortLayer = PostgresSalonPortAdapter.pipe(
   Layer.provide(InfrastructureLayer),
   Layer.orDie,
 );
+
+// Salon use case layers
+export const CreateSalonUseCaseLayer = CreateSalonUseCase.Default;
+export const GetSalonUseCaseLayer = GetSalonUseCase.Default;
+export const UpdateSalonUseCaseLayer = UpdateSalonUseCase.Default;
 
 // Resource use case layers
 export const CreateResourceUseCaseLayer = CreateResourceUseCase.Default.pipe(

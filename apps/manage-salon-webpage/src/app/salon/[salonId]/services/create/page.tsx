@@ -1,6 +1,6 @@
 import PageHeader from "@/components/PageHeader";
 import BackButton from "@/components/BackButton";
-import { fetchSalonResources } from "../service.actions";
+import { fetchSalonResources } from "@/api/salon-read.actions";
 import CreateServiceClient from "./CreateServiceClient";
 
 interface CreateServicePageProps {

@@ -41,12 +41,13 @@ export class SalonTopic {
         .getByRole("button", { name: "Salon erstellen" })
         .click();
 
-      await expect(this.managePage).toHaveURL(
-        new RegExp(`${e2eEnvironment.manageBaseUrl}/salon/[0-9a-f-]{36}$`),
+      const resourceSetupMatch = new RegExp(
+        `${e2eEnvironment.manageBaseUrl}/onboarding/[0-9a-f-]{36}/resources$`,
       );
+      await expect(this.managePage).toHaveURL(resourceSetupMatch);
 
       const match = new URL(this.managePage.url()).pathname.match(
-        /^\/salon\/([0-9a-f-]{36})$/,
+        /^\/onboarding\/([0-9a-f-]{36})\/resources$/,
       );
       const salonId = match?.[1];
 
@@ -55,6 +56,23 @@ export class SalonTopic {
           `Could not extract salonId from ${this.managePage.url()}`,
         );
       }
+
+      await expect(
+        this.managePage.getByRole("heading", {
+          name: "Terminplanung einrichten",
+        }),
+      ).toBeVisible();
+
+      await this.managePage
+        .getByRole("button", { name: "Weiter zum Salon" })
+        .click();
+
+      await expect(this.managePage).toHaveURL(
+        `${e2eEnvironment.manageBaseUrl}/salon/${salonId}`,
+        {
+          timeout: 20_000,
+        },
+      );
 
       this.salon = { salonId, name };
       return this.salon;

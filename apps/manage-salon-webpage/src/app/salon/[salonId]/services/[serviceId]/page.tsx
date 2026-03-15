@@ -1,8 +1,8 @@
 import PageHeader from "@/components/PageHeader";
 import BackButton from "@/components/BackButton";
+import { fetchSalonResources } from "@/api/salon-read.actions";
 import {
   fetchServiceDefinition,
-  fetchSalonResources,
   fetchStylistsForService,
 } from "../service.actions";
 import { fetchStylists } from "@/app/salon/[salonId]/stylists/stylist.actions";

@@ -1,7 +1,11 @@
 import { Effect, Layer } from "effect";
-import { eq, asc } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { Database } from "../infrastructure/database.interface";
-import { servicePhasesTable, phaseResourceRequirementsTable } from "../schema";
+import {
+  servicePhasesTable,
+  phaseResourceRequirementsTable,
+  serviceDefinitionsTable,
+} from "../schema";
 import { ServicePhasePort } from "../ports/service-phase.port";
 import { InfrastructureError } from "../application/errors";
 
@@ -136,14 +140,28 @@ const make = Effect.gen(function* () {
       });
 
   const isResourceSlugReferenced: ServicePhasePort["isResourceSlugReferenced"] =
-    (resourceSlug) =>
+    (salonId, resourceSlug) =>
       Effect.gen(function* () {
         const [row] = yield* Effect.tryPromise(() =>
           db
             .select()
             .from(phaseResourceRequirementsTable)
+            .innerJoin(
+              servicePhasesTable,
+              eq(phaseResourceRequirementsTable.phaseId, servicePhasesTable.id),
+            )
+            .innerJoin(
+              serviceDefinitionsTable,
+              eq(
+                servicePhasesTable.serviceDefinitionId,
+                serviceDefinitionsTable.id,
+              ),
+            )
             .where(
-              eq(phaseResourceRequirementsTable.resourceSlug, resourceSlug),
+              and(
+                eq(phaseResourceRequirementsTable.resourceSlug, resourceSlug),
+                eq(serviceDefinitionsTable.salonId, salonId),
+              ),
             )
             .limit(1),
         ).pipe(

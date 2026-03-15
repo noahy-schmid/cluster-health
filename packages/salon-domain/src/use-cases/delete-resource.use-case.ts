@@ -18,7 +18,8 @@ export interface DeleteResourceCommand {
 
 /**
  * Deletes a salon resource. Performs cross-aggregate validation to ensure
- * the resource is not referenced by any service phase before deletion.
+ * the resource is not referenced by any service phase in the same salon before
+ * deletion.
  */
 const make = Effect.gen(function* () {
   const aggregate = yield* ResourceAggregate;
@@ -35,7 +36,7 @@ const make = Effect.gen(function* () {
       Effect.gen(function* () {
         // Cross-aggregate check: is this resource referenced by any service phase?
         const isReferenced = yield* servicePhasePort
-          .isResourceSlugReferenced(command.slug)
+          .isResourceSlugReferenced(command.salonId, command.slug)
           .pipe(
             Effect.mapError(
               (error) =>
