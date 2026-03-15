@@ -119,14 +119,16 @@ export interface SectionPort {
   ): Effect.Effect<void, SectionPersistenceError>;
 
   /**
-   * Reorders sections for a website by setting new order values.
+   * Moves a single section to a new index and shifts neighbouring sections.
    * @param websiteId Website ID owning the sections.
-   * @param sectionIds Array of section IDs in desired order.
+   * @param sectionId Section ID to move.
+   * @param newIndex Zero-based target position within the website.
    * @returns Effect resolving when reorder completes.
    */
   reorderSections(
     websiteId: string,
-    sectionIds: string[],
+    sectionId: string,
+    newIndex: number,
   ): Effect.Effect<void, SectionPersistenceError>;
 
   /**

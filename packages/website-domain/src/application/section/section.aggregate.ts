@@ -163,7 +163,11 @@ const make = Effect.gen(function* () {
       yield* Effect.log("Section deleted", sectionId);
     });
 
-  const reorderSections = (websiteId: string, sectionIds: string[]) =>
+  const reorderSections = (
+    websiteId: string,
+    sectionId: string,
+    newIndex: number,
+  ) =>
     Effect.gen(function* () {
       const existingSections = yield* sectionPort
         .fetchSectionsByWebsiteId(websiteId)
@@ -177,34 +181,60 @@ const make = Effect.gen(function* () {
           ),
         );
 
-      if (sectionIds.length !== existingSections.length) {
+      if (existingSections.length === 0) {
         return yield* Effect.fail(
           new SectionError({
             websiteId,
-            message: `Provided sectionIds length (${sectionIds.length}) does not match number of sections in website (${existingSections.length})`,
+            message: "Cannot reorder sections for an empty website",
           }),
         );
       }
 
-      const existingIdSet = new Set(existingSections.map((s) => s.id));
-      if (!sectionIds.every((id) => existingIdSet.has(id))) {
-        return yield* Effect.fail(
-          new SectionError({
-            websiteId,
-            message: "Provided sectionIds do not match sections in website",
-          }),
-        );
-      }
-
-      yield* sectionPort.reorderSections(websiteId, sectionIds).pipe(
-        Effect.mapError(
-          (error) =>
-            new SectionError({
-              websiteId,
-              message: error.message,
-            }),
-        ),
+      const targetIndex = existingSections.findIndex(
+        (section) => section.id === sectionId,
       );
+
+      if (targetIndex === -1) {
+        return yield* Effect.fail(
+          new SectionError({
+            websiteId,
+            sectionId,
+            message: "Section does not belong to this website",
+          }),
+        );
+      }
+
+      if (newIndex < 0) {
+        return yield* Effect.fail(
+          new SectionError({
+            websiteId,
+            sectionId,
+            message: "New index must be zero or greater",
+          }),
+        );
+      }
+
+      const maxIndex = existingSections.length - 1;
+      const clampedIndex = Math.min(newIndex, maxIndex);
+
+      if (clampedIndex === targetIndex) {
+        return yield* Effect.log(
+          "Section already at requested position",
+          sectionId,
+        );
+      }
+
+      yield* sectionPort
+        .reorderSections(websiteId, sectionId, clampedIndex)
+        .pipe(
+          Effect.mapError(
+            (error) =>
+              new SectionError({
+                websiteId,
+                message: error.message,
+              }),
+          ),
+        );
 
       yield* Effect.log("Sections reordered for website", websiteId);
     });

@@ -72,11 +72,16 @@ export default function WebsiteEditorClient({
     const nextSections = [...sections];
     const [movedSection] = nextSections.splice(oldIndex, 1);
     nextSections.splice(newIndex, 0, movedSection);
-    setSections(nextSections);
+    const reorderedWithOrder = nextSections.map((section, index) => ({
+      ...section,
+      order: index,
+    }));
+    setSections(reorderedWithOrder);
 
     const result = await reorderSectionsAction(
       websiteId ?? "",
-      nextSections.map((section) => section.id),
+      String(active.id),
+      newIndex,
     );
 
     if (!result.success) {

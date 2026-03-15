@@ -157,11 +157,12 @@ export async function deleteSection(
 
 /**
  * Server action to reorder sections
- * Takes websiteId and array of section IDs in their new order
+ * Takes websiteId, the moved section ID and its target index
  */
 export async function reorderSections(
   websiteId: string,
-  sectionIds: string[],
+  sectionId: string,
+  newIndex: number,
 ): Promise<Result<void, string>> {
   const access = await WebsiteAccessGuard.canEditWebsite(websiteId);
 
@@ -171,15 +172,17 @@ export async function reorderSections(
 
   const program = Effect.gen(function* () {
     const useCase = yield* ReorderSectionsUseCase;
-    return yield* useCase.execute({ websiteId, sectionIds }).pipe(
-      Effect.map(() => ({ success: true as const, data: undefined })),
-      Effect.catchTag("SectionError", (error) =>
-        Effect.succeed({
-          success: false as const,
-          errors: `${error._tag}: ${error.message}`,
-        }),
-      ),
-    );
+    return yield* useCase
+      .execute({ websiteId, sectionId, newIndex })
+      .pipe(
+        Effect.map(() => ({ success: true as const, data: undefined })),
+        Effect.catchTag("SectionError", (error) =>
+          Effect.succeed({
+            success: false as const,
+            errors: `${error._tag}: ${error.message}`,
+          }),
+        ),
+      );
   }).pipe(Effect.provide(ReorderSectionsUseCaseLayer));
 
   return await Effect.runPromise(program);

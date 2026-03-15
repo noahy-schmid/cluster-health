@@ -100,16 +100,80 @@ const make = Effect.gen(function* () {
     }
   };
 
+  const loadOrderedSections = (websiteId: string) =>
+    Effect.tryPromise(() =>
+      db
+        .select({
+          id: sectionsTable.id,
+          order: sectionsTable.order,
+        })
+        .from(sectionsTable)
+        .where(eq(sectionsTable.websiteId, websiteId))
+        .orderBy(sectionsTable.order),
+    ).pipe(
+      Effect.mapError(
+        (error) =>
+          new SectionPersistenceError({
+            message: `Failed to fetch section order for website ${websiteId}: ${String(error)}`,
+            cause: error,
+          }),
+      ),
+    );
+
+  const applyOrderUpdates = (
+    websiteId: string,
+    updates: { id: string; order: number }[],
+  ) =>
+    Effect.forEach(
+      updates,
+      ({ id, order }) =>
+        Effect.tryPromise(() =>
+          db
+            .update(sectionsTable)
+            .set({ order })
+            .where(
+              and(
+                eq(sectionsTable.id, id),
+                eq(sectionsTable.websiteId, websiteId),
+              ),
+            ),
+        ).pipe(
+          Effect.mapError(
+            (error) =>
+              new SectionPersistenceError({
+                message: `Failed to update order for section ${id}: ${String(error)}`,
+                cause: error,
+              }),
+          ),
+        ),
+      { concurrency: 1 },
+    ).pipe(Effect.asVoid);
+
   const createSection: SectionPort["createSection"] = (
     websiteId,
     type,
     position,
   ) =>
     Effect.gen(function* () {
+      const safePosition = Number.isFinite(position) ? position : 0;
+      const existingSections = yield* loadOrderedSections(websiteId);
+      const clampedPosition = Math.max(
+        0,
+        Math.min(safePosition, existingSections.length),
+      );
+      const updatedOrders = existingSections.map((section, index) => ({
+        id: section.id,
+        order: index < clampedPosition ? index : index + 1,
+      }));
+
+      if (updatedOrders.length > 0) {
+        yield* applyOrderUpdates(websiteId, updatedOrders);
+      }
+
       const baseSection = yield* Effect.tryPromise(() =>
         db
           .insert(sectionsTable)
-          .values({ websiteId, type, order: position })
+          .values({ websiteId, type, order: clampedPosition })
           .returning(),
       ).pipe(
         Effect.map((rows) => rows[0]),
@@ -194,32 +258,45 @@ const make = Effect.gen(function* () {
 
   const reorderSections: SectionPort["reorderSections"] = (
     websiteId,
-    sectionIds,
+    sectionId,
+    newIndex,
   ) =>
-    Effect.forEach(
-      sectionIds.map((id, index) => ({ id, index })),
-      ({ id, index }) =>
-        Effect.tryPromise(() =>
-          db
-            .update(sectionsTable)
-            .set({ order: index })
-            .where(
-              and(
-                eq(sectionsTable.id, id),
-                eq(sectionsTable.websiteId, websiteId),
-              ),
-            ),
-        ).pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionPersistenceError({
-                message: `Failed to reorder section ${id}: ${String(error)}`,
-                cause: error,
-              }),
-          ),
-        ),
-      { concurrency: 1 },
-    ).pipe(Effect.asVoid);
+    Effect.gen(function* () {
+      const existingSections = yield* loadOrderedSections(websiteId);
+
+      const currentIndex = existingSections.findIndex(
+        (section) => section.id === sectionId,
+      );
+
+      if (currentIndex === -1) {
+        return yield* Effect.fail(
+          new SectionPersistenceError({
+            message: `Section ${sectionId} does not belong to website ${websiteId}`,
+            isValidation: true,
+          }),
+        );
+      }
+
+      const safeIndex = Number.isFinite(newIndex) ? newIndex : 0;
+      const remaining = existingSections.filter(
+        (section) => section.id !== sectionId,
+      );
+      const clampedIndex = Math.max(
+        0,
+        Math.min(safeIndex, remaining.length),
+      );
+
+      const movedSection = existingSections[currentIndex]!;
+      const reordered = [...remaining];
+      reordered.splice(clampedIndex, 0, movedSection);
+
+      const orderUpdates = reordered.map((section, index) => ({
+        id: section.id,
+        order: index,
+      }));
+
+      return yield* applyOrderUpdates(websiteId, orderUpdates);
+    });
 
   const fetchSectionsByWebsiteId: SectionPort["fetchSectionsByWebsiteId"] = (
     websiteId,
