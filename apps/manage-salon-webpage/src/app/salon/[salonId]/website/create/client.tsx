@@ -28,6 +28,8 @@ export default function WebsiteCreateClient({
       settings.slug,
       settings.title,
       settings.faviconMediaId,
+      settings.menuBarTitle,
+      settings.menuLogoPosition,
     );
 
     if (result.success) {

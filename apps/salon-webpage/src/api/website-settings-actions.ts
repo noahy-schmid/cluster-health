@@ -17,6 +17,8 @@ export const fetchWebsiteMetadataSettingsBySalonSlug = unstable_cache(
     settings?: {
       title: string;
       favicon: string | null;
+      menuBarTitle: string | null;
+      menuLogoPosition: "left" | "center";
     };
     error?: string;
   }> => {
@@ -24,31 +26,39 @@ export const fetchWebsiteMetadataSettingsBySalonSlug = unstable_cache(
       const websiteService = yield* WebsiteService;
       const mediaService = yield* MediaService;
 
-      const settings = yield* websiteService
-        .getWebsiteSettingsBySlug(salonSlug)
-        .pipe(
-          Effect.catchTag("WebsiteNotFoundError", () =>
-            Effect.fail(new Error("Website not found")),
-          ),
-        );
+      return yield* websiteService.getWebsiteSettingsBySlug(salonSlug).pipe(
+        Effect.flatMap((settings) =>
+          Effect.gen(function* () {
+            const faviconMediaId = Option.getOrUndefined(
+              settings.faviconMediaId,
+            );
+            let favicon: string | null = null;
 
-      const faviconMediaId = Option.getOrUndefined(settings.faviconMediaId);
-      let favicon: string | null = null;
+            if (faviconMediaId) {
+              const urlResult = yield* mediaService
+                .getMediaUrl(faviconMediaId)
+                .pipe(Effect.option);
+              favicon = Option.getOrNull(urlResult);
+            }
 
-      if (faviconMediaId) {
-        const urlResult = yield* mediaService
-          .getMediaUrl(faviconMediaId)
-          .pipe(Effect.option);
-        favicon = Option.getOrNull(urlResult);
-      }
-
-      return {
-        success: true,
-        settings: {
-          title: settings.title,
-          favicon,
-        },
-      };
+            return {
+              success: true as const,
+              settings: {
+                title: settings.title,
+                favicon,
+                menuBarTitle: Option.getOrNull(settings.menuBarTitle),
+                menuLogoPosition: settings.menuLogoPosition,
+              },
+            };
+          }),
+        ),
+        Effect.catchTag("WebsiteNotFoundError", () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Website not found",
+          }),
+        ),
+      );
     }).pipe(
       Effect.provide(Layer.merge(WebsiteLayer, MediaLayer)),
       Effect.catchAll((error) =>

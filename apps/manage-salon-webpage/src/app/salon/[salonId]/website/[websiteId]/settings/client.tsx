@@ -30,6 +30,8 @@ export default function WebsiteSettingsPageClient({
       settings.slug,
       settings.title,
       settings.faviconMediaId,
+      settings.menuBarTitle,
+      settings.menuLogoPosition,
     );
 
     if (result.success) {

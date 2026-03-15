@@ -1,6 +1,6 @@
 {
-  "id": "ebd9e8f7-9fac-4c26-980d-fcee773fc45d",
-  "prevId": "ea918b42-664e-4856-995c-0cb73d49df0e",
+  "id": "ec1705e7-0b04-40a7-9ffe-e46ab62722de",
+  "prevId": "ebd9e8f7-9fac-4c26-980d-fcee773fc45d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -442,6 +442,19 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
+        },
+        "menuBarTitle": {
+          "name": "menuBarTitle",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "menuLogoPosition": {
+          "name": "menuLogoPosition",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'left'"
         },
         "colorBackgroundBase": {
           "name": "colorBackgroundBase",

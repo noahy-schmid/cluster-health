@@ -1,5 +1,6 @@
 import { fetchSectionsBySalonSlug } from "@/api/sections-actions";
 import { fetchHeroSettingsBySalonSlug } from "@/api/hero-actions";
+import { fetchWebsiteMetadataSettingsBySalonSlug } from "@/api/website-settings-actions";
 import SectionRenderer from "@/components/sections/SectionRenderer";
 import StickyMenuBar, { MenuItem } from "@/components/sticky-menu-bar";
 import Hero from "./Hero";
@@ -19,9 +20,10 @@ export default async function SalonPage({
   const { salonSlug } = await params;
 
   // Fetch sections and hero settings from the database
-  const [sectionsResult, heroResult] = await Promise.all([
+  const [sectionsResult, heroResult, metadataResult] = await Promise.all([
     fetchSectionsBySalonSlug(salonSlug),
     fetchHeroSettingsBySalonSlug(salonSlug),
+    fetchWebsiteMetadataSettingsBySalonSlug(salonSlug),
   ]);
 
   if (!sectionsResult.success) {
@@ -63,6 +65,8 @@ export default async function SalonPage({
             ? heroResult.settings.logoUrl
             : "/images/logo.png"
         }
+        menuTitle={metadataResult.settings?.menuBarTitle}
+        logoPosition={metadataResult.settings?.menuLogoPosition}
       />
 
       <div className="w-full bg-salon-bg-base">
