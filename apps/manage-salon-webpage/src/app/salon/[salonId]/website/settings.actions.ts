@@ -2,7 +2,7 @@
 
 import { AuthGuard } from "@/api/guards/auth.guard";
 import { WebsiteAccessGuard } from "@/api/guards/website.guard";
-import { SalonRepository } from "@repo/salon-domain";
+import { GetSalonUseCase, GetSalonUseCaseLayer } from "@repo/salon-domain";
 import { Effect, Option } from "effect";
 import { WebsiteService, type WebsiteId } from "@repo/website-domain";
 import { WebsiteLayer } from "@repo/website-domain/src/layers";
@@ -32,7 +32,7 @@ export async function getWebsiteInitialValues(): Promise<
       success: true;
       slug: string;
       title: string;
-      faviconUrl: string;
+      faviconMediaId: string;
       menuBarTitle: string;
       menuLogoPosition: "left" | "center";
     }
@@ -51,8 +51,28 @@ export async function getWebsiteInitialValues(): Promise<
     return { success: false, error: "Kein Salon zugeordnet" };
   }
 
-  const salonRepository = new SalonRepository();
-  const salonResult = await salonRepository.fetchSalonById(authToken.salonId);
+  const salonResult = await Effect.runPromise(
+    Effect.gen(function* () {
+      const salon = yield* GetSalonUseCase.execute({
+        salonId: authToken.salonId,
+      });
+      return { success: true as const, data: salon };
+    }).pipe(
+      Effect.catchTags({
+        NotFoundError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Salon nicht gefunden",
+          }),
+        InternalError: () =>
+          Effect.succeed({
+            success: false as const,
+            error: "Salon konnte nicht geladen werden",
+          }),
+      }),
+      Effect.provide(GetSalonUseCaseLayer),
+    ),
+  );
 
   if (!salonResult.success) {
     return { success: false, error: "Salon nicht gefunden" };
@@ -64,7 +84,7 @@ export async function getWebsiteInitialValues(): Promise<
     success: true,
     slug: slugify(salon.name),
     title: `${salon.name} - Dein Salon`,
-    faviconUrl: "",
+    faviconMediaId: "",
     menuBarTitle: salon.name,
     menuLogoPosition: "left" as const,
   };
@@ -80,7 +100,7 @@ export async function getWebsiteSettings(websiteId: string): Promise<
       success: true;
       slug: string;
       title: string;
-      faviconUrl: string;
+      faviconMediaId: string;
       menuBarTitle: string;
       menuLogoPosition: "left" | "center";
     }
@@ -106,7 +126,7 @@ export async function getWebsiteSettings(websiteId: string): Promise<
         success: true as const,
         slug: settings.slug,
         title: settings.title,
-        faviconUrl: Option.getOrElse(settings.favicon, () => ""),
+        faviconMediaId: Option.getOrElse(settings.faviconMediaId, () => ""),
         menuBarTitle: Option.getOrElse(settings.menuBarTitle, () => ""),
         menuLogoPosition: settings.menuLogoPosition,
       };
@@ -137,7 +157,7 @@ export async function getWebsiteSettings(websiteId: string): Promise<
  * Server action to create a new website with custom settings
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
- * @param faviconUrl - Optional URL to favicon image
+ * @param faviconMediaId - Optional media ID of the favicon image managed by the salon media system
  * @param menuBarTitle - Optional title rendered next to the sticky menu logo
  * @param menuLogoPosition - Position of the sticky menu logo
  * @returns Result with the created website ID or error
@@ -145,7 +165,7 @@ export async function getWebsiteSettings(websiteId: string): Promise<
 export async function createWebsite(
   slug: string,
   title: string,
-  faviconUrl: string,
+  faviconMediaId: string,
   menuBarTitle: string,
   menuLogoPosition: "left" | "center",
 ): Promise<
@@ -176,7 +196,9 @@ export async function createWebsite(
           salonId: authToken.salonId,
           slug,
           title,
-          favicon: faviconUrl ? Option.some(faviconUrl) : Option.none<string>(),
+          faviconMediaId: faviconMediaId
+            ? Option.some(faviconMediaId)
+            : Option.none<string>(),
           menuBarTitle: menuBarTitle.trim()
             ? Option.some(menuBarTitle.trim())
             : Option.none<string>(),
@@ -209,7 +231,7 @@ export async function createWebsite(
  * @param websiteId - ID of the website to update
  * @param slug - URL slug for the website
  * @param title - Page title for browser tabs and SEO
- * @param faviconUrl - Optional URL to favicon image
+ * @param faviconMediaId - Optional favicon media ID
  * @param menuBarTitle - Optional title rendered next to the sticky menu logo
  * @param menuLogoPosition - Position of the sticky menu logo
  * @returns Result indicating success or error
@@ -218,7 +240,7 @@ export async function updateWebsiteSettings(
   websiteId: string,
   slug: string,
   title: string,
-  faviconUrl: string,
+  faviconMediaId: string,
   menuBarTitle: string,
   menuLogoPosition: "left" | "center",
 ): Promise<
@@ -242,7 +264,9 @@ export async function updateWebsiteSettings(
       yield* service.updateWebsiteSettings(websiteId as WebsiteId, {
         slug,
         title,
-        favicon: faviconUrl ? Option.some(faviconUrl) : Option.none(),
+        faviconMediaId: faviconMediaId
+          ? Option.some(faviconMediaId)
+          : Option.none(),
         menuBarTitle: menuBarTitle.trim()
           ? Option.some(menuBarTitle.trim())
           : Option.none(),

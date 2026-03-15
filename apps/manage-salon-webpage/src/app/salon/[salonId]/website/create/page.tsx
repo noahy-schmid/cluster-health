@@ -30,7 +30,7 @@ export default async function WebsiteCreatePage({
           initialValues={{
             slug: initialValuesResult.slug,
             title: initialValuesResult.title,
-            faviconUrl: initialValuesResult.faviconUrl,
+            faviconMediaId: initialValuesResult.faviconMediaId,
             menuBarTitle: initialValuesResult.menuBarTitle,
             menuLogoPosition: initialValuesResult.menuLogoPosition,
           }}

@@ -53,7 +53,25 @@ describe("CreateResourceUseCase", () => {
     );
   });
 
-  it("should fail with amount < 1", async () => {
+  it("should allow amount 0", async () => {
+    const program = Effect.gen(function* () {
+      const useCase = yield* CreateResourceUseCase;
+      const resource = yield* useCase.execute({
+        salonId: ctx.salonId,
+        slug: "optional-device",
+        name: "Optional Device",
+        amount: 0,
+      });
+
+      expect(resource.amount).toBe(0);
+    });
+
+    await Effect.runPromise(
+      program.pipe(Effect.provide(ctx.resourceUseCaseLayer)),
+    );
+  });
+
+  it("should fail with negative amount", async () => {
     const program = Effect.gen(function* () {
       const useCase = yield* CreateResourceUseCase;
       const result = yield* useCase
@@ -61,7 +79,7 @@ describe("CreateResourceUseCase", () => {
           salonId: ctx.salonId,
           slug: "bad",
           name: "Dryer",
-          amount: 0,
+          amount: -1,
         })
         .pipe(Effect.either);
 

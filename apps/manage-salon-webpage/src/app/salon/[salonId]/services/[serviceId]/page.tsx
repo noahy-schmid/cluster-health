@@ -1,8 +1,8 @@
 import PageHeader from "@/components/PageHeader";
 import BackButton from "@/components/BackButton";
+import { fetchSalonResources } from "@/api/salon-read.actions";
 import {
   fetchServiceDefinition,
-  fetchSalonResources,
   fetchStylistsForService,
 } from "../service.actions";
 import { fetchStylists } from "@/app/salon/[salonId]/stylists/stylist.actions";
@@ -19,9 +19,9 @@ export default async function EditServicePage({
 
   const [serviceResult, resourcesResult, assignmentsResult, stylistsResult] =
     await Promise.all([
-      fetchServiceDefinition(salonId, serviceId),
+      fetchServiceDefinition(serviceId),
       fetchSalonResources(salonId),
-      fetchStylistsForService(salonId, serviceId),
+      fetchStylistsForService(serviceId),
       fetchStylists(salonId),
     ]);
 
@@ -39,7 +39,6 @@ export default async function EditServicePage({
 
   return (
     <EditServiceClient
-      salonId={salonId}
       serviceId={serviceId}
       initialService={serviceResult.data}
       initialResources={resourcesResult.success ? resourcesResult.data : []}

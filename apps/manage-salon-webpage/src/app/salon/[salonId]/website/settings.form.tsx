@@ -4,18 +4,20 @@ import { useState } from "react";
 import FormToggle from "@/components/website/forms/FormToggle";
 import FormInput from "../../../../components/website/forms/FormInput";
 import FormActions from "../../../../components/website/forms/FormActions";
+import MediaSelector from "@/components/media/media-selector";
 
 export type MenuLogoPosition = "left" | "center";
 
 export interface WebsiteSettings {
   slug: string;
   title: string;
-  faviconUrl: string;
+  faviconMediaId: string;
   menuBarTitle: string;
   menuLogoPosition: MenuLogoPosition;
 }
 
 interface WebsiteSettingsFormProps {
+  salonId: string;
   initialValues: WebsiteSettings;
   onSubmit: (settings: WebsiteSettings) => void;
   onCancel: () => void;
@@ -25,6 +27,7 @@ interface WebsiteSettingsFormProps {
 }
 
 export default function WebsiteSettingsForm({
+  salonId,
   initialValues,
   onSubmit,
   onCancel,
@@ -34,7 +37,9 @@ export default function WebsiteSettingsForm({
 }: WebsiteSettingsFormProps) {
   const [slug, setSlug] = useState(initialValues.slug);
   const [title, setTitle] = useState(initialValues.title);
-  const [faviconUrl, setFaviconUrl] = useState(initialValues.faviconUrl);
+  const [faviconMediaId, setFaviconMediaId] = useState(
+    initialValues.faviconMediaId,
+  );
   const [menuBarTitle, setMenuBarTitle] = useState(initialValues.menuBarTitle);
   const [menuLogoPosition, setMenuLogoPosition] = useState<MenuLogoPosition>(
     initialValues.menuLogoPosition,
@@ -47,7 +52,7 @@ export default function WebsiteSettingsForm({
     onSubmit({
       slug,
       title,
-      faviconUrl,
+      faviconMediaId,
       menuBarTitle,
       menuLogoPosition,
     });
@@ -61,6 +66,7 @@ export default function WebsiteSettingsForm({
         onChange={setSlug}
         placeholder="mein-salon"
         required
+        testId="website-slug-input"
         helperText="Der URL-Slug wird verwendet, um Ihre Website zu identifizieren (z.B. slug.dein.salon)"
       />
 
@@ -70,16 +76,16 @@ export default function WebsiteSettingsForm({
         onChange={setTitle}
         placeholder="Mein Friseursalon - Willkommen"
         required
+        testId="website-title-input"
         helperText="Der Titel, der im Browser-Tab und in Suchergebnissen angezeigt wird"
       />
 
-      <FormInput
-        label="Favicon URL"
-        value={faviconUrl}
-        onChange={setFaviconUrl}
-        placeholder="https://example.com/favicon.ico"
-        type="url"
-        helperText="Die URL zu Ihrem Favicon-Bild (optional)"
+      <MediaSelector
+        salonId={salonId}
+        label="Favicon"
+        value={faviconMediaId || undefined}
+        onChange={setFaviconMediaId}
+        helperText="Das Favicon wird im Browser-Tab angezeigt (optional)"
       />
 
       <div className="rounded-lg border border-border bg-bg-0 p-md flex flex-col gap-md">
@@ -129,6 +135,7 @@ export default function WebsiteSettingsForm({
         onCancel={onCancel}
         saveLabel={saveLabel}
         isSaving={isSubmitting}
+        saveTestId="website-save-button"
       />
     </form>
   );

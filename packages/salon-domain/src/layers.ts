@@ -9,6 +9,9 @@ import { PostgresServiceDefinitionAdapter } from "./adapters/postgres-service-de
 import { PostgresStylistPortAdapter } from "./adapters/postgres-stylist-port.adapter";
 import { PostgresResourceAdapter } from "./adapters/postgres-resource.adapter";
 import { PostgresSalonPortAdapter } from "./adapters/postgres-salon-port.adapter";
+import { CreateSalonUseCase } from "./use-cases/create-salon.use-case";
+import { GetSalonUseCase } from "./use-cases/get-salon.use-case";
+import { UpdateSalonUseCase } from "./use-cases/update-salon.use-case";
 import { CreateResourceUseCase } from "./use-cases/create-resource.use-case";
 import { UpdateResourceUseCase } from "./use-cases/update-resource.use-case";
 import { DeleteResourceUseCase } from "./use-cases/delete-resource.use-case";
@@ -17,6 +20,7 @@ import { CreateCustomServiceUseCase } from "./use-cases/create-custom-service.us
 import { UpdateCustomServiceUseCase } from "./use-cases/update-custom-service.use-case";
 import { DeleteServiceDefinitionUseCase } from "./use-cases/delete-service-definition.use-case";
 import { ListServiceDefinitionsUseCase } from "./use-cases/list-service-definitions.use-case";
+import { GetServiceDefinitionUseCase } from "./use-cases/get-service-definition.use-case";
 import { CreateSimpleServiceUseCase } from "./use-cases/create-simple-service.use-case";
 import { CreateColorationServiceUseCase } from "./use-cases/create-coloration-service.use-case";
 import { AssignEmployeeToServiceUseCase } from "./use-cases/assign-employee-to-service.use-case";
@@ -60,6 +64,11 @@ const SalonPortLayer = PostgresSalonPortAdapter.pipe(
   Layer.orDie,
 );
 
+// Salon use case layers
+export const CreateSalonUseCaseLayer = CreateSalonUseCase.Default;
+export const GetSalonUseCaseLayer = GetSalonUseCase.Default;
+export const UpdateSalonUseCaseLayer = UpdateSalonUseCase.Default;
+
 // Resource use case layers
 export const CreateResourceUseCaseLayer = CreateResourceUseCase.Default.pipe(
   Layer.provide(SalonPortLayer),
@@ -85,6 +94,8 @@ export const DeleteServiceDefinitionUseCaseLayer =
   DeleteServiceDefinitionUseCase.Default;
 export const ListServiceDefinitionsUseCaseLayer =
   ListServiceDefinitionsUseCase.Default;
+export const GetServiceDefinitionUseCaseLayer =
+  GetServiceDefinitionUseCase.Default;
 
 // Simplified service use case layers
 export const CreateSimpleServiceUseCaseLayer =

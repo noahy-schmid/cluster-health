@@ -36,6 +36,7 @@ export default function SectionTypeSelectionButton({
 
   return (
     <button
+      data-testid={`section-type-${info.type}`}
       onClick={() => handleSelectType(info.type)}
       className="bg-bg-1 border border-border rounded-lg p-lg hover:bg-bg-2 hover:shadow-md transition-all text-left group cursor-pointer"
     >

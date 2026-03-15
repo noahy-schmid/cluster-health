@@ -4,15 +4,6 @@ import { InternalError, NotFoundError, ValidationError } from "./errors";
 import { DatabaseLayer } from "../../infrastructure/database.service";
 import { ConfigurationLayer } from "../../infrastructure/config.service";
 import { PostgresResourceAdapter } from "../../adapters/postgres-resource.adapter";
-
-// --- Well-known resource slugs ---
-
-/** Resource slug for styling seats / chairs. */
-export const SEAT_SLUG = "seat";
-
-/** Resource slug for climazon heating lamps. */
-export const CLIMAZON_SLUG = "climazon";
-
 // --- Domain types (re-export port types directly since there is no mapping needed) ---
 
 export type Resource = PortResource;
@@ -43,10 +34,10 @@ const make = Effect.gen(function* () {
           }),
         );
       }
-      if (amount < 1) {
+      if (amount < 0) {
         return yield* Effect.fail(
           new ValidationError({
-            message: "Resource amount must be at least 1",
+            message: "Resource amount must not be negative",
           }),
         );
       }
@@ -86,10 +77,10 @@ const make = Effect.gen(function* () {
           }),
         );
       }
-      if (amount < 1) {
+      if (amount < 0) {
         return yield* Effect.fail(
           new ValidationError({
-            message: "Resource amount must be at least 1",
+            message: "Resource amount must not be negative",
           }),
         );
       }

@@ -69,6 +69,24 @@ async function handleOnboardingRoute(req: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
+  const segments = getPathSegments(req.nextUrl.pathname);
+  const requestedSalonId = segments[1];
+  const isResourceSetupRoute = segments[2] === "resources";
+
+  if (isResourceSetupRoute) {
+    if (!tokenResult.salonId) {
+      return NextResponse.redirect(new URL("/onboarding", req.url));
+    }
+
+    if (!requestedSalonId || requestedSalonId !== tokenResult.salonId) {
+      return NextResponse.redirect(
+        new URL(`/salon/${tokenResult.salonId}`, req.url),
+      );
+    }
+
+    return NextResponse.next();
+  }
+
   if (tokenResult.salonId) {
     return NextResponse.redirect(
       new URL(`/salon/${tokenResult.salonId}`, req.url),

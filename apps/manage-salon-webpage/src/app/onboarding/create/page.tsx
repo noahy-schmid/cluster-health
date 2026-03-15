@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { Store } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import SubmitButton from "@/components/SubmitButton";
-import { createSalonAction } from "@/api/salon-actions";
+import { createSalonAction } from "./create-salon.actions";
 
 export default function CreateSalonPage() {
   const [state, createSalon] = useActionState(createSalonAction, undefined);

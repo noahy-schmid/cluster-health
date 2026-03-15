@@ -16,10 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import type {
-  ServiceDefinition,
-  SalonResource,
-} from "@/lib/types/service-types";
+import type { ServiceDefinition, Resource } from "@/lib/types/service-types";
 import FormActions from "@/components/website/forms/FormActions";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import PhaseEditor from "./PhaseEditor.component";
@@ -30,7 +27,7 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 
 interface ServiceFormProps {
   service?: ServiceDefinition;
-  availableResources: SalonResource[];
+  availableResources: Resource[];
   onSubmit: (data: {
     name: string;
     description: string;

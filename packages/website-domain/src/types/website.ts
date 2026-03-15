@@ -20,7 +20,7 @@ const WebsiteSchema = Schema.Struct({
     Schema.compose(Schema.Trim),
     Schema.nonEmptyString({ message: () => "Title cannot be empty" }),
   ),
-  favicon: Schema.OptionFromSelf(
+  faviconMediaId: Schema.OptionFromSelf(
     Schema.String.pipe(Schema.compose(Schema.Trim)),
   ),
   menuBarTitle: Schema.OptionFromSelf(
@@ -48,7 +48,13 @@ const WebsiteSchema = Schema.Struct({
 });
 
 export const WebsiteSettingsSchema = WebsiteSchema.pipe(
-  Schema.pick("title", "slug", "favicon", "menuBarTitle", "menuLogoPosition"),
+  Schema.pick(
+    "title",
+    "slug",
+    "faviconMediaId",
+    "menuBarTitle",
+    "menuLogoPosition",
+  ),
 );
 
 export type WebsiteSettings = typeof WebsiteSettingsSchema.Type;

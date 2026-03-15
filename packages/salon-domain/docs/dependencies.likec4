@@ -1,0 +1,8 @@
+views {
+  view dependencies of salonDomain {
+    title "Salon domain dependencies"
+    include manageSalonWebpage
+    include *
+    include salonDomain
+  }
+}

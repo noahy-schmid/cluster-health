@@ -9,9 +9,9 @@
     "lint:fix": "eslint . --fix",
     "check-types": "tsc --noEmit",
     "build": "tsc",
-    "drizzle:generate": "drizzle-kit generate",
-    "drizzle:push": "drizzle-kit push",
-    "drizzle:migrate": "drizzle-kit migrate"
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

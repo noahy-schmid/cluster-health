@@ -12,9 +12,13 @@ import { PostgresReadServiceAdapter } from "../../adapters/postgres-read-service
 import { PostgresEmployeeServiceAdapter } from "../../adapters/postgres-employee-service.adapter";
 import { PostgresStylistPortAdapter } from "../../adapters/postgres-stylist-port.adapter";
 import { PostgresSalonPortAdapter } from "../../adapters/postgres-salon-port.adapter";
+import { SalonAggregate } from "../../application/salon/salon.aggregate";
 import { ResourceAggregate } from "../../application/resource/resource.aggregate";
 import { ServiceAggregate } from "../../application/service/service.aggregate";
 import { EmployeeServiceAggregate } from "../../application/employee-service/employee-service.aggregate";
+import { CreateSalonUseCase } from "../create-salon.use-case";
+import { GetSalonUseCase } from "../get-salon.use-case";
+import { UpdateSalonUseCase } from "../update-salon.use-case";
 import { CreateResourceUseCase } from "../create-resource.use-case";
 import { UpdateResourceUseCase } from "../update-resource.use-case";
 import { DeleteResourceUseCase } from "../delete-resource.use-case";
@@ -23,6 +27,7 @@ import { CreateCustomServiceUseCase } from "../create-custom-service.use-case";
 import { UpdateCustomServiceUseCase } from "../update-custom-service.use-case";
 import { DeleteServiceDefinitionUseCase } from "../delete-service-definition.use-case";
 import { ListServiceDefinitionsUseCase } from "../list-service-definitions.use-case";
+import { GetServiceDefinitionUseCase } from "../get-service-definition.use-case";
 import { AssignEmployeeToServiceUseCase } from "../assign-employee-to-service.use-case";
 import { UnassignEmployeeFromServiceUseCase } from "../unassign-employee-from-service.use-case";
 import { ListEmployeeServicesUseCase } from "../list-employee-services.use-case";
@@ -33,6 +38,9 @@ import { CreateColorationServiceUseCase } from "../create-coloration-service.use
 export interface TestContext {
   salonId: string;
   stylistId: string;
+  salonUseCaseLayer: Layer.Layer<
+    CreateSalonUseCase | GetSalonUseCase | UpdateSalonUseCase
+  >;
   resourceUseCaseLayer: Layer.Layer<
     | CreateResourceUseCase
     | UpdateResourceUseCase
@@ -44,6 +52,7 @@ export interface TestContext {
     | UpdateCustomServiceUseCase
     | DeleteServiceDefinitionUseCase
     | ListServiceDefinitionsUseCase
+    | GetServiceDefinitionUseCase
   >;
   assignmentUseCaseLayer: Layer.Layer<
     | AssignEmployeeToServiceUseCase
@@ -122,7 +131,17 @@ export async function setupTestContext(): Promise<TestContext> {
       Layer.provide(employeeServicePortLayer),
     );
 
+  const salonAggregateLayer = SalonAggregate.DefaultWithoutDependencies.pipe(
+    Layer.provide(salonPortLayer),
+  );
+
   // Use case layers
+  const salonUseCaseLayer = Layer.mergeAll(
+    CreateSalonUseCase.DefaultWithoutDependencies,
+    GetSalonUseCase.DefaultWithoutDependencies,
+    UpdateSalonUseCase.DefaultWithoutDependencies,
+  ).pipe(Layer.provide(salonAggregateLayer), Layer.orDie);
+
   const resourceUseCaseLayer = Layer.mergeAll(
     CreateResourceUseCase.DefaultWithoutDependencies.pipe(
       Layer.provide(salonPortLayer),
@@ -145,6 +164,7 @@ export async function setupTestContext(): Promise<TestContext> {
     ),
     DeleteServiceDefinitionUseCase.DefaultWithoutDependencies,
     ListServiceDefinitionsUseCase.DefaultWithoutDependencies,
+    GetServiceDefinitionUseCase.DefaultWithoutDependencies,
   ).pipe(Layer.provide(serviceAggregateLayer), Layer.orDie);
 
   const assignmentUseCaseLayer = Layer.mergeAll(
@@ -208,7 +228,7 @@ export async function setupTestContext(): Promise<TestContext> {
             name: "Test Stylist",
             subtitle: "Senior Stylist",
             description: "An experienced stylist",
-            profileImage: "https://example.com/image.jpg",
+            profileImageMediaId: null,
           })
           .returning({ id: stylistsTable.id }),
       );
@@ -240,6 +260,7 @@ export async function setupTestContext(): Promise<TestContext> {
   return {
     salonId: theSalonId,
     stylistId: theStylistId,
+    salonUseCaseLayer,
     resourceUseCaseLayer,
     serviceUseCaseLayer,
     assignmentUseCaseLayer,

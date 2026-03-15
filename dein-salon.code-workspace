@@ -37,6 +37,10 @@
       "name": "infrastructure | test-fixtures",
       "path": "packages/test-fixtures",
     },
+    {
+      "name": "infrastructure | e2e-tests",
+      "path": "apps/e2e-tests",
+    }
   ],
   "settings": {
     "chat.tools.terminal.autoApprove": {

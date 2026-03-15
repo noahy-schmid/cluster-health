@@ -3,16 +3,19 @@ name: CI
 on:
   pull_request:
     branches:
-      - '**'
+      - "**"
   push:
     branches:
       - main
       - develop
 
+env:
+  PNPM_VERSION: 10.17.1
+
 jobs:
   ci:
     runs-on: ubuntu-latest
-    
+
     env:
       DATABASE_URL: ${{ vars.DATABASE_URL }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -25,12 +28,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.17.1
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Get pnpm store directory
         shell: bash
@@ -59,3 +62,92 @@ jobs:
 
       - name: Run tests
         run: pnpm test
+
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: deinsalon_e2e
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d deinsalon_e2e"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/deinsalon_e2e
+      JWT_SECRET: playwright-ci-secret
+      NODE_ENV: test
+      SALON_URL: http://127.0.0.1:3001
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter e2e-tests exec playwright install --with-deps chromium
+
+      - name: Run Playwright end-to-end tests
+        run: pnpm test:e2e
+
+      - name: Add Playwright artifact links to job summary
+        if: always()
+        run: |
+          {
+            echo "## Playwright report artifacts"
+            echo ""
+            echo "- Download **playwright-html-report** for the full Playwright HTML report with screenshots and attachments."
+            echo "- Download **playwright-test-results** for raw screenshots, videos, and traces."
+            echo "- Open the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) and use the **Artifacts** section."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: apps/e2e-tests/playwright-report
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: apps/e2e-tests/test-results
+          retention-days: 14
+          if-no-files-found: ignore

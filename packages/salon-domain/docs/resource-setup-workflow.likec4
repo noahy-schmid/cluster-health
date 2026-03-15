@@ -1,0 +1,28 @@
+views {
+  dynamic view resourceSetupWorkflow {
+    title "Resource setup workflow (create then update)"
+
+    manageSalonWebpage
+      -> salonDomain.listResourcesUseCase "load current planning resources"
+      -> salonDomain.resourceAggregate "resolve resource list"
+      -> salonPostgres "read salon_resources"
+
+    manageSalonWebpage
+      -> salonDomain.createResourceUseCase "create planning resource"
+      -> salonDomain.resourceAggregate "validate and create resource"
+      -> salonPostgres "insert salon_resources row"
+
+    manageSalonWebpage
+      -> salonDomain.updateResourceUseCase "update planning resource"
+      -> salonDomain.resourceAggregate "validate and update resource"
+      -> salonPostgres "update salon_resources row"
+
+    include
+      manageSalonWebpage,
+      salonDomain.listResourcesUseCase,
+      salonDomain.createResourceUseCase,
+      salonDomain.updateResourceUseCase,
+      salonDomain.resourceAggregate,
+      salonPostgres
+  }
+}

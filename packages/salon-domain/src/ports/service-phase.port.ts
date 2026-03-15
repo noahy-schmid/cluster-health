@@ -64,11 +64,14 @@ export interface ServicePhasePort {
   >;
 
   /**
-   * Checks if a resource slug is referenced by any service phase requirement.
+   * Checks if a resource slug is referenced by any service phase requirement
+   * within the given salon.
+   * @param salonId The salon that owns the resource.
    * @param resourceSlug The resource slug to check.
    * @returns Effect resolving to true if referenced.
    */
   isResourceSlugReferenced(
+    salonId: string,
     resourceSlug: string,
   ): Effect.Effect<boolean, InfrastructureError>;
 }

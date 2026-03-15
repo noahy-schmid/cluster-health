@@ -37,6 +37,7 @@ export default function CenterTextForm({ section }: CenterTextFormProps) {
         value={menuTitle}
         onChange={(value) => setMenuTitle(value)}
         placeholder="Abschnitt im Menu anzeigen"
+        testId="center-text-menu-title-input"
         helperText="Wenn ein Titel angegeben wird, erscheint dieser Abschnitt im Navigationsmenu"
       />
 
@@ -46,6 +47,7 @@ export default function CenterTextForm({ section }: CenterTextFormProps) {
         onChange={(value) => setSettings({ ...settings, title: value })}
         placeholder="Titel eingeben"
         required
+        testId="center-text-title-input"
       />
 
       <FormTextarea
@@ -55,6 +57,7 @@ export default function CenterTextForm({ section }: CenterTextFormProps) {
         placeholder="Inhalt eingeben"
         rows={6}
         required
+        testId="center-text-content-input"
       />
 
       <FormActions
@@ -62,6 +65,7 @@ export default function CenterTextForm({ section }: CenterTextFormProps) {
           router.replace(`/salon/${salonId}/website/${websiteId}`)
         }
         onSave={handleSave}
+        saveTestId="center-text-save-button"
       />
     </div>
   );

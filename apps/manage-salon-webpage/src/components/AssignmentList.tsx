@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Users } from "lucide-react";
-import type { StylistServiceAssignment } from "@/lib/types/service-types";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import FlatChip from "@/components/buttons/FlatChip";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
@@ -12,24 +11,24 @@ interface AssignmentItem {
   name: string;
 }
 
-interface AssignmentListProps {
+interface AssignmentListProps<T> {
   /** The currently assigned items */
-  assignments: StylistServiceAssignment[];
+  assignments: T[];
   /** All available items that can be assigned */
   availableItems: AssignmentItem[];
   /** Label for the entity being assigned (e.g. "Stylist" or "Dienstleistung") */
   entityLabel: string;
   /** Extract the display name from an assignment */
-  getAssignmentName: (a: StylistServiceAssignment) => string;
+  getAssignmentName: (a: T) => string;
   /** Extract the unique key for the assigned entity */
-  getAssignmentKey: (a: StylistServiceAssignment) => string;
+  getAssignmentKey: (a: T) => string;
   /** Called when user assigns a new item */
   onAssign: (itemId: string) => Promise<void>;
   /** Called when user unassigns an item */
   onUnassign: (itemId: string) => Promise<void>;
 }
 
-export default function AssignmentList({
+export default function AssignmentList<T>({
   assignments,
   availableItems,
   entityLabel,
@@ -37,10 +36,9 @@ export default function AssignmentList({
   getAssignmentKey,
   onAssign,
   onUnassign,
-}: AssignmentListProps) {
+}: AssignmentListProps<T>) {
   const { showNotification } = useNotifications();
-  const [localAssignments, setLocalAssignments] =
-    useState<StylistServiceAssignment[]>(assignments);
+  const [localAssignments, setLocalAssignments] = useState<T[]>(assignments);
 
   useEffect(() => {
     setLocalAssignments(assignments);

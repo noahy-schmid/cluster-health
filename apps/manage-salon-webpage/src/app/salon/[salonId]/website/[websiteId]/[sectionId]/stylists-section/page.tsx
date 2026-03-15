@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import StylistsForm from "./stylists-section.form";
 
+export const dynamic = "force-dynamic";
+
 export default async function StylistsEditPage({
   params,
 }: {

@@ -36,7 +36,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     icon: Settings,
-    label: "Settings",
+    label: "Einstellungen",
     href: "/salon/:salonId/settings",
   },
 ];

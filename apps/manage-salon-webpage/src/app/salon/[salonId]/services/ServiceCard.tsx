@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Clock } from "lucide-react";
 import { useState } from "react";
-import type { ServiceDefinition, ServiceType } from "@/lib/types/service-types";
+import type { ServiceDefinition } from "@/lib/types/service-types";
 import { deleteServiceDefinition } from "./service.actions";
 import FlatIconButton from "@/components/buttons/FlatIconButton";
 import FlatIconTextButton from "@/components/buttons/FlatIconTextButton";
 import { useNotifications } from "@/components/notifications/useNotifications";
+import { ServiceType } from "@repo/salon-domain";
 
 const serviceTypeLabels: Record<ServiceType, string> = {
   simple: "Einfach",
@@ -25,10 +26,7 @@ export default function ServiceCard({ service, salonId }: ServiceCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const { showNotification } = useNotifications();
 
-  const totalDuration = service.phases.reduce(
-    (sum, p) => sum + p.durationMinutes,
-    0,
-  );
+  const totalDuration = service.durationMinutes;
 
   const handleEdit = () => {
     router.push(`/salon/${salonId}/services/${service.id}`);
@@ -42,7 +40,7 @@ export default function ServiceCard({ service, salonId }: ServiceCardProps) {
       return;
     }
 
-    const result = await deleteServiceDefinition(salonId, service.id);
+    const result = await deleteServiceDefinition(service.id);
 
     if (!result.success) {
       showNotification(`Fehler beim Löschen: ${result.error}`, "error", "long");
@@ -73,7 +71,8 @@ export default function ServiceCard({ service, salonId }: ServiceCardProps) {
             </span>
             <span className="text-sm">·</span>
             <span className="text-sm">
-              {serviceTypeLabels[service.serviceType]}
+              {serviceTypeLabels[service.serviceType as ServiceType] ??
+                service.serviceType}
             </span>
           </div>
         </div>

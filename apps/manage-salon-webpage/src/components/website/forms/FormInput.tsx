@@ -10,6 +10,7 @@ interface FormInputProps {
   required?: boolean;
   helperText?: string;
   disabled?: boolean;
+  testId?: string;
 }
 
 export default function FormInput({
@@ -22,6 +23,7 @@ export default function FormInput({
   helperText,
   onBlur,
   disabled = false,
+  testId,
 }: FormInputProps) {
   return (
     <div className="flex flex-col gap-sm">
@@ -30,6 +32,7 @@ export default function FormInput({
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <input
+        data-testid={testId}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}

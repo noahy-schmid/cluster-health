@@ -1,84 +1,87 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Stylist } from "@repo/salon-domain";
 import FormInput from "@/components/website/forms/FormInput";
+import FormActions from "@/components/website/forms/FormActions";
 import FormTextarea from "@/components/website/forms/FormTextarea";
+import MediaSelector from "@/components/media/media-selector";
 import { useNotifications } from "@/components/notifications/useNotifications";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { StylistDto } from "@/app/salon/[salonId]/stylists/stylist.dto";
 
 export interface StylistFormData {
   name: string;
   subtitle: string;
   description: string;
-  profileImage: string;
+  profileImageMediaId?: string;
 }
 
 interface StylistFormProps {
-  stylist?: Stylist;
+  salonId: string;
+  stylist?: StylistDto;
   onSubmit: (data: StylistFormData) => Promise<void>;
   onCancel?: () => void;
-  saveLabel?: string;
 }
 
 export default function StylistForm({
+  salonId,
   stylist,
   onSubmit,
   onCancel,
-  saveLabel,
 }: StylistFormProps) {
   const { showNotification } = useNotifications();
   const isEditMode = !!stylist;
   const [name, setName] = useState(stylist?.name || "");
   const [subtitle, setSubtitle] = useState(stylist?.subtitle || "");
   const [description, setDescription] = useState(stylist?.description || "");
-  const [profileImage, setProfileImage] = useState(stylist?.profileImage || "");
+  const [profileImageMediaId, setProfileImageMediaId] = useState<
+    string | undefined
+  >(stylist?.profileImageMediaId);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const fieldsRef = useRef({ name, subtitle, description, profileImage });
-  fieldsRef.current = { name, subtitle, description, profileImage };
+  const fieldsRef = useRef({
+    name,
+    subtitle,
+    description,
+    profileImageMediaId,
+  });
+  fieldsRef.current = { name, subtitle, description, profileImageMediaId };
 
   const initialRef = useRef({
     name: stylist?.name || "",
     subtitle: stylist?.subtitle || "",
     description: stylist?.description || "",
-    profileImage: stylist?.profileImage || "",
+    profileImageMediaId: stylist?.profileImageMediaId,
   });
 
   const isDirty =
     name !== initialRef.current.name ||
     subtitle !== initialRef.current.subtitle ||
     description !== initialRef.current.description ||
-    profileImage !== initialRef.current.profileImage;
+    profileImageMediaId !== initialRef.current.profileImageMediaId;
 
   const doSave = useCallback(async () => {
-    const { name, subtitle, description, profileImage } = fieldsRef.current;
+    const { name, subtitle, description, profileImageMediaId } =
+      fieldsRef.current;
     const trimmedName = name.trim();
     const trimmedSubtitle = subtitle.trim();
     const trimmedDescription = description.trim();
-    const trimmedProfileImage = profileImage.trim();
 
-    if (
-      !trimmedName ||
-      !trimmedSubtitle ||
-      !trimmedDescription ||
-      !trimmedProfileImage
-    )
-      return;
+    if (!trimmedName || !trimmedSubtitle || !trimmedDescription) return;
 
     await onSubmit({
       name: trimmedName,
       subtitle: trimmedSubtitle,
       description: trimmedDescription,
-      profileImage: trimmedProfileImage,
+      profileImageMediaId,
     });
 
     initialRef.current = {
       name: trimmedName,
       subtitle: trimmedSubtitle,
       description: trimmedDescription,
-      profileImage: trimmedProfileImage,
+      profileImageMediaId,
     };
   }, [onSubmit]);
 
@@ -87,18 +90,11 @@ export default function StylistForm({
   const handleBlur = isEditMode ? () => triggerAutoSave() : undefined;
 
   const handleSave = async () => {
-    // Trim whitespace and validate
     const trimmedName = name.trim();
     const trimmedSubtitle = subtitle.trim();
     const trimmedDescription = description.trim();
-    const trimmedProfileImage = profileImage.trim();
 
-    if (
-      !trimmedName ||
-      !trimmedSubtitle ||
-      !trimmedDescription ||
-      !trimmedProfileImage
-    ) {
+    if (!trimmedName || !trimmedSubtitle || !trimmedDescription) {
       setError("Bitte fülle alle Pflichtfelder aus");
       return;
     }
@@ -111,15 +107,14 @@ export default function StylistForm({
         name: trimmedName,
         subtitle: trimmedSubtitle,
         description: trimmedDescription,
-        profileImage: trimmedProfileImage,
+        profileImageMediaId,
       });
 
-      // Update snapshot after save
       initialRef.current = {
         name: trimmedName,
         subtitle: trimmedSubtitle,
         description: trimmedDescription,
-        profileImage: trimmedProfileImage,
+        profileImageMediaId,
       };
 
       showNotification("Erfolgreich gespeichert", "info", "short");
@@ -163,17 +158,15 @@ export default function StylistForm({
           required
         />
 
-        <FormInput
-          label="Profilbild URL"
-          value={profileImage}
-          onChange={(value) => {
-            setProfileImage(value);
+        <MediaSelector
+          salonId={salonId}
+          label="Profilbild"
+          value={profileImageMediaId}
+          onChange={(mediaId) => {
+            setProfileImageMediaId(mediaId);
+            if (isEditMode) triggerAutoSave();
           }}
-          onBlur={handleBlur}
-          placeholder="https://example.com/image.jpg"
-          type="url"
-          required
-          helperText="Gib die URL zum Profilbild ein"
+          helperText="Wähle ein Profilbild für den Stylisten"
         />
 
         {error && (
@@ -182,27 +175,14 @@ export default function StylistForm({
           </div>
         )}
 
-        {!isEditMode && (
-          <div className="flex gap-md justify-end pt-lg">
-            {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-lg py-sm border border-border rounded-md text-fg-normal text-base font-unfocus hover:bg-bg-0 transition-colors cursor-pointer"
-                disabled={isSaving}
-              >
-                Abbrechen
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving || !isDirty}
-              className="px-lg py-sm bg-primary-500 text-fg-inv rounded-md text-base font-focus hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? "Speichern..." : saveLabel || "Speichern"}
-            </button>
-          </div>
+        {!isEditMode && onCancel && (
+          <FormActions
+            onCancel={onCancel}
+            onSave={handleSave}
+            saveLabel={isSaving ? "Speichern..." : "Stylist erstellen"}
+            isSaving={isSaving}
+            isSaveDisabled={!isDirty}
+          />
         )}
       </div>
     </div>

@@ -10,7 +10,7 @@ export const websitesTable = pgTable("websites", {
   textColor: varchar().notNull().default("light"),
   slug: varchar().notNull().unique(),
   title: varchar().notNull(),
-  favicon: varchar(),
+  faviconMediaId: varchar(),
   menuBarTitle: varchar(),
   menuLogoPosition: varchar().notNull().default("left"),
   colorBackgroundBase: varchar().notNull(),

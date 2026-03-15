@@ -1,5 +1,5 @@
 {
-  "id": "ec1705e7-0b04-40a7-9ffe-e46ab62722de",
+  "id": "ebd9e8f7-9fac-4c26-980d-fcee773fc45d",
   "prevId": "ea918b42-664e-4856-995c-0cb73d49df0e",
   "version": "7",
   "dialect": "postgresql",
@@ -33,12 +33,8 @@
           "name": "center_text_sections_id_sections_id_fk",
           "tableFrom": "center_text_sections",
           "tableTo": "sections",
-          "columnsFrom": [
-            "id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -85,12 +81,8 @@
           "name": "gallery_images_gallerySectionId_gallery_sections_id_fk",
           "tableFrom": "gallery_images",
           "tableTo": "gallery_sections",
-          "columnsFrom": [
-            "gallerySectionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["gallerySectionId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -130,12 +122,8 @@
           "name": "gallery_sections_id_sections_id_fk",
           "tableFrom": "gallery_sections",
           "tableTo": "sections",
-          "columnsFrom": [
-            "id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -194,12 +182,8 @@
           "name": "reason_items_reasonSectionId_reason_sections_id_fk",
           "tableFrom": "reason_items",
           "tableTo": "reason_sections",
-          "columnsFrom": [
-            "reasonSectionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reasonSectionId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -239,12 +223,8 @@
           "name": "reason_sections_id_sections_id_fk",
           "tableFrom": "reason_sections",
           "tableTo": "sections",
-          "columnsFrom": [
-            "id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -297,12 +277,8 @@
           "name": "sections_websiteId_websites_id_fk",
           "tableFrom": "sections",
           "tableTo": "websites",
-          "columnsFrom": [
-            "websiteId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["websiteId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -342,12 +318,8 @@
           "name": "stylists_sections_id_sections_id_fk",
           "tableFrom": "stylists_sections",
           "tableTo": "sections",
-          "columnsFrom": [
-            "id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -393,12 +365,8 @@
           "name": "text_with_image_sections_id_sections_id_fk",
           "tableFrom": "text_with_image_sections",
           "tableTo": "sections",
-          "columnsFrom": [
-            "id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -469,24 +437,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "favicon": {
-          "name": "favicon",
+        "faviconMediaId": {
+          "name": "faviconMediaId",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
-        },
-        "menuBarTitle": {
-          "name": "menuBarTitle",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "menuLogoPosition": {
-          "name": "menuLogoPosition",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'left'"
         },
         "colorBackgroundBase": {
           "name": "colorBackgroundBase",
@@ -544,16 +499,12 @@
         "websites_salonId_unique": {
           "name": "websites_salonId_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "salonId"
-          ]
+          "columns": ["salonId"]
         },
         "websites_slug_unique": {
           "name": "websites_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},

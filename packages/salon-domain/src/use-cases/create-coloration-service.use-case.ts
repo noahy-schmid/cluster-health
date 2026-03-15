@@ -13,7 +13,7 @@ import { SalonPort } from "../ports/salon.port";
 import {
   SEAT_SLUG,
   CLIMAZON_SLUG,
-} from "../application/resource/resource.aggregate";
+} from "../application/resource/resource.constants";
 import {
   ResourceMissingError,
   collapseErrorsToInternalError,

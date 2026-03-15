@@ -12,7 +12,7 @@ describe("website settings schema", () => {
         salonId: "salon-1",
         slug: "mein-salon",
         title: "Mein Salon",
-        favicon: Option.none(),
+        faviconMediaId: Option.none(),
         menuBarTitle: Option.some("Salon am Platz"),
         menuLogoPosition: "left",
       }),

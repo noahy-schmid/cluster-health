@@ -2,9 +2,11 @@
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
   "globalEnv": [
+    "CI",
     "DATABASE_URL",
     "JWT_SECRET",
     "NODE_ENV",
+    "PLAYWRIGHT_MANAGEMENT_PASSWORD",
     "SALON_URL",
     "S3_URL",
     "S3_SALON_ACCESS_KEY",
@@ -32,12 +34,16 @@
       "cache": false,
       "persistent": true
     },
-    "drizzle:generate": {
-      "dependsOn": ["^drizzle:generate"],
+    "db:generate": {
+      "dependsOn": ["^db:generate"],
       "inputs": ["$TURBO_DEFAULT$", "**/schema.ts"],
       "outputs": ["drizzle/**"]
     },
-    "drizzle:push": {
+    "db:drop": {
+      "cache": false,
+      "outputs": []
+    },
+    "db:push": {
       "inputs": ["$TURBO_DEFAULT$", "drizzle/**", "**/schema.ts"],
       "outputs": []
     },
