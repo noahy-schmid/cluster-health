@@ -1,5 +1,5 @@
 import { Effect, Layer } from "effect";
-import { eq, and } from "drizzle-orm";
+import { and, eq, gt, gte, lt, lte, sql } from "drizzle-orm";
 import {
   SectionPort,
   SectionPersistenceError,
@@ -100,89 +100,39 @@ const make = Effect.gen(function* () {
     }
   };
 
-  const loadOrderedSections = (websiteId: string) =>
-    Effect.tryPromise(() =>
-      db
-        .select({
-          id: sectionsTable.id,
-          order: sectionsTable.order,
-        })
-        .from(sectionsTable)
-        .where(eq(sectionsTable.websiteId, websiteId))
-        .orderBy(sectionsTable.order),
-    ).pipe(
-      Effect.mapError(
-        (error) =>
-          new SectionPersistenceError({
-            message: `Failed to fetch section order for website ${websiteId}: ${String(error)}`,
-            cause: error,
-          }),
-      ),
-    );
-
-  const applyOrderUpdates = (
-    websiteId: string,
-    updates: { id: string; order: number }[],
-  ) =>
-    Effect.forEach(
-      updates,
-      ({ id, order }) =>
-        Effect.tryPromise(() =>
-          db
-            .update(sectionsTable)
-            .set({ order })
-            .where(
-              and(
-                eq(sectionsTable.id, id),
-                eq(sectionsTable.websiteId, websiteId),
-              ),
-            ),
-        ).pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionPersistenceError({
-                message: `Failed to update order for section ${id}: ${String(error)}`,
-                cause: error,
-              }),
-          ),
-        ),
-      { concurrency: 1 },
-    ).pipe(Effect.asVoid);
-
   const createSection: SectionPort["createSection"] = (
     websiteId,
     type,
     position,
   ) =>
     Effect.gen(function* () {
-      const safePosition = Number.isFinite(position) ? position : 0;
-      const existingSections = yield* loadOrderedSections(websiteId);
-      const clampedPosition = Math.max(
-        0,
-        Math.min(safePosition, existingSections.length),
-      );
-      const updatedOrders = existingSections.map((section, index) => ({
-        id: section.id,
-        order: index < clampedPosition ? index : index + 1,
-      }));
-
-      if (updatedOrders.length > 0) {
-        yield* applyOrderUpdates(websiteId, updatedOrders);
-      }
-
       const baseSection = yield* Effect.tryPromise(() =>
-        db
-          .insert(sectionsTable)
-          .values({ websiteId, type, order: clampedPosition })
-          .returning(),
+        db.transaction(async (tx) => {
+          await tx
+            .update(sectionsTable)
+            .set({ order: sql`${sectionsTable.order} + 1` })
+            .where(
+              and(
+                eq(sectionsTable.websiteId, websiteId),
+                gte(sectionsTable.order, position),
+              ),
+            );
+
+          const insertedRows = await tx
+            .insert(sectionsTable)
+            .values({ websiteId, type, order: position })
+            .returning();
+
+          return insertedRows[0];
+        }),
       ).pipe(
-        Effect.map((rows) => rows[0]),
-        Effect.mapError(
-          (error) =>
-            new SectionPersistenceError({
-              message: `Failed to insert base section: ${String(error)}`,
-              cause: error,
-            }),
+        Effect.mapError((error) =>
+          error instanceof SectionPersistenceError
+            ? error
+            : new SectionPersistenceError({
+                message: `Failed to insert base section: ${String(error)}`,
+                cause: error,
+              }),
         ),
       );
 
@@ -262,37 +212,76 @@ const make = Effect.gen(function* () {
     newIndex,
   ) =>
     Effect.gen(function* () {
-      const existingSections = yield* loadOrderedSections(websiteId);
+      return yield* Effect.tryPromise(() =>
+        db.transaction(async (tx) => {
+          const currentRows = await tx
+            .select({ order: sectionsTable.order })
+            .from(sectionsTable)
+            .where(
+              and(
+                eq(sectionsTable.id, sectionId),
+                eq(sectionsTable.websiteId, websiteId),
+              ),
+            )
+            .limit(1);
 
-      const currentIndex = existingSections.findIndex(
-        (section) => section.id === sectionId,
+          const currentIndex = currentRows[0]?.order;
+
+          if (currentIndex === undefined) {
+            throw new SectionPersistenceError({
+              message: `Section ${sectionId} does not belong to website ${websiteId}`,
+              isValidation: true,
+            });
+          }
+
+          if (currentIndex === newIndex) {
+            return;
+          }
+
+          if (newIndex < currentIndex) {
+            await tx
+              .update(sectionsTable)
+              .set({ order: sql`${sectionsTable.order} + 1` })
+              .where(
+                and(
+                  eq(sectionsTable.websiteId, websiteId),
+                  gte(sectionsTable.order, newIndex),
+                  lt(sectionsTable.order, currentIndex),
+                ),
+              );
+          } else {
+            await tx
+              .update(sectionsTable)
+              .set({ order: sql`${sectionsTable.order} - 1` })
+              .where(
+                and(
+                  eq(sectionsTable.websiteId, websiteId),
+                  gt(sectionsTable.order, currentIndex),
+                  lte(sectionsTable.order, newIndex),
+                ),
+              );
+          }
+
+          await tx
+            .update(sectionsTable)
+            .set({ order: newIndex })
+            .where(
+              and(
+                eq(sectionsTable.id, sectionId),
+                eq(sectionsTable.websiteId, websiteId),
+              ),
+            );
+        }),
+      ).pipe(
+        Effect.mapError((error) =>
+          error instanceof SectionPersistenceError
+            ? error
+            : new SectionPersistenceError({
+                message: `Failed to reorder section ${sectionId}: ${String(error)}`,
+                cause: error,
+              }),
+        ),
       );
-
-      if (currentIndex === -1) {
-        return yield* Effect.fail(
-          new SectionPersistenceError({
-            message: `Section ${sectionId} does not belong to website ${websiteId}`,
-            isValidation: true,
-          }),
-        );
-      }
-
-      const safeIndex = Number.isFinite(newIndex) ? newIndex : 0;
-      const remaining = existingSections.filter(
-        (section) => section.id !== sectionId,
-      );
-      const clampedIndex = Math.max(0, Math.min(safeIndex, remaining.length));
-
-      const movedSection = existingSections[currentIndex]!;
-      const reordered = [...remaining];
-      reordered.splice(clampedIndex, 0, movedSection);
-
-      const orderUpdates = reordered.map((section, index) => ({
-        id: section.id,
-        order: index,
-      }));
-
-      return yield* applyOrderUpdates(websiteId, orderUpdates);
     });
 
   const fetchSectionsByWebsiteId: SectionPort["fetchSectionsByWebsiteId"] = (
@@ -347,12 +336,39 @@ const make = Effect.gen(function* () {
       return results;
     });
 
+  const sectionExists: SectionPort["sectionExists"] = (websiteId, sectionId) =>
+    Effect.tryPromise(() =>
+      db
+        .select({ count: sql`count(*)` })
+        .from(sectionsTable)
+        .where(
+          and(
+            eq(sectionsTable.id, sectionId),
+            eq(sectionsTable.websiteId, websiteId),
+          ),
+        )
+        .limit(1),
+    ).pipe(
+      Effect.mapError(
+        (error) =>
+          new SectionPersistenceError({
+            message: `Failed to check existence of section ${sectionId}: ${String(error)}`,
+            cause: error,
+          }),
+      ),
+      Effect.map((rows) => {
+        const count = Number(rows[0]?.count ?? 0);
+        return count > 0;
+      }),
+    );
+
   return {
     createSection,
     updateSection,
     deleteSection,
     reorderSections,
     fetchSectionsByWebsiteId,
+    sectionExists,
   } satisfies SectionPort;
 });
 

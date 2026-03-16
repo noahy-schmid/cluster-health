@@ -139,6 +139,17 @@ export interface SectionPort {
   fetchSectionsByWebsiteId(
     websiteId: string,
   ): Effect.Effect<PortAllSections[], SectionPersistenceError>;
+
+  /**
+   * Checks if a section exists for a website.
+   * @param websiteId Website ID to check.
+   * @param sectionId Section ID to check.
+   * @returns Effect resolving to true if the section exists, false otherwise.
+   */
+  sectionExists(
+    websiteId: string,
+    sectionId: string,
+  ): Effect.Effect<boolean, SectionPersistenceError>;
 }
 
 /**
