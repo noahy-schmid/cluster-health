@@ -1,0 +1,46 @@
+name: Coolify PR Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions: {}
+
+    steps:
+      - name: Delete PR environment from Coolify
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          APPS=(
+            "manage-salon-webpage"
+            "salon-webpage"
+            "marketing-webpage"
+            "calendar-service"
+          )
+
+          # Fetch the full application list once to avoid repeated API calls
+          ALL_APPS=$(curl -sf \
+            -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
+            "${COOLIFY_URL}/api/v1/applications" || echo "[]")
+
+          for APP_NAME in "${APPS[@]}"; do
+            SERVICE_NAME="pr-${PR_NUMBER}-${APP_NAME}"
+
+            UUID=$(echo "${ALL_APPS}" | \
+              jq -r --arg n "${SERVICE_NAME}" '.[] | select(.name == $n) | .uuid // empty')
+
+            if [ -n "${UUID}" ]; then
+              echo "Deleting ${SERVICE_NAME} (${UUID})..."
+              curl -sf -X DELETE \
+                -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
+                "${COOLIFY_URL}/api/v1/applications/${UUID}?delete_configurations=true&delete_volumes=true" || true
+              echo "Deleted ${SERVICE_NAME}"
+            else
+              echo "Service ${SERVICE_NAME} not found in Coolify, skipping"
+            fi
+          done
