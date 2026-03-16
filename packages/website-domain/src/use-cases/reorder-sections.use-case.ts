@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { SectionAggregate } from "../application/section/section.aggregate";
 import { SectionError } from "../application/section/errors";
+import { MakeWebsiteId, MakeSectionId } from "../ports/section.port";
 
 // --- Command DTO ---
 
@@ -20,8 +21,8 @@ const make = Effect.gen(function* () {
       command: ReorderSectionsCommand,
     ): Effect.Effect<void, SectionError> =>
       aggregate.reorderSections(
-        command.websiteId,
-        command.sectionId,
+        MakeWebsiteId(command.websiteId),
+        MakeSectionId(command.sectionId),
         command.newIndex,
       ),
   };

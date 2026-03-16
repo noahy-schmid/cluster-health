@@ -6,6 +6,8 @@ import {
   type PortSection,
   type PortReasonItem,
   SectionPersistenceError,
+  WebsiteId,
+  SectionId,
 } from "../../ports/section.port";
 import {
   SectionError,
@@ -100,7 +102,7 @@ const make = Effect.gen(function* () {
   // it to the valid range. Set forInsert=true when the index represents an
   // insertion point (max = length); leave false for reorder (max = length - 1).
   const validateAndClampIndex = (
-    websiteId: string,
+    websiteId: WebsiteId,
     index: number,
     forInsert = false,
   ): Effect.Effect<number, SectionError | SectionPersistenceError> =>
@@ -134,7 +136,7 @@ const make = Effect.gen(function* () {
     });
 
   const createSection = (
-    websiteId: string,
+    websiteId: WebsiteId,
     type: SectionType,
     position: number,
   ) =>
@@ -195,7 +197,7 @@ const make = Effect.gen(function* () {
       ),
     );
 
-  const deleteSection = (websiteId: string, sectionId: string) =>
+  const deleteSection = (websiteId: WebsiteId, sectionId: SectionId) =>
     Effect.gen(function* () {
       yield* sectionPort.deleteSection(websiteId, sectionId);
 
@@ -213,12 +215,12 @@ const make = Effect.gen(function* () {
     );
 
   const reorderSections = (
-    websiteId: string,
-    sectionId: string,
+    websiteId: WebsiteId,
+    sectionId: SectionId,
     newIndex: number,
   ) =>
     Effect.gen(function* () {
-      yield* sectionPort.sectionExists(sectionId, websiteId).pipe(
+      yield* sectionPort.sectionExists(websiteId, sectionId).pipe(
         Effect.flatMap((exists) => {
           if (!exists) {
             return Effect.fail(
@@ -250,7 +252,7 @@ const make = Effect.gen(function* () {
       ),
     );
 
-  const fetchSections = (websiteId: string) =>
+  const fetchSections = (websiteId: WebsiteId) =>
     Effect.gen(function* () {
       const portSections =
         yield* sectionPort.fetchSectionsByWebsiteId(websiteId);

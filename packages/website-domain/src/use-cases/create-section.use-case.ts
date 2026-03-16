@@ -10,6 +10,7 @@ import {
   InvalidSectionTypeError,
 } from "../application/section/errors";
 import { WebsitePort } from "../ports/website.port";
+import { MakeWebsiteId } from "../ports/section.port";
 
 // --- Command DTO ---
 
@@ -56,7 +57,7 @@ const make = Effect.gen(function* () {
         }
 
         return yield* aggregate.createSection(
-          command.websiteId,
+          MakeWebsiteId(command.websiteId),
           command.type,
           command.position,
         );
