@@ -9,6 +9,9 @@ on:
       - main
       - develop
 
+env:
+  PNPM_VERSION: 10.17.1
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -88,6 +91,22 @@ jobs:
     permissions: {}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Deploy PR environment to Coolify (development)
         if: github.event_name == 'pull_request'
         env:
@@ -96,102 +115,26 @@ jobs:
           COOLIFY_SERVER_UUID: ${{ secrets.COOLIFY_SERVER_UUID }}
           COOLIFY_DEVELOPMENT_PROJECT_UUID: ${{ secrets.COOLIFY_DEVELOPMENT_PROJECT_UUID }}
           IMAGE_OWNER: ${{ github.repository_owner }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          # app name → exposed port inside the container
-          declare -A APP_PORTS=(
-            ["manage-salon-webpage"]="3000"
-            ["salon-webpage"]="3000"
-            ["marketing-webpage"]="3000"
-            ["calendar-service"]="8080"
-          )
-
-          IMAGE_TAG="pr-${PR_NUMBER}"
-
-          # Fetch the full application list once to avoid repeated API calls
-          ALL_APPS=$(curl -sf \
-            -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
-            "${COOLIFY_URL}/api/v1/applications" || echo "[]")
-
-          for APP_NAME in "${!APP_PORTS[@]}"; do
-            APP_PORT="${APP_PORTS[$APP_NAME]}"
-            SERVICE_NAME="pr-${PR_NUMBER}-${APP_NAME}"
-            IMAGE_NAME="ghcr.io/${IMAGE_OWNER}/${APP_NAME}"
-
-            echo "Processing ${SERVICE_NAME}..."
-
-            # Look up an existing application by name in the cached list
-            EXISTING_UUID=$(echo "${ALL_APPS}" | \
-              jq -r --arg n "${SERVICE_NAME}" '.[] | select(.name == $n) | .uuid // empty')
-
-            if [ -z "${EXISTING_UUID}" ]; then
-              echo "  Creating new Coolify application: ${SERVICE_NAME}"
-              RESULT=$(curl -sf -X POST \
-                -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
-                -H "Content-Type: application/json" \
-                "${COOLIFY_URL}/api/v1/applications" \
-                -d "{
-                  \"type\": \"dockerimage\",
-                  \"name\": \"${SERVICE_NAME}\",
-                  \"project_uuid\": \"${COOLIFY_DEVELOPMENT_PROJECT_UUID}\",
-                  \"server_uuid\": \"${COOLIFY_SERVER_UUID}\",
-                  \"environment_name\": \"pr-${PR_NUMBER}\",
-                  \"docker_registry_image_name\": \"${IMAGE_NAME}\",
-                  \"docker_registry_image_tag\": \"${IMAGE_TAG}\",
-                  \"ports_exposes\": \"${APP_PORT}\"
-                }" || true)
-              APP_UUID=$(echo "${RESULT}" | jq -r '.uuid // empty')
-              echo "  Created with UUID: ${APP_UUID}"
-            else
-              APP_UUID="${EXISTING_UUID}"
-              echo "  Found existing application (${APP_UUID})"
-            fi
-
-            if [ -n "${APP_UUID}" ]; then
-              echo "  Deploying ${SERVICE_NAME}..."
-              curl -sf -X POST \
-                -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
-                "${COOLIFY_URL}/api/v1/applications/${APP_UUID}/deploy" || true
-              echo "  Deployment triggered for ${SERVICE_NAME}"
-            else
-              echo "  WARNING: Could not obtain UUID for ${SERVICE_NAME}, skipping deploy"
-            fi
-          done
+        run: pnpm --filter @repo/deployment run deploy-pr -- --pr-number ${{ github.event.pull_request.number }}
 
       - name: Deploy to Coolify staging (develop branch)
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         env:
           COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-          UUID_MANAGE: ${{ secrets.COOLIFY_STAGING_MANAGE_SALON_UUID }}
-          UUID_SALON: ${{ secrets.COOLIFY_STAGING_SALON_UUID }}
-          UUID_MARKETING: ${{ secrets.COOLIFY_STAGING_MARKETING_UUID }}
-          UUID_CALENDAR: ${{ secrets.COOLIFY_STAGING_CALENDAR_UUID }}
-        run: |
-          for UUID in "${UUID_MANAGE}" "${UUID_SALON}" "${UUID_MARKETING}" "${UUID_CALENDAR}"; do
-            if [ -n "${UUID}" ]; then
-              echo "Triggering staging deployment for ${UUID}..."
-              curl -sf -X POST \
-                -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
-                "${COOLIFY_URL}/api/v1/applications/${UUID}/deploy" || true
-            fi
-          done
+          COOLIFY_STAGING_MANAGE_SALON_UUID: ${{ secrets.COOLIFY_STAGING_MANAGE_SALON_UUID }}
+          COOLIFY_STAGING_SALON_UUID: ${{ secrets.COOLIFY_STAGING_SALON_UUID }}
+          COOLIFY_STAGING_MARKETING_UUID: ${{ secrets.COOLIFY_STAGING_MARKETING_UUID }}
+          COOLIFY_STAGING_CALENDAR_UUID: ${{ secrets.COOLIFY_STAGING_CALENDAR_UUID }}
+        run: pnpm --filter @repo/deployment run deploy-staging
 
       - name: Deploy to Coolify production (main branch)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-          UUID_MANAGE: ${{ secrets.COOLIFY_PRODUCTION_MANAGE_SALON_UUID }}
-          UUID_SALON: ${{ secrets.COOLIFY_PRODUCTION_SALON_UUID }}
-          UUID_MARKETING: ${{ secrets.COOLIFY_PRODUCTION_MARKETING_UUID }}
-          UUID_CALENDAR: ${{ secrets.COOLIFY_PRODUCTION_CALENDAR_UUID }}
-        run: |
-          for UUID in "${UUID_MANAGE}" "${UUID_SALON}" "${UUID_MARKETING}" "${UUID_CALENDAR}"; do
-            if [ -n "${UUID}" ]; then
-              echo "Triggering production deployment for ${UUID}..."
-              curl -sf -X POST \
-                -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
-                "${COOLIFY_URL}/api/v1/applications/${UUID}/deploy" || true
-            fi
-          done
+          COOLIFY_PRODUCTION_MANAGE_SALON_UUID: ${{ secrets.COOLIFY_PRODUCTION_MANAGE_SALON_UUID }}
+          COOLIFY_PRODUCTION_SALON_UUID: ${{ secrets.COOLIFY_PRODUCTION_SALON_UUID }}
+          COOLIFY_PRODUCTION_MARKETING_UUID: ${{ secrets.COOLIFY_PRODUCTION_MARKETING_UUID }}
+          COOLIFY_PRODUCTION_CALENDAR_UUID: ${{ secrets.COOLIFY_PRODUCTION_CALENDAR_UUID }}
+        run: pnpm --filter @repo/deployment run deploy-production

@@ -1,0 +1,30 @@
+{
+  "name": "@repo/deployment",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "check-types": "tsc --noEmit",
+    "deploy-pr": "tsx src/cli.ts deploy-pr",
+    "deploy-staging": "tsx src/cli.ts deploy-staging",
+    "deploy-production": "tsx src/cli.ts deploy-production",
+    "cleanup-pr": "tsx src/cli.ts cleanup-pr"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.19.8",
+    "eslint": "^9.39.2",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "@joshuarileydev/coolify-client": "^1.1.0",
+    "commander": "^14.0.3",
+    "dotenv": "^17.2.3"
+  }
+}
