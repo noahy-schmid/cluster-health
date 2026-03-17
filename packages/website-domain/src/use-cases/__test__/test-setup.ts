@@ -131,6 +131,8 @@ export const createWebsite = () =>
       slug: `test-website-${Date.now()}`,
       title: "Test Website",
       faviconMediaId: Option.none(),
+      menuBarTitle: Option.some("Menu"),
+      menuLogoPosition: "left",
     });
 
     return websiteId;
