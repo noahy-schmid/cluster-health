@@ -1,5 +1,5 @@
 import { Effect, Layer } from "effect";
-import { eq, and } from "drizzle-orm";
+import { and, eq, gt, gte, lt, lte, sql } from "drizzle-orm";
 import {
   SectionPort,
   SectionPersistenceError,
@@ -107,18 +107,32 @@ const make = Effect.gen(function* () {
   ) =>
     Effect.gen(function* () {
       const baseSection = yield* Effect.tryPromise(() =>
-        db
-          .insert(sectionsTable)
-          .values({ websiteId, type, order: position })
-          .returning(),
+        db.transaction(async (tx) => {
+          await tx
+            .update(sectionsTable)
+            .set({ order: sql`${sectionsTable.order} + 1` })
+            .where(
+              and(
+                eq(sectionsTable.websiteId, websiteId),
+                gte(sectionsTable.order, position),
+              ),
+            );
+
+          const insertedRows = await tx
+            .insert(sectionsTable)
+            .values({ websiteId, type, order: position })
+            .returning();
+
+          return insertedRows[0];
+        }),
       ).pipe(
-        Effect.map((rows) => rows[0]),
-        Effect.mapError(
-          (error) =>
-            new SectionPersistenceError({
-              message: `Failed to insert base section: ${String(error)}`,
-              cause: error,
-            }),
+        Effect.mapError((error) =>
+          error instanceof SectionPersistenceError
+            ? error
+            : new SectionPersistenceError({
+                message: `Failed to insert base section: ${String(error)}`,
+                cause: error,
+              }),
         ),
       );
 
@@ -194,32 +208,81 @@ const make = Effect.gen(function* () {
 
   const reorderSections: SectionPort["reorderSections"] = (
     websiteId,
-    sectionIds,
+    sectionId,
+    newIndex,
   ) =>
-    Effect.forEach(
-      sectionIds.map((id, index) => ({ id, index })),
-      ({ id, index }) =>
-        Effect.tryPromise(() =>
-          db
-            .update(sectionsTable)
-            .set({ order: index })
+    Effect.gen(function* () {
+      return yield* Effect.tryPromise(() =>
+        db.transaction(async (tx) => {
+          const currentRows = await tx
+            .select({ order: sectionsTable.order })
+            .from(sectionsTable)
             .where(
               and(
-                eq(sectionsTable.id, id),
+                eq(sectionsTable.id, sectionId),
                 eq(sectionsTable.websiteId, websiteId),
               ),
-            ),
-        ).pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionPersistenceError({
-                message: `Failed to reorder section ${id}: ${String(error)}`,
+            )
+            .limit(1);
+
+          const currentIndex = currentRows[0]?.order;
+
+          if (currentIndex === undefined) {
+            throw new SectionPersistenceError({
+              message: `Section ${sectionId} does not belong to website ${websiteId}`,
+              isValidation: true,
+            });
+          }
+
+          if (currentIndex === newIndex) {
+            return;
+          }
+
+          if (newIndex < currentIndex) {
+            await tx
+              .update(sectionsTable)
+              .set({ order: sql`${sectionsTable.order} + 1` })
+              .where(
+                and(
+                  eq(sectionsTable.websiteId, websiteId),
+                  gte(sectionsTable.order, newIndex),
+                  lt(sectionsTable.order, currentIndex),
+                ),
+              );
+          } else {
+            await tx
+              .update(sectionsTable)
+              .set({ order: sql`${sectionsTable.order} - 1` })
+              .where(
+                and(
+                  eq(sectionsTable.websiteId, websiteId),
+                  gt(sectionsTable.order, currentIndex),
+                  lte(sectionsTable.order, newIndex),
+                ),
+              );
+          }
+
+          await tx
+            .update(sectionsTable)
+            .set({ order: newIndex })
+            .where(
+              and(
+                eq(sectionsTable.id, sectionId),
+                eq(sectionsTable.websiteId, websiteId),
+              ),
+            );
+        }),
+      ).pipe(
+        Effect.mapError((error) =>
+          error instanceof SectionPersistenceError
+            ? error
+            : new SectionPersistenceError({
+                message: `Failed to reorder section ${sectionId}: ${String(error)}`,
                 cause: error,
               }),
-          ),
         ),
-      { concurrency: 1 },
-    ).pipe(Effect.asVoid);
+      );
+    });
 
   const fetchSectionsByWebsiteId: SectionPort["fetchSectionsByWebsiteId"] = (
     websiteId,
@@ -273,12 +336,39 @@ const make = Effect.gen(function* () {
       return results;
     });
 
+  const sectionExists: SectionPort["sectionExists"] = (websiteId, sectionId) =>
+    Effect.tryPromise(() =>
+      db
+        .select({ count: sql`count(*)` })
+        .from(sectionsTable)
+        .where(
+          and(
+            eq(sectionsTable.id, sectionId),
+            eq(sectionsTable.websiteId, websiteId),
+          ),
+        )
+        .limit(1),
+    ).pipe(
+      Effect.mapError(
+        (error) =>
+          new SectionPersistenceError({
+            message: `Failed to check existence of section ${sectionId}: ${String(error)}`,
+            cause: error,
+          }),
+      ),
+      Effect.map((rows) => {
+        const count = Number(rows[0]?.count ?? 0);
+        return count > 0;
+      }),
+    );
+
   return {
     createSection,
     updateSection,
     deleteSection,
     reorderSections,
     fetchSectionsByWebsiteId,
+    sectionExists,
   } satisfies SectionPort;
 });
 

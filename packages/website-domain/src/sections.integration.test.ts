@@ -129,6 +129,8 @@ describe("Section Use Cases Integration Tests", () => {
           slug: "test-sections-website",
           title: "Test Sections Website",
           faviconMediaId: Option.none(),
+          menuBarTitle: Option.some("Test Sections"),
+          menuLogoPosition: "left",
         });
         websiteId = resultingId;
       }).pipe(
@@ -377,7 +379,34 @@ describe("Section Use Cases Integration Tests", () => {
     await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
   });
 
-  it("should reorder sections", async () => {
+  it("should insert a section at a specific position and shift existing ones", async () => {
+    const program = Effect.gen(function* () {
+      const listUseCase = yield* ListSectionsUseCase;
+      const createUseCase = yield* CreateSectionUseCase;
+
+      const before = yield* listUseCase.execute({ websiteId });
+      expect(before.length).toBeGreaterThan(0);
+
+      const command: CreateSectionCommand = {
+        websiteId,
+        type: "center-text",
+        position: 0,
+      };
+
+      const created = yield* createUseCase.execute(command);
+
+      const after = yield* listUseCase.execute({ websiteId });
+      expect(after.length).toBe(before.length + 1);
+      expect(after[0]?.id).toBe(created.id);
+      expect(after.map((section) => section.order)).toEqual(
+        after.map((_, index) => index),
+      );
+    });
+
+    await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
+  });
+
+  it("should reorder sections by moving a single section", async () => {
     const program = Effect.gen(function* () {
       const listUseCase = yield* ListSectionsUseCase;
       const reorderUseCase = yield* ReorderSectionsUseCase;
@@ -385,18 +414,22 @@ describe("Section Use Cases Integration Tests", () => {
       const sections = yield* listUseCase.execute({ websiteId });
       expect(sections.length).toBeGreaterThanOrEqual(2);
 
-      // Reverse the order
-      const reversedIds = sections.map((s) => s.id).reverse();
+      const sectionToMove = sections[0]!;
+      const targetIndex = sections.length - 1;
 
       const command: ReorderSectionsCommand = {
         websiteId,
-        sectionIds: reversedIds,
+        sectionId: sectionToMove.id,
+        newIndex: targetIndex,
       };
 
       yield* reorderUseCase.execute(command);
 
       const reordered = yield* listUseCase.execute({ websiteId });
-      expect(reordered.map((s) => s.id)).toEqual(reversedIds);
+      expect(reordered[targetIndex]?.id).toBe(sectionToMove.id);
+      expect(reordered.map((section) => section.order)).toEqual(
+        reordered.map((_, index) => index),
+      );
     });
 
     await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
@@ -442,13 +475,14 @@ describe("Section Use Cases Integration Tests", () => {
     await Effect.runPromise(program.pipe(Effect.provide(useCaseLayer)));
   });
 
-  it("should fail to reorder with mismatched section IDs", async () => {
+  it("should fail to reorder when the section does not belong to the website", async () => {
     const program = Effect.gen(function* () {
       const reorderUseCase = yield* ReorderSectionsUseCase;
       const result = yield* reorderUseCase
         .execute({
           websiteId,
-          sectionIds: [crypto.randomUUID()],
+          sectionId: crypto.randomUUID(),
+          newIndex: 0,
         })
         .pipe(Effect.either);
 

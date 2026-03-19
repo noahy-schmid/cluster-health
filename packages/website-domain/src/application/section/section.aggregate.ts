@@ -5,6 +5,9 @@ import {
   type PortAllSections,
   type PortSection,
   type PortReasonItem,
+  SectionPersistenceError,
+  WebsiteId,
+  SectionId,
 } from "../../ports/section.port";
 import {
   SectionError,
@@ -95,8 +98,45 @@ export const extractMediaIds = (section: AllSections): string[] => {
 const make = Effect.gen(function* () {
   const sectionPort = yield* SectionPort;
 
+  // Fetches all sections for the website, validates that index >= 0, and clamps
+  // it to the valid range. Set forInsert=true when the index represents an
+  // insertion point (max = length); leave false for reorder (max = length - 1).
+  const validateAndClampIndex = (
+    websiteId: WebsiteId,
+    index: number,
+    forInsert = false,
+  ): Effect.Effect<number, SectionError | SectionPersistenceError> =>
+    Effect.gen(function* () {
+      if (index < 0) {
+        return yield* Effect.fail(
+          new SectionError({
+            websiteId,
+            message: "Index must be zero or greater",
+          }),
+        );
+      }
+
+      const maximumIndex = yield* sectionPort
+        .fetchSectionsByWebsiteId(websiteId)
+        .pipe(
+          Effect.map((sections) => sections.length),
+          Effect.map((count) => count - (forInsert ? 0 : 1)),
+        );
+
+      if (maximumIndex < 0) {
+        return yield* Effect.fail(
+          new SectionError({
+            websiteId,
+            message: "Cannot reorder sections for an empty website",
+          }),
+        );
+      }
+
+      return Math.min(index, maximumIndex);
+    });
+
   const createSection = (
-    websiteId: string,
+    websiteId: WebsiteId,
     type: SectionType,
     position: number,
   ) =>
@@ -107,21 +147,30 @@ const make = Effect.gen(function* () {
         );
       }
 
-      const portSection = yield* sectionPort
-        .createSection(websiteId, type, position)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionError({
-                websiteId,
-                sectionType: type,
-                message: error.message,
-              }),
-          ),
-        );
+      const clampedPosition = yield* validateAndClampIndex(
+        websiteId,
+        position,
+        true,
+      );
+
+      const portSection = yield* sectionPort.createSection(
+        websiteId,
+        type,
+        clampedPosition,
+      );
 
       return fromPort(portSection);
-    });
+    }).pipe(
+      Effect.catchTag("SectionPersistenceError", (error) =>
+        Effect.fail(
+          new SectionError({
+            websiteId,
+            sectionType: type,
+            message: error.message,
+          }),
+        ),
+      ),
+    );
 
   const updateSection = (section: AllSections) =>
     Effect.gen(function* () {
@@ -131,100 +180,94 @@ const make = Effect.gen(function* () {
         );
       }
 
-      yield* sectionPort.updateSection(toPort(section)).pipe(
-        Effect.mapError((error) => {
-          if (error.isValidation) {
-            return new SectionValidationError({ message: error.message });
-          }
-          return new SectionError({
-            sectionId: section.id,
-            sectionType: section.type,
+      yield* sectionPort.updateSection(toPort(section));
+
+      yield* Effect.log("Section updated", section.id);
+    }).pipe(
+      Effect.catchTag("SectionPersistenceError", (error) =>
+        Effect.fail(
+          error.isValidation
+            ? new SectionValidationError({ message: error.message })
+            : new SectionError({
+                sectionId: section.id,
+                sectionType: section.type,
+                message: error.message,
+              }),
+        ),
+      ),
+    );
+
+  const deleteSection = (websiteId: WebsiteId, sectionId: SectionId) =>
+    Effect.gen(function* () {
+      yield* sectionPort.deleteSection(websiteId, sectionId);
+
+      yield* Effect.log("Section deleted", sectionId);
+    }).pipe(
+      Effect.catchTag("SectionPersistenceError", (error) =>
+        Effect.fail(
+          new SectionError({
+            sectionId,
+            websiteId,
             message: error.message,
-          });
+          }),
+        ),
+      ),
+    );
+
+  const reorderSections = (
+    websiteId: WebsiteId,
+    sectionId: SectionId,
+    newIndex: number,
+  ) =>
+    Effect.gen(function* () {
+      yield* sectionPort.sectionExists(websiteId, sectionId).pipe(
+        Effect.flatMap((exists) => {
+          if (!exists) {
+            return Effect.fail(
+              new SectionError({
+                sectionId,
+                websiteId,
+                message: "Section does not exist in the specified website",
+              }),
+            );
+          }
+          return Effect.succeed(true);
         }),
       );
 
-      yield* Effect.log("Section updated", section.id);
-    });
+      const clampedIndex = yield* validateAndClampIndex(websiteId, newIndex);
 
-  const deleteSection = (websiteId: string, sectionId: string) =>
-    Effect.gen(function* () {
-      yield* sectionPort.deleteSection(websiteId, sectionId).pipe(
-        Effect.mapError(
-          (error) =>
-            new SectionError({
-              sectionId,
-              websiteId,
-              message: error.message,
-            }),
-        ),
-      );
-
-      yield* Effect.log("Section deleted", sectionId);
-    });
-
-  const reorderSections = (websiteId: string, sectionIds: string[]) =>
-    Effect.gen(function* () {
-      const existingSections = yield* sectionPort
-        .fetchSectionsByWebsiteId(websiteId)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionError({
-                websiteId,
-                message: error.message,
-              }),
-          ),
-        );
-
-      if (sectionIds.length !== existingSections.length) {
-        return yield* Effect.fail(
-          new SectionError({
-            websiteId,
-            message: `Provided sectionIds length (${sectionIds.length}) does not match number of sections in website (${existingSections.length})`,
-          }),
-        );
-      }
-
-      const existingIdSet = new Set(existingSections.map((s) => s.id));
-      if (!sectionIds.every((id) => existingIdSet.has(id))) {
-        return yield* Effect.fail(
-          new SectionError({
-            websiteId,
-            message: "Provided sectionIds do not match sections in website",
-          }),
-        );
-      }
-
-      yield* sectionPort.reorderSections(websiteId, sectionIds).pipe(
-        Effect.mapError(
-          (error) =>
-            new SectionError({
-              websiteId,
-              message: error.message,
-            }),
-        ),
-      );
+      yield* sectionPort.reorderSections(websiteId, sectionId, clampedIndex);
 
       yield* Effect.log("Sections reordered for website", websiteId);
-    });
+    }).pipe(
+      Effect.catchTag("SectionPersistenceError", (error) =>
+        Effect.fail(
+          new SectionError({
+            sectionId,
+            websiteId,
+            message: error.message,
+          }),
+        ),
+      ),
+    );
 
-  const fetchSections = (websiteId: string) =>
+  const fetchSections = (websiteId: WebsiteId) =>
     Effect.gen(function* () {
-      const portSections = yield* sectionPort
-        .fetchSectionsByWebsiteId(websiteId)
-        .pipe(
-          Effect.mapError(
-            (error) =>
-              new SectionError({
-                websiteId,
-                message: error.message,
-              }),
-          ),
-        );
+      const portSections =
+        yield* sectionPort.fetchSectionsByWebsiteId(websiteId);
 
       return portSections.map(fromPort);
-    });
+    }).pipe(
+      Effect.catchTag("SectionPersistenceError", (error) =>
+        Effect.fail(
+          new SectionError({
+            websiteId,
+            message: error.message,
+          }),
+        ),
+      ),
+    );
 
   return {
     createSection,

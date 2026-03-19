@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { SectionAggregate } from "../application/section/section.aggregate";
 import { SectionError } from "../application/section/errors";
+import { MakeSectionId, MakeWebsiteId } from "../ports/section.port";
 
 // --- Command DTO ---
 
@@ -18,7 +19,10 @@ const make = Effect.gen(function* () {
     execute: (
       command: DeleteSectionCommand,
     ): Effect.Effect<void, SectionError> =>
-      aggregate.deleteSection(command.websiteId, command.sectionId),
+      aggregate.deleteSection(
+        MakeWebsiteId(command.websiteId),
+        MakeSectionId(command.sectionId),
+      ),
   };
 });
 

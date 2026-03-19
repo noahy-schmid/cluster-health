@@ -1,4 +1,5 @@
-import { Context, Data, Effect } from "effect";
+import { Brand, Context, Data, Effect } from "effect";
+import { Branded } from "effect/Brand";
 
 // --- Port-level error ---
 
@@ -16,6 +17,12 @@ export class SectionPersistenceError extends Data.TaggedError(
 }> {}
 
 // --- Port-owned types ---
+
+export type SectionId = Branded<string, "SectionId">;
+export type WebsiteId = Branded<string, "WebsiteId">;
+
+export const MakeSectionId = Brand.nominal<SectionId>();
+export const MakeWebsiteId = Brand.nominal<WebsiteId>();
 
 export type PortSectionType =
   | "text-with-image"
@@ -93,7 +100,7 @@ export interface SectionPort {
    * @returns Effect resolving to the created section data.
    */
   createSection(
-    websiteId: string,
+    websiteId: WebsiteId,
     type: PortSectionType,
     position: number,
   ): Effect.Effect<PortAllSections, SectionPersistenceError>;
@@ -114,19 +121,21 @@ export interface SectionPort {
    * @returns Effect resolving when deletion completes.
    */
   deleteSection(
-    websiteId: string,
-    sectionId: string,
+    websiteId: WebsiteId,
+    sectionId: SectionId,
   ): Effect.Effect<void, SectionPersistenceError>;
 
   /**
-   * Reorders sections for a website by setting new order values.
+   * Moves a single section to a new index and shifts neighbouring sections.
    * @param websiteId Website ID owning the sections.
-   * @param sectionIds Array of section IDs in desired order.
+   * @param sectionId Section ID to move.
+   * @param newIndex Zero-based target position within the website.
    * @returns Effect resolving when reorder completes.
    */
   reorderSections(
-    websiteId: string,
-    sectionIds: string[],
+    websiteId: WebsiteId,
+    sectionId: SectionId,
+    newIndex: number,
   ): Effect.Effect<void, SectionPersistenceError>;
 
   /**
@@ -135,8 +144,19 @@ export interface SectionPort {
    * @returns Effect resolving to array of all sections.
    */
   fetchSectionsByWebsiteId(
-    websiteId: string,
+    websiteId: WebsiteId,
   ): Effect.Effect<PortAllSections[], SectionPersistenceError>;
+
+  /**
+   * Checks if a section exists for a website.
+   * @param websiteId Website ID to check.
+   * @param sectionId Section ID to check.
+   * @returns Effect resolving to true if the section exists, false otherwise.
+   */
+  sectionExists(
+    websiteId: WebsiteId,
+    sectionId: SectionId,
+  ): Effect.Effect<boolean, SectionPersistenceError>;
 }
 
 /**

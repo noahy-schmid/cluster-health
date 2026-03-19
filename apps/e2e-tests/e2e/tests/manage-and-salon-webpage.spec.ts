@@ -126,4 +126,64 @@ test.describe("Manage Salon webpage + Salon webpage", () => {
     );
     await scenario.iCapturePublicPage("public-salon-website-with-two-stylists");
   });
+
+  test("reorders sections and inserts a section between existing ones", async ({
+    scenario,
+    managePage,
+    publicPage,
+  }) => {
+    await scenario.iHaveAnAccount();
+    await scenario.iHaveASalon();
+    await scenario.iHaveAWebsite();
+    const firstSection = await scenario.iAddACenterTextSection({
+      menuTitle: "Menu One",
+      title: "First Section",
+      content: "Erster Abschnitt für die Menü-Reihenfolge.",
+    });
+    const stylistsSection = await scenario.iAddAStylistsSection({
+      menuTitle: "Menu Team",
+      title: "Team Section",
+      subtitle: "Unser Team im Menü an erster Stelle.",
+    });
+
+    const dragHandles = managePage.getByLabel("Abschnitt verschieben");
+    const source = dragHandles.nth(1);
+    const target = dragHandles.nth(0);
+    const sourceBox = await source.boundingBox();
+    const targetBox = await target.boundingBox();
+
+    if (!sourceBox || !targetBox) {
+      throw new Error("Could not determine drag positions for section handles");
+    }
+
+    await managePage.mouse.move(
+      sourceBox.x + sourceBox.width / 2,
+      sourceBox.y + sourceBox.height / 2,
+    );
+    await managePage.mouse.down();
+    await managePage.mouse.move(
+      targetBox.x + targetBox.width / 2,
+      targetBox.y + targetBox.height / 2,
+      { steps: 10 },
+    );
+    await managePage.mouse.up();
+
+    const insertedSection = await scenario.iInsertCenterTextSectionAt(1, {
+      menuTitle: "Menu Middle",
+      title: "Middle Section",
+      content: "Dieser Abschnitt wurde zwischen die bestehenden eingefügt.",
+    });
+
+    await scenario.iOpenMySalonWebsite();
+
+    const menuButtons = publicPage.locator("button", {
+      hasText: new RegExp(
+        `${stylistsSection.menuTitle}|${insertedSection.menuTitle}|${firstSection.menuTitle}`,
+      ),
+    });
+
+    await expect(menuButtons.nth(0)).toHaveText(stylistsSection.menuTitle);
+    await expect(menuButtons.nth(1)).toHaveText(insertedSection.menuTitle);
+    await expect(menuButtons.nth(2)).toHaveText(firstSection.menuTitle);
+  });
 });

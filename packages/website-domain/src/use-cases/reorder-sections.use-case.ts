@@ -1,12 +1,14 @@
 import { Effect } from "effect";
 import { SectionAggregate } from "../application/section/section.aggregate";
 import { SectionError } from "../application/section/errors";
+import { MakeWebsiteId, MakeSectionId } from "../ports/section.port";
 
 // --- Command DTO ---
 
 export interface ReorderSectionsCommand {
   websiteId: string;
-  sectionIds: string[];
+  sectionId: string;
+  newIndex: number;
 }
 
 // --- Use Case ---
@@ -18,7 +20,11 @@ const make = Effect.gen(function* () {
     execute: (
       command: ReorderSectionsCommand,
     ): Effect.Effect<void, SectionError> =>
-      aggregate.reorderSections(command.websiteId, command.sectionIds),
+      aggregate.reorderSections(
+        MakeWebsiteId(command.websiteId),
+        MakeSectionId(command.sectionId),
+        command.newIndex,
+      ),
   };
 });
 

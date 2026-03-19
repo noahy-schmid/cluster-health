@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import type { AllSections } from "../application/section/section.aggregate";
 import { SectionAggregate } from "../application/section/section.aggregate";
 import { SectionError } from "../application/section/errors";
+import { MakeWebsiteId } from "../ports/section.port";
 
 // --- Query DTO ---
 
@@ -22,7 +23,7 @@ const make = Effect.gen(function* () {
     execute: (
       query: ListSectionsQuery,
     ): Effect.Effect<ListSectionsResult, SectionError> =>
-      aggregate.fetchSections(query.websiteId),
+      aggregate.fetchSections(MakeWebsiteId(query.websiteId)),
   };
 });
 

@@ -163,6 +163,92 @@ export class WebsiteTopic {
     });
   }
 
+  async iInsertCenterTextSectionAt(
+    position: number,
+    input: CenterTextInput = {},
+  ): Promise<CenterTextSectionState> {
+    return base.step(
+      `I insert a center text section at position ${position}`,
+      async () => {
+        const { salonId } = await this.salonTopic.iHaveASalon();
+        const website = await this.iHaveAWebsite();
+        const menuTitle =
+          input.menuTitle ?? `Menu ${this.uniqueSuffix}-${position}`;
+        const title =
+          input.title ?? `Inserted Section ${this.uniqueSuffix}-${position}`;
+        const content =
+          input.content ??
+          "Dieser Abschnitt wird zwischen bestehende Abschnitte eingefügt.";
+
+        await this.managePage.goto(
+          `${e2eEnvironment.manageBaseUrl}/salon/${salonId}/website/${website.websiteId}`,
+        );
+        await this.managePage
+          .getByTestId("add-section-button")
+          .nth(position)
+          .click();
+
+        await expect(this.managePage).toHaveURL(
+          new RegExp(`/website/${website.websiteId}/select-section`),
+          {
+            timeout: 20_000,
+          },
+        );
+
+        await this.managePage.getByTestId("section-type-center-text").click();
+
+        await expect(this.managePage).toHaveURL(
+          new RegExp(
+            `/website/${website.websiteId}/[0-9a-f-]{36}/center-text$`,
+          ),
+          {
+            timeout: 20_000,
+          },
+        );
+
+        const match = new URL(this.managePage.url()).pathname.match(
+          /^\/salon\/[^/]+\/website\/[0-9a-f-]{36}\/([0-9a-f-]{36})\/center-text$/,
+        );
+        const sectionId = match?.[1];
+
+        if (!sectionId) {
+          throw new Error(
+            `Could not extract sectionId from ${this.managePage.url()}`,
+          );
+        }
+
+        await this.managePage
+          .getByTestId("center-text-menu-title-input")
+          .fill(menuTitle);
+        await this.managePage
+          .getByTestId("center-text-title-input")
+          .fill(title);
+        await this.managePage
+          .getByTestId("center-text-content-input")
+          .fill(content);
+        await this.managePage.getByTestId("center-text-save-button").click();
+
+        await expect(this.managePage).toHaveURL(
+          new RegExp(`/website/${website.websiteId}$`),
+          {
+            timeout: 20_000,
+          },
+        );
+
+        await expect(
+          this.managePage.getByText(title, { exact: true }),
+        ).toBeVisible();
+
+        return {
+          sectionId,
+          menuTitle,
+          title,
+          content,
+        };
+      },
+    );
+  }
+
   async iAddAStylistsSection(
     input: StylistsSectionInput = {},
   ): Promise<StylistsSectionState> {
