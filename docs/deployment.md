@@ -36,8 +36,8 @@ Four services are deployed for each environment:
 ## Deployment Package
 
 All Coolify API interaction lives in `packages/deployment`, a standalone TypeScript package that
-exposes both a **programmatic API** and a **CLI**. It uses
-[`@joshuarileydev/coolify-client`](https://github.com/joshuarileydev/coolify-client) under the hood.
+exposes both a **programmatic API** and a **CLI**. It calls the Coolify REST API directly via the
+native `fetch`, with no third-party Coolify SDK dependency.
 
 ### CLI commands
 
@@ -164,11 +164,45 @@ Coolify to pull the latest image and restart.
 
 ### Development (PR) applications
 
-PR environments are managed **automatically** by the `deploy-pr` and `cleanup-pr` commands:
+PR environments are managed **automatically** by the `deploy-pr` and `cleanup-pr` commands.
 
-- On PR open / push: a Docker Image application named `pr-<number>-<app>` is created inside the
-  development project and deployed.
-- On PR close: the corresponding applications are deleted.
+#### Application containers
+
+On PR open / push, Docker Image applications named `pr-<number>-<app>` are created inside the
+development project and deployed. On PR close, the corresponding applications are deleted.
+
+#### Infrastructure services
+
+The `deploy-pr` command also provisions infrastructure services required by the app containers
+(e.g. a database and object storage). These are defined in
+`packages/deployment/src/pr-infrastructure.ts`:
+
+| Service             | Coolify type                    | Name pattern           |
+| ------------------- | ------------------------------- | ---------------------- |
+| PostgreSQL database | `postgresql`                    | `pr-<number>-postgres` |
+| MinIO S3 storage    | `minio` (Coolify service stack) | `pr-<number>-minio`    |
+
+**All provisioning is idempotent** — re-running `deploy-pr` for an existing PR number will
+skip resources that already exist.
+
+**Adding more infrastructure services in the future** is a one-line change in
+`packages/deployment/src/pr-infrastructure.ts`:
+
+```ts
+// Add a database engine (PostgreSQL, MySQL, Redis, …)
+export const PR_DATABASE_SERVICES: readonly PrDatabaseService[] = [
+  { type: "postgresql", nameSuffix: "postgres" },
+  { type: "redis", nameSuffix: "redis" }, // ← add here
+];
+
+// Add a Coolify service stack (MinIO, Gitea, …)
+export const PR_COOLIFY_SERVICES: readonly PrCoolifyService[] = [
+  { type: "minio", nameSuffix: "minio" },
+];
+```
+
+The `cleanup-pr` command deletes all matching databases and service stacks automatically when a
+PR is closed.
 
 No manual Coolify setup is needed for development environments beyond creating the project and
 storing `COOLIFY_DEVELOPMENT_PROJECT_UUID`.
@@ -188,6 +222,7 @@ on: pull_request / push → main, develop
 └─ deploy (runs after all build jobs succeed)
     ├─ checkout + pnpm install
     ├─ PR event   → pnpm deploy-pr --pr-number <n>
+    │               (provisions databases + services + app containers)
     ├─ develop    → pnpm deploy-staging
     └─ main       → pnpm deploy-production
 ```
@@ -200,4 +235,5 @@ on: pull_request [closed]
 └─ cleanup
     ├─ checkout + pnpm install
     └─ pnpm cleanup-pr --pr-number <n>
+        (deletes app containers, databases, and service stacks)
 ```

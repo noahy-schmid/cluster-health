@@ -1,4 +1,4 @@
-import { createCoolifyClient, triggerDeploy } from "../client.js";
+import { createCoolifyApiClient } from "../coolify/client.js";
 import type { DeployEnvironmentOptions } from "../types.js";
 
 export type { DeployEnvironmentOptions } from "../types.js";
@@ -7,7 +7,7 @@ export async function deployStaging(
   options: DeployEnvironmentOptions,
 ): Promise<void> {
   const { config } = options;
-  const client = createCoolifyClient(config.coolify);
+  const client = createCoolifyApiClient(config.coolify);
 
   console.log("Deploying to Coolify staging environment…");
 
@@ -24,7 +24,7 @@ export async function deployStaging(
       continue;
     }
     console.log(`  Deploying ${name} (${uuid})…`);
-    await triggerDeploy(client, uuid);
+    await client.deployApplication(uuid);
     console.log(`  Deployment triggered for ${name}`);
   }
 

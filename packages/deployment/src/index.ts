@@ -6,14 +6,22 @@ export type {
   DeploymentConfig,
   EnvironmentServiceUuids,
 } from "./config.js";
-export {
-  createCoolifyClient,
-  createDockerImageApplication,
-  deleteApplication,
-  findApplicationByName,
-  triggerDeploy,
-} from "./client.js";
+export { CoolifyApiClient, createCoolifyApiClient } from "./coolify/client.js";
+export type {
+  Application,
+  CoolifyService,
+  Database,
+  DatabaseType,
+} from "./coolify/client.js";
 export type { DeployEnvironmentOptions } from "./types.js";
+export {
+  PR_COOLIFY_SERVICES,
+  PR_DATABASE_SERVICES,
+} from "./pr-infrastructure.js";
+export type {
+  PrCoolifyService,
+  PrDatabaseService,
+} from "./pr-infrastructure.js";
 export { cleanupPr } from "./commands/cleanup-pr.js";
 export type { CleanupPrOptions } from "./commands/cleanup-pr.js";
 export { deployPr } from "./commands/deploy-pr.js";

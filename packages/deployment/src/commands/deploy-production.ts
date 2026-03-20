@@ -1,11 +1,11 @@
-import { createCoolifyClient, triggerDeploy } from "../client.js";
+import { createCoolifyApiClient } from "../coolify/client.js";
 import type { DeployEnvironmentOptions } from "../types.js";
 
 export async function deployProduction(
   options: DeployEnvironmentOptions,
 ): Promise<void> {
   const { config } = options;
-  const client = createCoolifyClient(config.coolify);
+  const client = createCoolifyApiClient(config.coolify);
 
   console.log("Deploying to Coolify production environment…");
 
@@ -22,7 +22,7 @@ export async function deployProduction(
       continue;
     }
     console.log(`  Deploying ${name} (${uuid})…`);
-    await triggerDeploy(client, uuid);
+    await client.deployApplication(uuid);
     console.log(`  Deployment triggered for ${name}`);
   }
 

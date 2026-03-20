@@ -1,7 +1,6 @@
-export interface CoolifyConfig {
-  readonly apiUrl: string;
-  readonly apiToken: string;
-}
+import type { CoolifyConfig } from "./coolify/types.js";
+
+export type { CoolifyConfig } from "./coolify/types.js";
 
 export interface DeploymentConfig {
   readonly coolify: CoolifyConfig;
