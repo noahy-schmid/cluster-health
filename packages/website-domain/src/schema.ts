@@ -6,16 +6,19 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import type { PgTableFn } from "drizzle-orm/pg-core";
 
 import { WEBSITE_SCHEMA_NAME } from "./schema-config";
 
 // Create schema-aware table function
 // If using public schema (no prefix), use pgTable directly
 // Otherwise, use schema.table
-const createTable =
+const websiteSchema =
   WEBSITE_SCHEMA_NAME === "public"
-    ? pgTable
-    : pgSchema(WEBSITE_SCHEMA_NAME).table;
+    ? { table: pgTable }
+    : pgSchema(WEBSITE_SCHEMA_NAME);
+
+const createTable = websiteSchema.table as PgTableFn;
 
 export const websitesTable = createTable("websites", {
   id: uuid().primaryKey().defaultRandom(),
