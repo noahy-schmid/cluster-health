@@ -10,7 +10,10 @@ import {
   varchar,
   text,
 } from "drizzle-orm/pg-core";
-export const salonSchema = pgSchema("salon");
+
+import { SALON_SCHEMA_NAME } from "./schema-config";
+
+export const salonSchema = pgSchema(SALON_SCHEMA_NAME);
 
 export const salonsTable = salonSchema.table(
   "salons",

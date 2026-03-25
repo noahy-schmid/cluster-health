@@ -19,7 +19,8 @@
     "db:generate": "turbo run db:generate",
     "db:drop": "tsx ./scripts/drizzle-drop-all.ts",
     "db:push": "turbo run db:push",
-    "db:reset": "pnpm db:drop && pnpm db:push"
+    "db:reset": "pnpm db:drop && pnpm db:push",
+    "db:migrate": "tsx ./scripts/migrate-database.ts"
   },
   "devDependencies": {
     "@effect/language-service": "^0.77.0",

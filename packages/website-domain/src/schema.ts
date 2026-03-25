@@ -1,6 +1,23 @@
-import { integer, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgSchema,
+  pgTable,
+  text,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
-export const websitesTable = pgTable("websites", {
+import { WEBSITE_SCHEMA_NAME } from "./schema-config";
+
+// Create schema-aware table function
+// If using public schema (no prefix), use pgTable directly
+// Otherwise, use schema.table
+const createTable =
+  WEBSITE_SCHEMA_NAME === "public"
+    ? pgTable
+    : pgSchema(WEBSITE_SCHEMA_NAME).table;
+
+export const websitesTable = createTable("websites", {
   id: uuid().primaryKey().defaultRandom(),
   salonId: uuid().notNull().unique(),
   heroImage: varchar().notNull(),
@@ -23,7 +40,7 @@ export const websitesTable = pgTable("websites", {
   colorOnAccent: varchar().notNull(),
 });
 
-export const sectionsTable = pgTable("sections", {
+export const sectionsTable = createTable("sections", {
   id: uuid().primaryKey().defaultRandom(),
   websiteId: uuid()
     .notNull()
@@ -33,16 +50,19 @@ export const sectionsTable = pgTable("sections", {
   menuTitle: varchar(),
 });
 
-export const textWithImageSectionsTable = pgTable("text_with_image_sections", {
-  id: uuid()
-    .primaryKey()
-    .references(() => sectionsTable.id, { onDelete: "cascade" }),
-  title: varchar().notNull(),
-  content: text().notNull(),
-  image: varchar().notNull(),
-});
+export const textWithImageSectionsTable = createTable(
+  "text_with_image_sections",
+  {
+    id: uuid()
+      .primaryKey()
+      .references(() => sectionsTable.id, { onDelete: "cascade" }),
+    title: varchar().notNull(),
+    content: text().notNull(),
+    image: varchar().notNull(),
+  },
+);
 
-export const gallerySectionsTable = pgTable("gallery_sections", {
+export const gallerySectionsTable = createTable("gallery_sections", {
   id: uuid()
     .primaryKey()
     .references(() => sectionsTable.id, { onDelete: "cascade" }),
@@ -50,7 +70,7 @@ export const gallerySectionsTable = pgTable("gallery_sections", {
   subtitle: varchar().notNull(),
 });
 
-export const galleryImagesTable = pgTable("gallery_images", {
+export const galleryImagesTable = createTable("gallery_images", {
   id: uuid().primaryKey().defaultRandom(),
   gallerySectionId: uuid()
     .notNull()
@@ -59,7 +79,7 @@ export const galleryImagesTable = pgTable("gallery_images", {
   order: integer().notNull(),
 });
 
-export const centerTextSectionsTable = pgTable("center_text_sections", {
+export const centerTextSectionsTable = createTable("center_text_sections", {
   id: uuid()
     .primaryKey()
     .references(() => sectionsTable.id, { onDelete: "cascade" }),
@@ -67,7 +87,7 @@ export const centerTextSectionsTable = pgTable("center_text_sections", {
   content: text().notNull(),
 });
 
-export const reasonSectionsTable = pgTable("reason_sections", {
+export const reasonSectionsTable = createTable("reason_sections", {
   id: uuid()
     .primaryKey()
     .references(() => sectionsTable.id, { onDelete: "cascade" }),
@@ -75,7 +95,7 @@ export const reasonSectionsTable = pgTable("reason_sections", {
   subtitle: varchar().notNull(),
 });
 
-export const reasonItemsTable = pgTable("reason_items", {
+export const reasonItemsTable = createTable("reason_items", {
   id: uuid().primaryKey().defaultRandom(),
   reasonSectionId: uuid()
     .notNull()
@@ -86,7 +106,7 @@ export const reasonItemsTable = pgTable("reason_items", {
   order: integer().notNull(),
 });
 
-export const stylistsSectionsTable = pgTable("stylists_sections", {
+export const stylistsSectionsTable = createTable("stylists_sections", {
   id: uuid()
     .primaryKey()
     .references(() => sectionsTable.id, { onDelete: "cascade" }),

@@ -1,0 +1,88 @@
+name: Database Migration
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - "**"
+
+env:
+  PNPM_VERSION: 10.17.1
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build domain packages
+        run: |
+          pnpm --filter @repo/auth-domain build
+          pnpm --filter @repo/salon-domain build
+          pnpm --filter @repo/website-domain build
+
+      - name: Set deployment prefix
+        id: prefix
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "DEPLOYMENT_PREFIX=pr${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+            echo "prefix=pr${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            echo "DEPLOYMENT_PREFIX=staging" >> $GITHUB_ENV
+            echo "prefix=staging" >> $GITHUB_OUTPUT
+          else
+            echo "DEPLOYMENT_PREFIX=" >> $GITHUB_ENV
+            echo "prefix=production" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DEPLOYMENT_PREFIX: ${{ env.DEPLOYMENT_PREFIX }}
+        run: pnpm db:migrate
+
+      - name: Migration summary
+        if: always()
+        run: |
+          {
+            echo "## Database Migration Summary"
+            echo ""
+            echo "- **Environment**: ${{ steps.prefix.outputs.prefix }}"
+            echo "- **Deployment Prefix**: \`${{ env.DEPLOYMENT_PREFIX }}\`"
+            echo "- **Branch**: ${{ github.ref_name }}"
+            if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+              echo "- **PR Number**: #${{ github.event.pull_request.number }}"
+            fi
+            echo ""
+            echo "Database schemas have been migrated with the prefix: \`${{ env.DEPLOYMENT_PREFIX }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
