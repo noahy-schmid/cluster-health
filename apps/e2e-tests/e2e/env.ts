@@ -1,7 +1,8 @@
 export const e2eEnvironment = {
-  databaseUrl:
-    process.env.DATABASE_URL ??
-    "postgresql://postgres:postgres@127.0.0.1:5432/deinsalon_e2e",
+  databaseUrl: process.env.DATABASE_URL ?? "postgresql://127.0.0.1:5432",
+  databaseUser: process.env.DATABASE_USER ?? "postgres",
+  databasePassword: process.env.DATABASE_PASSWORD ?? "postgres",
+  databaseName: process.env.DATABASE_NAME ?? "deinsalon_e2e",
   manageBaseUrl: "http://127.0.0.1:3000",
   salonBaseUrl: process.env.SALON_URL ?? "http://127.0.0.1:3001",
   s3Url: process.env.S3_URL ?? "http://127.0.0.1:9000",

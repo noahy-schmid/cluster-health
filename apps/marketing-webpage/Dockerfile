@@ -31,7 +31,10 @@ ENV NEXT_PUBLIC_BASE_PATH=${PATH_PREFIX}
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
-ENV DATABASE_URL=placeholderdb
+ENV DATABASE_URL=postgresql://placeholder:5432
+ENV DATABASE_USER=placeholder
+ENV DATABASE_PASSWORD=placeholder
+ENV DATABASE_NAME=placeholder
 
 # Build the project
 COPY --from=builder /app/out/full/ .
