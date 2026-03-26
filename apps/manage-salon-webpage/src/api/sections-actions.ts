@@ -79,11 +79,8 @@ export async function updateSection(
   }
 
   const program = Effect.gen(function* () {
-    const listUseCase = yield* ListSectionsUseCase;
-    const updateUseCase = yield* UpdateSectionUseCase;
-
     // Ensure the section being updated actually belongs to the given website
-    const fetchResult = yield* listUseCase.execute({ websiteId }).pipe(
+    const fetchResult = yield* ListSectionsUseCase.execute({ websiteId }).pipe(
       Effect.catchAll((error) =>
         Effect.fail({
           success: false as const,
@@ -106,10 +103,10 @@ export async function updateSection(
       });
     }
 
-    return yield* updateUseCase.execute(section).pipe(
+    return yield* UpdateSectionUseCase.execute(section).pipe(
       Effect.map(() => ({ success: true as const, data: undefined })),
       Effect.catchAll((error) =>
-        Effect.succeed({
+        Effect.fail({
           success: false as const,
           errors: error instanceof Error ? error.message : "Unknown error",
         }),
@@ -119,7 +116,7 @@ export async function updateSection(
     Effect.provide(
       Layer.merge(UpdateSectionUseCaseLayer, ListSectionsUseCaseLayer),
     ),
-    Effect.provide(MediaLayer),
+    Effect.provide(MediaLayer.pipe(Layer.orDie)),
     Effect.catchAll((error) => Effect.succeed(error)),
   );
 
