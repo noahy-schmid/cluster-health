@@ -51,24 +51,30 @@ jobs:
           pnpm --filter @repo/salon-domain build
           pnpm --filter @repo/website-domain build
 
-      - name: Set deployment prefix
-        id: prefix
+      - name: Set deployment environment
+        id: deployment
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "DEPLOYMENT_PREFIX=pr${{ github.event.pull_request.number }}" >> $GITHUB_ENV
-            echo "prefix=pr${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "DOKPLOY_DEPLOY_URL=https://pr-${{ github.event.pull_request.number }}-app.example.com" >> $GITHUB_ENV
+            echo "NODE_ENV=development" >> $GITHUB_ENV
+            echo "env=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            echo "DEPLOYMENT_PREFIX=staging" >> $GITHUB_ENV
-            echo "prefix=staging" >> $GITHUB_OUTPUT
+            echo "NODE_ENV=development" >> $GITHUB_ENV
+            echo "env=staging" >> $GITHUB_OUTPUT
           else
-            echo "DEPLOYMENT_PREFIX=" >> $GITHUB_ENV
-            echo "prefix=production" >> $GITHUB_OUTPUT
+            echo "NODE_ENV=production" >> $GITHUB_ENV
+            echo "env=production" >> $GITHUB_OUTPUT
           fi
 
       - name: Run database migrations
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DEPLOYMENT_PREFIX: ${{ env.DEPLOYMENT_PREFIX }}
+          DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+          DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_DATABASE: ${{ secrets.DATABASE_DATABASE }}
+          NODE_ENV: ${{ env.NODE_ENV }}
+          DOKPLOY_DEPLOY_URL: ${{ env.DOKPLOY_DEPLOY_URL }}
         run: pnpm db:migrate
 
       - name: Migration summary
@@ -77,12 +83,12 @@ jobs:
           {
             echo "## Database Migration Summary"
             echo ""
-            echo "- **Environment**: ${{ steps.prefix.outputs.prefix }}"
-            echo "- **Deployment Prefix**: \`${{ env.DEPLOYMENT_PREFIX }}\`"
+            echo "- **Environment**: ${{ steps.deployment.outputs.env }}"
             echo "- **Branch**: ${{ github.ref_name }}"
             if [[ "${{ github.event_name }}" == "pull_request" ]]; then
               echo "- **PR Number**: #${{ github.event.pull_request.number }}"
+              echo "- **Database**: pr_${{ github.event.pull_request.number }}"
             fi
             echo ""
-            echo "Database schemas have been migrated with the prefix: \`${{ env.DEPLOYMENT_PREFIX }}\`"
+            echo "Database migrations completed successfully"
           } >> "$GITHUB_STEP_SUMMARY"

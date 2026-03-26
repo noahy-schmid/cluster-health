@@ -4,7 +4,12 @@
   "globalEnv": [
     "CI",
     "DATABASE_URL",
-    "DEPLOYMENT_PREFIX",
+    "DATABASE_HOST",
+    "DATABASE_PORT",
+    "DATABASE_USER",
+    "DATABASE_PASSWORD",
+    "DATABASE_DATABASE",
+    "DOKPLOY_DEPLOY_URL",
     "JWT_SECRET",
     "NODE_ENV",
     "PLAYWRIGHT_MANAGEMENT_PASSWORD",
@@ -37,7 +42,7 @@
     },
     "db:generate": {
       "dependsOn": ["^db:generate"],
-      "inputs": ["$TURBO_DEFAULT$", "**/schema.ts", "**/schema-config.ts"],
+      "inputs": ["$TURBO_DEFAULT$", "**/schema.ts"],
       "outputs": ["drizzle/**"]
     },
     "db:drop": {
@@ -45,7 +50,7 @@
       "outputs": []
     },
     "db:push": {
-      "inputs": ["$TURBO_DEFAULT$", "drizzle/**", "**/schema.ts", "**/schema-config.ts"],
+      "inputs": ["$TURBO_DEFAULT$", "drizzle/**", "**/schema.ts"],
       "outputs": []
     },
     "test": {

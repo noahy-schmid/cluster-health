@@ -4,6 +4,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { config as loadEnv } from "dotenv";
+import { Client } from "pg";
+
+import { getDatabaseConfig, buildDatabaseUrl } from "./database-config";
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const rootDir = path.resolve(path.dirname(currentFilePath), "..");
@@ -12,31 +15,6 @@ const rootDir = path.resolve(path.dirname(currentFilePath), "..");
 const envPath = path.join(rootDir, ".env");
 if (fs.existsSync(envPath)) {
   loadEnv({ path: envPath });
-}
-
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  console.error("❌ DATABASE_URL is missing. Cannot run migrations.");
-  process.exit(1);
-}
-
-// Get deployment prefix for PR/staging deployments
-// For PR deployments: DEPLOYMENT_PREFIX=pr-123
-// For staging: DEPLOYMENT_PREFIX=staging
-// For production: No prefix (or empty string)
-const deploymentPrefix = process.env.DEPLOYMENT_PREFIX || "";
-
-const validatePrefix = (prefix: string): boolean => {
-  if (!prefix) return true;
-  // Prefix should be alphanumeric with hyphens and underscores only
-  return /^[a-z0-9_-]+$/i.test(prefix);
-};
-
-if (!validatePrefix(deploymentPrefix)) {
-  console.error(
-    `❌ Invalid DEPLOYMENT_PREFIX: "${deploymentPrefix}". Must be alphanumeric with hyphens/underscores only.`,
-  );
-  process.exit(1);
 }
 
 const domains = [
@@ -54,7 +32,54 @@ const domains = [
   },
 ];
 
-const migrateDomain = (domain: { name: string; path: string }) => {
+/**
+ * Ensures the target database exists, creating it if necessary
+ */
+async function ensureDatabaseExists(
+  dbConfig: ReturnType<typeof getDatabaseConfig>,
+): Promise<void> {
+  // Connect to postgres database to create target database if needed
+  const adminUrl = buildDatabaseUrl({
+    ...dbConfig,
+    database: "postgres", // Connect to default postgres database
+  });
+
+  const client = new Client({ connectionString: adminUrl });
+
+  try {
+    await client.connect();
+
+    // Check if database exists
+    const result = await client.query(
+      "SELECT 1 FROM pg_database WHERE datname = $1",
+      [dbConfig.database],
+    );
+
+    if (result.rows.length === 0) {
+      // Database doesn't exist, create it
+      console.log(`📦 Creating database "${dbConfig.database}"...`);
+
+      // CREATE DATABASE cannot be run in a transaction, so we use template0
+      await client.query(
+        `CREATE DATABASE "${dbConfig.database}" TEMPLATE template0 ENCODING 'UTF8'`,
+      );
+
+      console.log(`   ✅ Database "${dbConfig.database}" created successfully`);
+    } else {
+      console.log(`   ℹ️  Database "${dbConfig.database}" already exists`);
+    }
+  } catch (error) {
+    console.error(`   ❌ Failed to ensure database exists:`, error);
+    throw error;
+  } finally {
+    await client.end();
+  }
+}
+
+const migrateDomain = (
+  domain: { name: string; path: string },
+  databaseUrl: string,
+) => {
   console.log(`\n📦 Migrating ${domain.name}...`);
 
   const domainPath = path.join(rootDir, domain.path);
@@ -67,14 +92,12 @@ const migrateDomain = (domain: { name: string; path: string }) => {
 
   try {
     // Run drizzle-kit push command for this domain
-    // This uses the db:push script from the domain's package.json
     console.log(`   Pushing schema changes for ${domain.name}...`);
 
-    // Pass through all environment variables including DEPLOYMENT_PREFIX
+    // Pass through all environment variables with the correct DATABASE_URL
     const env = {
       ...process.env,
       DATABASE_URL: databaseUrl,
-      DEPLOYMENT_PREFIX: deploymentPrefix,
     };
 
     execSync("pnpm db:push", {
@@ -90,22 +113,24 @@ const migrateDomain = (domain: { name: string; path: string }) => {
   }
 };
 
-const main = () => {
+const main = async () => {
   console.log("🚀 Starting database migrations...");
 
-  if (deploymentPrefix) {
-    console.log(`📍 Deployment prefix: "${deploymentPrefix}"`);
-    console.log(
-      `   Schemas will use prefixed names for PR/staging deployments`,
-    );
-  } else {
-    console.log(`📍 No deployment prefix - using default schema names`);
-  }
+  // Get database configuration
+  const dbConfig = getDatabaseConfig();
+  const databaseUrl = buildDatabaseUrl(dbConfig);
+
+  console.log(`📍 Database: ${dbConfig.database}`);
+  console.log(`   Host: ${dbConfig.host}:${dbConfig.port}`);
+  console.log(`   User: ${dbConfig.user}`);
 
   try {
+    // Ensure the database exists
+    await ensureDatabaseExists(dbConfig);
+
     // Migrate all domains sequentially
     for (const domain of domains) {
-      migrateDomain(domain);
+      migrateDomain(domain, databaseUrl);
     }
 
     console.log("\n✅ All migrations completed successfully!");

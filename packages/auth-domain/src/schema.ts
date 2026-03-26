@@ -2,9 +2,7 @@ import { timestamp } from "drizzle-orm/pg-core";
 import { pgSchema } from "drizzle-orm/pg-core";
 import { text, uuid, varchar } from "drizzle-orm/pg-core";
 
-import { AUTH_SCHEMA_NAME } from "./schema-config";
-
-export const authSchema = pgSchema(AUTH_SCHEMA_NAME);
+export const authSchema = pgSchema("auth");
 
 export const managementUserTable = authSchema.table("management_user", {
   id: uuid().primaryKey().defaultRandom(),
