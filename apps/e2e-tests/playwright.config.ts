@@ -61,6 +61,9 @@ export default defineConfig({
       env: {
         ...process.env,
         DATABASE_URL: e2eEnvironment.databaseUrl,
+        DATABASE_USER: e2eEnvironment.databaseUser,
+        DATABASE_PASSWORD: e2eEnvironment.databasePassword,
+        DATABASE_NAME: e2eEnvironment.databaseName,
         JWT_SECRET: e2eEnvironment.jwtSecret,
         PLAYWRIGHT_MANAGEMENT_PASSWORD: e2eEnvironment.managementPassword,
         SALON_URL: e2eEnvironment.salonBaseUrl,
@@ -84,6 +87,9 @@ export default defineConfig({
       env: {
         ...process.env,
         DATABASE_URL: e2eEnvironment.databaseUrl,
+        DATABASE_USER: e2eEnvironment.databaseUser,
+        DATABASE_PASSWORD: e2eEnvironment.databasePassword,
+        DATABASE_NAME: e2eEnvironment.databaseName,
         JWT_SECRET: e2eEnvironment.jwtSecret,
         PLAYWRIGHT_MANAGEMENT_PASSWORD: e2eEnvironment.managementPassword,
         SALON_URL: e2eEnvironment.salonBaseUrl,

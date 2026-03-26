@@ -3,24 +3,58 @@ import { drizzle, NodePgQueryResultHKT } from "drizzle-orm/node-postgres";
 import { PgTransaction } from "drizzle-orm/pg-core";
 import { Configuration } from "./infrastructure/config.interface";
 
-let dbInstance: ReturnType<typeof drizzle> | undefined;
+function deriveDatabaseName(deployUrl: string): string {
+  const parsed = new URL(deployUrl);
+  let sanitized = parsed.hostname.toLowerCase().replace(/[^a-z0-9]/g, "_");
+  if (/^[0-9]/.test(sanitized)) {
+    sanitized = `_${sanitized}`;
+  }
+  return sanitized.slice(0, 63) || "preview_db";
+}
 
-const getConfig = () => {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
+function buildDatabaseUrl(): string {
+  const url = process.env.DATABASE_URL;
+  const user = process.env.DATABASE_USER;
+  const password = process.env.DATABASE_PASSWORD;
+
+  if (!url || !user || !password) {
     throw new Error(
-      "DATABASE_URL environment variable is not defined. Please set it in your .env file or environment configuration.",
+      "DATABASE_URL, DATABASE_USER, and DATABASE_PASSWORD environment variables must be set",
     );
   }
-  return databaseUrl;
-};
+
+  let dbName = process.env.DATABASE_NAME;
+
+  if (!dbName) {
+    if (process.env.DEPLOYMENT_CONTEXT === "development") {
+      const deployUrl = process.env.DOKPLOY_DEPLOY_URL;
+      if (!deployUrl) {
+        throw new Error(
+          "DOKPLOY_DEPLOY_URL must be set when DEPLOYMENT_CONTEXT=development and DATABASE_NAME is not provided",
+        );
+      }
+      dbName = deriveDatabaseName(deployUrl);
+    } else {
+      throw new Error("DATABASE_NAME environment variable must be set");
+    }
+  }
+
+  const parsedUrl = new URL(url);
+  parsedUrl.username = user;
+  parsedUrl.password = password;
+  parsedUrl.pathname = `/${dbName}`;
+
+  return parsedUrl.toString();
+}
+
+let dbInstance: ReturnType<typeof drizzle> | undefined;
 
 const getDbInstance = () => {
   if (dbInstance) {
     return dbInstance;
   }
 
-  dbInstance = drizzle(getConfig());
+  dbInstance = drizzle(buildDatabaseUrl());
   return dbInstance;
 };
 

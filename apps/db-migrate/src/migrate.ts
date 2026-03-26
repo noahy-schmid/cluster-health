@@ -1,5 +1,12 @@
 import "dotenv/config";
-import { defineConfig } from "drizzle-kit";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { Pool } from "pg";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function deriveDatabaseName(deployUrl: string): string {
   const parsed = new URL(deployUrl);
@@ -45,11 +52,44 @@ function buildDatabaseUrl(): string {
   return parsedUrl.toString();
 }
 
-export default defineConfig({
-  out: "./drizzle",
-  schema: "./src/schema.ts",
-  dialect: "postgresql",
-  dbCredentials: {
-    url: buildDatabaseUrl(),
-  },
-});
+const main = async () => {
+  const connectionString = buildDatabaseUrl();
+
+  const pool = new Pool({ connectionString });
+  const db = drizzle(pool);
+
+  try {
+    console.log("Running auth-domain migrations...");
+    await migrate(db, {
+      migrationsFolder: path.join(
+        __dirname,
+        "../../packages/auth-domain/drizzle",
+      ),
+    });
+
+    console.log("Running salon-domain migrations...");
+    await migrate(db, {
+      migrationsFolder: path.join(
+        __dirname,
+        "../../packages/salon-domain/drizzle",
+      ),
+    });
+
+    console.log("Running website-domain migrations...");
+    await migrate(db, {
+      migrationsFolder: path.join(
+        __dirname,
+        "../../packages/website-domain/drizzle",
+      ),
+    });
+
+    console.log("All migrations completed successfully.");
+  } catch (error) {
+    console.error("Migration failed:", error);
+    process.exitCode = 1;
+  } finally {
+    await pool.end();
+  }
+};
+
+void main();

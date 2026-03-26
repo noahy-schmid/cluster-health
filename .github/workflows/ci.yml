@@ -18,6 +18,9 @@ jobs:
 
     env:
       DATABASE_URL: ${{ vars.DATABASE_URL }}
+      DATABASE_USER: ${{ vars.DATABASE_USER }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_NAME: ${{ vars.DATABASE_NAME }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       NODE_ENV: production
 
@@ -82,7 +85,10 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/deinsalon_e2e
+      DATABASE_URL: postgresql://127.0.0.1:5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: deinsalon_e2e
       JWT_SECRET: playwright-ci-secret
       NODE_ENV: test
       SALON_URL: http://127.0.0.1:3001

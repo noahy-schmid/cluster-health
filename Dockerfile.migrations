@@ -1,0 +1,50 @@
+FROM node:22-alpine AS base
+
+RUN npm install -g pnpm
+ENV PNPM_HOME="/usr/local/share/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN mkdir -p $PNPM_HOME
+
+FROM base AS builder
+RUN apk update
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+RUN pnpm add -g turbo@^2
+COPY . .
+
+# Generate a partial monorepo with a pruned lockfile for the db-migrate workspace.
+RUN turbo prune db-migrate --docker
+
+# Add lockfile and package.json's of isolated subworkspace
+FROM base AS installer
+RUN apk update
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# First install the dependencies (as they change less often)
+COPY --from=builder /app/out/json/ .
+RUN pnpm install --frozen-lockfile
+
+# Copy full workspace sources
+COPY --from=builder /app/out/full/ .
+
+# Copy migration SQL files from all domain packages
+COPY packages/auth-domain/drizzle/ packages/auth-domain/drizzle/
+COPY packages/salon-domain/drizzle/ packages/salon-domain/drizzle/
+COPY packages/website-domain/drizzle/ packages/website-domain/drizzle/
+
+# Compile the migration script
+RUN pnpm --filter db-migrate build
+
+FROM base AS runner
+WORKDIR /app
+
+# Don't run as root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 migrator
+USER migrator
+
+COPY --from=installer --chown=migrator:nodejs /app ./
+
+CMD ["node", "apps/db-migrate/dist/migrate.js"]
