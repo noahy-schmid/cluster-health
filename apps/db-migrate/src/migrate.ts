@@ -7,6 +7,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const workspaceRoot = path.resolve(__dirname, "../../../");
 
 function deriveDatabaseName(deployUrl: string): string {
   const parsed = new URL(deployUrl);
@@ -17,17 +18,7 @@ function deriveDatabaseName(deployUrl: string): string {
   return sanitized.slice(0, 63) || "preview_db";
 }
 
-function buildDatabaseUrl(): string {
-  const url = process.env.DATABASE_URL;
-  const user = process.env.DATABASE_USER;
-  const password = process.env.DATABASE_PASSWORD;
-
-  if (!url || !user || !password) {
-    throw new Error(
-      "DATABASE_URL, DATABASE_USER, and DATABASE_PASSWORD environment variables must be set",
-    );
-  }
-
+function resolveDatabaseName(): string {
   let dbName = process.env.DATABASE_NAME;
 
   if (!dbName) {
@@ -44,16 +35,62 @@ function buildDatabaseUrl(): string {
     }
   }
 
+  return dbName;
+}
+
+function buildConnectionString(databaseName: string): string {
+  const url = process.env.DATABASE_URL;
+  const user = process.env.DATABASE_USER;
+  const password = process.env.DATABASE_PASSWORD;
+
+  if (!url || !user || !password) {
+    throw new Error(
+      "DATABASE_URL, DATABASE_USER, and DATABASE_PASSWORD environment variables must be set",
+    );
+  }
+
   const parsedUrl = new URL(url);
   parsedUrl.username = user;
   parsedUrl.password = password;
-  parsedUrl.pathname = `/${dbName}`;
+  parsedUrl.pathname = `/${databaseName}`;
 
   return parsedUrl.toString();
 }
 
+function quoteIdentifier(identifier: string): string {
+  return `"${identifier.replace(/"/g, '""')}"`;
+}
+
+async function ensureDatabaseExists(databaseName: string): Promise<void> {
+  const adminDatabaseName = process.env.DATABASE_ADMIN_DB ?? "postgres";
+  const adminConnectionString = buildConnectionString(adminDatabaseName);
+  const adminPool = new Pool({ connectionString: adminConnectionString });
+
+  try {
+    const result = await adminPool.query<{ exists: boolean }>(
+      "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1) AS exists",
+      [databaseName],
+    );
+
+    if (result.rows[0]?.exists) {
+      console.log(`Database \"${databaseName}\" already exists.`);
+      return;
+    }
+
+    console.log(`Database \"${databaseName}\" does not exist. Creating...`);
+    await adminPool.query(`CREATE DATABASE ${quoteIdentifier(databaseName)}`);
+    console.log(`Database \"${databaseName}\" created successfully.`);
+  } finally {
+    await adminPool.end();
+  }
+}
+
 const main = async () => {
-  const connectionString = buildDatabaseUrl();
+  const databaseName = resolveDatabaseName();
+
+  await ensureDatabaseExists(databaseName);
+
+  const connectionString = buildConnectionString(databaseName);
 
   const pool = new Pool({ connectionString });
   const db = drizzle(pool);
@@ -62,24 +99,28 @@ const main = async () => {
     console.log("Running auth-domain migrations...");
     await migrate(db, {
       migrationsFolder: path.join(
-        __dirname,
-        "../../packages/auth-domain/drizzle",
+        workspaceRoot,
+        "packages/auth-domain/drizzle",
       ),
     });
 
     console.log("Running salon-domain migrations...");
     await migrate(db, {
+      migrationsSchema: "drizzle",
+      migrationsTable: "__drizzle_migrations_salon",
       migrationsFolder: path.join(
-        __dirname,
-        "../../packages/salon-domain/drizzle",
+        workspaceRoot,
+        "packages/salon-domain/drizzle",
       ),
     });
 
     console.log("Running website-domain migrations...");
     await migrate(db, {
+      migrationsSchema: "drizzle",
+      migrationsTable: "__drizzle_migrations_website",
       migrationsFolder: path.join(
-        __dirname,
-        "../../packages/website-domain/drizzle",
+        workspaceRoot,
+        "packages/website-domain/drizzle",
       ),
     });
 
