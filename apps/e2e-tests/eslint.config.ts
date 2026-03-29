@@ -9,4 +9,11 @@ export default defineConfig([
   {
     files: ["e2e/**/*.ts"],
   },
+  {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
 ]);
