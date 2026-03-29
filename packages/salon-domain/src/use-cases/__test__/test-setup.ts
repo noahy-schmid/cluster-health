@@ -74,6 +74,7 @@ export async function setupTestContext(): Promise<TestContext> {
     Configuration,
     Effect.succeed({
       databaseUrl: pgContainer.databaseUrl,
+      isPreviewDeployment: false,
       s3Url: "",
       s3Region: "us-east-1",
       s3AccessKey: "",

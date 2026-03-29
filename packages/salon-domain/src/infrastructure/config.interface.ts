@@ -2,6 +2,7 @@ import { Context } from "effect";
 
 export interface Configuration {
   databaseUrl: string;
+  isPreviewDeployment: boolean;
   s3Url: string;
   s3Region: string;
   s3AccessKey: string;

@@ -101,6 +101,7 @@ describe("MediaService Integration Tests", () => {
       Configuration,
       Effect.succeed({
         databaseUrl: pgContainer.databaseUrl,
+        isPreviewDeployment: false,
         s3Url: `http://${minioContainer.host}:${minioContainer.port}`,
         s3Region: "us-east-1",
         s3AccessKey: minioContainer.accessKey,
