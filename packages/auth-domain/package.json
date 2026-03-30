@@ -25,6 +25,7 @@
     "typescript": "5.9.2"
   },
   "dependencies": {
+    "@repo/infrastructure-deployment": "workspace:*",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "jose": "^6.1.3",

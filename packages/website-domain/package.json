@@ -34,6 +34,7 @@
     "vitest": "^3.1.4"
   },
   "dependencies": {
+    "@repo/infrastructure-deployment": "workspace:*",
     "@repo/salon-domain": "workspace:*",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",

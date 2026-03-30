@@ -36,6 +36,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.995.0",
     "@aws-sdk/s3-presigned-post": "^3.995.0",
+    "@repo/infrastructure-deployment": "workspace:*",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "effect": "^3.19.16",

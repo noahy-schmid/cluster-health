@@ -1,8 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 import path from "path";
-import { e2eEnvironment } from "./e2e/env";
+import { e2eEnvironment } from "./e2e/env.js";
 
-const repositoryRoot = path.resolve(__dirname, "../..");
+const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const appServerStartupTimeout = 240_000;
 const salonWebpageBuildIdPath = "apps/salon-webpage/.next/BUILD_ID";
 const htmlReporter = ["html", { open: "never" }] as const;

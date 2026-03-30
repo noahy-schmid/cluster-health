@@ -1,6 +1,10 @@
 import "dotenv/config";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import {
+  derivePreviewDatabaseName,
+  isPreviewDeployment,
+} from "@repo/infrastructure-deployment";
 
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -9,27 +13,18 @@ import { Pool } from "pg";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(__dirname, "../../../");
 
-function deriveDatabaseName(deployUrl: string): string {
-  const parsed = new URL(deployUrl);
-  let sanitized = parsed.hostname.toLowerCase().replace(/[^a-z0-9]/g, "_");
-  if (/^[0-9]/.test(sanitized)) {
-    sanitized = `_${sanitized}`;
-  }
-  return sanitized.slice(0, 63) || "preview_db";
-}
-
 function resolveDatabaseName(): string {
   let dbName = process.env.DATABASE_NAME;
 
   if (!dbName) {
-    if (process.env.DEPLOYMENT_CONTEXT === "development") {
+    if (isPreviewDeployment(process.env.DEPLOYMENT_CONTEXT)) {
       const deployUrl = process.env.DOKPLOY_DEPLOY_URL;
       if (!deployUrl) {
         throw new Error(
           "DOKPLOY_DEPLOY_URL must be set when DEPLOYMENT_CONTEXT=development and DATABASE_NAME is not provided",
         );
       }
-      dbName = deriveDatabaseName(deployUrl);
+      dbName = derivePreviewDatabaseName(deployUrl);
     } else {
       throw new Error("DATABASE_NAME environment variable must be set");
     }
@@ -133,4 +128,10 @@ const main = async () => {
   }
 };
 
-void main();
+const isEntrypoint =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isEntrypoint) {
+  void main();
+}
