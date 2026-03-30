@@ -17,7 +17,7 @@
     "S3_URL",
     "S3_SALON_ACCESS_KEY",
     "S3_SALON_SECRET_KEY",
-    "S3_WEBSITE_BUCKET_NAME",
+    "S3_SALON_BUCKET",
     "S3_REGION"
   ],
   "envMode": "strict",

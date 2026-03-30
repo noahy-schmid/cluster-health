@@ -42,7 +42,7 @@ const makeConfiguration = Effect.gen(function* () {
     s3AccessKey: process.env.S3_SALON_ACCESS_KEY || "",
     s3SecretKey: process.env.S3_SALON_SECRET_KEY || "",
     s3BucketName: buildBucketName(
-      process.env.S3_WEBSITE_BUCKET_NAME || "salon-media",
+      process.env.S3_SALON_BUCKET || "salon-media",
     ),
   };
 
