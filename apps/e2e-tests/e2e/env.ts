@@ -8,7 +8,7 @@ export const e2eEnvironment = {
   s3Url: process.env.S3_URL ?? "http://127.0.0.1:9000",
   s3AccessKey: process.env.S3_SALON_ACCESS_KEY ?? "minioadmin",
   s3SecretKey: process.env.S3_SALON_SECRET_KEY ?? "minioadmin",
-  s3BucketName: process.env.S3_WEBSITE_BUCKET_NAME ?? "salon-media",
+  s3BucketName: process.env.S3_SALON_BUCKET ?? "salon-media",
   jwtSecret: process.env.JWT_SECRET ?? "deinsalon-playwright-test-secret",
   managementPassword:
     process.env.PLAYWRIGHT_MANAGEMENT_PASSWORD ?? "Playwright123!",
