@@ -92,6 +92,7 @@ jobs:
       JWT_SECRET: playwright-ci-secret
       NODE_ENV: test
       SALON_URL: http://127.0.0.1:3001
+      S3_ALLOW_DOMAINS: "*"
 
     steps:
       - name: Checkout code
