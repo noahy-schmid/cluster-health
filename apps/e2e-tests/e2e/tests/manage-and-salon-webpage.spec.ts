@@ -1,7 +1,7 @@
-import { expect, test } from "../fixtures/cross-app.fixture";
+import { expect, test } from "../fixtures/cross-app.fixture.js";
 import path from "path";
 
-const repositoryRoot = path.resolve(__dirname, "../../../..");
+const repositoryRoot = path.resolve(import.meta.url, "../../../..");
 
 test.describe("Manage Salon webpage + Salon webpage", () => {
   test.describe.configure({ timeout: 120_000 });
