@@ -1,7 +1,13 @@
 import { expect, test } from "../fixtures/cross-app.fixture.js";
 import path from "path";
+import { fileURLToPath } from "url";
+import { e2eEnvironment } from "../env.js";
 
-const repositoryRoot = path.resolve(import.meta.url, "../../../..");
+const currentFilePath = fileURLToPath(import.meta.url);
+const repositoryRoot = path.resolve(
+  path.dirname(currentFilePath),
+  "../../../..",
+);
 
 test.describe("Manage Salon webpage + Salon webpage", () => {
   test.describe.configure({ timeout: 120_000 });
@@ -88,7 +94,9 @@ test.describe("Manage Salon webpage + Salon webpage", () => {
     await expect(publicPage.getByAltText(firstStylist.name)).toBeVisible();
     await expect(publicPage.getByAltText(firstStylist.name)).toHaveAttribute(
       "src",
-      /salon-media/,
+      new RegExp(
+        e2eEnvironment.s3BucketName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      ),
     );
     await expect(publicPage).toHaveURL(website.publicUrl);
 
@@ -118,11 +126,15 @@ test.describe("Manage Salon webpage + Salon webpage", () => {
     await expect(publicPage.getByText(secondStylist.subtitle)).toBeVisible();
     await expect(publicPage.getByAltText(firstStylist.name)).toHaveAttribute(
       "src",
-      /salon-media/,
+      new RegExp(
+        e2eEnvironment.s3BucketName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      ),
     );
     await expect(publicPage.getByAltText(secondStylist.name)).toHaveAttribute(
       "src",
-      /salon-media/,
+      new RegExp(
+        e2eEnvironment.s3BucketName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      ),
     );
     await scenario.iCapturePublicPage("public-salon-website-with-two-stylists");
   });
