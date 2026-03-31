@@ -6,9 +6,13 @@ export const e2eEnvironment = {
   manageBaseUrl: "http://127.0.0.1:3000",
   salonBaseUrl: process.env.SALON_URL ?? "http://127.0.0.1:3001",
   s3Url: process.env.S3_URL ?? "http://127.0.0.1:9000",
+  s3Region: process.env.S3_REGION ?? "us-east-1",
   s3AccessKey: process.env.S3_SALON_ACCESS_KEY ?? "minioadmin",
   s3SecretKey: process.env.S3_SALON_SECRET_KEY ?? "minioadmin",
   s3BucketName: process.env.S3_SALON_BUCKET ?? "salon-media",
+  s3Principal: process.env.S3_SALON_PRINCIPAL ?? "",
+  s3BucketPolicyTemplate: process.env.S3_BUCKET_POLICY_TEMPLATE ?? "",
+  s3AllowDomains: process.env.S3_ALLOW_DOMAINS ?? "",
   jwtSecret: process.env.JWT_SECRET ?? "deinsalon-playwright-test-secret",
   managementPassword:
     process.env.PLAYWRIGHT_MANAGEMENT_PASSWORD ?? "Playwright123!",
