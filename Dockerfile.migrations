@@ -1,4 +1,4 @@
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 RUN npm install -g pnpm
 ENV PNPM_HOME="/usr/local/share/pnpm"
@@ -13,7 +13,6 @@ WORKDIR /app
 RUN pnpm add -g turbo@^2
 COPY . .
 
-# Generate a partial monorepo with a pruned lockfile for the db-migrate workspace.
 RUN turbo prune db-migrate --docker
 
 # Add lockfile and package.json's of isolated subworkspace
@@ -34,8 +33,9 @@ COPY packages/auth-domain/drizzle/ packages/auth-domain/drizzle/
 COPY packages/salon-domain/drizzle/ packages/salon-domain/drizzle/
 COPY packages/website-domain/drizzle/ packages/website-domain/drizzle/
 
-# Compile the migration script
-RUN pnpm --filter db-migrate build
+# Build the project
+COPY --from=builder /app/out/full/ .
+RUN pnpm turbo run build --filter=db-migrate
 
 FROM base AS runner
 WORKDIR /app
