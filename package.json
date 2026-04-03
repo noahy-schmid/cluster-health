@@ -37,6 +37,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@repo/infrastructure-deployment": "workspace:*",
     "dotenv": "^17.2.3",
     "pg": "^8.18.0"
   }

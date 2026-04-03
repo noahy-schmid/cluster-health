@@ -1,8 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 import path from "path";
-import { e2eEnvironment } from "./e2e/env";
+import { e2eEnvironment } from "./e2e/env.js";
 
-const repositoryRoot = path.resolve(__dirname, "../..");
+const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const appServerStartupTimeout = 240_000;
 const salonWebpageBuildIdPath = "apps/salon-webpage/.next/BUILD_ID";
 const htmlReporter = ["html", { open: "never" }] as const;
@@ -68,15 +68,19 @@ export default defineConfig({
         PLAYWRIGHT_MANAGEMENT_PASSWORD: e2eEnvironment.managementPassword,
         SALON_URL: e2eEnvironment.salonBaseUrl,
         S3_URL: e2eEnvironment.s3Url,
+        S3_REGION: e2eEnvironment.s3Region,
         S3_SALON_ACCESS_KEY: e2eEnvironment.s3AccessKey,
         S3_SALON_SECRET_KEY: e2eEnvironment.s3SecretKey,
-        S3_WEBSITE_BUCKET_NAME: e2eEnvironment.s3BucketName,
+        S3_SALON_BUCKET: e2eEnvironment.s3BucketName,
+        S3_SALON_PRINCIPAL: e2eEnvironment.s3Principal,
+        S3_BUCKET_POLICY_TEMPLATE: e2eEnvironment.s3BucketPolicyTemplate,
+        S3_ALLOW_DOMAINS: e2eEnvironment.s3AllowDomains,
         NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS: "1",
         NODE_ENV: e2eEnvironment.nodeEnv,
         PORT: "3000",
       },
       port: 3000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       stdout: "pipe",
       stderr: "pipe",
       timeout: appServerStartupTimeout,
@@ -94,15 +98,19 @@ export default defineConfig({
         PLAYWRIGHT_MANAGEMENT_PASSWORD: e2eEnvironment.managementPassword,
         SALON_URL: e2eEnvironment.salonBaseUrl,
         S3_URL: e2eEnvironment.s3Url,
+        S3_REGION: e2eEnvironment.s3Region,
         S3_SALON_ACCESS_KEY: e2eEnvironment.s3AccessKey,
         S3_SALON_SECRET_KEY: e2eEnvironment.s3SecretKey,
-        S3_WEBSITE_BUCKET_NAME: e2eEnvironment.s3BucketName,
+        S3_SALON_BUCKET: e2eEnvironment.s3BucketName,
+        S3_SALON_PRINCIPAL: e2eEnvironment.s3Principal,
+        S3_BUCKET_POLICY_TEMPLATE: e2eEnvironment.s3BucketPolicyTemplate,
+        S3_ALLOW_DOMAINS: e2eEnvironment.s3AllowDomains,
         NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS: "1",
         NODE_ENV: e2eEnvironment.nodeEnv,
         PORT: "3001",
       },
       port: 3001,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       stdout: "pipe",
       stderr: "pipe",
       timeout: appServerStartupTimeout,

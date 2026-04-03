@@ -38,6 +38,10 @@
       "path": "packages/test-fixtures",
     },
     {
+      "name": "infrastructure | deployment",
+      "path": "packages/infrastructure-deployment",
+    },
+    {
       "name": "infrastructure | e2e-tests",
       "path": "apps/e2e-tests",
     }

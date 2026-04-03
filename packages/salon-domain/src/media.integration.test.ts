@@ -101,11 +101,17 @@ describe("MediaService Integration Tests", () => {
       Configuration,
       Effect.succeed({
         databaseUrl: pgContainer.databaseUrl,
+        nodeEnv: "test",
+        isPreviewDeployment: false,
         s3Url: `http://${minioContainer.host}:${minioContainer.port}`,
         s3Region: "us-east-1",
         s3AccessKey: minioContainer.accessKey,
         s3SecretKey: minioContainer.secretKey,
         s3BucketName: "test-bucket",
+        s3Principal: "",
+        s3BucketPolicyTemplate:
+          '{"Version":"2012-10-17","Statement":[{"Sid":"PublicReadGetObject","Effect":"Allow","Principal":"*","Action":["s3:GetObject"],"Resource":["arn:aws:s3:::{{bucket}}/*"]}]}',
+        s3AllowDomains: ["*"],
       }),
     );
 

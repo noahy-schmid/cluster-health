@@ -80,10 +80,7 @@ const make = Effect.gen(function* () {
       const presigned = yield* fileStoragePort.createPresignedPost({
         bucket: config.s3BucketName,
         key: s3Key,
-        conditions: [
-          ["content-length-range", 0, input.fileSize],
-          ["starts-with", "$Content-Type", ""],
-        ],
+        conditions: [["content-length-range", 0, input.fileSize]],
         expires: 300,
       });
 

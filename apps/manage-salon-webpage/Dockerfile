@@ -1,4 +1,4 @@
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 RUN npm install -g pnpm
 ENV PNPM_HOME="/usr/local/share/pnpm"
@@ -8,13 +8,11 @@ RUN mkdir -p $PNPM_HOME
 FROM base AS builder
 RUN apk update
 RUN apk add --no-cache libc6-compat
-# Set working directory
 WORKDIR /app
 
 RUN pnpm add -g turbo@^2
 COPY . .
 
-# Generate a partial monorepo with a pruned lockfile for a target workspace.
 RUN turbo prune manage-salon-webpage --docker
 
 # Add lockfile and package.json's of isolated subworkspace

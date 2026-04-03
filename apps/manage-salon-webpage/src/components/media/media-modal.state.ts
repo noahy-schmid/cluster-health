@@ -1,6 +1,7 @@
 "use client";
 
 import { useReducer, useCallback } from "react";
+import axios from "axios";
 import { MediaFile } from "@/api/media-actions";
 import { validateFile } from "./media-utils";
 import {
@@ -161,15 +162,7 @@ export function useMediaModalState({
         });
         formData.append("file", file);
 
-        const uploadResponse = await fetch(uploadUrl, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!uploadResponse.ok) {
-          setError("Upload fehlgeschlagen");
-          return;
-        }
+        await axios.post(uploadUrl, formData);
 
         setUploadProgress(80);
 

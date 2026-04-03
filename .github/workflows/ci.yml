@@ -92,6 +92,8 @@ jobs:
       JWT_SECRET: playwright-ci-secret
       NODE_ENV: test
       SALON_URL: http://127.0.0.1:3001
+      S3_ALLOW_DOMAINS: "*"
+      S3_BUCKET_POLICY_TEMPLATE: '{"Version":"2012-10-17","Statement":[{"Sid":"PublicReadGetObject","Effect":"Allow","Principal":"*","Action":["s3:GetObject"],"Resource":["arn:aws:s3:::{{bucket}}/*"]}]}'
 
     steps:
       - name: Checkout code

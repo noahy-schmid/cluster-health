@@ -8,4 +8,11 @@ export default defineConfig([
     files: ["**/*.ts", "**/*.tsx"],
     ignores: ["dist/**"],
   },
+  {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: new URL(".", import.meta.url).pathname.slice(0, -1),
+      },
+    },
+  },
 ]);

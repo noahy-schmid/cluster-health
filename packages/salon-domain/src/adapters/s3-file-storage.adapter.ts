@@ -12,6 +12,7 @@ import {
   HeadBucketCommand,
   CreateBucketCommand,
   PutBucketPolicyCommand,
+  PutBucketCorsCommand,
   HeadObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
@@ -35,6 +36,17 @@ const createS3Client = (
   });
 };
 
+const buildBucketPolicy = (
+  policyTemplate: string,
+  bucket: string,
+  s3Principal: string,
+) =>
+  policyTemplate
+    .split("{{bucket}}")
+    .join(bucket)
+    .split("{{s3Principal}}")
+    .join(s3Principal);
+
 const makeFileStoragePort = Effect.gen(function* () {
   const config = yield* Configuration;
 
@@ -44,6 +56,9 @@ const makeFileStoragePort = Effect.gen(function* () {
     config.s3AccessKey,
     config.s3SecretKey,
   );
+
+  const corsAllowedOrigins =
+    config.nodeEnv === "production" ? config.s3AllowDomains : ["*"];
 
   const createPresignedPostImpl = (policy: PresignedPostPolicy) =>
     Effect.gen(function* () {
@@ -135,6 +150,11 @@ const makeFileStoragePort = Effect.gen(function* () {
         return;
       }
 
+      yield* Effect.logInfo(
+        `Bucket ${bucket} does not exist yet, creating it now`,
+        bucket,
+      );
+
       yield* Effect.tryPromise(() =>
         s3Client.send(
           new CreateBucketCommand({
@@ -142,45 +162,85 @@ const makeFileStoragePort = Effect.gen(function* () {
           }),
         ),
       ).pipe(
-        Effect.mapError(
-          (error) =>
-            new S3Error({
-              message: `Failed to create bucket: ${bucket}`,
-              cause: error,
-            }),
+        Effect.tapError((error) =>
+          Effect.logError(`Failed to create bucket: ${bucket}`, error),
         ),
       );
 
-      const anonymousReadPolicy = {
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Sid: "PublicReadGetObject",
-            Effect: "Allow",
-            Principal: "*",
-            Action: ["s3:GetObject"],
-            Resource: [`arn:aws:s3:::${bucket}/*`],
-          },
-        ],
-      };
+      yield* Effect.logInfo(`Bucket ${bucket} created successfully`, bucket);
+
+      const bucketPolicy = buildBucketPolicy(
+        config.s3BucketPolicyTemplate,
+        bucket,
+        config.s3Principal,
+      );
 
       yield* Effect.tryPromise(() =>
         s3Client.send(
           new PutBucketPolicyCommand({
             Bucket: bucket,
-            Policy: JSON.stringify(anonymousReadPolicy),
+            Policy: bucketPolicy,
           }),
         ),
       ).pipe(
-        Effect.mapError(
-          (error) =>
-            new S3Error({
-              message: `Failed to set bucket policy for: ${bucket}`,
-              cause: error,
-            }),
+        Effect.tapError((error) =>
+          Effect.logError(`Failed to set bucket policy for: ${bucket}`, error),
         ),
       );
-    });
+
+      yield* Effect.logInfo(
+        `Bucket policy set successfully for bucket: ${bucket}`,
+        bucket,
+      );
+
+      yield* Effect.tryPromise(() =>
+        s3Client.send(
+          new PutBucketCorsCommand({
+            Bucket: bucket,
+            CORSConfiguration: {
+              CORSRules: [
+                {
+                  AllowedOrigins: corsAllowedOrigins,
+                  AllowedMethods: ["GET", "HEAD", "POST", "PUT", "DELETE"],
+                  AllowedHeaders: ["*"],
+                  ExposeHeaders: ["ETag"],
+                  MaxAgeSeconds: 3000,
+                },
+              ],
+            },
+          }),
+        ),
+      ).pipe(
+        Effect.tapError((error) =>
+          Effect.logError(
+            `Failed to set CORS policy for bucket: ${bucket}`,
+            error,
+          ),
+        ),
+        Effect.catchAll(() => {
+          if (config.nodeEnv === "production") {
+            return Effect.fail(
+              new S3Error({
+                message: `Failed to set CORS policy for bucket: ${bucket} in production environment, this is required for proper functioning of the media upload feature. Please check the error logs for more details.`,
+              }),
+            );
+          } else {
+            return Effect.logWarning(
+              `Failed to set CORS policy for bucket: ${bucket}, but continuing anyway since we're not in production. This may cause issues with media uploads in development environments.`,
+              bucket,
+            );
+          }
+        }),
+      );
+    }).pipe(
+      Effect.mapError(
+        (error) =>
+          new S3Error({
+            message: `Failed to ensure bucket exists: ${bucket}`,
+            cause: error,
+          }),
+      ),
+    );
 
   return {
     createPresignedPost: createPresignedPostImpl,
