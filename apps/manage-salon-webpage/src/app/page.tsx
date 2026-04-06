@@ -18,7 +18,7 @@ export default async function Home() {
       <LandingNav isLoggedIn={isLoggedIn} salonId={salonId} />
 
       {/* Hero section */}
-      <HeroSection isLoggedIn={isLoggedIn} salonId={salonId} />
+      <HeroSection />
     </div>
   );
 }

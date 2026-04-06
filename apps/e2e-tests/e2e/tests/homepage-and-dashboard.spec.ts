@@ -145,6 +145,8 @@ test.describe("Landing page and dashboard", () => {
     await expect(
       managePage.getByText("Widget hinzufügen", { exact: true }),
     ).toBeVisible();
-    await expect(managePage.getByText("Gesamtkunden")).toBeVisible();
+    await expect(
+      managePage.getByRole("button", { name: "Gesamtkunden" }),
+    ).toBeVisible();
   });
 });
