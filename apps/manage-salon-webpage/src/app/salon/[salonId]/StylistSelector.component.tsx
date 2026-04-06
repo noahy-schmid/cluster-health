@@ -43,7 +43,7 @@ export function StylistSelector({
     <div ref={ref} className="relative inline-block">
       <button
         type="button"
-        aria-label="Stylist auswählen"
+        aria-label={`Stylist auswählen: ${label}`}
         onClick={() => setIsOpen((v) => !v)}
         className="flex items-center gap-sm px-md py-sm rounded-md border border-border bg-bg-1 text-fg-normal text-sm font-medium hover:bg-bg-2 transition-colors min-w-[180px]"
       >

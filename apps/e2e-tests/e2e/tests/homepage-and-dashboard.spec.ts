@@ -99,13 +99,15 @@ test.describe("Landing page and dashboard", () => {
       managePage.getByRole("heading", { name: "Dashboard" }),
     ).toBeVisible();
 
-    // Stylist selector should be visible
+    // Stylist selector should be visible (aria-label reflects current selection)
     await expect(
-      managePage.getByRole("button", { name: "Stylist auswählen" }),
+      managePage.getByRole("button", {
+        name: /Stylist auswählen/,
+      }),
     ).toBeVisible();
 
     // Open the selector
-    await managePage.getByRole("button", { name: "Stylist auswählen" }).click();
+    await managePage.getByRole("button", { name: /Stylist auswählen/ }).click();
 
     // Stylist name should appear in dropdown
     await expect(

@@ -182,9 +182,9 @@ function SortableWidget({ widget, onRemove }: SortableWidgetProps) {
 
   const colSpanClass =
     widget.width === "wide"
-      ? "col-span-4"
+      ? "col-span-1 sm:col-span-2 lg:col-span-4"
       : widget.width === "medium"
-        ? "col-span-2"
+        ? "col-span-1 sm:col-span-2 lg:col-span-2"
         : "col-span-1";
 
   return (
@@ -309,7 +309,7 @@ export function DashboardWidgetGrid({
           items={widgets.map((w) => w.id)}
           strategy={horizontalListSortingStrategy}
         >
-          <div className="grid grid-cols-4 gap-md auto-rows-fr">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md auto-rows-fr">
             {widgets.map((widget) => (
               <SortableWidget
                 key={widget.id}

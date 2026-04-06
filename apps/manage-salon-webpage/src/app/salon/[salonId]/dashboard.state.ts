@@ -72,7 +72,7 @@ function reducer(
       );
       if (!widgetDef) return state;
       const newWidget: WidgetConfig = {
-        id: `w-${action.widgetType}-${Date.now()}`,
+        id: crypto.randomUUID(),
         type: action.widgetType,
         width: widgetDef.width,
       };
