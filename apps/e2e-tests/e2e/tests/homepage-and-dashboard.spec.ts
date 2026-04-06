@@ -105,9 +105,7 @@ test.describe("Landing page and dashboard", () => {
     ).toBeVisible();
 
     // Open the selector
-    await managePage
-      .getByRole("button", { name: "Stylist auswählen" })
-      .click();
+    await managePage.getByRole("button", { name: "Stylist auswählen" }).click();
 
     // Stylist name should appear in dropdown
     await expect(
@@ -139,12 +137,12 @@ test.describe("Landing page and dashboard", () => {
     ).toHaveCount(initialCount - 1);
 
     // Open add widget panel
-    await managePage
-      .getByRole("button", { name: "Widget hinzufügen" })
-      .click();
+    await managePage.getByRole("button", { name: "Widget hinzufügen" }).click();
 
     // Panel should show widget type options
-    await expect(managePage.getByText("Widget hinzufügen", { exact: true })).toBeVisible();
+    await expect(
+      managePage.getByText("Widget hinzufügen", { exact: true }),
+    ).toBeVisible();
     await expect(managePage.getByText("Gesamtkunden")).toBeVisible();
   });
 });
