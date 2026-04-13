@@ -9,6 +9,7 @@ import {
   uuid,
   varchar,
   text,
+  date,
 } from "drizzle-orm/pg-core";
 export const salonSchema = pgSchema("salon");
 
@@ -129,4 +130,98 @@ export const employeeServiceAssignmentsTable = salonSchema.table(
   (table) => ({
     pk: primaryKey({ columns: [table.stylistId, table.serviceDefinitionId] }),
   }),
+);
+
+// --- Opening hours ---
+
+/**
+ * Weekly recurring salon opening hours.
+ * dayOfWeek: 0=Monday, 1=Tuesday, ..., 6=Sunday (ISO week convention)
+ * openTime/closeTime: "HH:mm" 24-hour format, e.g. "09:00", "18:30"
+ */
+export const salonOpeningHoursTable = salonSchema.table(
+  "salon_opening_hours",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    salonId: uuid()
+      .notNull()
+      .references(() => salonsTable.id, { onDelete: "cascade" }),
+    dayOfWeek: integer().notNull(),
+    openTime: varchar({ length: 5 }).notNull(),
+    closeTime: varchar({ length: 5 }).notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+);
+
+/**
+ * Date-specific exceptions to the salon's regular opening hours.
+ * date: ISO date string "YYYY-MM-DD"
+ * isClosed: if true the salon is closed that day regardless of openTime/closeTime
+ * openTime/closeTime: custom hours when not closed (nullable)
+ */
+export const salonOpeningHoursExceptionsTable = salonSchema.table(
+  "salon_opening_hours_exceptions",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    salonId: uuid()
+      .notNull()
+      .references(() => salonsTable.id, { onDelete: "cascade" }),
+    date: date().notNull(),
+    isClosed: boolean().notNull().default(true),
+    openTime: varchar({ length: 5 }),
+    closeTime: varchar({ length: 5 }),
+    reason: varchar({ length: 255 }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+);
+
+/**
+ * Weekly recurring stylist availability windows.
+ * dayOfWeek: 0=Monday ... 6=Sunday
+ * startTime/endTime: "HH:mm" 24-hour format
+ */
+export const stylistAvailabilityTable = salonSchema.table(
+  "stylist_availability",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    stylistId: uuid()
+      .notNull()
+      .references(() => stylistsTable.id, { onDelete: "cascade" }),
+    salonId: uuid()
+      .notNull()
+      .references(() => salonsTable.id, { onDelete: "cascade" }),
+    dayOfWeek: integer().notNull(),
+    startTime: varchar({ length: 5 }).notNull(),
+    endTime: varchar({ length: 5 }).notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+);
+
+/**
+ * Date-specific exceptions to a stylist's regular availability.
+ * date: ISO date string "YYYY-MM-DD"
+ * isAbsent: if true the stylist is absent the whole day
+ * startTime/endTime: custom availability when not absent (nullable)
+ */
+export const stylistAvailabilityExceptionsTable = salonSchema.table(
+  "stylist_availability_exceptions",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    stylistId: uuid()
+      .notNull()
+      .references(() => stylistsTable.id, { onDelete: "cascade" }),
+    salonId: uuid()
+      .notNull()
+      .references(() => salonsTable.id, { onDelete: "cascade" }),
+    date: date().notNull(),
+    isAbsent: boolean().notNull().default(true),
+    startTime: varchar({ length: 5 }),
+    endTime: varchar({ length: 5 }),
+    reason: varchar({ length: 255 }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
 );

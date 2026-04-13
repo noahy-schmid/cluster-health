@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Clock } from "lucide-react";
 import { deleteStylist } from "@/app/salon/[salonId]/stylists/stylist.actions";
 import { getMediaUrl } from "@/api/media-actions";
 import { useState } from "react";
@@ -34,6 +34,10 @@ export default function StylistCard({ stylist, salonId }: StylistCardProps) {
 
   const handleEdit = () => {
     router.push(`/salon/${salonId}/stylists/${stylist.id}`);
+  };
+
+  const handleAvailability = () => {
+    router.push(`/salon/${salonId}/stylists/${stylist.id}/availability`);
   };
 
   const handleDelete = async () => {
@@ -90,6 +94,12 @@ export default function StylistCard({ stylist, salonId }: StylistCardProps) {
               className="w-full"
             />
           </div>
+          <FlatIconButton
+            icon={Clock}
+            onClick={handleAvailability}
+            ariaLabel="Verfügbarkeit"
+            elevation={1}
+          />
           <FlatIconButton
             icon={Trash2}
             onClick={handleDelete}
