@@ -139,20 +139,17 @@ export const employeeServiceAssignmentsTable = salonSchema.table(
  * dayOfWeek: 0=Monday, 1=Tuesday, ..., 6=Sunday (ISO week convention)
  * openTime/closeTime: "HH:mm" 24-hour format, e.g. "09:00", "18:30"
  */
-export const salonOpeningHoursTable = salonSchema.table(
-  "salon_opening_hours",
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    salonId: uuid()
-      .notNull()
-      .references(() => salonsTable.id, { onDelete: "cascade" }),
-    dayOfWeek: integer().notNull(),
-    openTime: varchar({ length: 5 }).notNull(),
-    closeTime: varchar({ length: 5 }).notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  },
-);
+export const salonOpeningHoursTable = salonSchema.table("salon_opening_hours", {
+  id: uuid().primaryKey().defaultRandom(),
+  salonId: uuid()
+    .notNull()
+    .references(() => salonsTable.id, { onDelete: "cascade" }),
+  dayOfWeek: integer().notNull(),
+  openTime: varchar({ length: 5 }).notNull(),
+  closeTime: varchar({ length: 5 }).notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
 
 /**
  * Date-specific exceptions to the salon's regular opening hours.

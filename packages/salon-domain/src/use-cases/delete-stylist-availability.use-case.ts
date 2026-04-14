@@ -26,8 +26,7 @@ const make = Effect.gen(function* () {
     ): Effect.Effect<
       void,
       StylistAvailabilityValidationError | StylistAvailabilityInternalError
-    > =>
-      aggregate.deleteAvailability(command.stylistId, command.dayOfWeek),
+    > => aggregate.deleteAvailability(command.stylistId, command.dayOfWeek),
   };
 });
 

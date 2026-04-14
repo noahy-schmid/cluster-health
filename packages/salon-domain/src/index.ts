@@ -172,7 +172,10 @@ export {
 } from "./use-cases/list-service-employees.use-case";
 
 // Opening hours domain types
-export type { OpeningHours, OpeningHoursException } from "./application/opening-hours/opening-hours.aggregate";
+export type {
+  OpeningHours,
+  OpeningHoursException,
+} from "./application/opening-hours/opening-hours.aggregate";
 export {
   OpeningHoursValidationError,
   OpeningHoursNotFoundError,
@@ -215,7 +218,10 @@ export {
 } from "./use-cases/list-salon-opening-hours-exceptions.use-case";
 
 // Stylist availability domain types
-export type { StylistAvailability, StylistAvailabilityException } from "./application/stylist-availability/stylist-availability.aggregate";
+export type {
+  StylistAvailability,
+  StylistAvailabilityException,
+} from "./application/stylist-availability/stylist-availability.aggregate";
 export {
   StylistAvailabilityValidationError,
   StylistAvailabilityNotFoundError,

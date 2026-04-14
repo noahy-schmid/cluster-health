@@ -49,7 +49,8 @@ const make = Effect.gen(function* () {
       if (!validateDayOfWeek(dayOfWeek)) {
         return yield* Effect.fail(
           new OpeningHoursValidationError({
-            message: "dayOfWeek must be an integer between 0 (Monday) and 6 (Sunday)",
+            message:
+              "dayOfWeek must be an integer between 0 (Monday) and 6 (Sunday)",
           }),
         );
       }
@@ -211,9 +212,7 @@ const make = Effect.gen(function* () {
         );
 
       if (!deleted) {
-        return yield* Effect.fail(
-          new OpeningHoursNotFoundError({ id }),
-        );
+        return yield* Effect.fail(new OpeningHoursNotFoundError({ id }));
       }
     });
 

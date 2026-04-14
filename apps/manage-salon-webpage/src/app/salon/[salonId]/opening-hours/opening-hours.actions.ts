@@ -55,7 +55,9 @@ function serializeOpeningHours(oh: OpeningHours): OpeningHoursDto {
   };
 }
 
-function serializeException(ex: OpeningHoursException): OpeningHoursExceptionDto {
+function serializeException(
+  ex: OpeningHoursException,
+): OpeningHoursExceptionDto {
   return {
     id: ex.id,
     salonId: ex.salonId,
@@ -74,8 +76,7 @@ function serializeException(ex: OpeningHoursException): OpeningHoursExceptionDto
 export async function fetchOpeningHours(
   salonId: string,
 ): Promise<
-  | { success: true; data: OpeningHoursDto[] }
-  | { success: false; error: string }
+  { success: true; data: OpeningHoursDto[] } | { success: false; error: string }
 > {
   const access = await SalonAccessGuard.canAccessSalon(salonId);
   if (!access.success) return { success: false, error: access.error };
@@ -100,8 +101,7 @@ export async function setOpeningHours(
   openTime: string,
   closeTime: string,
 ): Promise<
-  | { success: true; data: OpeningHoursDto }
-  | { success: false; error: string }
+  { success: true; data: OpeningHoursDto } | { success: false; error: string }
 > {
   const access = await SalonAccessGuard.canAccessSalon(salonId);
   if (!access.success) return { success: false, error: access.error };

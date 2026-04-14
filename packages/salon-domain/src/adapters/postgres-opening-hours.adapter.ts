@@ -212,7 +212,4 @@ const make = Effect.gen(function* () {
 /**
  * Layer that provides the PostgreSQL OpeningHoursPort implementation.
  */
-export const PostgresOpeningHoursAdapter = Layer.effect(
-  OpeningHoursPort,
-  make,
-);
+export const PostgresOpeningHoursAdapter = Layer.effect(OpeningHoursPort, make);

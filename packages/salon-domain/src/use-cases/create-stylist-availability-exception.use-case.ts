@@ -7,7 +7,10 @@ import type {
   StylistAvailabilityValidationError,
   StylistAvailabilityInternalError,
 } from "../application/stylist-availability/errors";
-import { NotFoundError, collapseErrorsToInternalError } from "../application/errors";
+import {
+  NotFoundError,
+  collapseErrorsToInternalError,
+} from "../application/errors";
 import { StylistPort } from "../ports/stylist.port";
 
 // --- Command DTO ---
@@ -52,7 +55,9 @@ const make = Effect.gen(function* () {
           .getStylistById(command.stylistId)
           .pipe(
             Effect.mapError(
-              collapseErrorsToInternalError("Failed to check stylist existence"),
+              collapseErrorsToInternalError(
+                "Failed to check stylist existence",
+              ),
             ),
           );
 

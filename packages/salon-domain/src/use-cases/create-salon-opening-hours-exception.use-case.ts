@@ -7,7 +7,10 @@ import type {
   OpeningHoursValidationError,
   OpeningHoursInternalError,
 } from "../application/opening-hours/errors";
-import { NotFoundError, collapseErrorsToInternalError } from "../application/errors";
+import {
+  NotFoundError,
+  collapseErrorsToInternalError,
+} from "../application/errors";
 import { SalonPort } from "../ports/salon.port";
 
 // --- Command DTO ---

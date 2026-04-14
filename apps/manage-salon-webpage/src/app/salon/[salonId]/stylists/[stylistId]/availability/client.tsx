@@ -1,7 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Plus, Trash2, Clock, X, Check, AlertCircle } from "lucide-react";
+import { useState, useTransition, useEffect, useRef, useCallback } from "react";
+import {
+  Clock,
+  AlertCircle,
+  Check,
+  X,
+  ChevronRight,
+  CalendarDays,
+} from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import BackButton from "@/components/BackButton";
 import type {
@@ -15,7 +22,36 @@ import {
   deleteStylistAvailabilityException,
 } from "./availability.actions";
 
-const DAYS_OF_WEEK = [
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface EffectiveSchedule {
+  isAvailable: boolean;
+  startTime: string | null;
+  endTime: string | null;
+  source: "weekly" | "exception" | "default";
+  exceptionId?: string;
+}
+
+interface EditFormState {
+  isAvailable: boolean;
+  startTime: string;
+  endTime: string;
+}
+
+interface ApplyDialogState {
+  dateStr: string;
+  dayLabel: string;
+  dayOfWeek: number;
+  form: EditFormState;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const DAYS_DE = [
   "Montag",
   "Dienstag",
   "Mittwoch",
@@ -25,40 +61,50 @@ const DAYS_OF_WEEK = [
   "Sonntag",
 ];
 
+function jsToIsoDay(jsDay: number) {
+  return (jsDay + 6) % 7;
+}
+
+function toDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function formatDisplayDate(date: Date): string {
+  return date.toLocaleDateString("de-DE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+function today(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function addDays(base: Date, n: number): Date {
+  const d = new Date(base);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+const INITIAL_DAYS = 28;
+const LOAD_MORE_DAYS = 14;
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 interface StylistAvailabilityClientProps {
   salonId: string;
   stylistId: string;
   stylistName: string;
   initialAvailability: StylistAvailabilityDto[];
   initialExceptions: StylistAvailabilityExceptionDto[];
-}
-
-interface DayEditState {
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-}
-
-interface ExceptionFormState {
-  date: string;
-  isAbsent: boolean;
-  startTime: string;
-  endTime: string;
-  reason: string;
-}
-
-function formatExceptionDate(dateStr: string) {
-  try {
-    const date = new Date(dateStr + "T00:00:00");
-    return date.toLocaleDateString("de-DE", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
 }
 
 export default function StylistAvailabilityClient({
@@ -68,144 +114,229 @@ export default function StylistAvailabilityClient({
   initialAvailability,
   initialExceptions,
 }: StylistAvailabilityClientProps) {
-  const [availability, setAvailability] =
-    useState<StylistAvailabilityDto[]>(initialAvailability);
-  const [exceptions, setExceptions] =
-    useState<StylistAvailabilityExceptionDto[]>(initialExceptions);
-  const [editingDay, setEditingDay] = useState<DayEditState | null>(null);
-  const [showExceptionForm, setShowExceptionForm] = useState(false);
-  const [exceptionForm, setExceptionForm] = useState<ExceptionFormState>({
-    date: "",
-    isAbsent: true,
+  const [weeklyMap, setWeeklyMap] = useState<
+    Map<number, StylistAvailabilityDto>
+  >(() => new Map(initialAvailability.map((a) => [a.dayOfWeek, a])));
+
+  const [exceptionMap, setExceptionMap] = useState<
+    Map<string, StylistAvailabilityExceptionDto>
+  >(() => new Map(initialExceptions.map((e) => [e.date, e])));
+
+  const [startDate] = useState<Date>(() => today());
+  const [loadedDays, setLoadedDays] = useState(INITIAL_DAYS);
+  const [jumpDate, setJumpDate] = useState("");
+
+  const [editingDateStr, setEditingDateStr] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditFormState>({
+    isAvailable: true,
     startTime: "09:00",
     endTime: "18:00",
-    reason: "",
   });
+  const [applyDialog, setApplyDialog] = useState<ApplyDialogState | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const getAvailabilityForDay = (dayOfWeek: number) =>
-    availability.find((a) => a.dayOfWeek === dayOfWeek) ?? null;
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadMore = useCallback(() => {
+    setLoadedDays((prev) => prev + LOAD_MORE_DAYS);
+  }, []);
 
-  const openEditDay = (dayOfWeek: number) => {
-    const existing = getAvailabilityForDay(dayOfWeek);
-    setEditingDay({
-      dayOfWeek,
-      startTime: existing?.startTime ?? "09:00",
-      endTime: existing?.endTime ?? "18:00",
-    });
-    setErrorMessage(null);
-  };
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
-  const handleSaveDay = () => {
-    if (!editingDay) return;
-    setErrorMessage(null);
+  // ---------------------------------------------------------------------------
+  // Derived helpers
+  // ---------------------------------------------------------------------------
 
-    startTransition(async () => {
-      const result = await setStylistAvailability(
-        salonId,
-        stylistId,
-        editingDay.dayOfWeek,
-        editingDay.startTime,
-        editingDay.endTime,
-      );
-
-      if (!result.success) {
-        setErrorMessage(result.error);
-        return;
-      }
-
-      setAvailability((prev) => {
-        const filtered = prev.filter(
-          (a) => a.dayOfWeek !== editingDay.dayOfWeek,
-        );
-        return [...filtered, result.data].sort(
-          (a, b) => a.dayOfWeek - b.dayOfWeek,
-        );
-      });
-      setEditingDay(null);
-    });
-  };
-
-  const handleDeleteDay = (dayOfWeek: number) => {
-    setErrorMessage(null);
-
-    startTransition(async () => {
-      const result = await deleteStylistAvailability(
-        salonId,
-        stylistId,
-        dayOfWeek,
-      );
-      if (!result.success) {
-        setErrorMessage(result.error);
-        return;
-      }
-      setAvailability((prev) => prev.filter((a) => a.dayOfWeek !== dayOfWeek));
-      if (editingDay?.dayOfWeek === dayOfWeek) {
-        setEditingDay(null);
-      }
-    });
-  };
-
-  const handleSaveException = () => {
-    if (!exceptionForm.date) {
-      setErrorMessage("Bitte ein Datum auswählen");
-      return;
+  function getEffective(date: Date): EffectiveSchedule {
+    const ds = toDateStr(date);
+    const ex = exceptionMap.get(ds);
+    if (ex) {
+      return {
+        isAvailable: !ex.isAbsent,
+        startTime: ex.startTime,
+        endTime: ex.endTime,
+        source: "exception",
+        exceptionId: ex.id,
+      };
     }
+    const isoDay = jsToIsoDay(date.getDay());
+    const weekly = weeklyMap.get(isoDay);
+    if (weekly) {
+      return {
+        isAvailable: true,
+        startTime: weekly.startTime,
+        endTime: weekly.endTime,
+        source: "weekly",
+      };
+    }
+    return {
+      isAvailable: false,
+      startTime: null,
+      endTime: null,
+      source: "default",
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Interaction handlers
+  // ---------------------------------------------------------------------------
+
+  function openEdit(date: Date) {
+    const ds = toDateStr(date);
+    const effective = getEffective(date);
+    setEditingDateStr(ds);
+    setEditForm({
+      isAvailable: effective.isAvailable,
+      startTime: effective.startTime ?? "09:00",
+      endTime: effective.endTime ?? "18:00",
+    });
     setErrorMessage(null);
+  }
 
+  function closeEdit() {
+    setEditingDateStr(null);
+    setApplyDialog(null);
+  }
+
+  function requestApply(date: Date) {
+    const isoDay = jsToIsoDay(date.getDay());
+    setApplyDialog({
+      dateStr: toDateStr(date),
+      dayLabel: DAYS_DE[isoDay] ?? "",
+      dayOfWeek: isoDay,
+      form: editForm,
+    });
+  }
+
+  function applyJustThisDay(dialog: ApplyDialogState) {
+    setErrorMessage(null);
     startTransition(async () => {
-      const result = await createStylistAvailabilityException(
-        salonId,
-        stylistId,
-        exceptionForm.date,
-        exceptionForm.isAbsent,
-        exceptionForm.isAbsent ? null : exceptionForm.startTime,
-        exceptionForm.isAbsent ? null : exceptionForm.endTime,
-        exceptionForm.reason || null,
-      );
-
-      if (!result.success) {
-        setErrorMessage(result.error);
-        return;
-      }
-
-      setExceptions((prev) => {
-        const filtered = prev.filter((e) => e.date !== result.data.date);
-        return [...filtered, result.data].sort((a, b) =>
-          a.date.localeCompare(b.date),
+      if (!dialog.form.isAvailable) {
+        const result = await createStylistAvailabilityException(
+          salonId,
+          stylistId,
+          dialog.dateStr,
+          true,
+          null,
+          null,
+          null,
         );
-      });
-      setShowExceptionForm(false);
-      setExceptionForm({
-        date: "",
-        isAbsent: true,
-        startTime: "09:00",
-        endTime: "18:00",
-        reason: "",
-      });
-    });
-  };
-
-  const handleDeleteException = (id: string) => {
-    setErrorMessage(null);
-
-    startTransition(async () => {
-      const result = await deleteStylistAvailabilityException(salonId, id);
-      if (!result.success) {
-        setErrorMessage(result.error);
-        return;
+        if (!result.success) {
+          setErrorMessage(result.error);
+          return;
+        }
+        setExceptionMap((prev) => {
+          const next = new Map(prev);
+          next.set(dialog.dateStr, result.data);
+          return next;
+        });
+      } else {
+        const result = await createStylistAvailabilityException(
+          salonId,
+          stylistId,
+          dialog.dateStr,
+          false,
+          dialog.form.startTime,
+          dialog.form.endTime,
+          null,
+        );
+        if (!result.success) {
+          setErrorMessage(result.error);
+          return;
+        }
+        setExceptionMap((prev) => {
+          const next = new Map(prev);
+          next.set(dialog.dateStr, result.data);
+          return next;
+        });
       }
-      setExceptions((prev) => prev.filter((e) => e.id !== id));
+      setApplyDialog(null);
+      setEditingDateStr(null);
     });
-  };
+  }
+
+  function applyEveryWeekday(dialog: ApplyDialogState) {
+    setErrorMessage(null);
+    startTransition(async () => {
+      if (!dialog.form.isAvailable) {
+        const result = await deleteStylistAvailability(
+          salonId,
+          stylistId,
+          dialog.dayOfWeek,
+        );
+        if (!result.success) {
+          setErrorMessage(result.error);
+          return;
+        }
+        setWeeklyMap((prev) => {
+          const next = new Map(prev);
+          next.delete(dialog.dayOfWeek);
+          return next;
+        });
+      } else {
+        const result = await setStylistAvailability(
+          salonId,
+          stylistId,
+          dialog.dayOfWeek,
+          dialog.form.startTime,
+          dialog.form.endTime,
+        );
+        if (!result.success) {
+          setErrorMessage(result.error);
+          return;
+        }
+        setWeeklyMap((prev) => {
+          const next = new Map(prev);
+          next.set(dialog.dayOfWeek, result.data);
+          return next;
+        });
+      }
+      // Remove specific exception for this date
+      const existingEx = exceptionMap.get(dialog.dateStr);
+      if (existingEx) {
+        const delResult = await deleteStylistAvailabilityException(
+          salonId,
+          existingEx.id,
+        );
+        if (delResult.success) {
+          setExceptionMap((prev) => {
+            const next = new Map(prev);
+            next.delete(dialog.dateStr);
+            return next;
+          });
+        }
+      }
+      setApplyDialog(null);
+      setEditingDateStr(null);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
+  const resolvedStart = jumpDate ? new Date(jumpDate + "T00:00:00") : startDate;
+  const dates = Array.from({ length: loadedDays }, (_, i) =>
+    addDays(resolvedStart, i),
+  );
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <BackButton text="Zurück zum Stylisten" />
       <PageHeader
         title={`Verfügbarkeit – ${stylistName}`}
-        subtitle="Definiere die regulären Arbeitszeiten und Ausnahmen dieses Stylisten"
+        subtitle="Tippe auf einen Tag um die Zeiten zu bearbeiten"
       />
 
       {errorMessage && (
@@ -215,323 +346,227 @@ export default function StylistAvailabilityClient({
         </div>
       )}
 
-      {/* Weekly availability grid */}
-      <div className="mb-xl">
-        <h2 className="text-lg font-focus font-semibold text-fg-strong mb-md">
-          Wöchentliche Verfügbarkeit
-        </h2>
+      {/* Date jump */}
+      <div className="mb-md flex items-center gap-sm">
+        <CalendarDays className="w-4 h-4 text-fg-muted shrink-0" />
+        <input
+          type="date"
+          value={jumpDate}
+          onChange={(e) => {
+            setJumpDate(e.target.value);
+            setLoadedDays(INITIAL_DAYS);
+            setEditingDateStr(null);
+            setApplyDialog(null);
+          }}
+          className="rounded-md border border-border bg-bg-1 px-sm py-xs text-sm text-fg-normal focus:border-primary-400 focus:outline-none"
+        />
+        {jumpDate && (
+          <button
+            onClick={() => {
+              setJumpDate("");
+              setLoadedDays(INITIAL_DAYS);
+            }}
+            className="text-xs text-fg-muted hover:text-fg-normal"
+          >
+            Zurück zu heute
+          </button>
+        )}
+      </div>
 
-        <div className="grid grid-cols-1 gap-sm">
-          {DAYS_OF_WEEK.map((dayName, dayIndex) => {
-            const existingAvailability = getAvailabilityForDay(dayIndex);
-            const isEditing = editingDay?.dayOfWeek === dayIndex;
+      {/* Apply dialog */}
+      {applyDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-md">
+          <div className="w-full max-w-sm rounded-xl bg-bg-0 border border-border shadow-lg p-lg">
+            <h3 className="font-focus font-semibold text-fg-strong mb-sm">
+              Änderung anwenden auf…
+            </h3>
+            <p className="text-sm text-fg-muted mb-lg">
+              {applyDialog.form.isAvailable
+                ? `Verfügbar ${applyDialog.form.startTime} – ${applyDialog.form.endTime}`
+                : "Abwesend"}
+            </p>
 
-            return (
-              <div
-                key={dayIndex}
-                className={`rounded-lg border transition-fast ${
-                  isEditing
-                    ? "border-primary-400 bg-bg-1"
-                    : "border-border bg-bg-1 hover:border-primary-300"
-                }`}
+            <div className="flex flex-col gap-sm">
+              <button
+                disabled={isPending}
+                onClick={() => applyJustThisDay(applyDialog)}
+                className="w-full rounded-lg border border-border bg-bg-1 px-md py-sm text-left text-sm hover:border-primary-400 hover:bg-bg-2 disabled:opacity-50 transition-fast"
               >
-                {isEditing ? (
-                  <div className="p-md">
-                    <div className="flex items-center justify-between mb-md">
-                      <span className="font-medium text-fg-strong">
-                        {dayName}
-                      </span>
-                      <button
-                        onClick={() => setEditingDay(null)}
-                        className="text-fg-muted hover:text-fg-normal transition-fast"
-                        aria-label="Abbrechen"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
+                <div className="font-medium text-fg-strong">Nur diesen Tag</div>
+                <div className="text-fg-muted text-xs">
+                  {new Date(
+                    applyDialog.dateStr + "T00:00:00",
+                  ).toLocaleDateString("de-DE", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                  })}
+                </div>
+              </button>
 
-                    <div className="flex items-center gap-md flex-wrap">
+              <button
+                disabled={isPending}
+                onClick={() => applyEveryWeekday(applyDialog)}
+                className="w-full rounded-lg border border-border bg-bg-1 px-md py-sm text-left text-sm hover:border-primary-400 hover:bg-bg-2 disabled:opacity-50 transition-fast"
+              >
+                <div className="font-medium text-fg-strong">
+                  Jeden {applyDialog.dayLabel}
+                </div>
+                <div className="text-fg-muted text-xs">
+                  Wöchentliche Wiederholung
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setApplyDialog(null)}
+              className="mt-md w-full text-center text-sm text-fg-muted hover:text-fg-normal"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Date list */}
+      <div className="flex flex-col gap-xs" data-testid="availability-list">
+        {dates.map((date) => {
+          const ds = toDateStr(date);
+          const effective = getEffective(date);
+          const isEditing = editingDateStr === ds;
+
+          return (
+            <div
+              key={ds}
+              className={`rounded-lg border transition-fast ${
+                isEditing
+                  ? "border-primary-400 bg-bg-1"
+                  : "border-border bg-bg-1"
+              }`}
+            >
+              {isEditing ? (
+                <div className="p-md">
+                  <div className="flex items-center justify-between mb-md">
+                    <span className="font-medium text-fg-strong text-sm">
+                      {formatDisplayDate(date)}
+                    </span>
+                    <button
+                      onClick={closeEdit}
+                      className="text-fg-muted hover:text-fg-normal"
+                      aria-label="Abbrechen"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex gap-sm mb-md">
+                    <button
+                      onClick={() =>
+                        setEditForm((f) => ({ ...f, isAvailable: true }))
+                      }
+                      className={`flex-1 py-xs rounded-md border text-sm transition-fast ${
+                        editForm.isAvailable
+                          ? "border-primary-400 bg-primary-50 text-primary-700"
+                          : "border-border text-fg-muted hover:border-primary-300"
+                      }`}
+                    >
+                      Verfügbar
+                    </button>
+                    <button
+                      onClick={() =>
+                        setEditForm((f) => ({ ...f, isAvailable: false }))
+                      }
+                      className={`flex-1 py-xs rounded-md border text-sm transition-fast ${
+                        !editForm.isAvailable
+                          ? "border-red-400 bg-red-50 text-red-700"
+                          : "border-border text-fg-muted hover:border-red-300"
+                      }`}
+                    >
+                      Abwesend
+                    </button>
+                  </div>
+
+                  {editForm.isAvailable && (
+                    <div className="flex items-center gap-md mb-md flex-wrap">
                       <div className="flex items-center gap-sm">
                         <label className="text-sm text-fg-muted">Von</label>
                         <input
                           type="time"
-                          value={editingDay.startTime}
+                          value={editForm.startTime}
                           onChange={(e) =>
-                            setEditingDay((prev) =>
-                              prev
-                                ? { ...prev, startTime: e.target.value }
-                                : prev,
-                            )
+                            setEditForm((f) => ({
+                              ...f,
+                              startTime: e.target.value,
+                            }))
                           }
-                          className="rounded-md border border-border bg-bg-0 px-sm py-xs text-sm text-fg-normal focus:border-primary-400 focus:outline-none"
+                          className="rounded-md border border-border bg-bg-0 px-sm py-xs text-sm focus:border-primary-400 focus:outline-none"
                         />
                       </div>
                       <div className="flex items-center gap-sm">
                         <label className="text-sm text-fg-muted">Bis</label>
                         <input
                           type="time"
-                          value={editingDay.endTime}
+                          value={editForm.endTime}
                           onChange={(e) =>
-                            setEditingDay((prev) =>
-                              prev
-                                ? { ...prev, endTime: e.target.value }
-                                : prev,
-                            )
+                            setEditForm((f) => ({
+                              ...f,
+                              endTime: e.target.value,
+                            }))
                           }
-                          className="rounded-md border border-border bg-bg-0 px-sm py-xs text-sm text-fg-normal focus:border-primary-400 focus:outline-none"
+                          className="rounded-md border border-border bg-bg-0 px-sm py-xs text-sm focus:border-primary-400 focus:outline-none"
                         />
                       </div>
+                    </div>
+                  )}
 
-                      <div className="flex gap-sm ml-auto">
-                        <button
-                          onClick={handleSaveDay}
-                          disabled={isPending}
-                          className="flex items-center gap-xs px-md py-xs rounded-md bg-primary-600 text-white text-sm hover:bg-primary-700 disabled:opacity-50 transition-fast"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          Speichern
-                        </button>
-                        {existingAvailability && (
-                          <button
-                            onClick={() => handleDeleteDay(dayIndex)}
-                            disabled={isPending}
-                            className="flex items-center gap-xs px-md py-xs rounded-md border border-border text-fg-muted text-sm hover:bg-red-50 hover:border-red-300 hover:text-red-600 disabled:opacity-50 transition-fast"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            Nicht verfügbar
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                  <div className="flex justify-end">
+                    <button
+                      disabled={isPending}
+                      onClick={() => requestApply(date)}
+                      className="flex items-center gap-xs px-md py-xs rounded-md bg-primary-600 text-white text-sm hover:bg-primary-700 disabled:opacity-50 transition-fast"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      Weiter
+                    </button>
                   </div>
-                ) : (
-                  <button
-                    className="w-full p-md flex items-center justify-between text-left"
-                    onClick={() => openEditDay(dayIndex)}
-                  >
-                    <div className="flex items-center gap-md">
-                      <span className="w-28 font-medium text-fg-normal text-sm">
-                        {dayName}
-                      </span>
-                      {existingAvailability ? (
-                        <div className="flex items-center gap-xs text-fg-normal text-sm">
-                          <Clock className="w-3.5 h-3.5 text-primary-500" />
-                          <span>
-                            {existingAvailability.startTime} –{" "}
-                            {existingAvailability.endTime}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-fg-muted text-sm italic">
-                          Nicht verfügbar
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs text-fg-muted hover:text-primary-500 transition-fast">
-                      Bearbeiten
+                </div>
+              ) : (
+                <button
+                  className="w-full px-md py-sm flex items-center justify-between text-left"
+                  onClick={() => openEdit(date)}
+                  data-testid={`availability-row-${ds}`}
+                >
+                  <div className="flex items-center gap-md min-w-0">
+                    <span className="text-sm font-medium text-fg-normal truncate">
+                      {formatDisplayDate(date)}
                     </span>
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Exceptions section */}
-      <div className="mb-xl">
-        <div className="flex items-center justify-between mb-md">
-          <div>
-            <h2 className="text-lg font-focus font-semibold text-fg-strong">
-              Ausnahmen
-            </h2>
-            <p className="text-sm text-fg-muted">
-              Z.B. Urlaub, Krankheit oder besondere Arbeitszeiten
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              setShowExceptionForm(true);
-              setErrorMessage(null);
-            }}
-            className="flex items-center gap-xs px-md py-sm rounded-md bg-primary-600 text-white text-sm hover:bg-primary-700 transition-fast"
-          >
-            <Plus className="w-4 h-4" />
-            Ausnahme hinzufügen
-          </button>
-        </div>
-
-        {showExceptionForm && (
-          <div className="mb-md rounded-lg border border-primary-300 bg-bg-1 p-md">
-            <div className="flex items-center justify-between mb-md">
-              <span className="font-medium text-fg-strong text-sm">
-                Neue Ausnahme
-              </span>
-              <button
-                onClick={() => setShowExceptionForm(false)}
-                className="text-fg-muted hover:text-fg-normal"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
-              <div>
-                <label className="block text-sm text-fg-muted mb-xs">
-                  Datum
-                </label>
-                <input
-                  type="date"
-                  value={exceptionForm.date}
-                  onChange={(e) =>
-                    setExceptionForm((prev) => ({
-                      ...prev,
-                      date: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-md border border-border bg-bg-0 px-sm py-xs text-sm text-fg-normal focus:border-primary-400 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-fg-muted mb-xs">
-                  Grund (optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="z.B. Urlaub, Krankheit"
-                  value={exceptionForm.reason}
-                  onChange={(e) =>
-                    setExceptionForm((prev) => ({
-                      ...prev,
-                      reason: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-md border border-border bg-bg-0 px-sm py-xs text-sm text-fg-normal focus:border-primary-400 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="mt-md">
-              <label className="block text-sm text-fg-muted mb-sm">
-                Art der Ausnahme
-              </label>
-              <div className="flex gap-sm">
-                <button
-                  onClick={() =>
-                    setExceptionForm((prev) => ({ ...prev, isAbsent: true }))
-                  }
-                  className={`flex-1 py-sm rounded-md border text-sm transition-fast ${
-                    exceptionForm.isAbsent
-                      ? "border-primary-400 bg-primary-50 text-primary-700"
-                      : "border-border text-fg-muted hover:border-primary-300"
-                  }`}
-                >
-                  Abwesend
-                </button>
-                <button
-                  onClick={() =>
-                    setExceptionForm((prev) => ({ ...prev, isAbsent: false }))
-                  }
-                  className={`flex-1 py-sm rounded-md border text-sm transition-fast ${
-                    !exceptionForm.isAbsent
-                      ? "border-primary-400 bg-primary-50 text-primary-700"
-                      : "border-border text-fg-muted hover:border-primary-300"
-                  }`}
-                >
-                  Sonderarbeitszeiten
-                </button>
-              </div>
-            </div>
-
-            {!exceptionForm.isAbsent && (
-              <div className="mt-md flex items-center gap-md flex-wrap">
-                <div className="flex items-center gap-sm">
-                  <label className="text-sm text-fg-muted">Von</label>
-                  <input
-                    type="time"
-                    value={exceptionForm.startTime}
-                    onChange={(e) =>
-                      setExceptionForm((prev) => ({
-                        ...prev,
-                        startTime: e.target.value,
-                      }))
-                    }
-                    className="rounded-md border border-border bg-bg-0 px-sm py-xs text-sm focus:border-primary-400 focus:outline-none"
-                  />
-                </div>
-                <div className="flex items-center gap-sm">
-                  <label className="text-sm text-fg-muted">Bis</label>
-                  <input
-                    type="time"
-                    value={exceptionForm.endTime}
-                    onChange={(e) =>
-                      setExceptionForm((prev) => ({
-                        ...prev,
-                        endTime: e.target.value,
-                      }))
-                    }
-                    className="rounded-md border border-border bg-bg-0 px-sm py-xs text-sm focus:border-primary-400 focus:outline-none"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="mt-md flex justify-end">
-              <button
-                onClick={handleSaveException}
-                disabled={isPending}
-                className="flex items-center gap-xs px-md py-sm rounded-md bg-primary-600 text-white text-sm hover:bg-primary-700 disabled:opacity-50 transition-fast"
-              >
-                <Check className="w-3.5 h-3.5" />
-                Ausnahme speichern
-              </button>
-            </div>
-          </div>
-        )}
-
-        {exceptions.length === 0 ? (
-          <div className="rounded-lg border border-border bg-bg-1 p-lg text-center text-fg-muted text-sm">
-            Keine Ausnahmen eingetragen
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-sm">
-            {exceptions.map((ex) => (
-              <div
-                key={ex.id}
-                className="rounded-lg border border-border bg-bg-1 p-md flex items-start justify-between gap-md"
-              >
-                <div>
-                  <div className="font-medium text-fg-strong text-sm">
-                    {formatExceptionDate(ex.date)}
-                  </div>
-                  <div className="text-sm text-fg-muted mt-xs">
-                    {ex.isAbsent ? (
-                      <span className="text-red-600">Abwesend</span>
-                    ) : (
-                      <span className="flex items-center gap-xs text-fg-normal">
-                        <Clock className="w-3.5 h-3.5 text-primary-500" />
-                        {ex.startTime} – {ex.endTime}
+                    {effective.source === "exception" && (
+                      <span className="shrink-0 text-xs px-xs py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-200">
+                        Ausnahme
                       </span>
                     )}
-                    {ex.reason && (
-                      <span className="ml-sm text-fg-muted">· {ex.reason}</span>
-                    )}
                   </div>
-                </div>
-                <button
-                  onClick={() => handleDeleteException(ex.id)}
-                  disabled={isPending}
-                  className="p-xs rounded-md text-fg-muted hover:bg-red-50 hover:text-red-600 transition-fast disabled:opacity-50 shrink-0"
-                  aria-label="Ausnahme löschen"
-                >
-                  <Trash2 className="w-4 h-4" />
+
+                  <div className="flex items-center gap-sm shrink-0 ml-sm">
+                    {effective.isAvailable ? (
+                      <span className="flex items-center gap-xs text-sm text-fg-normal">
+                        <Clock className="w-3.5 h-3.5 text-primary-500" />
+                        {effective.startTime} – {effective.endTime}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-red-500">Abwesend</span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-fg-muted" />
+                  </div>
                 </button>
-              </div>
-            ))}
-          </div>
-        )}
+              )}
+            </div>
+          );
+        })}
       </div>
+
+      {/* Infinite-scroll sentinel */}
+      <div ref={sentinelRef} className="h-8" />
     </div>
   );
 }

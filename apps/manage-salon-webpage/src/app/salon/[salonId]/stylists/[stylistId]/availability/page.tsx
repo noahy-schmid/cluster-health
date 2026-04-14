@@ -27,10 +27,7 @@ export default async function StylistAvailabilityPage({
     return (
       <div className="max-w-4xl mx-auto">
         <BackButton text="Zurück zu Stylisten" />
-        <PageHeader
-          title="Verfügbarkeit"
-          subtitle="Stylist nicht gefunden"
-        />
+        <PageHeader title="Verfügbarkeit" subtitle="Stylist nicht gefunden" />
       </div>
     );
   }
@@ -56,9 +53,7 @@ export default async function StylistAvailabilityPage({
       stylistId={stylistId}
       stylistName={stylistResult.data.name}
       initialAvailability={availabilityResult.data}
-      initialExceptions={
-        exceptionsResult.success ? exceptionsResult.data : []
-      }
+      initialExceptions={exceptionsResult.success ? exceptionsResult.data : []}
     />
   );
 }

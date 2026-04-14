@@ -81,7 +81,13 @@ const make = Effect.gen(function* () {
       }
 
       return yield* availabilityPort
-        .upsertAvailability({ stylistId, salonId, dayOfWeek, startTime, endTime })
+        .upsertAvailability({
+          stylistId,
+          salonId,
+          dayOfWeek,
+          startTime,
+          endTime,
+        })
         .pipe(
           Effect.mapError(
             (error) =>
@@ -214,9 +220,7 @@ const make = Effect.gen(function* () {
         );
 
       if (!deleted) {
-        return yield* Effect.fail(
-          new StylistAvailabilityNotFoundError({ id }),
-        );
+        return yield* Effect.fail(new StylistAvailabilityNotFoundError({ id }));
       }
     });
 
