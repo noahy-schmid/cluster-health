@@ -22,7 +22,7 @@ export type OpeningHoursException = PortOpeningHoursException;
 
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-function validateTime(time: string, field: string): boolean {
+function validateTime(time: string, _field: string): boolean {
   return TIME_REGEX.test(time);
 }
 

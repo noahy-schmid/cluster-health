@@ -135,6 +135,8 @@ export async function setStylistAvailability(
         Effect.succeed({ success: false as const, error: e.message }),
       StylistAvailabilityInternalError: (e) =>
         Effect.succeed({ success: false as const, error: e.message }),
+      InternalError: (e) =>
+        Effect.succeed({ success: false as const, error: e.message }),
       NotFoundError: (e) =>
         Effect.succeed({
           success: false as const,
@@ -228,6 +230,8 @@ export async function createStylistAvailabilityException(
       StylistAvailabilityValidationError: (e) =>
         Effect.succeed({ success: false as const, error: e.message }),
       StylistAvailabilityInternalError: (e) =>
+        Effect.succeed({ success: false as const, error: e.message }),
+      InternalError: (e) =>
         Effect.succeed({ success: false as const, error: e.message }),
       NotFoundError: (e) =>
         Effect.succeed({

@@ -8,6 +8,7 @@ import type {
   StylistAvailabilityInternalError,
 } from "../application/stylist-availability/errors";
 import {
+  InternalError,
   NotFoundError,
   collapseErrorsToInternalError,
 } from "../application/errors";
@@ -48,6 +49,7 @@ const make = Effect.gen(function* () {
       CreateStylistAvailabilityExceptionResult,
       | StylistAvailabilityValidationError
       | StylistAvailabilityInternalError
+      | InternalError
       | NotFoundError
     > =>
       Effect.gen(function* () {

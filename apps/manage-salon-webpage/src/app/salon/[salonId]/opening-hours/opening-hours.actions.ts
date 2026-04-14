@@ -121,6 +121,8 @@ export async function setOpeningHours(
         Effect.succeed({ success: false as const, error: e.message }),
       OpeningHoursInternalError: (e) =>
         Effect.succeed({ success: false as const, error: e.message }),
+      InternalError: (e) =>
+        Effect.succeed({ success: false as const, error: e.message }),
       NotFoundError: (e) =>
         Effect.succeed({
           success: false as const,
@@ -210,6 +212,8 @@ export async function createOpeningHoursException(
       OpeningHoursValidationError: (e) =>
         Effect.succeed({ success: false as const, error: e.message }),
       OpeningHoursInternalError: (e) =>
+        Effect.succeed({ success: false as const, error: e.message }),
+      InternalError: (e) =>
         Effect.succeed({ success: false as const, error: e.message }),
       NotFoundError: (e) =>
         Effect.succeed({

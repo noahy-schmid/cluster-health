@@ -8,6 +8,7 @@ import type {
   OpeningHoursInternalError,
 } from "../application/opening-hours/errors";
 import {
+  InternalError,
   NotFoundError,
   collapseErrorsToInternalError,
 } from "../application/errors";
@@ -44,7 +45,10 @@ const make = Effect.gen(function* () {
       command: CreateSalonOpeningHoursExceptionCommand,
     ): Effect.Effect<
       CreateSalonOpeningHoursExceptionResult,
-      OpeningHoursValidationError | OpeningHoursInternalError | NotFoundError
+      | OpeningHoursValidationError
+      | OpeningHoursInternalError
+      | InternalError
+      | NotFoundError
     > =>
       Effect.gen(function* () {
         const salonExists = yield* salonPort
