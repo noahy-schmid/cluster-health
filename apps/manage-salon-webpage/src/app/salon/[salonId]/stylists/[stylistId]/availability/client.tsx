@@ -492,6 +492,7 @@ export default function StylistAvailabilityClient({
                         <label className="text-sm text-fg-muted">Von</label>
                         <input
                           type="time"
+                          aria-label="Von"
                           value={editForm.startTime}
                           onChange={(e) =>
                             setEditForm((f) => ({
@@ -506,6 +507,7 @@ export default function StylistAvailabilityClient({
                         <label className="text-sm text-fg-muted">Bis</label>
                         <input
                           type="time"
+                          aria-label="Bis"
                           value={editForm.endTime}
                           onChange={(e) =>
                             setEditForm((f) => ({

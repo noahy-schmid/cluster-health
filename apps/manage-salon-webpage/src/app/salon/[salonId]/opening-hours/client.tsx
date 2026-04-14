@@ -496,6 +496,7 @@ export default function OpeningHoursClient({
                         <label className="text-sm text-fg-muted">Von</label>
                         <input
                           type="time"
+                          aria-label="Von"
                           value={editForm.openTime}
                           onChange={(e) =>
                             setEditForm((f) => ({
@@ -510,6 +511,7 @@ export default function OpeningHoursClient({
                         <label className="text-sm text-fg-muted">Bis</label>
                         <input
                           type="time"
+                          aria-label="Bis"
                           value={editForm.closeTime}
                           onChange={(e) =>
                             setEditForm((f) => ({
