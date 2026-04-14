@@ -125,14 +125,23 @@ test.describe("Opening hours management", () => {
     await expect(laterRow.getByText("Ausnahme")).not.toBeVisible();
   });
 
-  test("navigates to sidebar link for opening hours", async ({
+  test("navigates to opening hours via the navigation menu", async ({
     scenario,
     managePage,
   }) => {
     await scenario.iHaveAnAccount();
     await scenario.iHaveASalon();
 
-    // Click the Öffnungszeiten sidebar link
+    // On mobile the sidebar is hidden behind the hamburger menu; open it first
+    const viewport = managePage.viewportSize();
+    const isMobile = viewport !== null && viewport.width < 1024;
+    if (isMobile) {
+      await managePage.getByRole("button", { name: "Open menu" }).click();
+      await expect(
+        managePage.getByRole("link", { name: "Öffnungszeiten" }),
+      ).toBeVisible({ timeout: 5_000 });
+    }
+
     await managePage
       .getByRole("link", { name: "Öffnungszeiten" })
       .first()
