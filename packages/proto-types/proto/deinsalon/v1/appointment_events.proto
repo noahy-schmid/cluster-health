@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package deinsalon.v1;
+
+// Emitted by the appointment service when a new appointment is successfully booked.
+message AppointmentBooked {
+  string appointment_id = 1;
+  string salon_id = 2;
+  string stylist_id = 3;
+  string service_id = 4;
+  // ISO 8601 datetime (UTC)
+  string starts_at = 5;
+  // ISO 8601 datetime (UTC)
+  string ends_at = 6;
+  // ID of the customer who made the booking
+  string customer_id = 7;
+}
+
+// Emitted when an existing appointment is cancelled.
+message AppointmentCancelled {
+  string appointment_id = 1;
+  string salon_id = 2;
+  // Who initiated the cancellation: "customer", "stylist", or "system"
+  string cancelled_by = 3;
+  string reason = 4;
+}
+
+// Emitted when a stylist's availability for a given day is updated.
+message StylistAvailabilityUpdated {
+  string salon_id = 1;
+  string stylist_id = 2;
+  // ISO 8601 date (YYYY-MM-DD)
+  string date = 3;
+  repeated TimeSlot available_slots = 4;
+}
+
+// A discrete availability window within a day. Times are in HH:MM (UTC).
+message TimeSlot {
+  string start_time = 1;
+  string end_time = 2;
+}

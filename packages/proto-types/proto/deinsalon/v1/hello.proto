@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package deinsalon.v1;
+
+// A simple hello world message for testing end-to-end connectivity over RabbitMQ.
+message HelloRequest {
+  // The greeting message content
+  string message = 1;
+  // Identifier of the sending service or client
+  string sender_id = 2;
+}
+
+// Response returned after processing a HelloRequest.
+message HelloResponse {
+  // The echoed/processed response message
+  string message = 1;
+  // ISO 8601 timestamp of when the message was received
+  string received_at = 2;
+}
