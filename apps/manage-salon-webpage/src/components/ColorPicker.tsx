@@ -17,7 +17,7 @@ export default function ColorPicker({
 }: ColorPickerProps) {
   return (
     <div className="flex flex-col gap-sm">
-      <style jsx>{`
+      <style>{`
         input[type="color"]::-webkit-color-swatch-wrapper {
           padding: 0;
         }
