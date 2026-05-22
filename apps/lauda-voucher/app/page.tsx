@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../lib/auth-context";
+import { EventShell } from "./components/event-shell";
+import { FeatureCard } from "./components/feature-card.component";
 
 export default function LoginPage() {
   const { password, setPassword } = useAuth();
@@ -51,34 +53,46 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6">
-      <form
-        className="flex w-full max-w-md flex-col gap-6 rounded-lg bg-white p-10 shadow-lg"
-        onSubmit={handleSubmit}
-      >
-        <h1 className="text-center text-2xl font-bold text-primary">
-          Gutschein Generator
-        </h1>
-        <p className="text-center text-sm text-gray-500">
-          Bitte Passwort eingeben um fortzufahren
-        </p>
-        <input
-          type="password"
-          placeholder="Passwort"
-          className="w-full rounded-lg border-2 border-gray-200 px-4 py-3.5 text-base outline-none transition-colors focus:border-primary"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          autoFocus
-        />
-        {error && <p className="text-center text-sm text-danger">{error}</p>}
-        <button
-          type="submit"
-          className="w-full rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-white shadow-md shadow-primary/30 transition-opacity hover:opacity-90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={loading}
+    <EventShell
+      title="Stammheimer Seifenkistenrennen"
+      subtitle="Die Event-App bündelt Gutscheine, Teamverwaltung und weitere Abläufe rund um das Rennen an einem Ort."
+      compact
+    >
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <form
+          className="flex flex-col gap-5 rounded-[1.75rem] border-2 border-primary/10 bg-white/90 p-6 shadow-[0_18px_40px_rgba(31,44,61,0.12)] sm:p-8"
+          onSubmit={handleSubmit}
         >
-          {loading ? "Prüfe..." : "Anmelden"}
-        </button>
-      </form>
-    </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl text-accent sm:text-3xl">Anmeldung</h2>
+            <p className="text-base leading-relaxed text-accent/75">
+              Melden Sie sich an, um Gutscheine zu verwalten, Teams zu pflegen
+              und den Organisationsteil des Events zu öffnen.
+            </p>
+          </div>
+
+          <input
+            type="password"
+            placeholder="Passwort"
+            className="w-full rounded-2xl border-2 border-accent/10 bg-cream px-4 py-3.5 text-base outline-none transition-colors focus:border-primary"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            autoFocus
+          />
+          {error ? (
+            <p className="rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            className="rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-white shadow-[0_10px_24px_rgba(204,0,0,0.28)] transition-transform hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={loading}
+          >
+            {loading ? "Prüfe Zugang..." : "Event-App öffnen"}
+          </button>
+        </form>
+      </div>
+    </EventShell>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../../lib/auth-context";
+import { EventShell } from "../../components/event-shell";
 
 interface VerifyResult {
   valid: boolean;
@@ -98,27 +99,30 @@ export default function VerifyResultPage() {
   if (!password || (!qrContent && !isInvalidQr)) return null;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6">
+    <EventShell
+      title="Scanner Ergebnis"
+      subtitle="Hier sehen Sie sofort, ob ein Gutschein fur das Event gültig und noch nicht eingelöst ist."
+      compact
+      backHref="/home"
+    >
       {view.type === "loading" && (
-        <div className="flex w-full max-w-md flex-col gap-6 rounded-lg bg-white p-10 shadow-lg">
-          <h2 className="text-center text-xl font-bold text-primary">
-            Wird geprüft...
-          </h2>
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-6 rounded-[1.75rem] bg-white/92 p-8 shadow-[0_18px_40px_rgba(31,44,61,0.12)] ring-1 ring-primary/10">
+          <h2 className="text-center text-2xl text-primary">Wird geprüft...</h2>
         </div>
       )}
 
       {view.type === "result" && (
-        <div className="flex w-full max-w-md flex-col gap-6 rounded-lg bg-white p-10 shadow-lg">
-          <h2 className="text-center text-xl font-bold text-primary">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-6 rounded-[1.75rem] bg-white/92 p-8 shadow-[0_18px_40px_rgba(31,44,61,0.12)] ring-1 ring-primary/10">
+          <h2 className="text-center text-2xl text-primary">
             Gutschein Ergebnis
           </h2>
 
           {!view.result.valid ? (
             <>
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-100 text-4xl text-danger">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-danger/10 text-4xl text-danger">
                 ✗
               </div>
-              <p className="text-center text-sm text-danger">
+              <p className="text-center text-base text-danger">
                 Ungültige Gutschein-Signatur
               </p>
             </>
@@ -127,7 +131,7 @@ export default function VerifyResultPage() {
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-4xl text-amber-500">
                 !
               </div>
-              <p className="text-center text-sm text-danger">
+              <p className="text-center text-base text-danger">
                 Dieser Gutschein wurde bereits eingelöst
               </p>
               <div className="text-center text-4xl font-bold text-primary">
@@ -139,7 +143,7 @@ export default function VerifyResultPage() {
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl text-success">
                 ✓
               </div>
-              <p className="text-center text-sm text-success">
+              <p className="text-center text-base text-success">
                 Gültiger Gutschein
               </p>
               <div className="text-center text-4xl font-bold text-primary">
@@ -151,7 +155,7 @@ export default function VerifyResultPage() {
           <div className="flex flex-col gap-3">
             {view.result.valid && !view.result.used && (
               <button
-                className="w-full rounded-full bg-gray-800 px-6 py-3.5 text-base font-semibold text-white shadow-md transition-opacity hover:opacity-90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-full bg-accent px-6 py-3.5 text-base font-semibold text-white shadow-[0_10px_24px_rgba(31,44,61,0.24)] transition-transform hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={handleUse}
                 disabled={useLoading}
               >
@@ -159,7 +163,7 @@ export default function VerifyResultPage() {
               </button>
             )}
             <button
-              className="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100"
+              className="w-full rounded-full border-2 border-accent/10 bg-white px-4 py-3 text-sm text-accent/70 transition-colors hover:border-primary/25 hover:text-primary"
               onClick={() => router.replace("/verify")}
             >
               ← Zurück zum Scanner
@@ -169,34 +173,34 @@ export default function VerifyResultPage() {
       )}
 
       {view.type === "used-success" && (
-        <div className="flex w-full max-w-md flex-col gap-6 rounded-lg bg-white p-10 shadow-lg">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-6 rounded-[1.75rem] bg-white/92 p-8 shadow-[0_18px_40px_rgba(31,44,61,0.12)] ring-1 ring-primary/10">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl text-success">
             ✓
           </div>
-          <h2 className="text-center text-xl font-bold text-primary">
+          <h2 className="text-center text-2xl text-primary">
             Gutschein eingelöst!
           </h2>
-          <p className="text-center text-sm text-success">
+          <p className="text-center text-base text-success">
             Zurück zum Scanner...
           </p>
         </div>
       )}
 
       {view.type === "error" && (
-        <div className="flex w-full max-w-md flex-col gap-6 rounded-lg bg-white p-10 shadow-lg">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-100 text-4xl text-danger">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-6 rounded-[1.75rem] bg-white/92 p-8 shadow-[0_18px_40px_rgba(31,44,61,0.12)] ring-1 ring-primary/10">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-danger/10 text-4xl text-danger">
             ✗
           </div>
-          <h2 className="text-center text-xl font-bold text-primary">Fehler</h2>
-          <p className="text-center text-sm text-danger">{view.message}</p>
+          <h2 className="text-center text-2xl text-primary">Fehler</h2>
+          <p className="text-center text-base text-danger">{view.message}</p>
           <button
-            className="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100"
+            className="w-full rounded-full border-2 border-accent/10 bg-white px-4 py-3 text-sm text-accent/70 transition-colors hover:border-primary/25 hover:text-primary"
             onClick={() => router.replace("/verify")}
           >
             ← Zurück zum Scanner
           </button>
         </div>
       )}
-    </div>
+    </EventShell>
   );
 }

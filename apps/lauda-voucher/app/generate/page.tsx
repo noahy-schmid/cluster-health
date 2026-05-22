@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
+import Link from "next/link";
+import { EventShell } from "../components/event-shell";
 
 export default function GeneratePage() {
   const { password } = useAuth();
@@ -74,23 +76,31 @@ export default function GeneratePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6">
+    <EventShell
+      title="Gutscheine"
+      subtitle="Erstellen Sie Gutscheine fur das Event und geben Sie sie gesammelt als PDF aus."
+      compact
+      backHref="/home"
+    >
       <form
-        className="flex w-full max-w-md flex-col gap-6 rounded-lg bg-white p-10 shadow-lg"
+        className="mx-auto flex w-full max-w-xl flex-col gap-5 rounded-[1.75rem] border-2 border-primary/10 bg-white/92 p-6 shadow-[0_18px_40px_rgba(31,44,61,0.12)] sm:p-8"
         onSubmit={handleGenerate}
       >
-        <h1 className="text-center text-2xl font-bold text-primary">
-          Gutschein erstellen
-        </h1>
-        <p className="text-center text-sm text-gray-500">
-          Gutscheinbetrag und Anzahl eingeben
-        </p>
+        <div className="space-y-2 text-center">
+          <h2 className="text-2xl text-accent sm:text-3xl">
+            Gutscheine erzeugen
+          </h2>
+          <p className="text-base text-accent/75">
+            Betrag und Anzahl festlegen, danach wird direkt eine PDF-Datei zum
+            Download erzeugt.
+          </p>
+        </div>
         <input
           type="number"
           placeholder="Betrag in €"
           min={1}
           step={1}
-          className="w-full rounded-lg border-2 border-gray-200 px-4 py-3.5 text-base outline-none transition-colors focus:border-primary"
+          className="w-full rounded-2xl border-2 border-accent/10 bg-cream px-4 py-3.5 text-base outline-none transition-colors focus:border-primary"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           autoFocus
@@ -100,25 +110,29 @@ export default function GeneratePage() {
           placeholder="Anzahl Gutscheine"
           min={1}
           step={1}
-          className="w-full rounded-lg border-2 border-gray-200 px-4 py-3.5 text-base outline-none transition-colors focus:border-primary"
+          className="w-full rounded-2xl border-2 border-accent/10 bg-cream px-4 py-3.5 text-base outline-none transition-colors focus:border-primary"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
         />
-        {error && <p className="text-center text-sm text-danger">{error}</p>}
+        {error ? (
+          <p className="rounded-2xl bg-danger/10 px-4 py-3 text-center text-sm text-danger">
+            {error}
+          </p>
+        ) : null}
         <button
           type="submit"
-          className="w-full rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-white shadow-md shadow-primary/30 transition-opacity hover:opacity-90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-white shadow-[0_10px_24px_rgba(204,0,0,0.28)] transition-transform hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={loading}
         >
-          {loading ? "Wird erstellt..." : "PDF erstellen"}
+          {loading ? "PDF wird erstellt..." : "Gutschein-PDF erstellen"}
         </button>
-        <a
+        <Link
           href="/home"
-          className="block text-center text-sm text-gray-500 hover:underline"
+          className="block text-center text-sm text-accent/65 transition-colors hover:text-primary"
         >
-          ← Zurück
-        </a>
+          ← Zurück zur Startseite
+        </Link>
       </form>
-    </div>
+    </EventShell>
   );
 }
