@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { authenticate } from "../../../lib/auth";
 import { createVoucherPayload } from "../../../lib/crypto";
+import {
+  centerTextX,
+  drawDisplayHeading,
+  drawRoundedRect,
+  drawStripedRail,
+  loadBrandedPdfAssets,
+  pdfTheme,
+  wrapText,
+} from "../../../lib/pdf-branding";
 
 export async function POST(request: NextRequest) {
   const authError = authenticate(request);
@@ -41,43 +50,15 @@ export async function POST(request: NextRequest) {
   }
 
   const pdfDoc = await PDFDocument.create();
-  const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-  const primaryColor = rgb(0.8, 0, 0); // #CC0000
-  const accentColor = rgb(0.1, 0.1, 0.18); // #1a1a2e (dark accent)
-  const textColor = rgb(0.2, 0.2, 0.2);
+  const { displayFont, bodyFont, logoImage } =
+    await loadBrandedPdfAssets(pdfDoc);
 
   const pageWidth = 595.28;
-
-  // Helper to center text
-  const centerX = (text: string, font: typeof helvetica, size: number) => {
-    const width = font.widthOfTextAtSize(text, size);
-    return (pageWidth - width) / 2;
-  };
-
-  // Helper to wrap text into lines
-  const wrapText = (
-    text: string,
-    font: typeof helvetica,
-    size: number,
-    maxWidth: number,
-  ): string[] => {
-    const words = text.split(" ");
-    const lines: string[] = [];
-    let currentLine = "";
-    for (const word of words) {
-      const testLine = currentLine ? `${currentLine} ${word}` : word;
-      if (font.widthOfTextAtSize(testLine, size) > maxWidth) {
-        if (currentLine) lines.push(currentLine);
-        currentLine = word;
-      } else {
-        currentLine = testLine;
-      }
-    }
-    if (currentLine) lines.push(currentLine);
-    return lines;
-  };
+  const pageHeight = 841.89;
+  const outerX = 32;
+  const outerY = 34;
+  const outerWidth = pageWidth - outerX * 2;
+  const outerHeight = pageHeight - outerY * 2;
 
   for (let i = 0; i < quantity; i++) {
     const id = uuidv4();
@@ -91,143 +72,237 @@ export async function POST(request: NextRequest) {
     });
     const qrImageBytes = Buffer.from(qrDataUrl.split(",")[1], "base64");
 
-    const page = pdfDoc.addPage([595.28, 841.89]);
+    const page = pdfDoc.addPage([pageWidth, pageHeight]);
 
-    // Border
     page.drawRectangle({
-      x: 30,
-      y: 30,
-      width: 535.28,
-      height: 781.89,
-      borderColor: primaryColor,
-      borderWidth: 3,
+      x: 0,
+      y: 0,
+      width: pageWidth,
+      height: pageHeight,
+      color: pdfTheme.paper,
     });
 
-    // Inner border
+    page.drawCircle({
+      x: 72,
+      y: 780,
+      size: 86,
+      color: pdfTheme.primary,
+      opacity: 0.08,
+    });
+    page.drawCircle({
+      x: 240,
+      y: 300,
+      size: 74,
+      color: pdfTheme.accent,
+      opacity: 0.07,
+    });
+
+    drawRoundedRect(page, {
+      x: outerX,
+      y: outerY,
+      width: outerWidth,
+      height: outerHeight,
+      radius: 26,
+      color: pdfTheme.white,
+      borderColor: pdfTheme.primary,
+      borderWidth: 4,
+    });
+
     page.drawRectangle({
-      x: 37,
-      y: 37,
-      width: 521.28,
-      height: 767.89,
-      borderColor: accentColor,
-      borderWidth: 1,
+      x: outerX,
+      y: outerY + outerHeight - 16,
+      width: outerWidth,
+      height: 16,
+      color: pdfTheme.primary,
     });
 
-    // Header line 1
-    const headerLine1 = "STAMMHEIMER";
-    page.drawText(headerLine1, {
-      x: centerX(headerLine1, helveticaBold, 24),
-      y: 775,
-      size: 24,
-      font: helveticaBold,
-      color: primaryColor,
+    drawRoundedRect(page, {
+      x: 64,
+      y: 724,
+      width: 118,
+      height: 54,
+      radius: 16,
+      color: pdfTheme.paper,
+      borderColor: pdfTheme.primarySoft,
+      borderWidth: 1.5,
     });
 
-    // Header line 2
-    const headerLine2 = "SEIFENKISTENRENNEN";
-    page.drawText(headerLine2, {
-      x: centerX(headerLine2, helveticaBold, 24),
-      y: 748,
-      size: 24,
-      font: helveticaBold,
-      color: primaryColor,
-    });
-
-    // Decorative line
-    page.drawLine({
-      start: { x: 80, y: 738 },
-      end: { x: 515, y: 738 },
-      thickness: 2,
-      color: primaryColor,
-    });
-
-    // Subtitle
-    const subtitle = "Anwohner Gutschein";
-    page.drawText(subtitle, {
-      x: centerX(subtitle, helvetica, 16),
-      y: 715,
-      size: 16,
-      font: helvetica,
-      color: textColor,
-    });
-
-    // Amount
-    const amountText = `${amount} \u20ac`;
-    page.drawText(amountText, {
-      x: centerX(amountText, helveticaBold, 48),
-      y: 645,
-      size: 48,
-      font: helveticaBold,
-      color: primaryColor,
-    });
-
-    // Amount label
-    const amountLabel = "Wert";
-    page.drawText(amountLabel, {
-      x: centerX(amountLabel, helvetica, 12),
-      y: 625,
-      size: 12,
-      font: helvetica,
-      color: textColor,
-    });
-
-    // Decorative line
-    page.drawLine({
-      start: { x: 80, y: 610 },
-      end: { x: 515, y: 610 },
-      thickness: 1,
-      color: primaryColor,
-    });
-
-    // QR Code
-    const qrImage = await pdfDoc.embedPng(qrImageBytes);
-    page.drawImage(qrImage, {
-      x: 207.64,
-      y: 400,
-      width: 180,
-      height: 180,
-    });
-
-    // QR label
-    const qrLabel = "QR-Code zum Einl\u00f6sen scannen";
-    page.drawText(qrLabel, {
-      x: centerX(qrLabel, helvetica, 10),
-      y: 385,
-      size: 10,
-      font: helvetica,
-      color: textColor,
-    });
-
-    // Decorative line
-    page.drawLine({
-      start: { x: 80, y: 372 },
-      end: { x: 515, y: 372 },
-      thickness: 1,
-      color: primaryColor,
-    });
-
-    // Footer description text
-    const footerText = `Als Einladung und kleine Entschädigung erhalten Sie von uns diesen Gutschein über ${amount} € welchen Sie bei unserem Fest am 13. Juni. 2026 einlösen können. Bitte kommen Sie dazu an die Kasse und zeigen diesen Gutschein vor. Der Gutschein kann nur beim Kauf eines Wertmarken-Bündels (10 €, 20 € oder 40 €) eingelöst werden, sie erhalten den Gegenwert davon in Wertmarken. Der Gutschein ist nur am 13. Juni 2026 gültig und kann nicht gegen Bargeld eingetauscht werden. Der Gutschein ist nur einmalig gültig.`;
-    const footerLines = wrapText(footerText, helvetica, 9, 480);
-    let footerY = 350;
-    for (const line of footerLines) {
-      page.drawText(line, {
-        x: centerX(line, helvetica, 9),
-        y: footerY,
-        size: 9,
-        font: helvetica,
-        color: textColor,
+    if (logoImage) {
+      drawRoundedRect(page, {
+        x: 470,
+        y: 718,
+        width: 72,
+        height: 72,
+        radius: 18,
+        color: pdfTheme.white,
+        borderColor: pdfTheme.primarySoft,
+        borderWidth: 1.5,
       });
-      footerY -= 13;
+
+      page.drawImage(logoImage, {
+        x: 480,
+        y: 728,
+        width: 500 / 8,
+        height: 346 / 8,
+      });
     }
 
-    // Voucher ID
-    page.drawText(`ID: ${id}`, {
-      x: centerX(`ID: ${id}`, helvetica, 7),
-      y: 50,
-      size: 7,
-      font: helvetica,
-      color: rgb(0.5, 0.5, 0.5),
+    const headingLine1 = "STAMMHEIMER";
+    const headingLine2 = "SEIFENKISTENRENNEN";
+    drawDisplayHeading(page, {
+      text: headingLine1,
+      x: centerTextX(headingLine1, displayFont, 31, pageWidth),
+      y: 668,
+      size: 31,
+      font: displayFont,
+      fillColor: pdfTheme.primary,
+    });
+    drawDisplayHeading(page, {
+      text: headingLine2,
+      x: centerTextX(headingLine2, displayFont, 31, pageWidth),
+      y: 628,
+      size: 31,
+      font: displayFont,
+      fillColor: pdfTheme.primary,
+    });
+
+    const subtitle = "Anwohner Gutschein";
+    page.drawText(subtitle, {
+      x: centerTextX(subtitle, bodyFont, 20, pageWidth),
+      y: 594,
+      size: 20,
+      font: bodyFont,
+      color: pdfTheme.accent,
+    });
+
+    const subcopy = "Wertgutschein für Anwohner am Seifenkistenrennen Gelände.";
+    page.drawText(subcopy, {
+      x: centerTextX(subcopy, bodyFont, 11.5, pageWidth),
+      y: 572,
+      size: 11.5,
+      font: bodyFont,
+      color: pdfTheme.muted,
+    });
+
+    drawRoundedRect(page, {
+      x: 90,
+      y: 432,
+      width: 415,
+      height: 112,
+      radius: 22,
+      color: pdfTheme.cream,
+      borderColor: pdfTheme.accentSoft,
+      borderWidth: 1.5,
+    });
+
+    const amountLabel = "Gutscheinwert";
+    page.drawText(amountLabel.toUpperCase(), {
+      x: centerTextX(amountLabel.toUpperCase(), displayFont, 12, pageWidth),
+      y: 512,
+      size: 12,
+      font: displayFont,
+      color: pdfTheme.primary,
+    });
+
+    const amountText = `${amount} €`;
+    drawDisplayHeading(page, {
+      text: amountText,
+      x: centerTextX(amountText, displayFont, 50, pageWidth),
+      y: 457,
+      size: 50,
+      font: displayFont,
+      fillColor: pdfTheme.primary,
+      shadowOffset: 2,
+    });
+
+    drawRoundedRect(page, {
+      x: 70,
+      y: 168,
+      width: 248,
+      height: 214,
+      radius: 20,
+      color: pdfTheme.paper,
+      borderColor: pdfTheme.accentSoft,
+      borderWidth: 1.25,
+    });
+    drawRoundedRect(page, {
+      x: 344,
+      y: 168,
+      width: 180,
+      height: 214,
+      radius: 20,
+      color: pdfTheme.white,
+      borderColor: pdfTheme.primarySoft,
+      borderWidth: 1.25,
+    });
+
+    page.drawText("Details", {
+      x: 90,
+      y: 350,
+      size: 18,
+      font: displayFont,
+      color: pdfTheme.accent,
+    });
+    page.drawText("QR-Code", {
+      x: 396,
+      y: 350,
+      size: 18,
+      font: displayFont,
+      color: pdfTheme.accent,
+    });
+
+    const detailCopy = `Als Einladung und kleine Entschädigung erhalten Sie diesen Gutschein über ${amount} €. Er kann am 13. Juni 2026 an der Kasse beim Kauf eines Wertmarken-Bündels in höhe von min. 10€ eingelöst werden. Keine Barauszahlung, einmalig gültig.`;
+    const detailLines = wrapText(detailCopy, bodyFont, 12, 208);
+    let detailY = 320;
+    for (const line of detailLines) {
+      page.drawText(line, {
+        x: 90,
+        y: detailY,
+        size: 12,
+        font: bodyFont,
+        color: pdfTheme.ink,
+      });
+      detailY -= 18;
+    }
+
+    page.drawText("Bitte beim Einlösen diesen Code vorzeigen.", {
+      x: 90,
+      y: 198,
+      size: 10.5,
+      font: bodyFont,
+      color: pdfTheme.muted,
+    });
+
+    const qrImage = await pdfDoc.embedPng(qrImageBytes);
+    page.drawImage(qrImage, {
+      x: 374,
+      y: 218,
+      width: 120,
+      height: 120,
+    });
+
+    const qrLabel = "Zum Einlösen scannen";
+    page.drawText(qrLabel, {
+      x: centerTextX(qrLabel, bodyFont, 10.5, 180) + 344,
+      y: 196,
+      size: 10.5,
+      font: bodyFont,
+      color: pdfTheme.muted,
+    });
+
+    page.drawText(`Voucher-ID: ${id}`, {
+      x: 70,
+      y: 82,
+      size: 9,
+      font: bodyFont,
+      color: rgb(0.49, 0.49, 0.49),
+    });
+    page.drawText("Nur am 13. Juni 2026 gültig", {
+      x: 360,
+      y: 82,
+      size: 10,
+      font: bodyFont,
+      color: pdfTheme.primary,
     });
   } // end for loop
 
