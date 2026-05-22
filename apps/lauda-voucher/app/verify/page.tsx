@@ -72,13 +72,17 @@ export default function VerifyPage() {
         () => {},
       );
     } catch {
-      setError("Kein Kamerazugriff. Bitte Kameraberechtigung erteilen.");
+      throw new Error("Kein Kamerazugriff. Bitte Kameraberechtigung erteilen.");
     }
   }, [stopScanner, router]);
 
   useEffect(() => {
     if (password) {
-      startScanner();
+      startScanner().catch((err: unknown) => {
+        setError(
+          err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.",
+        );
+      });
     }
     return () => {
       stopScanner();

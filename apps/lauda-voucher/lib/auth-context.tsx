@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 interface AuthContextType {
   password: string | null;
@@ -19,16 +13,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 const STORAGE_KEY = "lauda-voucher-password";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [password, setPasswordState] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      setPasswordState(stored);
-    }
-    setLoaded(true);
-  }, []);
+  const [password, setPasswordState] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(STORAGE_KEY);
+  });
 
   const setPassword = (pw: string) => {
     localStorage.setItem(STORAGE_KEY, pw);
@@ -40,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPasswordState(null);
   };
 
-  if (!loaded) return null;
+  if (typeof window === "undefined") return null;
 
   return (
     <AuthContext.Provider value={{ password, setPassword, logout }}>
