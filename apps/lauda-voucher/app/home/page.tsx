@@ -55,6 +55,40 @@ export default function HomePage() {
             />
           </div>
         </div>
+
+        <div className="flex flex-col rounded-[1.75rem] border-2 border-primary/10 bg-white/92 p-6 shadow-md sm:p-8">
+          <div className="space-y-3">
+            <h2 className="text-2xl text-accent sm:text-3xl">
+              Gemeinsame Stoppuhr
+            </h2>
+            <p className="text-sm leading-relaxed text-accent/75">
+              Eine Stoppuhr für alle: Auf einem Gerät starten – jedes verbundene
+              Gerät sieht die laufende Zeit und kann sie stoppen.
+            </p>
+          </div>
+
+          <div className="mt-6">
+            <FeatureCard
+              header="Live für alle Geräte"
+              caption="Stoppuhr öffnen"
+              text="Zeit gemeinsam starten, stoppen und zurücksetzen."
+              variant="primary"
+              className="transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+              onClick={() => router.push("/stopwatch")}
+            />
+          </div>
+
+          <div className="mt-4">
+            <FeatureCard
+              header="Für große Bildschirme"
+              caption="Anzeige öffnen"
+              text="Aktuelle Zeit und Team groß im Querformat darstellen – ideal für Beamer und Monitore."
+              variant="dark"
+              className="transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+              onClick={() => router.push("/display")}
+            />
+          </div>
+        </div>
       </div>
     </EventShell>
   );

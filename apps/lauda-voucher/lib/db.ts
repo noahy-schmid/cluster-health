@@ -1,6 +1,14 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import { asc, eq, sql } from "drizzle-orm";
-import { eventTeamsTable, type EventTeam, usedVouchersTable } from "./schema";
+import { asc, desc, eq, sql } from "drizzle-orm";
+import {
+  eventTeamsTable,
+  type EventTeam,
+  stopwatchTable,
+  type StopwatchRow,
+  stopwatchRunsTable,
+  type StopwatchRunRow,
+  usedVouchersTable,
+} from "./schema";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -144,4 +152,279 @@ export async function deleteTeam(id: string): Promise<void> {
   await ensureTeamsTable();
 
   await getDb().delete(eventTeamsTable).where(eq(eventTeamsTable.id, id));
+}
+
+const SHARED_STOPWATCH_ID = "shared";
+
+let ensureStopwatchTablePromise: Promise<void> | undefined;
+
+async function ensureStopwatchTable(): Promise<void> {
+  if (!ensureStopwatchTablePromise) {
+    ensureStopwatchTablePromise = getDb()
+      .execute(
+        sql`
+        CREATE TABLE IF NOT EXISTS stopwatch (
+          id text PRIMARY KEY,
+          status text NOT NULL DEFAULT 'idle',
+          started_at timestamptz,
+          elapsed_ms integer NOT NULL DEFAULT 0,
+          team_id uuid,
+          team_label text,
+          updated_at timestamptz NOT NULL DEFAULT now()
+        )
+      `,
+      )
+      .then(() =>
+        getDb().execute(
+          sql`
+          ALTER TABLE stopwatch ADD COLUMN IF NOT EXISTS team_id uuid;
+          ALTER TABLE stopwatch ADD COLUMN IF NOT EXISTS team_label text;
+        `,
+        ),
+      )
+      .then(() => undefined)
+      .catch((error) => {
+        ensureStopwatchTablePromise = undefined;
+        throw error;
+      });
+  }
+
+  await ensureStopwatchTablePromise;
+}
+
+const MAX_STOPWATCH_RUNS = 50;
+
+let ensureStopwatchRunsTablePromise: Promise<void> | undefined;
+
+async function ensureStopwatchRunsTable(): Promise<void> {
+  if (!ensureStopwatchRunsTablePromise) {
+    ensureStopwatchRunsTablePromise = getDb()
+      .execute(
+        sql`
+        CREATE TABLE IF NOT EXISTS stopwatch_runs (
+          id uuid PRIMARY KEY,
+          elapsed_ms integer NOT NULL,
+          team_id uuid,
+          team_label text,
+          stopped_at timestamptz NOT NULL DEFAULT now()
+        )
+      `,
+      )
+      .then(() =>
+        getDb().execute(
+          sql`
+          ALTER TABLE stopwatch_runs ADD COLUMN IF NOT EXISTS team_id uuid;
+          ALTER TABLE stopwatch_runs ADD COLUMN IF NOT EXISTS team_label text;
+        `,
+        ),
+      )
+      .then(() => undefined)
+      .catch((error) => {
+        ensureStopwatchRunsTablePromise = undefined;
+        throw error;
+      });
+  }
+
+  await ensureStopwatchRunsTablePromise;
+}
+
+async function readStopwatchRow(): Promise<StopwatchRow> {
+  const [row] = await getDb()
+    .select()
+    .from(stopwatchTable)
+    .where(eq(stopwatchTable.id, SHARED_STOPWATCH_ID));
+
+  if (row) {
+    return row;
+  }
+
+  const [created] = await getDb()
+    .insert(stopwatchTable)
+    .values({ id: SHARED_STOPWATCH_ID, status: "idle", elapsedMs: 0 })
+    .onConflictDoNothing()
+    .returning();
+
+  if (created) {
+    return created;
+  }
+
+  const [existing] = await getDb()
+    .select()
+    .from(stopwatchTable)
+    .where(eq(stopwatchTable.id, SHARED_STOPWATCH_ID));
+
+  if (!existing) {
+    throw new Error("Stoppuhr konnte nicht initialisiert werden.");
+  }
+
+  return existing;
+}
+
+export async function getStopwatch(): Promise<StopwatchRow> {
+  await ensureStopwatchTable();
+  return readStopwatchRow();
+}
+
+function formatTeamLabel(team: EventTeam): string {
+  return `#${team.startingNumber} ${team.teamName}`;
+}
+
+export async function startStopwatch(
+  teamId: string | null,
+): Promise<StopwatchRow> {
+  await ensureStopwatchTable();
+
+  let resolvedTeamId: string | null = null;
+  let teamLabel: string | null = null;
+
+  if (teamId) {
+    const [team] = await getDb()
+      .select()
+      .from(eventTeamsTable)
+      .where(eq(eventTeamsTable.id, teamId));
+
+    if (!team) {
+      throw new Error("Das ausgewählte Team wurde nicht gefunden.");
+    }
+
+    resolvedTeamId = team.id;
+    teamLabel = formatTeamLabel(team);
+  }
+
+  const now = new Date();
+
+  const [row] = await getDb()
+    .insert(stopwatchTable)
+    .values({
+      id: SHARED_STOPWATCH_ID,
+      status: "running",
+      startedAt: now,
+      elapsedMs: 0,
+      teamId: resolvedTeamId,
+      teamLabel,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: stopwatchTable.id,
+      set: {
+        status: "running",
+        startedAt: now,
+        elapsedMs: 0,
+        teamId: resolvedTeamId,
+        teamLabel,
+        updatedAt: now,
+      },
+    })
+    .returning();
+
+  if (!row) {
+    throw new Error("Stoppuhr konnte nicht gestartet werden.");
+  }
+
+  return row;
+}
+
+export async function recordStopwatchLap(): Promise<StopwatchRow> {
+  await ensureStopwatchTable();
+
+  const current = await readStopwatchRow();
+
+  if (current.status !== "running" || !current.startedAt) {
+    return current;
+  }
+
+  const elapsedMs = Math.max(0, Date.now() - current.startedAt.getTime());
+
+  await ensureStopwatchRunsTable();
+  await getDb().insert(stopwatchRunsTable).values({
+    id: crypto.randomUUID(),
+    elapsedMs,
+    teamId: current.teamId,
+    teamLabel: current.teamLabel,
+  });
+
+  return current;
+}
+
+export async function stopStopwatch(): Promise<StopwatchRow> {
+  await ensureStopwatchTable();
+
+  const current = await readStopwatchRow();
+
+  if (current.status !== "running" || !current.startedAt) {
+    return current;
+  }
+
+  const elapsedMs = Math.max(0, Date.now() - current.startedAt.getTime());
+
+  const [row] = await getDb()
+    .update(stopwatchTable)
+    .set({
+      status: "stopped",
+      startedAt: null,
+      elapsedMs,
+      updatedAt: new Date(),
+    })
+    .where(eq(stopwatchTable.id, SHARED_STOPWATCH_ID))
+    .returning();
+
+  if (!row) {
+    throw new Error("Stoppuhr konnte nicht gestoppt werden.");
+  }
+
+  await ensureStopwatchRunsTable();
+  await getDb().insert(stopwatchRunsTable).values({
+    id: crypto.randomUUID(),
+    elapsedMs,
+    teamId: current.teamId,
+    teamLabel: current.teamLabel,
+  });
+
+  return row;
+}
+
+export async function resetStopwatch(): Promise<StopwatchRow> {
+  await ensureStopwatchTable();
+
+  const now = new Date();
+
+  const [row] = await getDb()
+    .insert(stopwatchTable)
+    .values({
+      id: SHARED_STOPWATCH_ID,
+      status: "idle",
+      startedAt: null,
+      elapsedMs: 0,
+      teamId: null,
+      teamLabel: null,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: stopwatchTable.id,
+      set: {
+        status: "idle",
+        startedAt: null,
+        elapsedMs: 0,
+        teamId: null,
+        teamLabel: null,
+        updatedAt: now,
+      },
+    })
+    .returning();
+
+  if (!row) {
+    throw new Error("Stoppuhr konnte nicht zurückgesetzt werden.");
+  }
+
+  return row;
+}
+
+export async function listStopwatchRuns(): Promise<StopwatchRunRow[]> {
+  await ensureStopwatchRunsTable();
+
+  return getDb()
+    .select()
+    .from(stopwatchRunsTable)
+    .orderBy(desc(stopwatchRunsTable.stoppedAt))
+    .limit(MAX_STOPWATCH_RUNS);
 }

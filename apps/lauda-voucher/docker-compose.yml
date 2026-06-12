@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: voucher
+      POSTGRES_PASSWORD: voucher-secret
+      POSTGRES_DB: lauda_voucher
+    volumes:
+      - lauda-voucher-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voucher -d lauda_voucher"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    # Vor dem Start im Docker Hub hochladen und den Tag hier eintragen.
+    image: ${LAUDA_VOUCHER_IMAGE:-noahyschmid/lauda-voucher:latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://voucher:voucher-secret@db:5432/lauda_voucher
+      VOUCHER_AUTH_PASSWORD: ${VOUCHER_AUTH_PASSWORD:-my-secret-password}
+      VOUCHER_SECRET: ${VOUCHER_SECRET:-change-me-to-a-long-random-string}
+    ports:
+      - "3000:3000"
+
+volumes:
+  lauda-voucher-db:

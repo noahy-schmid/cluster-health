@@ -17,3 +17,29 @@ export const eventTeamsTable = pgTable("event_teams", {
 });
 
 export type EventTeam = typeof eventTeamsTable.$inferSelect;
+
+export const stopwatchTable = pgTable("stopwatch", {
+  id: text().primaryKey(),
+  status: text().notNull().default("idle"),
+  startedAt: timestamp("started_at", { withTimezone: true }),
+  elapsedMs: integer("elapsed_ms").notNull().default(0),
+  teamId: uuid("team_id"),
+  teamLabel: text("team_label"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type StopwatchRow = typeof stopwatchTable.$inferSelect;
+
+export const stopwatchRunsTable = pgTable("stopwatch_runs", {
+  id: uuid().primaryKey(),
+  elapsedMs: integer("elapsed_ms").notNull(),
+  teamId: uuid("team_id"),
+  teamLabel: text("team_label"),
+  stoppedAt: timestamp("stopped_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type StopwatchRunRow = typeof stopwatchRunsTable.$inferSelect;
