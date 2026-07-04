@@ -170,3 +170,119 @@ export {
   type ListServiceEmployeesResult,
   type ServiceEmployeeItem,
 } from "./use-cases/list-service-employees.use-case";
+
+// Opening hours domain types
+export type {
+  OpeningHours,
+  OpeningHoursException,
+} from "./application/opening-hours/opening-hours.aggregate";
+export {
+  OpeningHoursValidationError,
+  OpeningHoursNotFoundError,
+  OpeningHoursInternalError,
+} from "./application/opening-hours/errors";
+
+// Opening hours use cases
+export {
+  SetSalonOpeningHoursUseCase,
+  type SetSalonOpeningHoursCommand,
+  type SetSalonOpeningHoursResult,
+} from "./use-cases/set-salon-opening-hours.use-case";
+
+export {
+  DeleteSalonOpeningHoursUseCase,
+  type DeleteSalonOpeningHoursCommand,
+} from "./use-cases/delete-salon-opening-hours.use-case";
+
+export {
+  ListSalonOpeningHoursUseCase,
+  type ListSalonOpeningHoursQuery,
+  type ListSalonOpeningHoursResult,
+} from "./use-cases/list-salon-opening-hours.use-case";
+
+export {
+  CreateSalonOpeningHoursExceptionUseCase,
+  type CreateSalonOpeningHoursExceptionCommand,
+  type CreateSalonOpeningHoursExceptionResult,
+} from "./use-cases/create-salon-opening-hours-exception.use-case";
+
+export {
+  DeleteSalonOpeningHoursExceptionUseCase,
+  type DeleteSalonOpeningHoursExceptionCommand,
+} from "./use-cases/delete-salon-opening-hours-exception.use-case";
+
+export {
+  ListSalonOpeningHoursExceptionsUseCase,
+  type ListSalonOpeningHoursExceptionsQuery,
+  type ListSalonOpeningHoursExceptionsResult,
+} from "./use-cases/list-salon-opening-hours-exceptions.use-case";
+
+// Stylist availability domain types
+export type {
+  StylistAvailability,
+  StylistAvailabilityException,
+} from "./application/stylist-availability/stylist-availability.aggregate";
+export {
+  StylistAvailabilityValidationError,
+  StylistAvailabilityNotFoundError,
+  StylistAvailabilityInternalError,
+} from "./application/stylist-availability/errors";
+
+// Stylist availability use cases
+export {
+  SetStylistAvailabilityUseCase,
+  type SetStylistAvailabilityCommand,
+  type SetStylistAvailabilityResult,
+} from "./use-cases/set-stylist-availability.use-case";
+
+export {
+  DeleteStylistAvailabilityUseCase,
+  type DeleteStylistAvailabilityCommand,
+} from "./use-cases/delete-stylist-availability.use-case";
+
+export {
+  ListStylistAvailabilityUseCase,
+  type ListStylistAvailabilityQuery,
+  type ListStylistAvailabilityResult,
+} from "./use-cases/list-stylist-availability.use-case";
+
+export {
+  CreateStylistAvailabilityExceptionUseCase,
+  type CreateStylistAvailabilityExceptionCommand,
+  type CreateStylistAvailabilityExceptionResult,
+} from "./use-cases/create-stylist-availability-exception.use-case";
+
+export {
+  DeleteStylistAvailabilityExceptionUseCase,
+  type DeleteStylistAvailabilityExceptionCommand,
+} from "./use-cases/delete-stylist-availability-exception.use-case";
+
+export {
+  ListStylistAvailabilityExceptionsUseCase,
+  type ListStylistAvailabilityExceptionsQuery,
+  type ListStylistAvailabilityExceptionsResult,
+} from "./use-cases/list-stylist-availability-exceptions.use-case";
+
+// Layer exports for opening hours and stylist availability
+export {
+  SetSalonOpeningHoursUseCaseLayer,
+  DeleteSalonOpeningHoursUseCaseLayer,
+  ListSalonOpeningHoursUseCaseLayer,
+  CreateSalonOpeningHoursExceptionUseCaseLayer,
+  DeleteSalonOpeningHoursExceptionUseCaseLayer,
+  ListSalonOpeningHoursExceptionsUseCaseLayer,
+  SetStylistAvailabilityUseCaseLayer,
+  DeleteStylistAvailabilityUseCaseLayer,
+  ListStylistAvailabilityUseCaseLayer,
+  CreateStylistAvailabilityExceptionUseCaseLayer,
+  DeleteStylistAvailabilityExceptionUseCaseLayer,
+  ListStylistAvailabilityExceptionsUseCaseLayer,
+} from "./layers";
+
+// Schema exports for new tables
+export {
+  salonOpeningHoursTable,
+  salonOpeningHoursExceptionsTable,
+  stylistAvailabilityTable,
+  stylistAvailabilityExceptionsTable,
+} from "./schema";

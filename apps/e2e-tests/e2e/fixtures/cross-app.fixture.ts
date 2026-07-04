@@ -3,11 +3,14 @@ import { createUniqueSuffix } from "../helpers/id-helper";
 import { ScreenshotHelper } from "../helpers/screenshot-helper";
 import type {
   CenterTextInput,
+  OpeningHoursInput,
+  OpeningHoursState,
   StylistsSectionInput,
   StylistInput,
   WebsiteInput,
 } from "../helpers/types";
 import { AuthTopic } from "../topics/auth.topic";
+import { OpeningHoursTopic } from "../topics/opening-hours.topic";
 import { PublicWebsiteTopic } from "../topics/public-website.topic";
 import { SalonTopic } from "../topics/salon.topic";
 import { StylistTopic } from "../topics/stylist.topic";
@@ -19,6 +22,7 @@ class CrossAppScenario {
   readonly stylist: StylistTopic;
   readonly website: WebsiteTopic;
   readonly publicWebsite: PublicWebsiteTopic;
+  readonly openingHours: OpeningHoursTopic;
   private readonly screenshotHelper: ScreenshotHelper;
   private readonly managePage: Page;
   private readonly publicPage: Page;
@@ -47,6 +51,7 @@ class CrossAppScenario {
       this.website,
       screenshotHelper,
     );
+    this.openingHours = new OpeningHoursTopic(managePage, this.salon);
   }
 
   async iHaveAnAccount() {
@@ -79,6 +84,28 @@ class CrossAppScenario {
 
   async iOpenMySalonWebsite() {
     return this.publicWebsite.iOpenMySalonWebsite();
+  }
+
+  async iGoToOpeningHours() {
+    return this.openingHours.iGoToOpeningHours();
+  }
+
+  async iSetOpeningHoursForDate(
+    input: OpeningHoursInput,
+    applyAs: "just-this-day" | "every-weekday",
+  ): Promise<OpeningHoursState> {
+    return this.openingHours.iSetOpeningHoursForDate(input, applyAs);
+  }
+
+  async iSeeDateAs(
+    date: string,
+    expected: { isOpen: boolean; openTime?: string; closeTime?: string },
+  ) {
+    return this.openingHours.iSeeDateAs(date, expected);
+  }
+
+  async iSeeDateHasExceptionBadge(date: string) {
+    return this.openingHours.iSeeDateHasExceptionBadge(date);
   }
 
   async iCaptureManagePage(name: string) {

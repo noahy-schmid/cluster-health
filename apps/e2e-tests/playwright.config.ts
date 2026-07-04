@@ -3,8 +3,7 @@ import path from "path";
 import { e2eEnvironment } from "./e2e/env.js";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
-const appServerStartupTimeout = 240_000;
-const salonWebpageBuildIdPath = "apps/salon-webpage/.next/BUILD_ID";
+const appServerStartupTimeout = 120_000;
 const htmlReporter = ["html", { open: "never" }] as const;
 const minioCommand = [
   "docker rm -f deinsalon-e2e-minio >/dev/null 2>&1 || true",
@@ -17,17 +16,10 @@ const minioCommand = [
   ].join(" "),
 ].join(" && ");
 const prepareManageAppCommand = [
-  "corepack enable",
-  "pnpm build",
-  `node -e "require('fs').rmSync('.turbo/cache', { recursive: true, force: true })"`,
   "pnpm db:reset",
   "pnpm --filter manage-salon-webpage start",
 ].join(" && ");
-const waitForSalonBuildCommand = [
-  "corepack enable",
-  `node -e "const fs=require('fs'); const path='${salonWebpageBuildIdPath}'; const startedAt=Date.now(); const timeoutMs=${appServerStartupTimeout}; const wait=()=>{ if (fs.existsSync(path)) process.exit(0); if (Date.now() - startedAt > timeoutMs) { console.error('Timed out waiting for salon-webpage build output at ' + path); process.exit(1); } setTimeout(wait, 1000); }; wait()"`,
-  "pnpm --filter salon-webpage start",
-].join(" && ");
+const waitForSalonBuildCommand = "pnpm --filter salon-webpage start";
 
 export default defineConfig({
   testDir: "./e2e/tests",
@@ -80,7 +72,7 @@ export default defineConfig({
         PORT: "3000",
       },
       port: 3000,
-      reuseExistingServer: false,
+      reuseExistingServer: !process.env.CI,
       stdout: "pipe",
       stderr: "pipe",
       timeout: appServerStartupTimeout,
@@ -110,7 +102,7 @@ export default defineConfig({
         PORT: "3001",
       },
       port: 3001,
-      reuseExistingServer: false,
+      reuseExistingServer: !process.env.CI,
       stdout: "pipe",
       stderr: "pipe",
       timeout: appServerStartupTimeout,

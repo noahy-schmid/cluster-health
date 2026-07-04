@@ -5,6 +5,7 @@ import {
   Earth,
   Users,
   Scissors,
+  Clock,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -33,6 +34,11 @@ export const menuItems: MenuItem[] = [
     icon: Scissors,
     label: "Dienstleistungen",
     href: "/salon/:salonId/services",
+  },
+  {
+    icon: Clock,
+    label: "Öffnungszeiten",
+    href: "/salon/:salonId/opening-hours",
   },
   {
     icon: Settings,

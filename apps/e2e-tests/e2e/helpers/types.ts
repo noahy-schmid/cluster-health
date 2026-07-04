@@ -59,3 +59,20 @@ export type StylistInput = {
   description?: string;
   profileImagePath?: string;
 };
+
+export type OpeningHoursInput = {
+  /** YYYY-MM-DD */
+  date: string;
+  isOpen: boolean;
+  openTime?: string;
+  closeTime?: string;
+};
+
+export type OpeningHoursState = {
+  date: string;
+  isOpen: boolean;
+  openTime: string | null;
+  closeTime: string | null;
+  /** "exception" = date-specific override; "weekly" = recurring weekday rule */
+  appliedAs: "exception" | "weekly";
+};

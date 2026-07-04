@@ -27,6 +27,18 @@ import { AssignEmployeeToServiceUseCase } from "./use-cases/assign-employee-to-s
 import { UnassignEmployeeFromServiceUseCase } from "./use-cases/unassign-employee-from-service.use-case";
 import { ListEmployeeServicesUseCase } from "./use-cases/list-employee-services.use-case";
 import { ListServiceEmployeesUseCase } from "./use-cases/list-service-employees.use-case";
+import { SetSalonOpeningHoursUseCase } from "./use-cases/set-salon-opening-hours.use-case";
+import { DeleteSalonOpeningHoursUseCase } from "./use-cases/delete-salon-opening-hours.use-case";
+import { ListSalonOpeningHoursUseCase } from "./use-cases/list-salon-opening-hours.use-case";
+import { CreateSalonOpeningHoursExceptionUseCase } from "./use-cases/create-salon-opening-hours-exception.use-case";
+import { DeleteSalonOpeningHoursExceptionUseCase } from "./use-cases/delete-salon-opening-hours-exception.use-case";
+import { ListSalonOpeningHoursExceptionsUseCase } from "./use-cases/list-salon-opening-hours-exceptions.use-case";
+import { SetStylistAvailabilityUseCase } from "./use-cases/set-stylist-availability.use-case";
+import { DeleteStylistAvailabilityUseCase } from "./use-cases/delete-stylist-availability.use-case";
+import { ListStylistAvailabilityUseCase } from "./use-cases/list-stylist-availability.use-case";
+import { CreateStylistAvailabilityExceptionUseCase } from "./use-cases/create-stylist-availability-exception.use-case";
+import { DeleteStylistAvailabilityExceptionUseCase } from "./use-cases/delete-stylist-availability-exception.use-case";
+import { ListStylistAvailabilityExceptionsUseCase } from "./use-cases/list-stylist-availability-exceptions.use-case";
 
 const InfrastructureLayer = DatabaseLayer.pipe(
   Layer.provideMerge(ConfigurationLayer),
@@ -123,3 +135,38 @@ export const ListEmployeeServicesUseCaseLayer =
   );
 export const ListServiceEmployeesUseCaseLayer =
   ListServiceEmployeesUseCase.Default.pipe(Layer.provide(StylistPortLayer));
+
+// Opening hours use case layers
+// OpeningHoursAggregate.Default already bundles its port, so only externally-used
+// ports (SalonPort) need to be explicitly provided here.
+export const SetSalonOpeningHoursUseCaseLayer =
+  SetSalonOpeningHoursUseCase.Default.pipe(Layer.provide(SalonPortLayer));
+export const DeleteSalonOpeningHoursUseCaseLayer =
+  DeleteSalonOpeningHoursUseCase.Default;
+export const ListSalonOpeningHoursUseCaseLayer =
+  ListSalonOpeningHoursUseCase.Default;
+export const CreateSalonOpeningHoursExceptionUseCaseLayer =
+  CreateSalonOpeningHoursExceptionUseCase.Default.pipe(
+    Layer.provide(SalonPortLayer),
+  );
+export const DeleteSalonOpeningHoursExceptionUseCaseLayer =
+  DeleteSalonOpeningHoursExceptionUseCase.Default;
+export const ListSalonOpeningHoursExceptionsUseCaseLayer =
+  ListSalonOpeningHoursExceptionsUseCase.Default;
+
+// Stylist availability use case layers
+// StylistAvailabilityAggregate.Default already bundles its port.
+export const SetStylistAvailabilityUseCaseLayer =
+  SetStylistAvailabilityUseCase.Default.pipe(Layer.provide(StylistPortLayer));
+export const DeleteStylistAvailabilityUseCaseLayer =
+  DeleteStylistAvailabilityUseCase.Default;
+export const ListStylistAvailabilityUseCaseLayer =
+  ListStylistAvailabilityUseCase.Default;
+export const CreateStylistAvailabilityExceptionUseCaseLayer =
+  CreateStylistAvailabilityExceptionUseCase.Default.pipe(
+    Layer.provide(StylistPortLayer),
+  );
+export const DeleteStylistAvailabilityExceptionUseCaseLayer =
+  DeleteStylistAvailabilityExceptionUseCase.Default;
+export const ListStylistAvailabilityExceptionsUseCaseLayer =
+  ListStylistAvailabilityExceptionsUseCase.Default;
