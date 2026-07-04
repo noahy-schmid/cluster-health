@@ -1,0 +1,8 @@
+{
+  "name": "appointment-service",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "docker:build": "docker build -t appointment-service:latest -f Dockerfile ../.. --build-context root=../.."
+  }
+}

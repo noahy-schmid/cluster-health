@@ -54,20 +54,25 @@ services:
   #   networks:
   #     - cluster-health-network
 
-  # RabbitMQ message broker (commented out for now, uncomment when needed)
-  # rabbitmq:
-  #   image: rabbitmq:3-management-alpine
-  #   container_name: cluster-health-rabbitmq
-  #   environment:
-  #     RABBITMQ_DEFAULT_USER: admin
-  #     RABBITMQ_DEFAULT_PASS: admin
-  #   volumes:
-  #     - rabbitmq-data:/var/lib/rabbitmq
-  #   ports:
-  #     - "5672:5672"    # AMQP port
-  #     - "15672:15672"  # Management UI
-  #   networks:
-  #     - cluster-health-network
+  # RabbitMQ message broker — used by the appointment-service
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: cluster-health-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI (http://localhost:15672)
+    networks:
+      - cluster-health-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   # Workspace volume for better performance on Windows
@@ -89,8 +94,8 @@ volumes:
   #   driver: local
   # redis-data:
   #   driver: local
-  # rabbitmq-data:
-  #   driver: local
+  rabbitmq-data:
+    driver: local
 
 networks:
   cluster-health-network:
