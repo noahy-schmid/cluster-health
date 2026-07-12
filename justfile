@@ -17,30 +17,12 @@ default:
 
 # ─── Developer environment ───────────────────────────────────────────────────
 
+# Symlink the shared root .env into the current git worktree. Runs automatically
+# after `pnpm install` (root `prepare` script); this is just a manual re-run.
 # The real .env is gitignored, so it lives only in the main checkout — a linked
-# worktree does not get it, and the `dotenv -e .env` wrappers in package.json
-# would load nothing. `git rev-parse --git-common-dir` points back to the main
-# checkout's .git from anywhere, so this works no matter where the worktree
-# lives on disk. Run once after `git worktree add`.
-#
-# Symlink the shared root .env into the current git worktree.
+# worktree does not get it and the `dotenv -e .env` wrappers would load nothing.
 link-env:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    git_dir="$(git rev-parse --git-dir)"
-    common_dir="$(git rev-parse --git-common-dir)"
-    if [ "$git_dir" = "$common_dir" ]; then
-      echo "Main checkout already owns the real .env — nothing to link."
-      exit 0
-    fi
-    main_root="$(cd "$(dirname "$common_dir")" && pwd)"
-    src="$main_root/.env"
-    if [ ! -f "$src" ]; then
-      echo "No .env in the main checkout at $src — create it there first." >&2
-      exit 1
-    fi
-    ln -sf "$src" "$(git rev-parse --show-toplevel)/.env"
-    echo "✓ linked .env -> $src"
+    @node scripts/link-env.mjs
 
 # ─── Local infrastructure (Postgres, MinIO, ...) ─────────────────────────────
 # Adding a new service is a compose concern — see

@@ -15,7 +15,7 @@
     "test:e2e": "dotenv -e .env -- pnpm --filter e2e-tests test:e2e",
     "test:e2e:ui": "dotenv -e .env -- pnpm --filter e2e-tests test:e2e:ui",
     "test:e2e:install": "pnpm --filter e2e-tests test:e2e:install",
-    "prepare": "husky install",
+    "prepare": "husky install && node scripts/link-env.mjs",
     "db:generate": "dotenv -e .env -- turbo run db:generate",
     "db:drop": "dotenv -e .env -- tsx ./scripts/drizzle-drop-all.ts",
     "db:push": "dotenv -e .env -- turbo run db:push",
