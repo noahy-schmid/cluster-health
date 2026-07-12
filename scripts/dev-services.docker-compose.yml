@@ -1,0 +1,69 @@
+# Local development services for the deinsalon monorepo.
+#
+# This file is the single place to declare infrastructure that the apps need
+# when running locally (databases, object storage, caches, brokers, ...).
+#
+# Managed via ./scripts/dev-services.sh — but plain `docker compose -f` works too.
+#
+# ─── Adding a new service ────────────────────────────────────────────────────
+# 1. Add a block under `services:` below (copy an existing one as a template).
+# 2. Give it a `container_name: deinsalon-<name>` and a named volume if it
+#    needs to persist data (remember to declare the volume under `volumes:`).
+# 3. Add a `healthcheck:` so `docker compose up --wait` can tell when it's ready.
+# 4. Expose the port(s) the apps expect (keep them in sync with the root `.env`).
+# That's it — the wrapper script picks up every service automatically.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A fixed project name makes `up` idempotent: re-running never spawns duplicate
+# containers, it just reconciles the existing ones with this file.
+name: deinsalon-dev
+
+services:
+  # PostgreSQL — matches DATABASE_* in the root .env.
+  # The application database ("deinsalon") is created by the `db-migrate` app;
+  # here we only provision the server and its default admin database.
+  postgres:
+    image: postgres:16-alpine
+    container_name: deinsalon-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+      POSTGRES_DB: ${DATABASE_ADMIN_DB:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres} -d ${DATABASE_ADMIN_DB:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+  # MinIO (S3-compatible object storage) — matches S3_* in the root .env.
+  # The "salon" bucket is created + configured by the apps at runtime, so we
+  # only need to provision the server and root credentials here.
+  minio:
+    image: minio/minio:latest
+    container_name: deinsalon-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_SALON_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SALON_SECRET_KEY:-minioadmin}
+    ports:
+      - "${MINIO_API_PORT:-9004}:9000"     # S3 API   (S3_URL in .env)
+      - "${MINIO_CONSOLE_PORT:-9006}:9001" # Web console
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+volumes:
+  postgres-data:
+  minio-data:
