@@ -11,6 +11,7 @@ import {
   S3Client,
   HeadBucketCommand,
   CreateBucketCommand,
+  DeleteBucketCommand,
   PutBucketPolicyCommand,
   PutBucketCorsCommand,
   HeadObjectCommand,
@@ -175,16 +176,42 @@ const makeFileStoragePort = Effect.gen(function* () {
         config.s3Principal,
       );
 
-      yield* Effect.tryPromise(() =>
-        s3Client.send(
-          new PutBucketPolicyCommand({
-            Bucket: bucket,
-            Policy: bucketPolicy,
-          }),
-        ),
-      ).pipe(
+      const setBucketPolicy = Effect.gen(function* () {
+        yield* Effect.try({
+          try: () => JSON.parse(bucketPolicy),
+          catch: (error) =>
+            new S3Error({
+              message:
+                `S3_BUCKET_POLICY_TEMPLATE does not produce valid JSON. ` +
+                `A common cause is a stale shell export shadowing .env, where quote removal ` +
+                `strips the double quotes from the JSON (dotenv never overrides already-set ` +
+                `variables) — check \`echo $S3_BUCKET_POLICY_TEMPLATE\` in the terminal running ` +
+                `the app, and \`unset\` it or open a fresh terminal.`,
+              cause: error,
+            }),
+        });
+
+        yield* Effect.tryPromise(() =>
+          s3Client.send(
+            new PutBucketPolicyCommand({
+              Bucket: bucket,
+              Policy: bucketPolicy,
+            }),
+          ),
+        );
+      });
+
+      yield* setBucketPolicy.pipe(
         Effect.tapError((error) =>
           Effect.logError(`Failed to set bucket policy for: ${bucket}`, error),
+        ),
+        // Roll back the just-created bucket, otherwise it survives without a
+        // policy and every later call early-returns on the existence check,
+        // leaving it permanently misconfigured.
+        Effect.onError(() =>
+          Effect.tryPromise(() =>
+            s3Client.send(new DeleteBucketCommand({ Bucket: bucket })),
+          ).pipe(Effect.ignore),
         ),
       );
 
