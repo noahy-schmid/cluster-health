@@ -9,7 +9,7 @@
 // --git-common-dir` (works no matter where the worktree lives on disk).
 //
 // It runs automatically from the root `prepare` script (after `pnpm install`),
-// and can be re-run manually with `just link-env`.
+// and can be re-run manually with `node scripts/link-env.mjs`.
 //
 // Best-effort by design: it never fails the caller. In the main checkout, in CI,
 // in Docker image builds, or when git / the source .env is unavailable, it does

@@ -15,15 +15,6 @@ compose := "docker compose --env-file .env -f scripts/dev-services.docker-compos
 default:
     @just --list
 
-# ─── Developer environment ───────────────────────────────────────────────────
-
-# Symlink the shared root .env into the current git worktree. Runs automatically
-# after `pnpm install` (root `prepare` script); this is just a manual re-run.
-# The real .env is gitignored, so it lives only in the main checkout — a linked
-# worktree does not get it and the `dotenv -e .env` wrappers would load nothing.
-link-env:
-    @node scripts/link-env.mjs
-
 # ─── Local infrastructure (Postgres, MinIO, ...) ─────────────────────────────
 # Adding a new service is a compose concern — see
 # scripts/dev-services.docker-compose.yml. These recipes need no changes.
