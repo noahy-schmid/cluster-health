@@ -1,11 +1,14 @@
-export default function SalonPage() {
-  return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Salon Dashboard</h1>
-      <p>
-        Willkommen zum Salon Dashboard! Hier kannst du deinen Salon verwalten
-        und deine Webseite anpassen.
-      </p>
-    </div>
-  );
+import { fetchStylists } from "@/app/salon/[salonId]/stylists/stylist.actions";
+import { SalonDashboardClient } from "./dashboard.client";
+
+interface SalonPageProps {
+  params: Promise<{ salonId: string }>;
+}
+
+export default async function SalonPage({ params }: SalonPageProps) {
+  const { salonId } = await params;
+  const stylistsResult = await fetchStylists(salonId);
+  const stylists = stylistsResult.success ? stylistsResult.data : [];
+
+  return <SalonDashboardClient salonId={salonId} stylists={stylists} />;
 }
